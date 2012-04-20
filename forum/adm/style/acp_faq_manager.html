@@ -1,0 +1,113 @@
+<!-- INCLUDE overall_header.html -->
+
+<a name="maincontent"></a>
+
+<!-- IF S_UNDO --><a href="{U_UNDO}" style="float: {S_CONTENT_FLOW_END};">&laquo; {L_LOAD_BACKUP}</a><!-- ENDIF -->
+
+<h1>{L_TITLE}</h1>
+
+<p>{L_TITLE_EXPLAIN}</p>
+
+<p><strong>{NAVIGATION}</strong></p>
+
+<!-- IF S_EDIT or S_ADD -->
+	<form id="varedit" method="post" action="{U_ACTION}">
+
+	<fieldset>
+		<legend>{L_SETTINGS}</legend>
+		<!-- IF not S_CAT -->
+		<dl>
+			<dt><label for="var_name">{L_NAME}:</label></dt>
+			<dd><input class="text medium" type="text" id="var_name" name="var_name" value="{VARIABLE_NAME}" maxlength="255" /></dd>
+		</dl>
+		<!-- ENDIF -->
+		<dl>
+			<dt><label for="var_desc">{L_VALUE}:</label></dt>
+			<dd><textarea id="var_desc" name="var_value" rows="5" cols="45">{VARIABLE_VALUE}</textarea></dd>
+		</dl>
+	</fieldset>
+
+	<fieldset class="submit-buttons">
+		<input class="button1" type="submit" id="submit" name="submit" value="{L_SUBMIT}" />&nbsp;
+		<input class="button2" type="reset" id="reset" name="reset" value="{L_RESET}" />
+	</fieldset>
+	{S_FORM_TOKEN}
+	</form>
+<!-- ENDIF -->
+
+<!-- IF S_DISPLAY_LIST-->
+	<table cellspacing="1">
+		<col class="row1" /><col class="row1" /><col class="row2" />
+	<tbody>
+	<!-- BEGIN file_list -->
+		<tr>
+			<td>
+				<strong><!-- IF file_list.U_VIEW --><a href="{file_list.U_VIEW}">{file_list.NAME}</a><!-- ELSE -->{file_list.NAME}<!-- ENDIF --></strong>
+			</td>
+			<td style="vertical-align: top; width: 100px; text-align: right; white-space: nowrap;">
+				<!-- IF file_list.S_FIRST_ROW && not file_list.S_LAST_ROW -->
+					{ICON_MOVE_UP_DISABLED}
+					<a href="{file_list.U_MOVE_DOWN}">{ICON_MOVE_DOWN}</a>
+				<!-- ELSEIF not file_list.S_FIRST_ROW && not file_list.S_LAST_ROW-->
+					<a href="{file_list.U_MOVE_UP}">{ICON_MOVE_UP}</a>
+					<a href="{file_list.U_MOVE_DOWN}">{ICON_MOVE_DOWN}</a>
+				<!-- ELSEIF file_list.S_LAST_ROW && not file_list.S_FIRST_ROW -->
+					<a href="{file_list.U_MOVE_UP}">{ICON_MOVE_UP}</a>
+					{ICON_MOVE_DOWN_DISABLED}
+				<!-- ELSE -->
+					{ICON_MOVE_UP_DISABLED}
+					{ICON_MOVE_DOWN_DISABLED}
+				<!-- ENDIF -->
+				<a href="{file_list.U_EDIT}">{ICON_EDIT}</a>
+				<a href="{file_list.U_DELETE}">{ICON_DELETE}</a>
+			</td>
+		</tr>
+	<!-- BEGINELSE -->
+		<tr>
+			<td class="row1" colspan="5" style="text-align: center;">{L_NO_FAQ_VARS}</td>
+		</tr>
+	<!-- END file_list -->
+	</tbody>
+	</table>
+
+	<form id="forums" method="post" action="{U_ACTION}">
+
+	<fieldset class="quick">
+		<input type="hidden" name="action" value="add" />
+
+		<input type="text" name="<!-- IF not S_CAT -->var_name<!-- ELSE -->var_value<!-- ENDIF -->" value="" maxlength="255" />
+		<input class="button2" name="add" type="submit" value="{L_CREATE}" />
+	</fieldset>
+	{S_FORM_TOKEN}
+	</form>
+<!-- ENDIF -->
+
+<!-- IF S_DISPLAY_FILE_LIST -->
+	<table cellspacing="1">
+		<col class="row1" /><col class="row2" /><col class="row2" /><col class="row2" />
+	<thead>
+	<tr>
+		<th>{L_NAME}</th>
+		<th>{L_LANGUAGE}</th>
+		<th>{L_LOCATION}</th>
+		<th>{L_ACTION}</th>
+	</tr>
+	</thead>
+	<tbody>
+	<!-- BEGIN file_list -->
+		<tr>
+			<td>{file_list.NAME}</td>
+			<td>{file_list.LANGUAGE}</td>
+			<td>{file_list.LOCATION}</td>
+			<td>{file_list.ACTION}</td>
+		</tr>
+	<!-- BEGINELSE -->
+		<tr>
+			<td class="row1" colspan="5" style="text-align: center;">{L_NO_FAQ_FILES}</td>
+		</tr>
+	<!-- END file_list -->
+	</tbody>
+	</table>
+<!-- ENDIF -->
+
+<!-- INCLUDE overall_footer.html -->

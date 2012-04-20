@@ -1,0 +1,57 @@
+<!-- INCLUDE overall_header.html -->
+
+<a name="maincontent"></a>
+
+<!-- IF S_SELECT_USER -->
+	<h1>{L_TITLE_ADMIN}</h1>
+
+	<p>{L_TITLE_ADMIN_EXPLAIN}</p>
+
+	<form id="select_user" method="post" action="{U_ACTION}">
+
+	<fieldset>
+		<legend>{L_SELECT_USER}</legend>
+	<dl>
+		<dt><label for="username">{L_FIND_USERNAME}:</label></dt>
+		<dd><input class="text medium" type="text" id="username" name="username" /></dd>
+		<dd>[ <a href="{U_FIND_USERNAME}" onclick="find_username(this.href); return false;">{L_FIND_USERNAME}</a> ]</dd>
+		<dd class="full" style="text-align: left;"><label><input type="checkbox" class="radio" id="anonymous" name="u" value="{ANONYMOUS_USER_ID}" /> {L_SELECT_ANONYMOUS}</label></dd>
+	</dl>
+
+	<p class="quick">
+		<input type="submit" name="submituser" value="{L_SUBMIT}" class="button1" />
+	</p>
+	</fieldset>
+
+	</form>
+<!-- ELSE -->
+
+	<a href="{U_BACK}" style="float: {S_CONTENT_FLOW_END};">&laquo; {L_BACK}</a>
+
+	<h1>{L_TITLE_ADMIN} :: {MANAGED_USERNAME}</h1>
+
+	<p>{L_TITLE_ADMIN_EXPLAIN}</p>
+
+	<!-- IF S_ERROR -->
+		<div class="errorbox">
+			<h3>{L_WARNING}</h3>
+			<p>{ERROR_MSG}</p>
+		</div>
+	<!-- ENDIF -->
+
+	<form id="user_prefs" method="post" action="{U_ACTION}">
+	<fieldset>
+		<legend>{L_ACP_USER_RANK}</legend>
+		<dl>
+		<dt><label for="user_rank">{L_USER_RANK}:</label></dt>
+		<dd><select name="user_rank" id="user_rank">{S_RANK_OPTIONS}</select></dd>
+	</dl>
+	</fieldset>
+
+	<fieldset class="quick">
+		<input class="button1" type="submit" name="update" value="{L_SUBMIT}" />
+		{S_FORM_TOKEN}
+	</fieldset>
+	</form>
+<!-- ENDIF -->
+<!-- INCLUDE overall_footer.html -->
