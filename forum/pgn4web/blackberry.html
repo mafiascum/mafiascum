@@ -1,0 +1,156 @@
+<html>
+
+<!--
+  pgn4web javascript chessboard
+  copyright (C) 2009, 2012 Paolo Casaschi
+  see README file and http://pgn4web.casaschi.net
+  for credits, license and more details
+-->
+
+<head>
+
+<title>chess games</title>
+
+<link href="blackberry.css" type="text/css" rel="stylesheet" />
+
+<link rel="shortcut icon" href="pawn.ico" />
+
+<script src="pgn4web.js" type="text/javascript"></script>
+<script type="text/javascript">
+
+   thisRegExp = /(&|\?)(help|h)(&|$)/i;
+   if (window.location.search.match(thisRegExp) !== null) {
+       alert("pgn4web blackberry.html parameters" + "\n" +
+             " - pgnFile = filename.pgn" + "\n" +
+             " - initialGame = 'first', 'last', 'random' or the game number or a search string (default first)" +
+             " - initialHalfmove = 'start', 'end', 'random', 'comment', 'variation' or the halfmove number (default start)" +
+             " - refreshMinutes =  refresh interval in minutes, decimals allowed (default 0 = no live refresh)" +
+             " - refreshDemo = if true sets live demo mode (default false)" +
+             " - help");
+   }
+   pgnFilename = "";
+   thisRegExp = /(&|\?)(pgnFile|pf)=([^&]*)(&|$)/i;
+   if (window.location.search.match(thisRegExp) !== null) {
+       pgnFilename = unescape(window.location.search.match(thisRegExp)[3]);
+   } else {
+       // accepts pgnData as alias for pgnFile for consistency with board.html
+       thisRegExp = /(&|\?)(pgnData|pd)=([^&]*)(&|$)/i;
+       if (window.location.search.match(thisRegExp) !== null) {
+           pgnFilename = unescape(window.location.search.match(thisRegExp)[3]);
+       }
+   }
+   if (pgnFilename !== "") {
+       SetPgnUrl(pgnFilename); // if set, this has precedence over the inline PGN in the HTML file
+   }
+
+   ini_Game = null;
+   thisRegExp = /(&|\?)(initialGame|ig)=([^&]*)(&|$)/i;
+   if (window.location.search.match(thisRegExp) !== null) {
+       ini_Game = unescape(window.location.search.match(thisRegExp)[3]);
+   }
+
+   ini_Halfmove = null;
+   thisRegExp = /(&|\?)(initialHalfmove|ih)=([^&]*)(&|$)/i;
+   if (window.location.search.match(thisRegExp) !== null) {
+       ini_Halfmove = unescape(window.location.search.match(thisRegExp)[3]);
+   }
+
+   thisRegExp = /(&|\?)(demo|d|refreshDemo|rd)=([^&]*)(&|$)/i;
+   if (window.location.search.match(thisRegExp) !== null) {
+       demo_Flag = alert_Flag = ((window.location.search.match(thisRegExp) == "true") ||
+           (window.location.search.match(thisRegExp) == "t"));
+   } else { demo_Flag = alert_Flag = false; }
+
+   refresh_Minutes = null;
+   thisRegExp = /(&|\?)(refreshMinutes|rm)=([^&]*)(&|$)/i;
+   if (window.location.search.match(thisRegExp) !== null) {
+       refresh_Minutes = unescape(window.location.search.match(thisRegExp)[3]);
+       if (ini_Halfmove === null) { ini_Halfmove = "end"; }
+       if (ini_Game === null) { ini_Game = '\\[\\s*Result\\s*"\\*"\\s*\\]'; }
+   }
+
+   SetImagePath("alpha/35"); // use "" path if images are in the same folder as this javascript file
+   SetImageType("png");
+   SetHighlightOption(true);
+   SetGameSelectorOptions(" ...", true, 0, 0, 0, 11, 11, 0, 10); // (head, num, chEvent, chSite, chRound, chWhite, chBlack, chResult, chDate);
+   SetCommentsIntoMoveText(false);
+   SetCommentsOnSeparateLines(false);
+   SetAutoplayDelay(2000); // milliseconds
+   SetAutostartAutoplay(false);
+   SetAutoplayNextGame(false);
+   if (ini_Game === null) { ini_Game = 1; }
+   SetInitialGame(ini_Game);
+   SetInitialVariation(0);
+   if (ini_Halfmove === null) { ini_Halfmove = 0; }
+   SetInitialHalfmove(ini_Halfmove, true);
+   SetShortcutKeysEnabled(true);
+   if (refresh_Minutes) { SetLiveBroadcast(refresh_Minutes, alert_Flag, demo_Flag, false); }
+
+function customFunctionOnPgnGameLoad() {
+   if (pgnFilename !== "") {
+      pgnTitle = pgnFilename + " #" + (currentGame+1);
+   } else {
+      pgnTitle = "no PGN file loaded";
+   }
+   document.title = pgnTitle;
+   var maxLen = 13;
+   document.getElementById("GameDate").innerHTML = document.getElementById("GameDate").innerHTML.substr(0, maxLen);
+   document.getElementById("GameSite").innerHTML = document.getElementById("GameSite").innerHTML.substr(0, maxLen);
+   document.getElementById("GameEvent").innerHTML = document.getElementById("GameEvent").innerHTML.substr(0, maxLen);
+   document.getElementById("GameRound").innerHTML = document.getElementById("GameRound").innerHTML.substr(0, maxLen);
+   document.getElementById("GameWhite").innerHTML = document.getElementById("GameWhite").innerHTML.substr(0, maxLen);
+   document.getElementById("GameBlack").innerHTML = document.getElementById("GameBlack").innerHTML.substr(0, maxLen);
+   document.getElementById("GameResult").innerHTML = document.getElementById("GameResult").innerHTML.substr(0, maxLen);
+}
+
+function customFunctionOnMove() {
+   document.getElementById("GameResult").style.visibility =
+       (gameFEN[currentGame] && (CurrentPly == StartPly) && (PlyNumber > 0)) ? "hidden" : "visible";
+   document.getElementById("GameSideToMoveString").style.visibility =
+       (gameFEN[currentGame] && (CurrentPly == StartPly)) ? "visible" : "hidden";
+}
+
+</script>
+
+</head>
+
+<body>
+
+<!-- paste your PGN below and make sure you dont specify an external source with SetPgnUrl() -->
+<form style="display: none;"><textarea style="display: none;" id="pgnText">
+
+</textarea></form>
+<!-- paste your PGN above and make sure you dont specify an external source with SetPgnUrl() -->
+
+
+<table width="480" height="333" cellspacing="0" cellpadding="0" border="0"><tr><td width="328">
+
+<div id="GameBoard"></div>
+
+</td><td width="152" valign="top">
+
+<div style="padding-left: 10px;">
+<div class="headerItem">&nbsp;</div>
+<div class="headerItem" id="GameSelector">&nbsp;</div>
+<div class="headerItem">&nbsp;</div>
+<div class="headerItem">&nbsp;</div>
+<div class="headerItem" id="GameDate">&nbsp;</div>
+<div class="headerItem" id="GameSite">&nbsp;</div>
+<div class="headerItem" id="GameEvent">&nbsp;</div>
+<div class="headerItem" id="GameRound">&nbsp;</div>
+<div class="headerItem">&nbsp;</div>
+<div class="headerItem" id="GameWhiteClock">&nbsp;</div>
+<div class="headerItem" id="GameWhite">&nbsp;</div>
+<div class="headerItem" id="GameBlack">&nbsp;</div>
+<div class="headerItem" id="GameBlackClock">&nbsp;</div>
+<div class="headerItem">&nbsp;</div>
+<div class="headerItem" id="GameResult">&nbsp;</div>
+<div class="headerItem" style="visibility: hidden;" id="GameSideToMoveString"><span id="GameSideToMove"></span> to move</div>
+</div>
+
+</td></tr></table>
+
+
+</body>
+
+</html>

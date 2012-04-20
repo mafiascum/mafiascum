@@ -1,0 +1,114 @@
+<!-- IF S_IN_SEARCH_POPUP -->
+<!-- You should retain this javascript in your own template! -->
+<script type="text/javascript">
+// <![CDATA[
+function insert_user(user)
+{
+	opener.document.forms['{S_FORM_NAME}'].{S_FIELD_NAME}.value = ( opener.document.forms['{S_FORM_NAME}'].{S_FIELD_NAME}.value.length && opener.document.forms['{S_FORM_NAME}'].{S_FIELD_NAME}.type == "textarea" ) ? opener.document.forms['{S_FORM_NAME}'].{S_FIELD_NAME}.value + "\n" + user : user;
+}
+
+function insert_marked(users)
+{
+	if (typeof(users.length) == "undefined")
+	{
+		if (users.checked)
+		{
+			insert_user(users.value);
+		}
+	}
+	else if (users.length > 0)
+	{
+		for (i = 0; i < users.length; i++)
+		{
+			if (users[i].checked)
+			{
+				insert_user(users[i].value);
+			}
+		}
+	}
+
+	self.close();
+}
+
+function insert_single(user)
+{
+	opener.document.forms['{S_FORM_NAME}'].{S_FIELD_NAME}.value = user;
+	self.close();
+}
+// ]]>
+</script>
+<script type="text/javascript" src="{T_TEMPLATE_PATH}/forum_fn.js"></script>
+<!-- ENDIF -->
+<div id="forum_title_frame">
+	<h2>{L_FIND_USERNAME}</h2>
+</div>
+<form method="post" action="{S_MODE_ACTION}" id="search_memberlist">
+<div class="panel">
+
+	<p>{L_FIND_USERNAME_EXPLAIN}</p>
+
+	<fieldset class="fields1 column1">
+	<div data-role="fieldcontain" class="ui-hide-label">
+		<label for="username">{L_USERNAME}</label>
+		<input placeholder="{L_USERNAME}" type="text" name="username" id="username" value="{USERNAME}" class="inputbox" />
+	</div>
+<!-- IF S_EMAIL_SEARCH_ALLOWED -->
+	<div data-role="fieldcontain" class="ui-hide-label">
+		<label for="email">{L_EMAIL}</label>
+		<input placeholder="{L_EMAIL}" type="text" name="email" id="email" value="{EMAIL}" class="inputbox" />
+	</div>
+<!-- ENDIF -->
+	<div data-role="fieldcontain" class="ui-hide-label">
+		<label for="icq">{L_ICQ}</label>
+		<input placeholder="{L_ICQ}" type="text" name="icq" id="icq" value="{ICQ}" class="inputbox" />
+	</div>
+	<div data-role="fieldcontain" class="ui-hide-label">
+		<label for="aim">{L_AIM}</label>
+		<input placeholder="{L_AIM}" type="text" name="aim" id="aim" value="{AIM}" class="inputbox" />
+	</div>
+	<div data-role="fieldcontain" class="ui-hide-label">
+		<label for="yahoo">{L_YIM}</label>
+		<input placeholder="{L_YIM}" type="text" name="yahoo" id="yahoo" value="{YAHOO}" class="inputbox" />
+	</div>
+	<div data-role="fieldcontain" class="ui-hide-label">
+		<label for="msn">{L_MSNM}</label>
+		<input placeholder="{L_MSNM}" type="text" name="msn" id="msn" value="{MSNM}" class="inputbox" />
+	</div>
+	</fieldset>
+
+	<fieldset class="fields1 column2">
+		<label for="joined">{L_JOINED}:</label>
+		<select name="joined_select">{S_JOINED_TIME_OPTIONS}</select> 
+		<input class="inputbox medium" type="text" name="joined" id="joined" value="{JOINED}" />
+<!-- IF S_VIEWONLINE -->
+	<label for="active">{L_LAST_ACTIVE}:</label>
+	<select name="active_select">{S_ACTIVE_TIME_OPTIONS}</select>
+	<input class="inputbox medium" type="text" name="active" id="active" value="{ACTIVE}" />
+<!-- ENDIF -->
+	<label for="count">{L_POSTS}:</label>
+	<select name="count_select">{S_COUNT_OPTIONS}</select> 
+	<input class="inputbox medium" type="text" name="count" id="count" value="{COUNT}" />
+<!-- IF S_IP_SEARCH_ALLOWED -->
+	<div data-role="fieldcontain" class="ui-hide-label">
+		<label for="ip">{L_POST_IP}</label>
+		<input placeholder="{L_POST_IP}" class="inputbox medium" type="text" name="ip" id="ip" value="{IP}" />
+	</div>
+<!-- ENDIF -->
+		<label for="search_group_id">{L_GROUP}:</label></dt>
+		<select name="search_group_id" id="search_group_id">{S_GROUP_SELECT}</select>
+		<label for="sk" class="label3">{L_SORT_BY}:</label>
+		<select name="sk" id="sk">{S_SORT_OPTIONS}</select> <select name="sd">{S_ORDER_SELECT}</select>
+	</fieldset>
+
+	<div class="clear"></div>
+
+	<hr />
+
+	<fieldset class="submit-buttons">
+		<input type="reset" value="{L_RESET}" name="reset" class="button2" />
+		<input type="submit" name="submit" value="{L_SEARCH}" class="button1" />
+		{S_FORM_TOKEN}
+	</fieldset>
+</div>
+
+</form>

@@ -1,0 +1,139 @@
+<style type="text/css">
+
+div#gameInfoMaster {
+
+	font-size: 13px;
+	margin-bottom: 30px;
+}
+
+div.gameFieldNameLabel {
+
+	width: 150px;
+	display: inline-block;
+}
+
+span.gameFieldValue {
+
+	font-weight: bold;
+}
+
+#gameInfoLeft {
+
+	float: left;
+}
+
+#gameInfoRight {
+
+	float: left;
+	margin-left: 50px;
+}
+
+#gameInfoModeratorTable {
+
+	width: 300px;
+	border: 1px solid #000000;
+	border-bottom: none;
+	float: left;
+	background-image: url("./styles/mafsepia/theme/images/bg_header.png");
+}
+
+.gameInfoModeratorRow {
+
+	width: 300px;
+	float: left;
+	border-bottom: 1px solid #000000;
+}
+
+.gameInfoModeratorUsername {
+	width: 200px;
+	float: left;
+	text-align: center;
+	border-right: 1px solid #000000;
+}
+
+.gameInfoModeratorType {
+	width: 99px;
+	float: left;
+	text-align: center;
+}
+
+.gameInfoModeratorHeader {
+	font-weight: bold;
+	border: none;
+	color: #EFEDE8;
+}
+
+#gameInfoPlayerTable {
+
+	width: 825px;
+	border: 1px solid #000000;
+	border-bottom: none;
+	float: left;
+	clear: left;
+	margin-top: 15px;
+	background-image: url("./styles/mafsepia/theme/images/bg_header.png");
+}
+
+.gameInfoPlayerRow {
+
+	width: 825px;
+	float: left;
+	border-bottom: 1px solid #000000;
+}
+
+.gameInfoPlayerUsername {
+	width: 200px;
+	float: left;
+	text-align: center;
+	border-right: 1px solid #000000;
+}
+
+.gameInfoPlayerSlotNumber {
+	width: 99px;
+	float: left;
+	text-align: center;
+	border-right: 1px solid #000000;
+}
+
+.gameInfoPlayerAlignment {
+
+	width: 99px;
+	float: left;
+	text-align: center;
+	border-right: 1px solid #000000;
+}
+
+.gameInfoPlayerFaction {
+
+	width: 149px;
+	float: left;
+	text-align: center;
+	border-right: 1px solid #000000;
+}
+
+.gameInfoPlayerRole {
+
+	width: 124px;
+	float: left;
+	text-align: center;
+	border-right: 1px solid #000000;
+}
+
+.gameInfoPlayerStartDate {
+	width: 149px;
+	float: left;
+	text-align: center;
+}
+
+
+
+.gameInfoPlayerHeader {
+	font-weight: bold;
+	border: none;
+	color: #EFEDE8;
+}
+.gamePanel{
+	padding: 5px 10px;
+	margin-bottom: 35px;
+}
+</style>

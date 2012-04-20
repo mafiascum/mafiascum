@@ -1,0 +1,19 @@
+/*  phpBB 3.0 Style Sheet
+    --------------------------------------------------------------
+	Style name:		mafTigers
+	Based on style:	proSilver (this is the default phpBB 3 style)
+	Original author:	subBlue ( http://www.subBlue.com/ )
+	Modified by:		MafiaScum.net
+	
+	Copyright 2006 phpBB Group ( http://www.phpbb.com/ ), modifications 2011 MafiaScum.net
+    --------------------------------------------------------------
+*/
+
+@import url("common.css");
+@import url("links.css");
+@import url("content.css");
+@import url("buttons.css");
+@import url("cp.css");
+@import url("forms.css");
+@import url("tweaks.css");
+@import url("colours.css");

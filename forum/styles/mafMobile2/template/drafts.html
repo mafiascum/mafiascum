@@ -1,0 +1,23 @@
+
+
+<!-- IF .draftrow -->
+<div class="panel">
+
+	<h3>{L_LOAD_DRAFT}</h3>
+	<p>{L_LOAD_DRAFT_EXPLAIN}</p>
+
+</div>
+
+<div class="panel">
+
+	<ul data-role="listview" data-split-theme="d" data-filter="true" data-inset="true">
+
+	<!-- BEGIN draftrow -->
+	<li <!-- IF draftrow.S_ROW_COUNT is even --> data-theme="c"<!-- ELSE --> data-theme="d"<!-- ENDIF -->>
+				<a href="{draftrow.U_INSERT}" title="{L_LOAD_DRAFT}" class="topictitle">{draftrow.DRAFT_SUBJECT}</a>
+	</li>
+	<!-- END draftrow -->
+
+	</ul>
+</div>
+<!-- ENDIF -->

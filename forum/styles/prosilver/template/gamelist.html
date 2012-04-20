@@ -1,0 +1,139 @@
+<!-- INCLUDE overall_header.html -->
+<!-- IF U_MCP --><p>[&nbsp;<a href="{U_MCP}">{L_MCP}</a>&nbsp;]</p><!-- ENDIF -->
+
+<style type="text/css">
+
+#gameListMaster {
+
+	margin-left: auto;
+	margin-right: auto;
+	width: 950px;
+}
+
+#gameListTable {
+
+	font-size: 13px;
+	width: 950px;
+	border: 1px solid #000000;
+	background-image: url("./styles/mafsepia/theme/images/bg_header.png");
+}
+
+.gameListRow {
+
+	width: 100%;
+}
+
+.gameListHeaderCell {
+
+	font-weight: bold;
+	text-align: center;
+	color: #EFEDE8;
+	border: none;
+}
+
+.gameListIdCell {
+
+	width: 50px;
+	display: inline-block;
+	border-right: 1px solid #000000;
+	padding-bottom: 5px;
+	padding-top: 5px;
+	margin-left: 5px;
+}
+
+.gameListGameNameCell {
+
+	width: 400px;
+	display: inline-block;
+	border-right: 1px solid #000000;
+	padding-bottom: 5px;
+	padding-top: 5px;
+}
+
+.gameListStatusCell {
+
+	width: 75px;
+	display: inline-block;
+	border-right: 1px solid #000000;
+	padding-bottom: 5px;
+	padding-top: 5px;
+}
+
+.gameListTypeCell {
+
+	width: 150px;
+	display: inline-block;
+	border-right: 1px solid #000000;
+	padding-bottom: 5px;
+	padding-top: 5px;
+}
+
+.gameListStartDateCell {
+
+	width: 100px;
+	display: inline-block;
+	border-right: 1px solid #000000;
+	padding-bottom: 5px;
+	padding-top: 5px;
+}
+
+.gameListEndDateCell {
+
+	width: 100px;
+	display: inline-block;
+	padding-bottom: 5px;
+	padding-top: 5px;
+}
+
+#createGamePanel {
+
+	margin-top: 5px;
+}
+
+#gameName {
+
+	width: 300px;
+}
+
+</style>
+
+<div id="gameListMaster">
+ <div id="gameListTable">
+
+  <div class="gameListRow">
+   <span class="gameListIdCell gameListHeaderCell">ID</span>
+   <span class="gameListGameNameCell gameListHeaderCell">Game Name</span>
+   <span class="gameListTypeCell gameListHeaderCell">Type</span>
+   <span class="gameListStatusCell gameListHeaderCell">Status</span>
+   <span class="gameListStartDateCell gameListHeaderCell">Start Date</span>
+   <span class="gameListEndDateCell gameListHeaderCell">End Date</span>
+  </div>
+
+<!-- BEGIN gamerow -->
+  <div class="gameListRow bg1">
+   <span class="gameListIdCell">{gamerow.GAME_ID}</span>
+   <span class="gameListGameNameCell">{gamerow.GAME_URL}</span>
+   <span class="gameListTypeCell">{gamerow.GAME_TYPE}</span>
+   <span class="gameListStatusCell">{gamerow.GAME_STATUS}</span>
+   <span class="gameListStartDateCell">{gamerow.STARTED_DATE}</span>
+   <span class="gameListEndDateCell">{gamerow.COMPLETED_DATE}</span>
+  </div>
+<!-- END gamerow -->
+ </div>
+ <div id="createGamePanel">
+  <form method="post" id="createGameForm" action="{CREATE_GAME_ACTION}">
+   <input type="hidden" name="action" value="create" />
+   <input type="text" id="gameName" name="gameName" class="inputbox" value="<Enter Game Name>" onfocus="if(this.value == this.defaultValue) this.value = ''" onBlur="if(this.value == '') this.value = this.defaultValue"></input>
+   <input type="submit" id="gameCreateButton" name ="gameCreateButton" class="button1" value="Create Game"></input>
+  </form>
+ </div>
+</div>
+
+<!-- INCLUDE jumpbox.html -->
+
+<!-- IF S_DISPLAY_POST_INFO -->
+	<h3>{L_FORUM_PERMISSIONS}</h3>
+	<p><!-- BEGIN rules -->{rules.RULE}<br /><!-- END rules --></p>
+<!-- ENDIF -->
+
+<!-- INCLUDE overall_footer.html -->

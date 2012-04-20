@@ -1,0 +1,90 @@
+<!-- INCLUDE overall_header.html -->
+<!-- IF U_MCP --><p>[&nbsp;<a href="{U_MCP}">{L_MCP}</a>&nbsp;]</p><!-- ENDIF -->
+<h2><a href="{U_VIEW_TOPIC}">{TOPIC_TITLE}</a></h2>
+
+    <div id="pagecontent">
+
+       <table width="100%" cellspacing="1">
+       <tr>
+          <td align="{S_CONTENT_FLOW_BEGIN}" valign="middle" nowrap="nowrap">
+       </tr>
+       </table>
+
+            <form action="{S_POST_ACTION}" method="post">
+       <table class="tablebg" width="100%" cellspacing="1">
+          <tr>
+             <th>{L_ACTIVITY_OVERVIEW_TITLE}</th>
+          </tr>
+                    <tr class="row1">
+             <td width="100%" height="25">
+                <table width="100%" cellspacing="0">
+                <tr>
+                   <td class="gensmall" width="100%">
+                                                <div style="margin-left:auto;margin-right:auto;padding:3px;font-size:12px;border:1px solid grey;width:670px;font-weight:bold;">
+                                                    <span style="display:inline-block;text-align:center;width:25px;">
+                                                        {L_PM}
+                                                    </span>
+                                                    <span style="display:inline-block;text-align:center;width:190px;">
+							<a href="{USERNAME_SORT_URL}">
+								{L_USERNAME}
+							</a>
+                                                    </span>
+                                                    <span style="display:inline-block;text-align:center;width:160px;">
+							<a href="{POST_TIME_SORT_URL}">
+								{L_LAST_POST_TIME}
+							</a>
+                                                    </span>
+                                                    <span style="display:inline-block;text-align:center;width:126px;">
+							<a href="{POST_TIME_SORT_URL}">
+								{L_TIME_SINCE_POSTING}
+							</a>
+                                                    </span>
+                                                    <span style="display:inline-block;text-align:center;width:126px;">
+							<a href="{POST_COUNT_SORT_URL}">
+								Post Count
+							</a>
+                                                    </span>
+                                                </div>
+                                                <!-- BEGIN activity_row -->
+                                                    <div style="margin-left:auto;margin-right:auto;font-size:12px;padding:3px;border-bottom:1px solid grey;border-right:1px solid grey;border-left:1px solid grey;width:670px;">
+                                                        <span style="display:inline-block;margin-left:5px;text-align:left;width:35px;">
+                                                            <input type="checkbox" class="radio" name="{activity_row.U_PM}" value="bcc"/>
+                                                        </span>
+                                                        <span style="display:inline-block;text-align:left;width:200px;">
+                                                            {activity_row.USER_URL}
+                                                        </span>
+                                                        <span style="display:inline-block;text-align:left;width:160px;">
+                                                            {activity_row.LAST_POST_TIME}
+                                                        </span>
+                                                        <span style="display:inline-block;text-align:left;width:126px;">
+                                                            {activity_row.IDLE_TIME}
+                                                        </span>
+                                                        <span style="display:inline-block;text-align:center;width:126px;">
+                                                            <a href="{U_VIEW_TOPIC}&user_select={activity_row.USER_ID}">{activity_row.POST_COUNT}</a>
+                                                        </span>
+                                                    </div>
+                                                <!-- END activity_row -->
+                                            </td>
+                </tr>
+                </table>
+                                <div style="margin-left:auto;margin-right:auto;width:50px;margin-top:5px;margin-bottom:5px;">
+                                    <input class="btnmain" type="submit" value="PM Selected"/>
+                                </div>
+             </td>
+          </tr>
+            </table>
+            </form>
+    </div>
+    <div id="pagefooter"></div>
+
+    <br clear="all" />
+    <!-- IF S_QUICK_REPLY -->
+    <!-- INCLUDE quickreply_editor.html -->
+    <!-- ENDIF -->
+
+<!-- IF S_DISPLAY_ONLINE_LIST -->
+	<h3><!-- IF U_VIEWONLINE --><a href="{U_VIEWONLINE}">{L_WHO_IS_ONLINE}</a><!-- ELSE -->{L_WHO_IS_ONLINE}<!-- ENDIF --></h3>
+	<p>{LOGGED_IN_USER_LIST}</p>
+<!-- ENDIF -->
+
+<!-- INCLUDE overall_footer.html -->

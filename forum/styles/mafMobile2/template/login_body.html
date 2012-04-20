@@ -1,0 +1,60 @@
+<!-- INCLUDE overall_header.html -->
+
+<script type="text/javascript">
+// <![CDATA[
+	onload_functions.push('document.getElementById("{USERNAME_CREDENTIAL}").focus();');
+// ]]>
+</script>
+
+<form action="{S_LOGIN_ACTION}" method="post" id="login">
+<div class="panel">
+	<div class="content">
+		<h2><!-- IF LOGIN_EXPLAIN -->{LOGIN_EXPLAIN}<!-- ELSE -->{L_LOGIN}<!-- ENDIF --></h2>
+
+		<fieldset <!-- IF not S_CONFIRM_CODE -->class="fields1"<!-- ELSE -->class="fields2"<!-- ENDIF -->>
+		<!-- IF LOGIN_ERROR --><div class="error">{LOGIN_ERROR}</div><!-- ENDIF -->
+			<div data-role="fieldcontain" class="ui-hide-label">
+			<label for="{USERNAME_CREDENTIAL}">{L_USERNAME}:</label>
+			<input placeholder="{L_USERNAME}" type="text" tabindex="1" name="{USERNAME_CREDENTIAL}" id="{USERNAME_CREDENTIAL}" size="25" value="{USERNAME}" class="inputbox autowidth" />
+			</div>
+			<div data-role="fieldcontain" class="ui-hide-label">
+				<label for="{PASSWORD_CREDENTIAL}">{L_PASSWORD}:</label>
+				<input placeholder="{L_PASSWORD}" type="password" tabindex="2" id="{PASSWORD_CREDENTIAL}" name="{PASSWORD_CREDENTIAL}" size="25" class="inputbox autowidth" />
+				</div>
+			<!-- IF S_DISPLAY_FULL_LOGIN and (U_SEND_PASSWORD or U_RESEND_ACTIVATION) -->
+				<!-- IF U_SEND_PASSWORD --><a data-role="button" href="{U_SEND_PASSWORD}">{L_FORGOT_PASS}</a><!-- ENDIF -->
+				<!-- IF U_RESEND_ACTIVATION --><a data-role="button" href="{U_RESEND_ACTIVATION}">{L_RESEND_ACTIVATION}</a><!-- ENDIF -->
+			<!-- ENDIF -->
+		<!-- IF CAPTCHA_TEMPLATE and S_CONFIRM_CODE -->
+			<!-- DEFINE $CAPTCHA_TAB_INDEX = 3 -->
+			<!-- INCLUDE {CAPTCHA_TEMPLATE} -->
+		<!-- ENDIF -->
+		<!-- IF S_DISPLAY_FULL_LOGIN -->
+			<!-- IF S_AUTOLOGIN_ENABLED --><label for="autologin"><input type="checkbox" name="autologin" id="autologin" tabindex="4" /> {L_LOG_ME_IN}</label><!-- ENDIF -->
+			<label for="viewonline"><input type="checkbox" name="viewonline" id="viewonline" tabindex="5" /> {L_HIDE_ME}</label>
+		<!-- ENDIF -->
+
+		{S_LOGIN_REDIRECT}
+
+			{S_HIDDEN_FIELDS}<input type="submit" name="login" tabindex="6" value="{L_LOGIN}" class="button1" />
+		</fieldset>
+	</div>
+</div>
+
+
+<!-- IF not S_ADMIN_AUTH and S_REGISTER_ENABLED -->
+	<div class="panel">
+		<div class="content">
+			<h3>{L_REGISTER}</h3>
+			<p>{L_LOGIN_INFO}</p>
+			<a data-role="button" href="{U_TERMS_USE}">{L_TERMS_USE}</a>
+			<a data-role="button" href="{U_PRIVACY}">{L_PRIVACY}</a>
+			<hr class="dashed" />
+			<a data-role="button" href="{U_REGISTER}" class="button2">{L_REGISTER}</a>
+		</div>
+	</div>
+<!-- ENDIF -->
+
+</form>
+
+<!-- INCLUDE overall_footer.html -->

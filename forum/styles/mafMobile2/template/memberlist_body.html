@@ -1,0 +1,90 @@
+
+<!-- IF S_SEARCH_USER -->
+	<!-- INCLUDE overall_header.html -->	
+	<!-- INCLUDE memberlist_search.html -->
+	<form method="post" action="{S_MODE_ACTION}">
+
+<!-- ELSE -->
+	<!-- INCLUDE overall_header.html -->
+	<form method="post" action="{S_MODE_ACTION}">
+
+<!-- ENDIF -->
+
+	<!-- IF S_SHOW_GROUP -->
+	<div id="forum_title_frame">
+		<h2 <!-- IF GROUP_COLOR --> style="color:#{GROUP_COLOR};"<!-- ENDIF --> id="forum_title">{GROUP_NAME}</h2>
+		<h4>{PAGE_NUMBER}</h4>
+	</div>
+	<div class="buttonpanel">
+		<div class="pagination">
+		<div data-role="controlgroup" data-type="horizontal">
+			<!-- IF PREVIOUS_PAGE --><a href="{PREVIOUS_PAGE}" data-direction="reverse" data-role="button" data-icon="arrow-l"  data-inline="true" title="Previous Page" class="grouped_icon_button">Previous</a><!-- ENDIF -->
+			<!-- IF NEXT_PAGE or PREVIOUS_PAGE --><a href="#jumpPage" data-role="button" data-inline="true" data-rel="dialog" title="{L_JUMP_TO_PAGE}">Jump</a><!-- ENDIF -->
+			<!-- IF NEXT_PAGE --><a href="{NEXT_PAGE}" data-role="button" data-iconpos="right" data-icon="arrow-r"  data-inline="true" title="Next Page" class="grouped_icon_button">Next</a><!-- ENDIF -->
+		</div>
+		</div>
+		</div>
+	<!-- ELSE -->
+	<div id="forum_title_frame">
+		<h2 id="forum_title">{PAGE_TITLE}<!-- IF SEARCH_WORDS -->: <a href="{U_SEARCH_WORDS}">{SEARCH_WORDS}</a><!-- ENDIF --></h2>
+		<h4>{PAGE_NUMBER}</h4>
+	</div>
+		<div class="buttonpanel">
+				<!-- IF U_FIND_MEMBER and not S_SEARCH_USER --><a data-inline="true" data-role="button" class="icon-search" href="{U_FIND_MEMBER}">Member</a>  <!-- ELSEIF S_SEARCH_USER and U_HIDE_FIND_MEMBER and not S_IN_SEARCH_POPUP --><a data-role="button" data-inline="true" href="{U_HIDE_FIND_MEMBER}">Hide</a>  <!-- ENDIF -->
+		<div class="pagination">
+		<div data-role="controlgroup" data-type="horizontal">
+			<!-- IF PREVIOUS_PAGE --><a href="{PREVIOUS_PAGE}" data-direction="reverse" data-role="button" data-icon="arrow-l"  data-inline="true" title="Previous Page" class="grouped_icon_button">Previous</a><!-- ENDIF -->
+			<!-- IF NEXT_PAGE or PREVIOUS_PAGE --><a href="#jumpPage" data-role="button" data-inline="true" data-rel="dialog" title="{L_JUMP_TO_PAGE}">Jump</a><!-- ENDIF -->
+			<!-- IF NEXT_PAGE --><a href="{NEXT_PAGE}" data-role="button" data-iconpos="right" data-icon="arrow-r"  data-inline="true" title="Next Page" class="grouped_icon_button">Next</a><!-- ENDIF -->
+		</div>
+		</div>
+		</div>
+	<!-- ENDIF -->
+				<div class="panel">
+				<ul data-role="listview" data-split-theme="d" data-filter="true" data-inset="true">
+		<!-- BEGIN memberrow -->
+			<!-- IF S_SHOW_GROUP -->
+				<!-- IF not memberrow.S_GROUP_LEADER and not $S_MEMBER_HEADER -->
+
+					<!-- DEFINE $S_MEMBER_HEADER = 1 -->
+				<!-- ENDIF -->
+			<!-- ENDIF -->
+
+		<li <!-- IF  memberrow.S_ROW_COUNT is even --> data-theme="c"<!-- ELSE --> data-theme="d"<!-- ENDIF -->>
+			{memberrow.USERNAME_FULL}
+		</li>
+		<!-- BEGINELSE -->
+			<p>{L_NO_MEMBERS}</p>
+		<!-- END memberrow -->
+			</ul>
+</div>
+
+
+</form>
+	<!-- IF S_SHOW_GROUP -->
+		<div class="buttonpanel">
+		<div class="pagination">
+		<div data-role="controlgroup" data-type="horizontal">
+			<!-- IF PREVIOUS_PAGE --><a href="{PREVIOUS_PAGE}" data-direction="reverse" data-role="button" data-icon="arrow-l"  data-inline="true" title="Previous Page" class="grouped_icon_button">Previous</a><!-- ENDIF -->
+			<!-- IF NEXT_PAGE or PREVIOUS_PAGE --><a href="#jumpPage" data-role="button" data-inline="true" data-rel="dialog" title="{L_JUMP_TO_PAGE}">Jump</a><!-- ENDIF -->
+			<!-- IF NEXT_PAGE --><a href="{NEXT_PAGE}" data-role="button" data-iconpos="right" data-icon="arrow-r"  data-inline="true" title="Next Page" class="grouped_icon_button">Next</a><!-- ENDIF -->
+		</div>
+		</div>
+		</div>
+	<!-- ELSE -->
+		<div class="buttonpanel">
+				<!-- IF U_FIND_MEMBER and not S_SEARCH_USER --><a data-inline="true" data-role="button" class="icon-search" href="{U_FIND_MEMBER}">Member</a>  <!-- ELSEIF S_SEARCH_USER and U_HIDE_FIND_MEMBER and not S_IN_SEARCH_POPUP --><a data-role="button" data-inline="true" href="{U_HIDE_FIND_MEMBER}">Hide</a>  <!-- ENDIF -->
+		<div class="pagination">
+		<div data-role="controlgroup" data-type="horizontal">
+			<!-- IF PREVIOUS_PAGE --><a href="{PREVIOUS_PAGE}" data-direction="reverse" data-role="button" data-icon="arrow-l"  data-inline="true" title="Previous Page" class="grouped_icon_button">Previous</a><!-- ENDIF -->
+			<!-- IF NEXT_PAGE or PREVIOUS_PAGE --><a href="#jumpPage" data-role="button" data-inline="true" data-rel="dialog" title="{L_JUMP_TO_PAGE}">Jump</a><!-- ENDIF -->
+			<!-- IF NEXT_PAGE --><a href="{NEXT_PAGE}" data-role="button" data-iconpos="right" data-icon="arrow-r"  data-inline="true" title="Next Page" class="grouped_icon_button">Next</a><!-- ENDIF -->
+		</div>
+		</div>
+		</div>
+		<div class="clear"></div>
+	<!-- ENDIF -->
+	<div class="panel">
+	<!-- INCLUDE jumpbox.html -->
+	</div>
+	<!-- INCLUDE overall_footer.html -->

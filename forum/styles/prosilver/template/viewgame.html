@@ -1,0 +1,269 @@
+<!-- INCLUDE overall_header.html -->
+<!-- IF U_MCP --><p>[&nbsp;<a href="{U_MCP}">{L_MCP}</a>&nbsp;]</p><!-- ENDIF -->
+
+<style type="text/css">
+
+div#gameInfoMaster {
+
+	font-size: 13px;
+	margin-bottom: 30px;
+	float: left;
+}
+
+div.gameFieldNameLabel {
+
+	width: 150px;
+	height: 27px;
+	display: inline-block;
+}
+
+span.gameFieldValue {
+
+	font-weight: bold;
+}
+
+#gameInfoLeft {
+
+	float: left;
+	width: 300px;
+}
+
+#gameInfoRight {
+
+	float: left;
+	margin-left: 50px;
+}
+
+#gameInfoModeratorTable {
+
+	width: 300px;
+	border: 1px solid #000000;
+	border-bottom: none;
+	float: left;
+	background-image: url("./styles/mafsepia/theme/images/bg_header.png");
+}
+
+.gameInfoModeratorRow {
+
+	width: 300px;
+	float: left;
+	border-bottom: 1px solid #000000;
+}
+
+.gameInfoModeratorUsername {
+	width: 200px;
+	float: left;
+	text-align: center;
+	border-right: 1px solid #000000;
+}
+
+.gameInfoModeratorType {
+	width: 99px;
+	float: left;
+	text-align: center;
+}
+
+.gameInfoModeratorHeader {
+	font-weight: bold;
+	border: none;
+	color: #EFEDE8;
+}
+
+
+
+
+
+
+
+#gameInfoPlayerTable {
+
+	width: 825px;
+	border: 1px solid #000000;
+	border-bottom: none;
+	float: left;
+	clear: left;
+	margin-top: 15px;
+	background-image: url("./styles/mafsepia/theme/images/bg_header.png");
+}
+
+.gameInfoPlayerRow {
+
+	width: 825px;
+	float: left;
+	border-bottom: 1px solid #000000;
+}
+
+.gameInfoPlayerUsername {
+	width: 200px;
+	float: left;
+	text-align: center;
+	border-right: 1px solid #000000;
+}
+
+.gameInfoPlayerSlotNumber {
+	width: 99px;
+	float: left;
+	text-align: center;
+	border-right: 1px solid #000000;
+}
+
+.gameInfoPlayerAlignment {
+
+	width: 99px;
+	float: left;
+	text-align: center;
+	border-right: 1px solid #000000;
+}
+
+.gameInfoPlayerFaction {
+
+	width: 149px;
+	float: left;
+	text-align: center;
+	border-right: 1px solid #000000;
+}
+
+.gameInfoPlayerRole {
+
+	width: 124px;
+	float: left;
+	text-align: center;
+	border-right: 1px solid #000000;
+}
+
+.gameInfoPlayerStartDate {
+
+	width: 149px;
+	float: left;
+	text-align: center;
+}
+.gameInfoPlayerHeader {
+	font-weight: bold;
+	border: none;
+	color: #EFEDE8;
+}
+
+#gameInfoButtonRow {
+	margin-top: 7px;
+}
+
+input.gameInfoLabel {
+	width: 125px;
+	font-weight:bold;
+}
+
+.hidden {
+	display:none;
+}
+</style>
+
+<script type="text/javascript">
+$(document).ready(function() {
+	$("#editGameInfoButton").bind("click", function() {
+
+		$(".gameFieldValue").hide();
+		$("#gameInfoGameCreatedInputField").show();
+		$("#gameInfoGameStartedInputField").show();
+		$("#gameInfoGameCompletedInputField").show();
+		$("#gameInfoGameTypeInputField").show();
+		$("#gameInfoGameStatusInputField").show();
+	});
+});
+</script>
+
+
+
+<h2>{GAME_NAME}</h2>
+<h3>Description goes here!</h3>
+
+<div id="gameInfoMaster">
+
+ <div id="gameInfoLeft">
+
+  <div class="gameFieldNameLabel">ID</div> <span class="gameFieldValue">{GAME_ID}</span><br/>
+
+  <div class="gameFieldNameLabel">Created</div>
+   <input type="text" id="gameInfoGameCreatedInputField" name="gameInfoGameCreated" class="gameInfoLabel inputbox hidden" value="{CREATED_TIME}" />
+   <span id="gameInfoGameCreatedField" class="gameFieldValue">{CREATED_TIME}</span><br/>
+
+  <div class="gameFieldNameLabel">Started</div>
+   <input type="text" id="gameInfoGameStartedInputField" name="gameInfoGameStarted" class="gameInfoLabel inputbox hidden" value="{STARTED_TIME}" />
+   <span id="gameInfoGameStartedField" class="gameFieldValue">{STARTED_TIME}</span><br/>
+
+  <div class="gameFieldNameLabel">Completed</div>
+   <input type="text" id="gameInfoGameCompletedInputField" name="gameInfoGameCompleted" class="gameInfoLabel inputbox hidden" value="{COMPLETED_TIME}" />
+   <span id="gameInfoGameCompletedField" class="gameFieldValue">{COMPLETED_TIME}</span><br/>
+
+  <div class="gameFieldNameLabel">Type</div>
+   <select id="gameInfoGameTypeInputField" name="gameInfoGameType" class="gameInfoLabel hidden">
+    <option id="0">Large Normal</option>
+    <option id="1" selected>Large Theme</option>
+   </select>
+   <span id="gameInfoGameTypeField" class="gameFieldValue">{GAME_TYPE}</span><br/>
+
+  <div class="gameFieldNameLabel">Status</div>
+   <select id="gameInfoGameStatusInputField" name="gameInfoStatusType" class="gameInfoLabel hidden">
+    <option id="0">Pending</option>
+    <option id="1">Signups</option>
+    <option id="2">Ongoing</option>
+    <option id="3" selected>Completed</option>
+   </select>
+   <span id="gameInfoGameStatusField" class="gameFieldValue">{GAME_STATUS}</span><br/>
+
+  <div class="gameInfoButtonRow" id="gameInfoButtonRow">
+   <input type="button" class="button2" name="editGameInfoButton" id="editGameInfoButton" value="Edit Details" />
+  </div>
+ </div>
+
+ <div id="gameInfoRight">
+
+  <div id="gameInfoModeratorTable">
+
+   <div class="gameInfoModeratorRow">
+    <div class="gameInfoModeratorUsername gameInfoModeratorHeader">Moderator Name</div>
+    <div class="gameInfoModeratorType gameInfoModeratorHeader">Type</div>
+   </div>
+<!-- BEGIN moderator -->
+   <div class="gameInfoModeratorRow  bg1">
+    <div class="gameInfoModeratorUsername">{moderator.USER_URL}</div>
+    <div class="gameInfoModeratorType">{moderator.TYPE}</div>
+   </div>
+<!-- END moderator -->
+
+  </div>
+
+
+  <div id="gameInfoPlayerTable">
+
+   <div class="gameInfoPlayerRow">
+    <div class="gameInfoPlayerUsername gameInfoPlayerHeader">Player Name</div>
+    <div class="gameInfoPlayerSlotNumber gameInfoPlayerHeader">Slot #</div>
+    <div class="gameInfoPlayerAlignment gameInfoPlayerHeader">Alignment</div>
+    <div class="gameInfoPlayerFaction gameInfoPlayerHeader">Faction</div>
+    <div class="gameInfoPlayerRole gameInfoPlayerHeader">Role</div>
+    <div class="gameInfoPlayerStartDate gameInfoPlayerHeader">Start Date</div>
+   </div>
+
+<!-- BEGIN player -->
+   <div class="gameInfoPlayerRow bg1">
+    <div class="gameInfoPlayerUsername">{player.USER_URL}</div>
+    <div class="gameInfoPlayerSlotNumber">??</div>
+    <div class="gameInfoPlayerAlignment">{player.ALIGNMENT}</div>
+    <div class="gameInfoPlayerFaction">{player.FACTION}</div>
+    <div class="gameInfoPlayerRole">&nbsp;</div>
+    <div class="gameInfoPlayerStartDate">{player.FIRST_ACTIVE_TIME}</div>
+   </div>
+<!-- END player -->
+
+  </div>
+
+ </div>
+
+</div>
+
+<!-- IF S_DISPLAY_POST_INFO -->
+	<h3>{L_FORUM_PERMISSIONS}</h3>
+	<p><!-- BEGIN rules -->{rules.RULE}<br /><!-- END rules --></p>
+<!-- ENDIF -->
+
+<!-- INCLUDE overall_footer.html -->

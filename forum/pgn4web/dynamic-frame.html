@@ -1,0 +1,618 @@
+<html>
+
+<!--
+  pgn4web javascript chessboard
+  copyright (C) 2009, 2012 Paolo Casaschi
+  see README file and http://pgn4web.casaschi.net
+  for credits, license and more details
+-->
+
+<head>
+
+<title>chess games</title>
+
+<link rel="shortcut icon" href="pawn.ico" />
+
+<style type="text/css">
+
+</style>
+
+<style id="dynamicStyle" type="text/css"></style>
+
+<script src="pgn4web.js" type="text/javascript"></script>
+
+<script src="fide-lookup.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+SetHighlightOption(true);
+SetGameSelectorOptions("&middot;&middot;&middot;", false, 0, 0, 0, 15, 15, 3, 0); // (head, num, chEvent, chSite, chRound, chWhite, chBlack, chResult, chDate);
+SetAutoplayDelay(2000); // milliseconds
+SetAutostartAutoplay(false);
+SetAutoplayNextGame(false);
+SetShortcutKeysEnabled(true);
+
+pgnData_default = "";
+refreshMinutes_default = 0;
+initialGame_default = "first";
+pieceBaseSize_default = 96;
+pieceFont_default = "uscf";
+theme = new Array();
+theme[0]  = new Array("black",  "FFFFFF", "000000", "999999", "777777", "000000");
+theme[1]  = new Array("blue",   "000000", "80B0E0", "E6EDF3", "A0BED8", "596978");
+theme[2]  = new Array("braun",  "221100", "FFCE9E", "FFCE9E", "D18B47", "663300");
+theme[3]  = new Array("dark",   "FFFFFF", "000000", "FFCE9E", "D18B47", "663300");
+theme[4]  = new Array("gray",   "666666", "F4F4F4", "F4F4F4", "E0E0E0", "AAAAAA");
+theme[5]  = new Array("green",  "333333", "EFF4EC", "EFF4EC", "C6CEC3", "999999");
+theme[6]  = new Array("light",  "000000", "FFFFFF", "FFCE9E", "D18B47", "663300");
+theme[7]  = new Array("pink",   "615F54", "EDE8D5", "EDE8D5", "CFCBB3", "F8CCA0");
+theme[8]  = new Array("white",  "000000", "FFFFFF", "FFFFFF", "E4E4E4", "000000");
+theme[9]  = new Array("wood",   "663300", "FFFFFF", "FFCC99", "CC9966", "663300");
+theme[10] = new Array("yellow", "54110C", "F2D798", "F2D798", "C9AD6F", "54110C");
+colorTheme_indexDefault = 2;
+colorThemeOptions = "";
+for (ii = 0; ii < theme.length; ii++) { colorThemeOptions += "'" + theme[ii][0] + "' | "; }
+colorThemeOptions += "'random' ";
+
+fontSizeRatio_default = 0.8;
+pieceSizeRatio_default = 0.8;
+sizeRatio_min = 0.3;
+sizeRatio_max = 1;
+
+thisRegExp = /(&|\?)(help|h)(&|$)/i;
+if (window.location.search.match(thisRegExp) !== null) {
+  document.write("<pre style='font-size: smaller;'>pgn4web dynamic-frame.html parameters" + "\n" +
+    " - pgnData = file.pgn (no default)" + "\n" +
+    " - initialGame = initial game (default " + initialGame_default + ")" + "\n" +
+    " - live = if set true enables live broadcast with default values (default false)" + "\n" +
+    " - refreshMinutes = live broadcast delay (default " + refreshMinutes_default + ")" + "\n" +
+    " - refreshDemo = if set true sets live demo mode (default false)" + "\n" +
+//    " - pieceBaseSize = size of baseline piece bitmap (default " + pieceBaseSize_default + ")" + "\n" +
+    " - pieceFont = 'alpha' | 'merida' | 'uscf' | 'random' (default " + pieceFont_default + ")" + "\n" +
+    " - colorTheme = " + colorThemeOptions + "(default '" + theme[colorTheme_indexDefault][0] + "')" + "\n" +
+    " - fontColorHex = font color hex code, like FF0000 (default according to the selected color theme)" + "\n" +
+    " - backgroundColorHex = page background color hex code, like FF0000 (default according to the selected color theme)" + "\n" +
+    " - lightColorHex = light square color hex code, like FF0000 (default according to the selected color theme)" + "\n" +
+    " - darkColorHex = dark square color hex code, like FF0000 (default according to the selected color theme)" + "\n" +
+    " - highlightColorHex = highlight square color hex code, like FF0000, or 'transparent' for no highlight (default according to the selected color theme)" + "\n" +
+    " - showColorFlag = if set true shows a color flag for the side to move (default false)" + "\n" +
+//    " - fontSizeRatio = font size ratio, from " + sizeRatio_min + " to " + sizeRatio_max + " (default " + fontSizeRatio_default + ")" + "\n" +
+//    " - pieceSizeRatio = piece size ratio, from " + sizeRatio_min + " to " + sizeRatio_max + " (default " + pieceSizeRatio_default + ")" + "\n" +
+    " - bare = if set true shows chessboard only (default false)" + "\n" +
+//    " - debug" + "\n" +
+    " - help" + "\n" +
+    "</pre>");
+}
+
+// undocumented feature
+thisRegExp = /(&|\?)(debug|d)(&|$)/i;
+if (debug = (window.location.search.match(thisRegExp) !== null)) {
+  boardShortcut("A7", "dynamic frame debug info", function(t,e){ alert(dynamicFrameDebugString); });
+}
+dynamicFrameDebugString = "dynamic frame debug info:\n\nnone";
+
+liveString = "";
+thisRegExp = /(&|\?)(live|l)=([^&]*)(&|$)/i;
+if (window.location.search.match(thisRegExp) !== null) {
+  liveString = unescape(window.location.search.match(thisRegExp)[3]);
+}
+if ((liveString == "true") || (liveString == "t")) {
+  refreshMinutes_default = 1;
+}
+
+alertFlag = demoFlag = false;
+thisRegExp = /(&|\?)(refreshDemo|rd)=([^&]*)(&|$)/i;
+if (window.location.search.match(thisRegExp) !== null) {
+  refreshDemo = unescape(window.location.search.match(thisRegExp)[3]);
+  if ((refreshDemo == "true") || (refreshDemo == "t")) { alertFlag = demoFlag = true; }
+}
+
+refreshMinutes = refreshMinutes_default;
+stepFlag = true;
+thisRegExp = /(&|\?)(refreshMinutes|rm)=([^&]*)(&|$)/i;
+if (window.location.search.match(thisRegExp) !== null) {
+  refreshMinutes = parseFloat(unescape(window.location.search.match(thisRegExp)[3]));
+  if (isNaN(refreshMinutes)) { refreshMinutes = refreshMinutes_default; }
+  if (refreshMinutes <= 0) { refreshMinutes = refreshMinutes_default; }
+}
+if (refreshMinutes) {
+  pgnData_default = "live/live.pgn";
+  initialGame_default = "\\[\\s*Result\\s*\"\\*\"\\s*\\]";
+}
+
+SetInitialHalfmove(refreshMinutes ? "end" : "start", true);
+
+SetLiveBroadcast(refreshMinutes, alertFlag, demoFlag, stepFlag); // set live broadcast; parameters are delay (refresh delay in minutes, 0 means no broadcast, default 0) alertFlag (if true, displays debug error messages, default false) demoFlag (if true starts broadcast demo mode, default false) stepFlag (if true, autoplays updates in steps, default false)
+
+pgnData = pgnData_default;
+thisRegExp = /(&|\?)(pgnData|pd)=([^&]*)(&|$)/i;
+if (window.location.search.match(thisRegExp) !== null) {
+  pgnData = unescape(window.location.search.match(thisRegExp)[3]);
+}
+SetPgnUrl(pgnData); // if set, this has precedence over the inline PGN in the HTML file
+
+iniGame = initialGame_default;
+thisRegExp = /(&|\?)(initialGame|ig)=([^&]*)(&|$)/i;
+if (window.location.search.match(thisRegExp) !== null) {
+  iniGame = unescape(window.location.search.match(thisRegExp)[3]);
+}
+SetInitialGame(iniGame);
+
+// undocumented feature
+allowedPieceBaseSize = new Array(20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 52, 56, 60, 64, 72, 80, 88, 96, 112, 128, 144, 300);
+pieceBaseSize = pieceBaseSize_default;
+thisRegExp = /(&|\?)(pieceBaseSize|pbs)=([^&]*)(&|$)/i;
+if (window.location.search.match(thisRegExp) !== null) {
+  pieceBaseSize = parseInt(pieceBaseSize_input = unescape(window.location.search.match(thisRegExp)[3]), 10);
+  validPieceBaseSize = false;
+  for (pieceBaseIndex in allowedPieceBaseSize) {
+    if (pieceBaseSize === allowedPieceBaseSize[pieceBaseIndex]) {
+      validPieceBaseSize = true;
+      break;
+    }
+  }
+  if (!validPieceBaseSize) {
+    myAlert("warning: invalid pieceBaseSize=" + pieceBaseSize_input + ", reverting to " + pieceBaseSize_default + " as default");
+    pieceBaseSize = pieceBaseSize_default;
+  }
+}
+
+pieceFont = pieceFont_default;
+thisRegExp = /(&|\?)(pieceFont|pf)=([^&]*)(&|$)/i;
+if (window.location.search.match(thisRegExp) !== null) {
+  pieceFont = unescape(window.location.search.match(thisRegExp)[3]);
+}
+if (pieceFont == "a") { pieceFont = "alpha"; }
+if (pieceFont == "m") { pieceFont = "merida"; }
+if (pieceFont == "u") { pieceFont = "uscf"; }
+if (pieceFont == "s") { pieceFont = "svgchess"; }
+if ((pieceFont == "random") || (pieceFont == "r")) {
+  randomPiece = Math.floor(Math.random() * 3);
+  switch (randomPiece) {
+    case 1: pieceFont = "merida"; break;
+    case 2: pieceFont = "uscf"; break;
+    default: pieceFont = "alpha"; break;
+  }
+}
+if ((pieceFont != "alpha") && (pieceFont != "merida") && (pieceFont != "uscf") && (pieceFont != "svgchess")) { pieceFont = pieceFont_default; }
+if (pieceFont == "svgchess") {
+  SetImagePath(pieceFont);
+  SetImageType("svg");
+} else {
+  SetImagePath(pieceFont + "/" + pieceBaseSize);
+  SetImageType("png");
+}
+
+colorTheme = theme[colorTheme_indexDefault][0];
+thisRegExp = /(&|\?)(colorTheme|ct)=([\w]*)(&|$)/i;
+if (window.location.search.match(thisRegExp) !== null) {
+  colorTheme = unescape(window.location.search.match(thisRegExp)[3]);
+}
+colorTheme_index = colorTheme_indexDefault;
+if (colorTheme == "random") { colorTheme_index = Math.floor(theme.length * Math.random()); }
+else { for (ii = 0; ii < theme.length; ii++) { if (theme[ii][0] === colorTheme) { colorTheme_index = ii; break; } } }
+
+fontColorHex_default = theme[colorTheme_index][1];
+backgroundColorHex_default = theme[colorTheme_index][2];
+lightColorHex_default = theme[colorTheme_index][3];
+darkColorHex_default = theme[colorTheme_index][4];
+highlightColorHex_default = theme[colorTheme_index][5];
+
+fontColorHex = fontColorHex_default;
+thisRegExp = /(&|\?)(fontColorHex|fch)=([A-F0-9]*)(&|$)/i;
+if (window.location.search.match(thisRegExp) !== null) {
+  fontColorHex = unescape(window.location.search.match(thisRegExp)[3]);
+}
+
+backgroundColorHex = backgroundColorHex_default;
+thisRegExp = /(&|\?)(backgroundColorHex|bch)=([A-F0-9]*)(&|$)/i;
+if (window.location.search.match(thisRegExp) !== null) {
+  backgroundColorHex = unescape(window.location.search.match(thisRegExp)[3]);
+}
+
+lightColorHex = lightColorHex_default;
+thisRegExp = /(&|\?)(lightColorHex|lch)=([A-F0-9]*)(&|$)/i;
+if (window.location.search.match(thisRegExp) !== null) {
+  lightColorHex = unescape(window.location.search.match(thisRegExp)[3]);
+}
+
+darkColorHex = darkColorHex_default;
+thisRegExp = /(&|\?)(darkColorHex|dch)=([A-F0-9]*)(&|$)/i;
+if (window.location.search.match(thisRegExp) !== null) {
+  darkColorHex = unescape(window.location.search.match(thisRegExp)[3]);
+}
+
+highlightColorHex = highlightColorHex_default;
+thisRegExp = /(&|\?)(highlightColorHex|hch)=(t|transparent)(&|$)/i;
+if (window.location.search.match(thisRegExp) !== null) {
+  highlightColorHex = "";
+  clearShortcutSquares("D", "7");
+} else {
+  thisRegExp = /(&|\?)(highlightColorHex|hch)=([A-F0-9]*)(&|$)/i;
+  if (window.location.search.match(thisRegExp) !== null) {
+    highlightColorHex = unescape(window.location.search.match(thisRegExp)[3]);
+  }
+}
+
+showColorFlagString = "false";
+thisRegExp = /(&|\?)(showColorFlag|scf)=([^&]*)(&|$)/i;
+if (window.location.search.match(thisRegExp) !== null) {
+  showColorFlagString = unescape(window.location.search.match(thisRegExp)[3]);
+}
+showColorFlag = ((showColorFlagString == "true") || (showColorFlagString == "t"));
+
+// undocumented feature
+fontSizeRatio = fontSizeRatio_default;
+thisRegExp = /(&|\?)(fontSizeRatio|fsr)=([0-9.]*)(&|$)/i;
+if (window.location.search.match(thisRegExp) !== null) {
+  fontSizeRatio = parseFloat(unescape(window.location.search.match(thisRegExp)[3]));
+  if (isNaN(fontSizeRatio) || (fontSizeRatio < sizeRatio_min) || (fontSizeRatio > sizeRatio_max)) { fontSizeRatio = fontSizeRatio_default; }
+}
+
+// undocumented feature
+pieceSizeRatio = pieceSizeRatio_default;
+thisRegExp = /(&|\?)(pieceSizeRatio|psr)=([0-9.]*)(&|$)/i;
+if (window.location.search.match(thisRegExp) !== null) {
+  pieceSizeRatio = parseFloat(unescape(window.location.search.match(thisRegExp)[3]));
+  if (isNaN(pieceSizeRatio) || (pieceSizeRatio < sizeRatio_min) || (pieceSizeRatio > sizeRatio_max)) { pieceSizeRatio = pieceSizeRatio_default; }
+}
+
+bareString = "";
+thisRegExp = /(&|\?)(bare|b)=([^&]*)(&|$)/i;
+if (window.location.search.match(thisRegExp) !== null) {
+  bareString = unescape(window.location.search.match(thisRegExp)[3]);
+}
+bare = ((bareString == "true") || (bareString == "t"));
+
+
+function myRulesLength(sheet) {
+  if (sheet.cssRules) { return sheet.cssRules.length; }
+  if (sheet.rules) { return sheet.rules.length; }
+  return null;
+}
+
+function myInsertRule(sheet, selector, declaration) {
+  if (sheet.insertRule) { sheet.insertRule(selector + "{ " + declaration + " }", myRulesLength(sheet)); }
+  else if (sheet.addRule) { sheet.addRule(selector, declaration); }
+}
+
+function myDeleteRule(sheet, index) {
+  if (sheet.deleteRule) { sheet.deleteRule(index); }
+  else if (sheet.removeRule) { sheet.removeRule(index); }
+}
+
+function toggleColorFlag() {
+  showColorFlag = !showColorFlag;
+  if (!showColorFlag) {
+    if (theObject = document.getElementById("whiteColorFlag")) { theObject.style.display = "none"; }
+    if (theObject = document.getElementById("whiteColorFlagFiller")) { theObject.style.display = "none"; }
+    if (theObject = document.getElementById("blackColorFlag")) { theObject.style.display = "none"; }
+    if (theObject = document.getElementById("blackColorFlagFiller")) { theObject.style.display = "none"; }
+  }
+  myOnResize();
+}
+
+var horizontalLayout;
+function myOnResize() {
+  if (window.innerWidth && window.innerHeight) { ww = window.innerWidth; wh = window.innerHeight; }
+  else if (document.documentElement && document.documentElement.clientWidth) { ww = document.documentElement.clientWidth; wh = document.documentElement.clientHeight; }
+  else if (document.body && document.body.clientWidth) { ww = document.body.clientWidth; wh = document.body.clientHeight; }
+  else { return false; }
+
+  if (bare) {
+    horizontalLayout = (ww >= wh);
+    squareSize = Math.min(ww / 8, wh / 8);
+  } else {
+    squareSize_H = Math.min(ww / (16 / 9), wh) / 8;
+    squareSize_V = Math.min(ww, wh / (16 / 9)) / 8;
+    horizontalLayout = (squareSize_H >= squareSize_V);
+    squareSize = horizontalLayout ? squareSize_H : squareSize_V;
+  }
+  if (horizontalLayout) {
+    lineHeight = Math.floor(squareSize * 8 / 16);
+  } else {
+    lineHeight = Math.floor(Math.min((wh - squareSize * 8) / (7 * 2), squareSize * 8 / 16));
+  }
+  fontSize = Math.floor(lineHeight * fontSizeRatio);
+  if (fontSize > lineHeight) { fontSize = lineHeight; }
+  squareBorderWidth = Math.min(Math.ceil(squareSize / 50), 3);
+  bareSquareSize = squareSize - 2 * squareBorderWidth;
+  pieceSize = Math.floor(squareSize * pieceSizeRatio);
+  if (pieceSize > bareSquareSize) { pieceSize = Math.floor(bareSquareSize); }
+  headerContainerWidth = selectWidth = horizontalLayout ? ww - 9 * squareSize : ww;
+
+  sheet = document.styleSheets[0];
+  oldRules = myRulesLength(sheet);
+
+  myInsertRule(sheet, "body", "padding: 0; margin: 0; white-space: nowrap; overflow: hidden; color: #" + fontColorHex + "; background-color: #" + backgroundColorHex + "; font-family: sans-serif; line-height: " + lineHeight + "px; font-size: " + fontSize + "px;");
+  myInsertRule(sheet, "a:link", "text-decoration: none; color: #" + fontColorHex + ";");
+  myInsertRule(sheet, "a:visited", "text-decoration: none; color: #" + fontColorHex + ";");
+  myInsertRule(sheet, "a:active", "text-decoration: none; color: #" + fontColorHex + ";");
+  myInsertRule(sheet, "a:hover", "text-decoration: none; color: #" + fontColorHex + ";");
+  if (bare) {
+    if (horizontalLayout) { myInsertRule(sheet, ".boardTable", "margin-left: " + ((ww - 8 * squareSize) / 2) + "px;"); }
+    else { myInsertRule(sheet, ".boardTable", "margin-top: " + ((wh - 8 * squareSize) / 2) + "px;"); }
+  } else {
+    if (horizontalLayout) { myInsertRule(sheet, ".boardTable", "float: left;"); }
+    else { myInsertRule(sheet, ".boardTable", "margin-left: " + ((ww - 8 * squareSize) / 2) + "px;"); }
+  }
+  myInsertRule(sheet, ".pieceImage", "width:" + pieceSize + "px; height:" + pieceSize + "px;");
+  myInsertRule(sheet, ".whiteSquare", "width:" + bareSquareSize + "px; height:" + bareSquareSize + "px; border-style: solid; border-width: " + squareBorderWidth + "px;" + "background-color: #" + lightColorHex + "; border-color: #" + lightColorHex + ";");
+  myInsertRule(sheet, ".blackSquare", "width:" + bareSquareSize + "px; height:" + bareSquareSize + "px; border-style: solid; border-width: " + squareBorderWidth + "px;" + "background-color: #" + darkColorHex + "; border-color:  #" + darkColorHex + ";");
+  myInsertRule(sheet, ".highlightWhiteSquare", "width:" + bareSquareSize + "px; height:" + bareSquareSize + "px; border-style: solid; border-width: " + squareBorderWidth + "px;" + "background-color: #" + lightColorHex + "; border-color: #" + (highlightColorHex ? highlightColorHex : lightColorHex) + ";");
+  myInsertRule(sheet, ".highlightBlackSquare", "width:" + bareSquareSize + "px; height:" + bareSquareSize  + "px; border-style: solid; border-width: " + squareBorderWidth + "px;" + "background-color: #" + darkColorHex + "; border-color:  #" + (highlightColorHex ? highlightColorHex : darkColorHex) + ";");
+  myInsertRule(sheet, ".headerContainer", "width: " + headerContainerWidth + "px; white-space: nowrap; overflow: hidden;" + (horizontalLayout ? " float: right; text-align: left;" : " text-align: center;"));
+  myInsertRule(sheet, ".gameSelector", (horizontalLayout ? "float: right; width: " + selectWidth + "px; height: " + (3 * lineHeight / 2) + "px;" : "position: absolute; bottom: 0; z-index: 1; height: " + lineHeight + "px;") + " overflow: hidden;");
+  myInsertRule(sheet, ".selectControl", "margin: 0; padding: 0; width: " + selectWidth + "px !important; height: " + lineHeight + "px; font-size: " + fontSize + "px; color: #" + fontColorHex + "; background-color: #" + backgroundColorHex + "; border-style: solid; border-width: 1px; border-color: #" + backgroundColorHex + ";");
+  myInsertRule(sheet, ".optionSelectControl", "background-color: #" + backgroundColorHex + ";");
+  if (LiveBroadcastDelay > 0) {
+    myInsertRule(sheet, ".gameButtons", "display: none;");
+  } else {
+    myInsertRule(sheet, ".liveStatusLine", "display: none;");
+    if (horizontalLayout) { myInsertRule(sheet, ".gameButtons", "width: " + headerContainerWidth + "px; " + "text-align: left;"); }
+    buttonCss = "margin: 0; padding: 0; width: " + (3 * lineHeight / 2) + "px !important; height: " + lineHeight + "px; color: #" + fontColorHex + "; border-style: none; background-color: #" + backgroundColorHex + "; font-family: sans-serif; line-height: " + lineHeight + "px; font-size: " + fontSize + "px;";
+    myInsertRule(sheet, ".buttonControl", buttonCss);
+    myInsertRule(sheet, ".buttonControlPlay", buttonCss);
+    myInsertRule(sheet, ".buttonControlStop", buttonCss);
+    myInsertRule(sheet, ".buttonControlSpace", "margin: 0; padding: 0; width: " + (lineHeight / 4) + "px !important;");
+  }
+  myInsertRule(sheet, ".colorFlag", "height: 0.8ex; width: 0.8ex; border-width: 1px; border-color: #" + fontColorHex + "; border-style: solid; margin-bottom: 0.2ex;");
+  firstVariableSpacerLineHeight = Math.floor(horizontalLayout ? lineHeight / 2 : 3 * lineHeight / 2);
+  firstVariableSpacerFontSize = Math.floor(firstVariableSpacerLineHeight * 0.8);
+  myInsertRule(sheet, ".firstVariableSpacer", "line-height: " + firstVariableSpacerLineHeight + "px; font-size: " + firstVariableSpacerFontSize + "px;");
+  if (!horizontalLayout) {
+    variableSpacerLineHeight = Math.floor(Math.min((wh - squareSize * 8 - lineHeight * 11.5) / 5, lineHeight / 2));
+    variableSpacerFontSize = Math.floor(variableSpacerLineHeight * 0.8);
+    myInsertRule(sheet, ".variableSpacer", "line-height: " + variableSpacerLineHeight + "px; font-size: " + variableSpacerFontSize + "px;");
+  }
+
+  for (ii = 0; ii < oldRules; ii++) { myDeleteRule(sheet, 0); }
+
+  if (theObject = document.getElementById("boardTable")) {
+    theObject.style.height = (squareSize * 8) + "px";
+    theObject.style.width = (squareSize * 8) + "px";
+  }
+
+  if (theObject = document.getElementById("GameSelector")) { theObject.style.display = bare ? "none" : ""; }
+  if (theObject = document.getElementById("HeaderContainer")) { theObject.style.display = bare ? "none" : ""; }
+
+  fixColorFlag();
+
+  if (debug && (theObject = document.getElementById("DebugInfo"))) {
+    dynamicFrameDebugString = "fw=" + ww + ", fh=" + wh + ", fs=" + fontSize + ", ss=" + Math.round(squareSize*100)/100 + ", sb=" + squareBorderWidth + ", ps=" + pieceSize + ", pbs=" + pieceBaseSize;
+    theObject.innerHTML = "&nbsp;&nbsp;&nbsp;<a href='javascript:void(0);' onclick='alert(dynamicFrameDebugString); this.blur();'>" + dynamicFrameDebugString + "</a>";
+    dynamicFrameDebugString = "dynamic-frame debug info:\n\n" + dynamicFrameDebugString.replace(/, /g, "\n");
+    theObject.title = dynamicFrameDebugString;
+  }
+
+  return pieceSize;
+}
+
+function underlineByTicker(text, ticker) {
+  position = ticker % text.length;
+  return (text.substring(0, position) +
+    "<u>" +text.substring(position, position + 1) + "</u>" +
+    text.substring(position + 1));
+}
+
+function customFunctionOnCheckLiveBroadcastStatus() {
+
+  updateBareShortcut();
+
+  if (theObject = document.getElementById("GameLiveStatus")) {
+    if (LiveBroadcastTicker > 1) {
+      theObject.innerHTML =  theObject.innerHTML.replace(/live/, underlineByTicker("live", LiveBroadcastTicker-2));
+    }
+  }
+}
+
+function customFunctionOnPgnTextLoad() {
+  if (LiveBroadcastDelay) {
+    if (LiveBroadcastStarted && !LiveBroadcastEnded) {
+      document.title = "chess live broadcast" + (demoFlag ? " demo" : "");
+    } else { document.title = LiveBroadcastStatusString; }
+  }
+}
+
+function meaningfulHeader(tagValue) {
+  return ((typeof(tagValue) == "string") && (tagValue.match(/[^\s?.-]/)));
+}
+
+function fixHeaderItem(tag, objectId, label) {
+  if (theObject = document.getElementById(objectId)) {
+    if (meaningfulHeader(tagValue = customPgnHeaderTag(tag, objectId))) {
+      theObject.title = label + ": " + tagValue;
+      theObject.style.paddingLeft = "1em";
+    } else {
+      theObject.title = label;
+      theObject.style.paddingLeft = "";
+    }
+  }
+}
+
+function customFunctionOnPgnGameLoad() {
+  myOnResize();
+  if (theObject = document.getElementById("GameSite")) { theObject.title = "site" + (meaningfulHeader(gameSite[currentGame]) ? ": " + gameSite[currentGame] : ""); }
+  if (theObject = document.getElementById("GameEvent")) { theObject.title = "event" + (meaningfulHeader(gameEvent[currentGame]) ? ": " + gameEvent[currentGame] : ""); }
+  if (theObject = document.getElementById("GameWhite")) { theObject.title = "white player" + (meaningfulHeader(gameWhite[currentGame]) ? ": " + gameWhite[currentGame] : ""); }
+  if (theObject = document.getElementById("GameBlack")) { theObject.title = "black player" + (meaningfulHeader(gameBlack[currentGame]) ? ": " + gameBlack[currentGame] : ""); }
+  fixHeaderItem("Section", "GameSection", "section");
+  fixHeaderItem("Stage", "GameStage", "stage");
+  fixHeaderItem("WhiteTitle", "GameWhiteTitle", "white title");
+  fixHeaderItem("WhiteElo", "GameWhiteElo", "white elo");
+  fixHeaderItem("BlackTitle", "GameBlackTitle", "black title");
+  fixHeaderItem("BlackElo", "GameBlackElo", "black elo");
+  updateBareShortcut();
+}
+
+function customFunctionOnMove() {
+  extraMoves = 2;
+
+  document.getElementById("GamePrevMoves").innerHTML = "";
+  document.getElementById("GameCurrMove").innerHTML = "";
+  document.getElementById("GameNextMoves").innerHTML = "";
+  theObject = document.getElementById("GamePrevMoves");
+  thisPly = Math.max(CurrentPly - extraMoves - 1, StartPly);
+  if (thisPly > StartPly) { theObject.innerHTML += "... "; }
+  for (; thisPly < Math.min(CurrentPly + extraMoves, StartPly + PlyNumber); thisPly++) {
+    if (thisPly == CurrentPly) {
+      theObject = document.getElementById("GameNextMoves");
+    }
+    if (thisPly % 2 === 0) { theObject.innerHTML += Math.floor(1 + thisPly / 2) + ". "; }
+    if (thisPly == CurrentPly - 1) {
+      theObject = document.getElementById("GameCurrMove");
+    }
+    theObject.innerHTML += Moves[thisPly] + " ";
+  }
+  if (thisPly < StartPly + PlyNumber) { theObject.innerHTML += "..."; }
+
+  fixColorFlag();
+}
+
+
+function fixColorFlag() {
+
+  if (showColorFlag) {
+    whiteFlagPadding = (horizontalLayout || ((clockObject = document.getElementById("GameWhiteClock")) && (clockObject.innerHTML)));
+    if (theObject = document.getElementById("whiteColorFlag")) {
+      theObject.style.display = "inline";
+      theObject.style.visibility = CurrentPly % 2 ? "hidden" : "visible";
+      theObject.style.marginLeft = whiteFlagPadding ? "0.1em" : "";
+      theObject.style.marginRight = whiteFlagPadding ? "1em" : "";
+    }
+    if (theObject = document.getElementById("whiteColorFlagFiller")) {
+      theObject.style.display = whiteFlagPadding ? "inline" : "none";
+      theObject.style.visibility = "hidden";
+      theObject.style.marginRight = "0.1em";
+      theObject.style.marginLeft = "1em";
+    }
+    blackFlagPadding = (horizontalLayout || ((clockObject = document.getElementById("GameBlackClock")) && (clockObject.innerHTML)));
+    if (theObject = document.getElementById("blackColorFlag")) {
+      theObject.style.display = "inline";
+      theObject.style.visibility = CurrentPly % 2 ? "visible" : "hidden";
+      theObject.style.marginLeft = blackFlagPadding ? "0.1em" : "";
+      theObject.style.marginRight = blackFlagPadding ? "1em" : "";
+    }
+    if (theObject = document.getElementById("blackColorFlagFiller")) {
+      theObject.style.display = blackFlagPadding ? "inline" : "none";
+      theObject.style.visibility = "hidden";
+      theObject.style.marginRight = "0.1em";
+      theObject.style.marginLeft = "1em";
+    }
+  }
+}
+
+function searchPlayer(name, FideId) {
+  if (typeof(openFidePlayerUrl) == "function") { openFidePlayerUrl(name, FideId); }
+}
+
+function customShortcutKey_Shift_1() {
+  searchPlayer(gameWhite[currentGame], customPgnHeaderTag('WhiteFideId'));
+}
+
+function customShortcutKey_Shift_2() {
+  searchPlayer(gameBlack[currentGame], customPgnHeaderTag('BlackFideId'));
+}
+
+function customShortcutKey_Shift_3() {
+  toggleBareChessboard();
+}
+
+function customShortcutKey_Shift_4() {
+  showFullscreenChessboard(false);
+}
+
+function customShortcutKey_Shift_5() {
+  showFullscreenChessboard(true);
+}
+
+function toggleBareChessboard() {
+  bare = !bare;
+  myOnResize();
+  updateBareShortcut();
+}
+
+function showFullscreenChessboard(newWin) {
+  win = window;
+  if (newWin) { win.open(location.href.replace(/(pieceBaseSize|pbs)=[^&]*/gi, ""), "_blank"); }
+  else {
+    while (win.parent !== win) { win = win.parent; }
+    win.location.href = location.href.replace(/(pieceBaseSize|pbs)=[^&]*/gi, "");
+  }
+}
+
+clearShortcutSquares("E", "7");
+
+boardShortcut("F7", "toggle side to move flag", function(t,e){ toggleColorFlag(); });
+
+if (window.parent !== window) {
+  boardShortcut("H5", "show fullscreen chessboard", function(t,e){ showFullscreenChessboard(false); });
+}
+
+function updateBareShortcut() {
+  boardShortcut("G5", bare ? "unhide game info\n\n" + gameTooltipInfo() : "maximize chessboard and hide game info", function(t,e){ toggleBareChessboard(); });
+}
+
+function gameTooltipInfo() {
+  str = " game " + (currentGame+1) + " of " + numberOfGames + "  ";
+  if (LiveBroadcastDelay > 0) { str += "\n " + LiveBroadcastStatusString.replace("&nbsp;", " ") + "  "; }
+  if (meaningfulHeader(gameEvent[currentGame])) { str+= "\n event: " + gameEvent[currentGame] + "  "; }
+  if (meaningfulHeader(gameSite[currentGame])) { str+= "\n site: " + gameSite[currentGame] + "  "; }
+  if (meaningfulHeader(gameDate[currentGame])) { str+= "\n date: " + gameDate[currentGame] + "  "; }
+  if (meaningfulHeader(gameRound[currentGame])) { str+= "\n round: " + gameRound[currentGame] + "  "; }
+  if (meaningfulHeader(gameWhite[currentGame])) { str+= "\n white: " + gameWhite[currentGame] + "  "; }
+  if (meaningfulHeader(gameBlack[currentGame])) { str+= "\n black: " + gameBlack[currentGame] + "  "; }
+  if (meaningfulHeader(gameResult[currentGame])) { str+= "\n result: " + gameResult[currentGame] + "  "; }
+  return str;
+}
+
+function myOnLoad() {
+  calculatedPieceSize = myOnResize();
+  start_pgn4web();
+  if (calculatedPieceSize === false) { myOnResize(); }
+}
+
+</script>
+
+</head>
+
+<body onLoad="myOnLoad();" onResize="myOnResize();">
+
+<!-- paste your PGN below and make sure you dont specify an external source with SetPgnUrl() -->
+<form style="display: none;"><textarea style="display: none;" id="pgnText">
+
+</textarea></form>
+<!-- paste your PGN above and make sure you dont specify an external source with SetPgnUrl() -->
+
+<div class="gameSelector" id="GameSelector"></div>
+
+<div id="GameBoard"></div>
+
+<div class="headerContainer" id="HeaderContainer">
+<div class="firstVariableSpacer">&nbsp;</div>
+<div>&nbsp;<span id="GameSite" title="site"></span>&nbsp;</div>
+<div>&nbsp;<span id="GameEvent" title="event"></span><span id="GameSection" title="section"></span><span id="GameStage" title="stage"></span>&nbsp;</div>
+<div class="variableSpacer">&nbsp;</div>
+<div>&nbsp;<span style="display:inline-block;" title="white to move"><img class="colorFlag" style="background:white;display:none;" id="whiteColorFlag" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoEAYAAADcbmQuAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAZiS0dEAMAAwADAGp0HVAAAAAlwSFlzAAAASAAAAEgARslrPgAAAAl2cEFnAAAAKAAAACgAo3CU+AAAACNJREFUaN7twQENAAAAwqD3T20PBxQAAAAAAAAAAAAAAAAPBjIoAAFxtd2pAAAAAElFTkSuQmCC" /></span><a id="GameWhiteClock" href="javascript:void(0);" onclick="toggleColorFlag(); this.blur();" title="white clock"></a><span style="display:inline-block;"><img class="colorFlag" style="background:white; display:none;" id="whiteColorFlagFiller" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoEAYAAADcbmQuAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAZiS0dEAMAAwADAGp0HVAAAAAlwSFlzAAAASAAAAEgARslrPgAAAAl2cEFnAAAAKAAAACgAo3CU+AAAACNJREFUaN7twQENAAAAwqD3T20PBxQAAAAAAAAAAAAAAAAPBjIoAAFxtd2pAAAAAElFTkSuQmCC" /></span>&nbsp;</div>
+<div>&nbsp;<a style="font-weight: bold;" id="GameWhite" href="javascript:void(0);" onclick="searchPlayer(this.innerHTML, customPgnHeaderTag('WhiteFideId')); this.blur();" title="white player"></a><span id="GameWhiteTitle" title="white title"></span><span id="GameWhiteElo" title="white elo"></span><span style="font-weight: bold;">&nbsp;</span></div>
+<div>&nbsp;<a style="font-weight: bold;" id="GameBlack" href="javascript:void(0);" onclick="searchPlayer(this.innerHTML, customPgnHeaderTag('BlackFideId')); this.blur();" title="black player"></a><span id="GameBlackTitle" title="black title"></span><span id="GameBlackElo" title="black elo"></span><span style="font-weight: bold;">&nbsp;</span></div>
+<div>&nbsp;<span style="display:inline-block;" title="black to move"><img class="colorFlag" style="background:black; display:none;" id="blackColorFlag" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoEAYAAADcbmQuAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAZiS0dEAMAAwADAGp0HVAAAAAlwSFlzAAAASAAAAEgARslrPgAAAAl2cEFnAAAAKAAAACgAo3CU+AAAACNJREFUaN7twQENAAAAwqD3T20PBxQAAAAAAAAAAAAAAAAPBjIoAAFxtd2pAAAAAElFTkSuQmCC" /></span><a id="GameBlackClock" href="javascript:void(0);" onclick="toggleColorFlag(); this.blur();" title="black clock"></a><span style="display:inline-block;"><img class="colorFlag" style="background:black; display:none;" id="blackColorFlagFiller" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoEAYAAADcbmQuAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAZiS0dEAMAAwADAGp0HVAAAAAlwSFlzAAAASAAAAEgARslrPgAAAAl2cEFnAAAAKAAAACgAo3CU+AAAACNJREFUaN7twQENAAAAwqD3T20PBxQAAAAAAAAAAAAAAAAPBjIoAAFxtd2pAAAAAElFTkSuQmCC" /></span>&nbsp;</div>
+<div class="variableSpacer">&nbsp;</div>
+<div>&nbsp;<span style="font-weight: bold;" id="GameResult" title="result"></span><span style="font-weight: bold;">&nbsp;</span><span id="DebugInfo"></span></div>
+<div class="variableSpacer">&nbsp;</div>
+<div>&nbsp;<a id="GamePrevMoves" href="javascript:void(0);" onclick="GoToMove(CurrentPly - 1); this.blur();" title="previous moves"></a><a style="font-weight: bold;" id="GameCurrMove" href="javascript:void(0);" onclick="SetHighlight(!highlightOption); this.blur();" title="current move as shown on chessboard"></a><a id="GameNextMoves" href="javascript:void(0);" onclick="GoToMove(CurrentPly + 1); this.blur();" title="next moves"></a><span style="font-weight: bold;">&nbsp;</span></div>
+<div class="variableSpacer">&nbsp;</div>
+<center><div class="gameButtons" id="GameButtons"></div></center>
+<div class="liveStatusLine">&nbsp;<a id="GameLiveStatus" href="javascript:void(0);" onclick="refreshPgnSource(); this.blur();" title="live broadcast status"></a>&nbsp;<span id="GameLiveStatusDemo" title="this is a broadcast simulation"></span></div>
+</div>
+
+<script type="text/javascript">
+
+if ((LiveBroadcastDelay) && (theObject = document.getElementById("GameLiveStatusDemo"))) {
+  theObject.innerHTML = LiveBroadcastDemo ? "&nbsp;&nbsp;demo" : "";
+}
+
+</script>
+
+</body>
+
+</html>

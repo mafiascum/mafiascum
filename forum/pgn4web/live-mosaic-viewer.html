@@ -1,0 +1,721 @@
+<html>
+
+<!--
+  pgn4web javascript chessboard
+  copyright (C) 2009, 2012 Paolo Casaschi
+  see README file and http://pgn4web.casaschi.net
+  for credits, license and more details
+-->
+
+<head>
+
+<title>chess games viewer: live broadcast</title>
+
+<link rel="shortcut icon" href="pawn.ico" />
+
+<script src="pgn4web.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+
+  var pgnData_default = "live/live.pgn";
+  var maxBoards_default = 8;
+  var displayGame_default = 1;
+  var refreshMinutes_default = 1;
+
+  var thisRegExp = /(&|\?)(help|h)(&|$)/i;
+  if (window.location.search.match(thisRegExp) !== null) {
+    alert("pgn4web live-mosaic-viewer.html parameters" + "\n\n" +
+      " - pgnData = file.pgn" + "\n\n" +
+      " - maxBoards = max number of boards to display in a page (default " + maxBoards_default +  ")" + "\n\n" +
+      " - displayGame = number of game for display, negative counts backwards (default " + displayGame_default + ")" + "\n\n" +
+      " - refreshMinutes = live broadcast delay (default " + refreshMinutes_default + ")" + "\n\n" +
+      " - refreshDemo = if set true sets live demo mode (default false)" + "\n\n" +
+      " - headlessPage = if set true displays a page without heading (default false)" + "\n\n" +
+      " - help");
+  }
+
+  var pgnData = pgnData_default;
+  thisRegExp = /(&|\?)(pgnData|pd)=([^&]*)(&|$)/i;
+  if (window.location.search.match(thisRegExp) !== null) {
+    pgnData = unescape(window.location.search.match(thisRegExp)[3]);
+  } else {
+    // accepts pgnData as alias for pgnFile for consistency with board.html
+    thisRegExp = /(&|\?)(pgnFile|pf)=([^&]*)(&|$)/i;
+    if (window.location.search.match(thisRegExp) !== null) {
+      pgnData = unescape(window.location.search.match(thisRegExp)[3]);
+    }
+  }
+
+  if (pgnData) {
+    SetPgnUrl(pgnData); // if set, this has precedence over the inline PGN in the HTML file
+
+    // force the page action on the chessboard page, for backward compatibility with chrome before version 17
+    // see README.txt note about http://crbug.com/60101
+    try {
+      if ((typeof(chrome.webRequest) == "undefined") && (backgroundPage = chrome.extension.getBackgroundPage())) {
+        chrome.tabs.getCurrent( function(tab) { backgroundPage.checkWebRequestForPgnFiles({ "tabId": tab.id, url: pgnData }); });
+      }
+    } catch (e) {}
+
+  }
+
+  var maxBoards = getMaxBoardFromLocalStorage();
+  thisRegExp = /(&|\?)(maxBoards|mb)=([\d]*)(&|$)/i;
+  if (window.location.search.match(thisRegExp) !== null) {
+    maxBoards = unescape(window.location.search.match(thisRegExp)[3]);
+  }
+  maxBoards = parseInt(maxBoards, 10);
+  if (isNaN(maxBoards) || (maxBoards < 1)) { maxBoards = maxBoards_default; }
+
+  var displayGame = displayGame_default;
+  thisRegExp = /(&|\?)(displayGame|dg)=((\+|-|)[\d]*)(&|$)/i;
+  if (window.location.search.match(thisRegExp) !== null) {
+    displayGame = unescape(window.location.search.match(thisRegExp)[3]);
+  }
+  displayGame = parseInt(displayGame, 10);
+  if (displayGame === 0) { displayGame = 1; }
+
+  var alertFlag = demoFlag = false;
+  thisRegExp = /(&|\?)(refreshDemo|rd)=([^&]*)(&|$)/i;
+  if (window.location.search.match(thisRegExp) !== null) {
+    refreshDemo = unescape(window.location.search.match(thisRegExp)[3]);
+    if ((refreshDemo == "true") || (refreshDemo == "t")) { alertFlag = demoFlag = true; }
+  }
+
+  thisRegExp = /(&|\?)(demoPly|dp)=([^&]*)(&|$)/i;
+  if (window.location.search.match(thisRegExp) !== null) {
+    gameDemoMaxPly = unescape(window.location.search.match(thisRegExp)[3]).split(",");
+    for (g in gameDemoMaxPly) { gameDemoMaxPly[g] = isNaN(p = parseInt(gameDemoMaxPly[g], 10)) ? 0 : p; }
+  }
+
+  var refreshMinutes = refreshMinutes_default;
+  var stepFlag = true;
+  thisRegExp = /(&|\?)(refreshMinutes|rm)=([^&]*)(&|$)/i;
+  if (window.location.search.match(thisRegExp) !== null) {
+    refreshMinutes = parseFloat(unescape(window.location.search.match(thisRegExp)[3]));
+    if (isNaN(refreshMinutes)) { refreshMinutes = refreshMinutes_default; }
+    if (refreshMinutes <= 0) { refreshMinutes = refreshMinutes_default; }
+  }
+
+  // special mode for the about.html page of the chess games viewer extension for google chrome
+  if ((typeof(chrome) != "undefined") && (typeof(chrome.extension) != "undefined") && (typeof(chrome.extension.getURL) != "undefined") && (pgnData == chrome.extension.getURL("demoLiveGames.pgn")) && (refreshMinutes)) {
+    refreshMinutes = 0.1;
+    alertFlag = demoFlag = true;
+    if ((!gameDemoMaxPly) || (gameDemoMaxPly.length === 0)) { gameDemoMaxPly = new Array(1, 2, 3, 4); }
+  }
+
+  SetLiveBroadcast(refreshMinutes, alertFlag, demoFlag, stepFlag); // set live broadcast; parameters are delay (refresh delay in minutes, 0 means no broadcast, default 0) alertFlag (if true, displays debug error messages, default false) demoFlag (if true starts broadcast demo mode, default false) stepFlag (if true, autoplays updates in steps, default false)
+
+  function getMaxBoardFromLocalStorage() {
+    try { mb = localStorage.getItem("pgn4web_chess_live_mosaic_viewer_maxBoards"); }
+    catch (e) { return maxBoards_default; }
+    return mb;
+  }
+
+  function setMaxBoardToLocalStorage() {
+    try { localStorage.setItem("pgn4web_chess_live_mosaic_viewer_maxBoards", maxBoards); }
+    catch (e) { return false; }
+    return true;
+  }
+
+  var headlessPage = false;
+  thisRegExp = /(&|\?)(headlessPage|hp)=([^&]*)(&|$)/i;
+  if (window.location.search.match(thisRegExp) !== null) {
+    headlessPageValue = unescape(window.location.search.match(thisRegExp)[3]);
+    if ((headlessPageValue == "true") || (headlessPageValue == "t")) { headlessPage = true; }
+  }
+
+  var rememberedFilteredGames = null;
+  // undocumented URL parameter: use only within the chrome extension
+  thisRegExp = /(&|\?)(rememberHidden|rh)=([^&]*)(&|$)/i;
+  if (window.location.search.match(thisRegExp) !== null) {
+    try {
+      rememberedFilteredGames = JSON.parse(unescape(window.location.search.match(thisRegExp)[3]));
+      if (rememberedFilteredGames[rememberedFilteredGames.length - 1] === pgnData) {
+        rememberedFilteredGames.splice(rememberedFilteredGames.length - 1, 1);
+      } else { rememberedFilteredGames = null; }
+    }
+    catch(e) { rememberedFilteredGames = null; }
+  }
+
+  SetImagePath("alpha/24"); // just to avoid console errors
+
+</script>
+
+
+<style type="text/css">
+
+@import url("fonts/pgn4web-font-LiberationSans.css");
+
+body {
+  color: black;
+  background: white;
+  font-family: sans-serif;
+  padding-top: 20px;
+  padding-bottom: 20px;
+  padding-left: 20px;
+  padding-right: 20px;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+a:link, a:visited, a:active {
+  color: black;
+  text-decoration: none;
+}
+
+a:hover {
+  color: red;
+  text-decoration: none;
+}
+
+.header,
+.header:link,
+.header:visited,
+.header:hover,
+.header:active {
+  color: red;
+  text-decoration: none;
+}
+
+.beforeBoards {
+  display: inline-block;
+  text-align: right;
+  margin-top: 5px;
+  height: 20px;
+  width: 100%;
+  overflow: hidden;
+}
+
+.afterBoards {
+  display: inline-block;
+  text-align: right;
+  height: 40px;
+  width: 100%;
+  overflow: hidden;
+}
+
+.menuLine {
+  font-size: 12px;
+  font-family: 'pgn4web Liberation Sans', sans-serif;
+  line-height: 20px;
+}
+
+.menuLink {
+  display: inline-block;
+  width: 2em;
+}
+
+.commandLink:hover {
+  text-transform: uppercase;
+}
+
+.hiddenFrame,
+.visibleFrame {
+  width: 256px;
+  height: 306px;
+  margin-left: 20px;
+  margin-right: 20px;
+  margin-top: 15px;
+  margin-bottom: 5px;
+}
+
+.hiddenFrame {
+  display: none;
+}
+
+.visibleFrame {
+  display: inline;
+}
+
+.infoMessage {
+  font-weight: bold;
+  text-align: center;
+}
+
+</style>
+
+</head>
+
+<body id="body">
+
+<script type="text/javascript">
+
+function fixCSSforHeadelessPage() {
+  document.write("<style type='text/css'> body { color: #AAAAAA; background: -webkit-linear-gradient(#FFFFFF, #F0F0F0); } a:link, a:visited, a:active { color: #AAAAAA; } a:hover { color: black; } .beforeBoards { margin-top: 10px; } </style>");
+}
+
+function printHeader() {
+  document.write("<table border='0' cellpadding='0' cellspacing='0' width='100%'><tbody><tr><td align='left' valign='middle'><h1 class='header' name='top'>pgn4web <a class='header' href='#boards' onfocus='this.blur();'>chess live broadcast</a></h1></td><td align='right' valign='middle'><img src='pawns.png' border='0'></td></tr></tbody></table></div>");
+}
+
+function printMenu() {
+  document.write("<div id='rightMenu' class='menuLine' style='text-align:right; float:right;'></div><div id='leftMenu' class='menuLine' style='text-align:left; float:left;'><span id='GameLiveStatusDemo' title='this is a simulation of the live broadcast functionality'></span><a id='GameLiveStatus' href='javascript:void(0);' style='display:none;' onclick='clickGameLiveStatus(); this.blur();' title='live broadcast status'></a></div><div id='infoMessage' class='menuLine infoMessage'>chess games viewer: loading PGN data, please wait...</div>");
+}
+
+timeOfLastReplayPreviousMoves = 0;
+function clickGameLiveStatus() {
+  thisTime = (new Date()).getTime();
+  if (thisTime - timeOfLastReplayPreviousMoves < 333) {
+    displayDebugInfo();
+    timeOfLastReplayPreviousMoves = 0;
+  } else {
+    timeOfLastReplayPreviousMoves = thisTime;
+    replayPreviousMoves();
+  }
+}
+
+function replayPreviousMoves() {
+  showAll = LiveBroadcastEnded;
+  for (thisBoard in boardId) {
+    if ((wf = window.frames["board" + boardId[thisBoard]]) && (rpm = wf.replayPreviousMoves)) {
+      if (showAll || wf.newMovesFlagTimeout) { rpm(1); }
+    }
+  }
+}
+
+nextBoardId = 1000;
+boardId = new Array();
+
+function updateBoardFrames(newMaxBoards) {
+  if (theObject = document.getElementById("boardFrames")) {
+    theObject.innerHTML = "";
+    for (board = 0; board < newMaxBoards; board++) {
+      theObject.innerHTML += "<iframe src='live-mosaic-tile.html?ut=t&rm=" + refreshMinutes + "' class='hiddenFrame' id='board" + nextBoardId + "' name='board" + nextBoardId + "' width='256' height='306' frameborder='0' marginheight='0' marginwidth='0' scrolling='no'>your web browser and/or your host do not support iframes as required to display the chessboard</iframe>";
+      boardId[board] = nextBoardId++;
+    }
+  }
+  maxBoards = newMaxBoards;
+  setMaxBoardToLocalStorage();
+}
+
+if (headlessPage) {
+  fixCSSforHeadelessPage();
+  printMenu();
+} else {
+  printHeader();
+}
+
+</script>
+
+<center>
+<a class="beforeBoards" name="boards" href="javascript:void(0);" onclick="goToHash('boards');" onfocus="this.blur();">&nbsp;</a>
+<div id="boardFrames"></div>
+
+
+<!-- chat box code here -->
+
+<!-- end of chat box code -->
+
+
+</center>
+<a class="afterBoards" name="bottom" href="javascript:void(0);" onclick="goToHash('');" onfocus="this.blur();">&nbsp;</a>
+
+<script type="text/javascript">
+
+updateBoardFrames(maxBoards);
+
+if (!headlessPage) {
+  printMenu();
+}
+
+
+var pgn4webClearShortCutSquaresForChildFrames =  [ ["DH", "8"], ["H", "7"], ["ABH", "6"] ];
+
+var filteredGames = new Array();
+var unfilteredGames = new Array();
+var numberOfGamesForDisplay = 0;
+var firstGame;
+var startGame;
+var firstBoardDisplayGame = 0;
+
+function firstFromDisplayGame(dGame) {
+  if (dGame > numberOfGames) { dGame = numberOfGames; }
+  else if (dGame < -numberOfGames) { dGame = -numberOfGames; }
+
+  if (dGame > 0) { dGame--; } // positive displayGame starts from +1 as first game
+
+  dGameAdjustment = 0;
+  if (filteredGames.length > 0) {
+    if (dGame >= 0) {
+      for (g = 0; g < dGame; g++) {
+        if (checkForHiddenGame(gameEvent[g], gameSite[g], gameDate[g], gameRound[g], gameWhite[g], gameBlack[g])) {
+          dGameAdjustment--;
+        }
+      }
+    } else {
+      for (g = numberOfGames - 1; g > numberOfGames + dGame; g--) {
+        if (checkForHiddenGame(gameEvent[g], gameSite[g], gameDate[g], gameRound[g], gameWhite[g], gameBlack[g])) {
+          dGameAdjustment++;
+        }
+      }
+    }
+  }
+
+  return (dGame + dGameAdjustment);
+}
+
+function gameKey(event, site, date, round, white, black) {
+  key = "";
+  key += "[" + (typeof(event) == "string" ? event : "") + "]";
+  key += "[" + (typeof(site) == "string" ? site : "") + "]";
+  key += "[" + (typeof(round) == "string" ? round : "") + "]";
+  key += "[" + (typeof(white) == "string" ? white : "") + "]";
+  key += "[" + (typeof(black) == "string" ? black : "") + "]";
+  return key;
+}
+
+function pgn4webHideChildFrameGame(event, site, date, round, white, black, test) {
+  if (numberOfGamesForDisplay > 1) {
+    res = hideGame(event, site, date, round, white, black, test);
+    if (res && (test !== true)) {
+      firstGame = firstFromDisplayGame(firstBoardDisplayGame);
+      customFunctionOnPgnTextLoad();
+    }
+  } else {
+    res = false;
+  }
+  return res;
+}
+
+function hideGame(event, site, date, round, white, black, test) {
+  key = gameKey(event, site, date, round, white, black);
+  meaningful = (key.match(/[A-Za-z0-9]/) !== null);
+  if (meaningful && (test !== true)) {
+    for (f in filteredGames) { if (key == filteredGames[f]) { return false; } }
+    filteredGames.push(key);
+  }
+  return meaningful;
+}
+
+function checkForHiddenGame(event, site, date, round, white, black) {
+  key = gameKey(event, site, date, round, white, black);
+  for (f in filteredGames) {
+    if (key == filteredGames[f]) { return true; }
+  }
+  return false;
+}
+
+function hideEndedGames() {
+  for (g = 0; g < numberOfGames; g++) {
+    if ((typeof(gameResult[g]) == "undefined") || (gameResult[g].indexOf("*") == -1)) {
+      hideGame(gameEvent[g], gameSite[g], gameDate[g], gameRound[g], gameWhite[g], gameBlack[g]);
+    }
+  }
+  firstGame = firstFromDisplayGame(firstBoardDisplayGame);
+  customFunctionOnPgnTextLoad();
+}
+
+function restoreHiddenGames() {
+  filteredGames = new Array();
+  firstGame = firstFromDisplayGame(firstBoardDisplayGame);
+  customFunctionOnPgnTextLoad();
+}
+
+function pgnGameForBoard(gameNum) {
+  if (!LiveBroadcastDemo) { return fullPgnGame(gameNum); }
+
+  if (gameDemoMaxPly[gameNum] > gameDemoLength[gameNum]) { return fullPgnGame(gameNum); }
+
+  Init(gameNum);
+
+  localPgnGame = "";
+  if (gameEvent[gameNum]) { localPgnGame += "[Event \"" + gameEvent[gameNum] + "\"]\n"; }
+  if (gameSite[gameNum]) { localPgnGame += "[Site \"" + gameSite[gameNum] + "\"]\n"; }
+  if (gameDate[gameNum]) { localPgnGame += "[Date \"" + gameDate[gameNum] + "\"]\n"; }
+  if (gameRound[gameNum]) { localPgnGame += "[Round \"" + gameRound[gameNum] + "\"]\n"; }
+  if (gameWhite[gameNum]) { localPgnGame += "[White \"" + gameWhite[gameNum] + "\"]\n"; }
+  if (gameBlack[gameNum]) { localPgnGame += "[Black \"" + gameBlack[gameNum] + "\"]\n"; }
+  if (gameResult[gameNum]) { localPgnGame += "[Result \"" + gameResult[gameNum] + "\"]\n"; }
+  if (gameFEN[gameNum]) { localPgnGame += "[FEN \"" + gameFEN[gameNum] + "\"]\n"; }
+  if (gameSetUp[gameNum]) { localPgnGame += "[SetUp \"" + gameSetUp[gameNum] + "\"]\n"; }
+  if (gameVariant[gameNum]) { localPgnGame += "[Variant \"" + gameVariant[gameNum] + "\"]\n"; }
+  if (gameInitialWhiteClock[gameNum]) { localPgnGame += "[WhiteClock \"" + gameInitialWhiteClock[gameNum] + "\"]\n"; }
+  if (gameInitialBlackClock[gameNum]) { localPgnGame += "[BlackClock \"" + gameInitialBlackClock[gameNum] + "\"]\n"; }
+  if (thisTag = customPgnHeaderTag("TimeControl")) { localPgnGame += "[TimeControl \"" + thisTag + "\"]\n"; }
+  localPgnGame += "\n";
+
+  gameDemoPlyNumber = gameDemoMaxPly[gameNum] <= gameDemoLength[gameNum] ? gameDemoMaxPly[gameNum] : gameDemoLength[gameNum] + 1;
+  for (thisPly = StartPly; thisPly < StartPly + gameDemoPlyNumber; thisPly++) {
+    if (thisPly % 2) {
+      if (thisComment = MoveComments[thisPly].replace(/{/g, "")) {
+        localPgnGame += "{" + thisComment + "} " + ((thisPly+1)/2) + "... ";
+      }
+      localPgnGame += Moves[thisPly] + " \n";
+    } else {
+      if (thisComment = MoveComments[thisPly].replace(/{/g, "")) { localPgnGame += "{" + thisComment + "} "; }
+      localPgnGame += (thisPly/2+1) + ". " + Moves[thisPly] + " ";
+    }
+  }
+  if (thisComment = MoveComments[thisPly].replace(/{/g, "")) { localPgnGame += "{" + thisComment + "} "; }
+  localPgnGame += " *";
+
+  return localPgnGame;
+}
+
+function updateBoard(thisBoardId) {
+  gameNum = -1;
+  thisBoard = -1;
+  for (thisBoard in boardId) { if (thisBoardId === boardId[thisBoard]) { break; } }
+  thisBoard = parseInt(thisBoard, 10);
+  if ((thisBoard < boardId.length) && (thisFrame = document.getElementById("board" + thisBoardId))) {
+    if (thisBoard < numberOfGamesForDisplay) {
+      startGame = startFromFirstGame(firstGame);
+      if (startGame >= 0) { gameForBoard = (startGame + thisBoard) % numberOfGamesForDisplay; }
+      else { gameForBoard = (2 * numberOfGamesForDisplay + startGame - thisBoard) % numberOfGamesForDisplay; }
+      gameNum = unfilteredGames[gameForBoard];
+      thisPgnGame = pgnGameForBoard(gameNum);
+      thisFrameClass = "visibleFrame";
+    } else {
+      thisPgnGame = "";
+      thisFrameClass = "hiddenFrame";
+    }
+    try {
+      if (window.frames["board" + thisBoardId].readyToReceivePgn) {
+        window.frames["board" + thisBoardId].pauseLiveBroadcast();
+        window.frames["board" + thisBoardId].document.getElementById("pgnText").value = thisPgnGame;
+        window.frames["board" + thisBoardId].refreshPgnSource();
+        window.frames["board" + thisBoardId].clearShortcutSquares("A","8");
+      }
+    } catch(e) { myAlert("error: failed accessing iframe for board #" + thisBoard, true); }
+    thisFrame.className = thisFrameClass;
+  }
+  return gameNum;
+}
+
+var firstLoadPgnText = true;
+var liveBroadcastUpdateTicker = 0;
+var previousPgnGameLength = new Array();
+
+function customFunctionOnPgnTextLoad() {
+
+  if (rememberedFilteredGames) {
+    filteredGames = rememberedFilteredGames;
+    rememberedFilteredGames = null;
+    if (displayGame > 0) {
+      displayGameNum = displayGame > numberOfGames ? numberOfGames - 1 : displayGame - 1;
+    } else if (displayGame < 0) {
+      displayGameNum = displayGame < -numberOfGames ? numberOfGames + 1 : displayGame;
+    } else {
+      displayGameNum = 0;
+    }
+    if ((g = filteredGames.indexOf(gameKey(gameEvent[displayGameNum], gameSite[displayGameNum], gameDate[displayGameNum], gameRound[displayGameNum], gameWhite[displayGameNum], gameBlack[displayGameNum]))) != -1 ) {
+      filteredGames.splice(g,1);
+    }
+  }
+
+  if (firstLoadPgnText) { firstGame = firstFromDisplayGame(displayGame); }
+
+  unfilteredGames = new Array();
+  newMovesInShownGames = false;
+  gamesForHiding = 0;
+  for (g = 0; g < numberOfGames; g++) {
+    if (!checkForHiddenGame(gameEvent[g], gameSite[g], gameDate[g], gameRound[g], gameWhite[g], gameBlack[g])) {
+      unfilteredGames.push(g);
+      if ((typeof(gameResult[g]) == "undefined") || (gameResult[g].indexOf("*") == -1)) { gamesForHiding++; }
+    }
+  }
+  numberOfGamesForDisplay = unfilteredGames.length;
+
+  for (board = 0; board < maxBoards; board++) {
+    if ((g = updateBoard(boardId[board])) != -1) {
+      if (board === 0) { firstBoardDisplayGame = displayGame >=0 ? g + 1 : numberOfGames - g; }
+      found_g = false; for (f in unfilteredGames) { if (unfilteredGames[f] === g) { found_g = true; break; } }
+      if (found_g) {
+        if (LiveBroadcastDemo) {
+          currentPgnGameLength = gameDemoMaxPly[g] > gameDemoLength[g] ? gameDemoLength[g] + 1 : gameDemoMaxPly[g];
+        } else {
+          currentPgnGameLength = pgnGame[g].replace(/{[^}]*}/g, " ").replace(/\([^)]*\)/g, " ").length;
+        }
+        newMovesInShownGames = newMovesInShownGames || (typeof(previousPgnGameLength[g]) == "undefined") || (previousPgnGameLength[g] !== currentPgnGameLength);
+        previousPgnGameLength[g] = currentPgnGameLength;
+      }
+    }
+  }
+
+  if (theObject = document.getElementById("GameLiveStatus")) {
+    theObject.title = "live broadcast status";
+    if (alertNumSinceReset) {
+      theObject.title += ": " + alertNumSinceReset + " new alert" + (alertNumSinceReset > 1 ? "s" : "");
+    }
+    if (firstLoadPgnText) { theObject.style.display = "inline"; }
+  }
+
+  if (newMovesInShownGames) { liveBroadcastUpdateTicker++; }
+  if (LiveBroadcastStarted && !LiveBroadcastEnded) {
+    document.title = liveBroadcastUpdateTicker + LiveBroadcastStatusString.replace("live games: ", ".").replace(" &nbsp; finished: ", ".") + " live broadcast" + (demoFlag ? " demo" : "");
+  } else { document.title = LiveBroadcastStatusString; }
+
+  if (theObject = document.getElementById("GameLiveStatusDemo")) { theObject.innerHTML = LiveBroadcastDemo ? "demo &nbsp; " : ""; }
+
+  updateMenu();
+
+  if (firstLoadPgnText) { firstLoadPgnText = false; }
+}
+
+function updateMenu() {
+
+  if (theRightObject = document.getElementById("rightMenu")) {
+    theRightObject.innerHTML = "";
+
+    if (numberOfGamesForDisplay > maxBoards) { theRightObject.innerHTML += "<span class='menuLink'><a class='commandLink' href='javascript:void(0);' onclick='previousPage();' title='showing from game " + (Math.abs(firstGame)+1) + "/" + numberOfGamesForDisplay + ": view the Earlier games' onfocus='this.blur();'>&nbsp;e&nbsp;</a></span><span class='menuLink'><a class='commandLink' href='javascript:void(0);' onclick='nextPage();' title='showing from game " + (Math.abs(firstGame)+1) + "/" + numberOfGamesForDisplay + ": view the Next games' onfocus='this.blur();'>&nbsp;n&nbsp;</a></span>"; }
+
+    if (maxBoards > 1 && numberOfGamesForDisplay > 1) { theRightObject.innerHTML += "<span class='menuLink'><a class='commandLink' href='javascript:void(0);' onclick='newBoards(" + Math.min(maxBoards - 1, numberOfGamesForDisplay - 1) + ");' title='show one chessboard Less' onfocus='this.blur();'>&nbsp;l&nbsp;</a></span>"; }
+    if (numberOfGamesForDisplay > maxBoards) { theRightObject.innerHTML += "<span class='menuLink'><a class='commandLink' href='javascript:void(0);' onclick='newBoards(" + (maxBoards + 1) + ");' title='show one chessboard More' onfocus='this.blur();'>&nbsp;m&nbsp;</a></span>"; }
+
+    if (LiveBroadcastStarted && !LiveBroadcastEnded && gamesForHiding && numberOfGamesForDisplay > 1) { theRightObject.innerHTML += "<span class='menuLink'><a class='commandLink' href='javascript:void(0);' onclick='hideEndedGames();' title='Hide games finished so far' onfocus='this.blur();'>&nbsp;h&nbsp;</a></span>"; }
+    if (filteredGames.length > 0) { theRightObject.innerHTML += "<span class='menuLink'><a class='commandLink' href='javascript:void(0);' onclick='restoreHiddenGames();' title='Unhide games previously hidden: " + filteredGames.length + "/" + numberOfGames + "' onfocus='this.blur();'>&nbsp;u&nbsp;</a></span>"; }
+
+    if (LiveBroadcastDelay > 0) {
+      if (LiveBroadcastEnded) { theRightObject.innerHTML += "<span class='menuLink'><a class='commandLink' href='javascript:void(0);' onclick='restartLiveBroadcast();' title='Check for the start of a new live broadcast event' onfocus='this.blur();'>&nbsp;c&nbsp;</a></span>"; }
+      else {
+        if (LiveBroadcastPaused && LiveBroadcastStarted) { theRightObject.innerHTML += "<span class='menuLink'><a class='commandLink' href='javascript:void(0);' onclick='restartLiveBroadcast(); updateMenu();' title='Restart live broadcast automatic refresh of games' onfocus='this.blur();'>&nbsp;r&nbsp;</a></span>"; }
+        else if (LiveBroadcastPaused && !LiveBroadcastStarted) { theRightObject.innerHTML += "<span class='menuLink'><a class='commandLink' href='javascript:void(0);' onclick='restartLiveBroadcast(); updateMenu();' title='Restart polling for a new live broadcast' onfocus='this.blur();'>&nbsp;r&nbsp;</a></span>"; }
+        else if (LiveBroadcastStarted) { theRightObject.innerHTML += "<span class='menuLink'><a class='commandLink' href='javascript:void(0);' onclick='pauseLiveBroadcast(); updateMenu();' title='Pause live broadcast automatic refresh of games' onfocus='this.blur();'>&nbsp;p&nbsp;</a></span>"; }
+        else { theRightObject.innerHTML += "<span class='menuLink'><a class='commandLink' href='javascript:void(0);' onclick='pauseLiveBroadcast(); updateMenu();' title='Pause polling for a new live broadcast' onfocus='this.blur();'>&nbsp;p&nbsp;</a></span>"; }
+        theRightObject.innerHTML += "<span class='menuLink'><a class='commandLink' class='commandLink' href='javascript:void(0);' onclick='refreshPgnSource();' title='Force games refresh" + (LiveBroadcastStarted ? ": last moves received on " + LiveBroadcastLastReceivedLocal : "") + "' onfocus='this.blur();'>&nbsp;f&nbsp;</a></span>";
+      }
+    }
+
+    if (theRightObject && (theLeftObject = document.getElementById("leftMenu"))) {
+      theRightObject.style.minWidth = 0;
+      theLeftObject.style.minWidth = 0;
+      theRightObject.style.minWidth = theLeftObject.offsetWidth;
+      theLeftObject.style.minWidth = theRightObject.offsetWidth;
+    }
+  }
+
+  if (theInfoObject = document.getElementById("infoMessage")) {
+    if (numberOfGamesForDisplay < 1) {
+      theInfoObject.innerHTML = "warning: all games hidden: <a href='javascript:void(0);' onclick='restoreHiddenGames();' onfocus='this.blur();'>unhide games</a> or <a href='javascript:void(0);' onclick='refreshPgnSource();' onfocus='this.blur();'>force live refresh</a>";
+    } else {
+      theEvent = "";
+      theSite = "";
+      for (n = 0; n < numberOfGames; n++) {
+        if ((theEvent !== false) && (theEvent !== gameEvent[n])) {
+          if (theEvent) { theEvent = false; }
+          else { theEvent = gameEvent[n]; }
+        }
+        if ((theSite !== false) && (theSite !== gameSite[n])) {
+          if (theSite) { theSite = false; }
+          else { theSite = gameSite[n]; }
+        }
+      }
+      if (theEvent == "?") { theEvent = ""; }
+      if (theSite == "?") { theSite = ""; }
+      if (theEvent) { theEvent = theEvent.replace(/\s/g, "&nbsp;").replace(/-/g, "&#8209;"); }
+      if (theSite) { theSite = theSite.replace(/\s/g, "&nbsp;").replace(/-/g, "&#8209;"); }
+
+      if (theEvent || theSite) {
+        theInfoObjectText = "<span class='notranslate'>&nbsp;&nbsp;&nbsp;";
+        if (theEvent) { theInfoObjectText += theEvent; }
+        if (theEvent && theSite) { theInfoObjectText += "&nbsp;&nbsp;&nbsp;"; }
+        if (theSite) { theInfoObjectText += theSite; }
+        theInfoObjectText += "&nbsp;&nbsp;&nbsp;</span>";
+        theInfoObject.innerHTML = theInfoObjectText;
+        theInfoObject.title = "event currently on display: hover the mouse below each chessboard for more details";
+      } else {
+        theInfoObject.innerHTML = "&nbsp;";
+        theInfoObject.title = "";
+      }
+    }
+  }
+
+}
+
+function startFromFirstGame(fGame) {
+  if (fGame >= numberOfGamesForDisplay) { return numberOfGamesForDisplay - 1; }
+  if (fGame < -numberOfGamesForDisplay) { return 0; }
+  if (fGame < 0) { return numberOfGamesForDisplay + fGame; }
+  else { return fGame; }
+}
+
+function nextPage() {
+  firstGame = (startFromFirstGame(firstGame) + maxBoards) % numberOfGamesForDisplay;
+  firstGame -= (firstGame < 0 ? numberOfGamesForDisplay : 0);
+  customFunctionOnPgnTextLoad();
+}
+
+function previousPage() {
+  firstGame = (startFromFirstGame(firstGame) - maxBoards + numberOfGamesForDisplay) % numberOfGamesForDisplay;
+  firstGame -= (firstGame < 0 ? numberOfGamesForDisplay : 0);
+  customFunctionOnPgnTextLoad();
+}
+
+function newBoards(newMaxBoards) {
+  updateBoardFrames(newMaxBoards);
+  updateMenu();
+}
+
+function underlineByTicker(text, ticker) {
+  position = ticker % text.length;
+  return (text.substring(0, position) +
+    "<u>" +text.substring(position, position + 1) + "</u>" +
+    text.substring(position + 1));
+}
+
+function customFunctionOnCheckLiveBroadcastStatus() {
+  if (theObject = document.getElementById("GameLiveStatus")) {
+    if (LiveBroadcastTicker > 1) {
+      theObject.innerHTML =  theObject.innerHTML.replace(/live/, underlineByTicker("live", LiveBroadcastTicker-2));
+    }
+  }
+}
+
+function switchBoardView(search) {
+  if ((typeof(chrome) != "undefined") && (chrome.extension) && (pgnUrl) && (LiveBroadcastDelay > 0)) {
+    url = "chess-games-viewer.html?pgnData=" + escape(pgnUrl) + "&refreshMinutes=" + escape(refreshMinutes);
+    if (demoFlag) { url += "&refreshDemo=true&demoPly=" + gameDemoMaxPly.join(); }
+    if ((search !== null) && ((searchGame = gameNumberSearchPgn(search, false, true)) !== false)) {
+      url += "&search=" + escape(searchGame + 1);
+    }
+    if (filteredGames.length) {
+       try { rememberHiddenValue = escape(JSON.stringify(filteredGames.concat(pgnData))); }
+       catch(e) { rememberHiddenValue = null; }
+       rememberHiddenValueMaxLength = 59876; // keep total URL shorter than 64k
+       if (rememberHiddenValue && (rememberHiddenValue.length < rememberHiddenValueMaxLength)) { url += "&rememberHidden=" + rememberHiddenValue; }
+    }
+    location.href = url;
+  }
+}
+
+function cycleHash() {
+  switch (location.hash) {
+    case "#boards": goToHash("bottom"); break;
+    case "#bottom": goToHash(""); break;
+    default: goToHash("boards"); break;
+  }
+}
+
+function goToHash(hash) {
+  if (hash) { location.hash = ""; }
+  else { location.hash = "boards"; }
+  location.hash = hash;
+}
+
+function customShortcutKey_Shift_3() { cycleHash(); }
+
+function customShortcutKey_Shift_5() {
+  displayGame = displayGame_default;
+  firstLoadPgnText = true;
+  customFunctionOnPgnTextLoad();
+}
+
+function customShortcutKey_Shift_6() {
+  firstLoadPgnText = true;
+  customFunctionOnPgnTextLoad();
+}
+
+function customShortcutKey_Shift_7() {
+  restoreHiddenGames();
+}
+
+function customShortcutKey_Shift_8() {
+  newBoards(maxBoards_default);
+}
+
+</script>
+
+</body>
+
+</html>

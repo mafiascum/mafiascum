@@ -1,0 +1,199 @@
+<!-- INCLUDE overall_header.html -->
+
+<div id="forum_title_frame">
+	<h2><a href="{U_VIEW_TOPIC}" id="forum_title">{TOPIC_TITLE}</a></h2>
+	<h4>{PAGE_NUMBER}</h4>
+</div>
+
+
+<div class="topic-actions buttonpanel">
+
+	<!-- IF PAGINATION or TOTAL_POSTS or TOTAL_TOPICS -->
+		<div class="pagination">
+		<div data-role="controlgroup" data-type="horizontal">
+			<!-- IF PREVIOUS_PAGE --><a href="{PREVIOUS_PAGE}" data-direction="reverse" data-role="button" data-icon="arrow-l"  data-inline="true" title="Previous Page" class="grouped_icon_button">Prev</a><!-- ENDIF -->
+			<!-- IF NEXT_PAGE or PREVIOUS_PAGE --><a href="#jumpPage" data-role="button" data-inline="true" data-rel="dialog" title="{L_JUMP_TO_PAGE}">Jump</a><!-- ENDIF -->
+			<!-- IF NEXT_PAGE --><a href="{NEXT_PAGE}" data-role="button" data-iconpos="right" data-icon="arrow-r"  data-inline="true" title="Next Page" class="grouped_icon_button">Next</a><!-- ENDIF -->
+		</div>
+		</div>
+	<!-- ENDIF -->
+	<!-- IF not S_IS_BOT and S_DISPLAY_REPLY_INFO -->
+			<a href="{U_POST_REPLY_TOPIC}" onclick="{U_REPLY_ONCLICK}" data-role="button" data-inline="true"><!-- IF S_IS_LOCKED -->Locked<!-- ELSE -->Reply<!-- ENDIF --></a>
+	<!-- ENDIF -->
+
+</div>
+<div class="clear"></div>
+
+<!-- IF S_HAS_POLL -->
+	<form method="post" action="{S_POLL_ACTION}">
+
+	<div class="panel">
+
+		<div class="content">
+			<h2>{POLL_QUESTION}</h2>
+			<p class="author">{L_POLL_LENGTH}<!-- IF S_CAN_VOTE and L_POLL_LENGTH --><br /><!-- ENDIF --><!-- IF S_CAN_VOTE -->{L_MAX_VOTES}<!-- ENDIF --></p>
+
+			<fieldset class="polls">
+			<!-- BEGIN poll_option -->
+				<dl class="<!-- IF poll_option.POLL_OPTION_VOTED -->voted<!-- ENDIF -->"<!-- IF poll_option.POLL_OPTION_VOTED --> title="{L_POLL_VOTED_OPTION}"<!-- ENDIF -->>
+					<dt><!-- IF S_CAN_VOTE --><label for="vote_{poll_option.POLL_OPTION_ID}">{poll_option.POLL_OPTION_CAPTION}</label><!-- ELSE -->{poll_option.POLL_OPTION_CAPTION}<!-- ENDIF --></dt>
+					<!-- IF S_CAN_VOTE --><dd style="width: auto;"><!-- IF S_IS_MULTI_CHOICE --><input type="checkbox" name="vote_id[]" id="vote_{poll_option.POLL_OPTION_ID}" value="{poll_option.POLL_OPTION_ID}"<!-- IF poll_option.POLL_OPTION_VOTED --> checked="checked"<!-- ENDIF --> /><!-- ELSE --><input type="radio" name="vote_id[]" id="vote_{poll_option.POLL_OPTION_ID}" value="{poll_option.POLL_OPTION_ID}"<!-- IF poll_option.POLL_OPTION_VOTED --> checked="checked"<!-- ENDIF --> /><!-- ENDIF --></dd><!-- ENDIF -->
+					<!-- IF S_DISPLAY_RESULTS --><dd class="resultbar"><div class="<!-- IF poll_option.POLL_OPTION_PCT < 20 -->pollbar1<!-- ELSEIF poll_option.POLL_OPTION_PCT < 40 -->pollbar2<!-- ELSEIF poll_option.POLL_OPTION_PCT < 60 -->pollbar3<!-- ELSEIF poll_option.POLL_OPTION_PCT < 80 -->pollbar4<!-- ELSE -->pollbar5<!-- ENDIF -->" style="width:{poll_option.POLL_OPTION_PERCENT};">{poll_option.POLL_OPTION_RESULT}</div></dd>
+					<dd><!-- IF poll_option.POLL_OPTION_RESULT == 0 -->{L_NO_VOTES}<!-- ELSE -->{poll_option.POLL_OPTION_PERCENT}<!-- ENDIF --></dd><!-- ENDIF -->
+				</dl>
+			<!-- END poll_option -->
+
+			<!-- IF S_DISPLAY_RESULTS -->
+				<dl>
+					<dt>&nbsp;</dt>
+					<dd class="resultbar">{L_TOTAL_VOTES} : {TOTAL_VOTES}</dd>
+				</dl>
+			<!-- ENDIF -->
+
+			<!-- IF S_CAN_VOTE -->
+				<dl style="border-top: none;">
+					<dt>&nbsp;</dt>
+					<dd class="resultbar"><input type="submit" name="update" value="{L_SUBMIT_VOTE}" class="button1" /></dd>
+				</dl>
+			<!-- ENDIF -->
+
+			<!-- IF not S_DISPLAY_RESULTS -->
+				<dl style="border-top: none;">
+					<dt>&nbsp;</dt>
+					<dd class="resultbar"><a href="{U_VIEW_RESULTS}">{L_VIEW_RESULTS}</a></dd>
+				</dl>
+			<!-- ENDIF -->
+			</fieldset>
+		</div>
+		{S_FORM_TOKEN}
+		{S_HIDDEN_FIELDS}
+	</div>
+
+
+	</form>
+	<hr />
+<!-- ENDIF -->
+			<script type="text/javascript">
+				var editList = new Array();
+				var deleteList = new Array();
+				var reportList = new Array();
+				var warnList = new Array();
+				var infoList = new Array();
+				var quoteList = new Array();
+			</script>
+<!-- BEGIN postrow -->
+	<!-- IF postrow.S_FIRST_UNREAD --><a id="unread"></a><!-- ENDIF -->
+	<div id="p{postrow.POST_ID}" class="post <!-- IF postrow.S_ROW_COUNT is odd -->bg1<!-- ELSE -->bg2<!-- ENDIF --><!-- IF postrow.S_UNREAD_POST --> unreadpost<!-- ENDIF --><!-- IF postrow.S_POST_REPORTED --> reported<!-- ENDIF -->">
+		<div class="postbody">
+		
+			<!-- IF postrow.S_IGNORE_POST -->
+				<div class="ignore">{postrow.L_IGNORE_POST}</div>
+			<!-- ELSE -->
+			<div class="top_of_post">
+						<!-- IF not S_IS_BOT -->
+			<!-- IF postrow.U_EDIT or postrow.U_DELETE or postrow.U_REPORT or postrow.U_WARN or postrow.U_INFO or postrow.U_QUOTE or postrow.MULTIPOST_STATUS-->
+			<div class="profile-icons">
+			<fieldset>
+			<!-- IF postrow.U_EDIT or postrow.U_DELETE or postrow.U_REPORT or postrow.U_WARN or postrow.U_INFO or postrow.U_QUOTE -->
+				<select id="action_{postrow.POST_ID}" data-inline="true" onchange="postActions('{postrow.POST_ID}')">
+					<option >Actions:</option>
+					<!-- IF postrow.U_EDIT --><script type="text/javascript"> editList[{postrow.POST_ID}]="{postrow.U_EDIT}";</script><option value="1"><span>Edit</span></option><!-- ENDIF -->
+					<!-- IF postrow.U_DELETE --><script type="text/javascript"> deleteList[{postrow.POST_ID}]="{postrow.U_DELETE}";</script><option value="2"><span>Delete</span></option><!-- ENDIF -->
+					<!-- IF postrow.U_REPORT --><script type="text/javascript"> reportList[{postrow.POST_ID}]="{postrow.U_REPORT}";</script><option value="3"><span>Report</span></option><!-- ENDIF -->
+					<!-- IF postrow.U_WARN --><script type="text/javascript"> warnList[{postrow.POST_ID}]="{postrow.U_WARN}";</script><option value="4"><span>Warn</span></option><!-- ENDIF -->
+					<!-- IF postrow.U_INFO --><script type="text/javascript"> infoList[{postrow.POST_ID}]="{postrow.U_INFO}";</script><option value="5"><span>Info</span></option><!-- ENDIF -->
+					<!-- IF postrow.U_QUOTE --><script type="text/javascript"> quoteList[{postrow.POST_ID}]="{postrow.U_QUOTE_NOJS}";</script><option value="6"><span>Quote</span></option><!-- ENDIF -->
+				</select>
+				<!-- ENDIF -->
+			</fieldset>
+			</div>
+			<!-- ENDIF -->
+		<!-- ENDIF -->
+		<div class="post_top_left">
+			<div class="avatar">{postrow.POSTER_AVATAR}</div>
+			<div class="author">
+				 <div class="author_name"><!-- IF S_IS_BOT -->{postrow.MINI_POST_IMG}&nbsp;&nbsp;
+			      <!-- ELSE -->
+					{L_POST_NUM}&nbsp;<a href="{postrow.U_MINI_POST}"><strong>{postrow.POST_NUM}</strong></a>&nbsp;
+				    <!-- IF S_ENABLE_ISO_POST_NUM -->
+					(<strong>{L_POST_NUM_SYMBOL}{postrow.ISO_POST_NUM}</strong>)&nbsp;
+				    <!-- ENDIF -->
+			      <!-- ENDIF --> by 			<!-- IF postrow.U_POST_AUTHOR  --><a href="{postrow.U_POST_AUTHOR}"><!-- IF not postrow.U_POST_AUTHOR --><strong>{postrow.POST_AUTHOR_FULL}</strong><!-- ELSE -->{postrow.POST_AUTHOR_FULL}<!-- ENDIF --> </div>
+			     <div class="post_date">{postrow.POST_DATE}</div>
+			</div>
+			</div>
+			</div>
+		<div class="clear"></div>
+			<!-- IF postrow.S_POST_UNAPPROVED or postrow.S_POST_REPORTED -->
+				<p class="rules">
+					<!-- IF postrow.S_POST_REPORTED -->{REPORTED_IMG} <a href="{postrow.U_MCP_REPORT}"><strong>{L_POST_REPORTED}</strong></a><!-- ENDIF -->
+				</p>
+			<!-- ENDIF -->
+
+			<div class="postcontent">{postrow.MESSAGE}</div>
+
+			<!-- IF postrow.EDITED_MESSAGE or postrow.EDIT_REASON -->
+				<div class="notice">{postrow.EDITED_MESSAGE}
+					<!-- IF postrow.EDIT_REASON --><br /><strong>{L_REASON}:</strong> <em>{postrow.EDIT_REASON}</em><!-- ENDIF -->
+				</div>
+			<!-- ENDIF -->
+
+			<!-- IF postrow.BUMPED_MESSAGE --><div class="notice"><br /><br />{postrow.BUMPED_MESSAGE}</div><!-- ENDIF -->
+		<!-- ENDIF -->
+
+		</div>
+
+	<!-- ENDIF -->
+
+	</div>
+<!-- END postrow -->
+<div class="topic-actions buttonpanel">
+
+	<!-- IF PAGINATION or TOTAL_POSTS or TOTAL_TOPICS -->
+		<div class="pagination">
+		<div data-role="controlgroup" data-type="horizontal">
+			<!-- IF PREVIOUS_PAGE --><a href="{PREVIOUS_PAGE}" data-direction="reverse" data-role="button" data-icon="arrow-l"  data-inline="true" title="Previous Page" class="grouped_icon_button">Prev</a><!-- ENDIF -->
+			<!-- IF NEXT_PAGE or PREVIOUS_PAGE --><a href="#jumpPage" data-role="button" data-inline="true" data-rel="dialog" title="{L_JUMP_TO_PAGE}">Jump</a><!-- ENDIF -->
+			<!-- IF NEXT_PAGE --><a href="{NEXT_PAGE}" data-role="button" data-iconpos="right" data-icon="arrow-r"  data-inline="true" title="Next Page" class="grouped_icon_button">Next</a><!-- ENDIF -->
+		</div>
+		</div>
+	<!-- ENDIF -->
+	<!-- IF not S_IS_BOT and S_DISPLAY_REPLY_INFO -->
+			<a href="{U_POST_REPLY_TOPIC}" onclick="{U_REPLY_ONCLICK}" data-role="button" data-inline="true"><!-- IF S_IS_LOCKED -->Locked<!-- ELSE -->Reply<!-- ENDIF --></a>
+	<!-- ENDIF -->
+
+</div>
+<div class="clear"></div>
+
+<!-- IF not S_IS_LOCKED and S_QUICK_REPLY -->
+	<!-- INCLUDE quickreply_editor.html -->
+<!-- ENDIF -->
+<!-- IF S_NUM_POSTS > 0 or PREVIOUS_PAGE -->
+<div class="panel bg1">
+	<form id="viewtopic" method="get" action="{S_TOPIC_ACTION}">
+
+	<input type="hidden" name="t" value="{TOPIC_ID}"/>
+	<input type="hidden" name="f" value="{FORUM_ID}"/>
+	<fieldset class="display-options" style="margin-top: 0;" data-role="controlgroup">
+		<!-- IF not S_IS_BOT -->
+	        {S_SELECT_SORT_USERS}{S_SELECT_SORT_USERS2}<a data-role="button" href="#" id="user_select_toggle_link" onclick="toggle_user_select_display();return false;">{TOGGLE_ANCHOR_DISPLAY}</a> <input type="submit" name="user_sort" value="{L_GO}" class="button2" /></label>
+		<!-- ENDIF -->
+	</fieldset>
+	</form>
+</div>
+<!-- ENDIF -->
+
+<div class="panel bg2">
+<!-- INCLUDE jumpbox.html -->
+
+<!-- IF S_TOPIC_MOD -->
+
+	<form method="post" action="{S_MOD_ACTION}" class="quickmod_form">
+	<fieldset class="quickmod" data-role="controlgroup" >
+		{S_TOPIC_MOD} <input type="submit" value="{L_GO}" class="button2" />
+		{S_FORM_TOKEN}
+	</fieldset>
+	</form>
+<!-- ENDIF -->
+</div>
+<!-- INCLUDE overall_footer.html -->

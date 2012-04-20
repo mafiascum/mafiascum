@@ -1,0 +1,39 @@
+	</div>
+
+<div id="page-footer">
+
+
+<!--
+	We request you retain the full copyright notice below including the link to www.phpbb.com.
+	This not only gives respect to the large amount of time given freely by the developers
+	but also helps build interest, traffic and use of phpBB3. If you (honestly) cannot retain
+	the full copyright we ask you at least leave in place the "Powered by phpBB" line, with
+	"phpBB" linked to www.phpbb.com. If you refuse to include even this then support on our
+	forums may be affected.
+
+	The phpBB Group : 2006
+//-->
+
+	<div class="copyright">Powered by <a href="http://www.phpbb.com/">phpBB</a> &copy; 2000, 2002, 2005, 2007 phpBB Group
+		<!-- IF TRANSLATION_INFO --><br />{TRANSLATION_INFO}<!-- ENDIF -->
+		<!-- IF DEBUG_OUTPUT --><br />{DEBUG_OUTPUT}<!-- ENDIF -->
+		<!-- IF U_ACP --><br /><strong><a href="{U_ACP}">{L_ACP}</a></strong><!-- ENDIF -->
+	</div>
+</div>
+</div>
+</div>
+</div>
+<div>
+	<a id="bottom" name="bottom" accesskey="z"></a>
+	<!-- IF not S_IS_BOT -->{RUN_CRON_TASK}<!-- ENDIF -->
+</div>
+<div data-role="dialog" id="jumpPage">
+<div data-role="header"><h1>Page Jump</h1></div>
+<div data-role="content">
+<p>{LA_JUMP_PAGE}:<p>
+	<input data-inline="true" type="text" id="jumpText" value="{ON_PAGE}" />
+	<a data-inline="true" data-role="button" href="#" id="jumpPageButton" onclick="jumpto();">{L_GO}</a>
+</div>
+</div>
+</body>
+</html>

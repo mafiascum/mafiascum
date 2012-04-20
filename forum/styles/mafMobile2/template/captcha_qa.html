@@ -1,0 +1,14 @@
+<!-- IF S_TYPE == 1 -->
+<div class="panel">
+	<h3>{L_CONFIRMATION}</h3>
+	<fieldset class="fields2">
+<!-- ENDIF -->
+		<div data-role="fieldcontain" class="ui-hide-label">
+		<label>{QA_CONFIRM_QUESTION}:</label>
+			<input placeholder="{QA_CONFIRM_QUESTION}" type="text" tabindex="{$CAPTCHA_TAB_INDEX}" name="qa_answer" id="answer" class="inputbox autowidth" title="{L_ANSWER}" />
+		</div>
+		<input type="hidden" name="qa_confirm_id" id="qa_confirm_id" value="{QA_CONFIRM_ID}" />
+<!-- IF S_TYPE == 1 -->
+	</fieldset>
+</div>
+<!-- ENDIF -->

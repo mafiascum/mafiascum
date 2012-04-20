@@ -1,0 +1,28 @@
+<!-- INCLUDE overall_header.html -->
+
+<!-- INCLUDE forumlist_body.html -->
+
+<!-- IF not S_USER_LOGGED_IN and not S_IS_BOT -->
+	<form method="post" action="{S_LOGIN_ACTION}" class="headerspace">
+	<div class="panel">
+		<fieldset class="quick-login">
+			<div data-role="fieldcontain" class="ui-hide-label">
+				<label for="username">{L_USERNAME}:</label>
+				<input placeholder="{L_USERNAME}" type="text" name="username" id="username" size="10" class="inputbox" title="{L_USERNAME}" />
+				</div>
+			<div data-role="fieldcontain" class="ui-hide-label">
+				<label for="password">{L_PASSWORD}:</label>
+				<input placeholder="{L_PASSWORD}" type="password" name="password" id="password" size="10" class="inputbox" title="{L_PASSWORD}" />
+				</div>
+			<!-- IF S_AUTOLOGIN_ENABLED -->
+				<label for="autologin">{L_LOG_ME_IN} <input type="checkbox" name="autologin" id="autologin" /></label>
+			<!-- ENDIF -->
+			<input type="submit" name="login" value="{L_LOGIN}" class="button2" />
+			{S_LOGIN_REDIRECT}
+		</fieldset>
+		</div>
+	</form>
+<!-- ENDIF -->
+
+
+<!-- INCLUDE overall_footer.html -->
