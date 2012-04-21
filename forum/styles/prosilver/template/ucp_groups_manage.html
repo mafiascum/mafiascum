@@ -135,7 +135,7 @@
 			<tbody>
 		<!-- ELSE -->
 			<tr class="<!-- IF member.S_ROW_COUNT is even -->bg1<!-- ELSE -->bg2<!-- ENDIF -->">
-				<td class="name">{member.USERNAME_FULL}</td>
+				<td class="name">{member.USERNAME_FULL} <!-- IF member.AUTO_REMOVED --> (Auto Removed On {member.AUTO_REMOVED})<!-- ENDIF --></td>
 				<td><!-- IF member.S_GROUP_DEFAULT -->{L_YES}<!-- ELSE -->{L_NO}<!-- ENDIF --></td>
 				<td class="posts">{member.USER_POSTS}</td>
 				<td class="joined">{member.JOINED}</td>
@@ -184,6 +184,8 @@
 		<dt><label for="usernames">{L_USERNAME}:</label><br /><span>{L_USERNAMES_EXPLAIN}</span></dt>
 		<dd><textarea name="usernames" id="usernames" rows="3" cols="30" class="inputbox"></textarea></dd>
 		<dd><strong><a href="{U_FIND_USERNAME}" onclick="find_username(this.href); return false;">{L_FIND_USERNAME}</a></strong></dd>
+		<dt><label for="duration">Duration:</label><br /><span>The duration, in days, for which the user will remain in the usergroup.</span></dt>
+		<dd><input type="text" name="duration" id="duration" size="7" maxlength="7" class="inputbox narrow"/></dd>
 	</dl>
 	</fieldset>
 

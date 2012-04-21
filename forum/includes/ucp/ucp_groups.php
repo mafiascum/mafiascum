@@ -795,7 +795,7 @@ class ucp_groups
 						$db->sql_freeresult($result);
 
 						// Grab the members
-						$sql = 'SELECT u.user_id, u.username, u.username_clean, u.user_colour, u.user_regdate, u.user_posts, u.group_id, ug.group_leader, ug.user_pending
+						$sql = 'SELECT u.user_id, u.username, u.username_clean, u.user_colour, u.user_regdate, u.user_posts, u.group_id, ug.group_leader, ug.user_pending, ug.auto_remove_time
 							FROM ' . USERS_TABLE . ' u, ' . USER_GROUP_TABLE . " ug
 							WHERE ug.group_id = $group_id
 								AND u.user_id = ug.user_id
@@ -835,7 +835,8 @@ class ucp_groups
 								'S_GROUP_DEFAULT'	=> ($row['group_id'] == $group_id) ? true : false,
 								'JOINED'			=> ($row['user_regdate']) ? $user->format_date($row['user_regdate'], 'M d Y') : ' - ',
 								'USER_POSTS'		=> $row['user_posts'],
-								'USER_ID'			=> $row['user_id'])
+								'USER_ID'			=> $row['user_id'],
+								'AUTO_REMOVED'		=> ($row['auto_remove_time'] == 0 ? "" : strftime("%b %d %Y", $row['auto_remove_time'])))
 							);
 						}
 						$db->sql_freeresult($result);
@@ -1024,6 +1025,7 @@ class ucp_groups
 						$user->add_lang(array('acp/groups', 'acp/common'));
 
 						$names = utf8_normalize_nfc(request_var('usernames', '', true));
+						$duration = request_var('duration', 0, true);
 
 						if (!$group_id)
 						{
@@ -1045,16 +1047,15 @@ class ucp_groups
 						{
 							trigger_error($user->lang['NOT_LEADER_OF_GROUP'] . $return_page);
 						}
-
+						
 						$name_ary = array_unique(explode("\n", $names));
 						$group_name = ($group_row['group_type'] == GROUP_SPECIAL) ? $user->lang['G_' . $group_row['group_name']] : $group_row['group_name'];
-
 						$default = request_var('default', 0);
 
 						if (confirm_box(true))
 						{
 							// Add user/s to group
-							if ($error = group_user_add($group_id, false, $name_ary, $group_name, $default, 0, 0, $group_row))
+							if ($error = group_user_add($group_id, false, $name_ary, $group_name, $default, 0, 0, $group_row, $duration))
 							{
 								trigger_error($user->lang[$error] . $return_page);
 							}
@@ -1066,6 +1067,7 @@ class ucp_groups
 							$s_hidden_fields = array(
 								'default'	=> $default,
 								'usernames'	=> $names,
+								'duration'	=> $duration,
 								'g'			=> $group_id,
 								'i'			=> $id,
 								'mode'		=> $mode,

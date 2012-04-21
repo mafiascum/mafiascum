@@ -2743,7 +2743,7 @@ function group_delete($group_id, $group_name = false)
 *
 * @return mixed false if no errors occurred, else the user lang string for the relevant error, for example 'NO_USER'
 */
-function group_user_add($group_id, $user_id_ary = false, $username_ary = false, $group_name = false, $default = false, $leader = 0, $pending = 0, $group_attributes = false)
+function group_user_add($group_id, $user_id_ary = false, $username_ary = false, $group_name = false, $default = false, $leader = 0, $pending = 0, $group_attributes = false, $duration = 0)
 {
 	global $db, $auth;
 
@@ -2783,6 +2783,12 @@ function group_user_add($group_id, $user_id_ary = false, $username_ary = false, 
 		return 'GROUP_USERS_EXIST';
 	}
 
+	$auto_remove_time = 0;
+	if($duration !== 0)
+	{
+		$auto_remove_time = time() + (24 * 60 * 60 * $duration);
+	}
+
 	$db->sql_transaction('begin');
 
 	// Insert the new users
@@ -2797,6 +2803,7 @@ function group_user_add($group_id, $user_id_ary = false, $username_ary = false, 
 				'group_id'		=> (int) $group_id,
 				'group_leader'	=> (int) $leader,
 				'user_pending'	=> (int) $pending,
+				'auto_remove_time' => (int) $auto_remove_time,
 			);
 		}
 
