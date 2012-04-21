@@ -1408,7 +1408,7 @@ while ($row = $db->sql_fetchrow($result))
 
 				'vla'			=> (bool) $is_vla,
 				'vla_start'		=> ($row['user_vla_start'] != '') ? $row['user_vla_start'] : '',
-				'vla_end'		=> ($row['user_vla_end'] != '') ? $row['user_vla_till'] : '',
+				'vla_end'		=> ($row['user_vla_till'] != '') ? $row['user_vla_till'] : '',
 				'online'		=> false,
 				'profile'		=> append_sid("{$phpbb_root_path}memberlist.$phpEx", "mode=viewprofile&amp;u=$poster_id"),
 				'www'			=> $row['user_website'],
