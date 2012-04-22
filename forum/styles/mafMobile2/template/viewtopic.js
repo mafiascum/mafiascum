@@ -140,7 +140,6 @@ function storeQuote (post_id, username, l_wrote){
 				selectionError = true; 
 			}
 		}
-	/**
 		//reformat that selections
 		var i = 0;
 		var char1;
@@ -151,15 +150,18 @@ function storeQuote (post_id, username, l_wrote){
 			{
 				char1 = trueSelections.charAt(i);
 				char2 = theSelections[j].charAt(k);
-				alert("char1: " + char1.charCodeAt(0) + " char2: " + char2.charCodeAt(0) + " theSelections: " + theSelections[j] + " trueSelection: " + trueSelections);
 				if (char1 != char2)
 				{
+					if (char2.charCodeAt(0) == 32){
+						i--;
+					}
+					else {
 					theSelections[j]= theSelections[j].substring(0,k) + char1 + theSelections[j].substring(k,theSelections[j].length);
+					}	
 				}
 				i++;
 			}
 		}
-	**/
 	}
 	else if (document.getSelection)
 	{
@@ -180,6 +182,7 @@ function storeQuote (post_id, username, l_wrote){
 	{
 		cookiecontent += theSelections[count] + "NqLN5jsRe24krOHFSruT";
 	}
+	cookiecontent = encodeURIComponent(cookiecontent);
 	setCookie("ugEvYSDJEOAz2bHadHvOPOST_"+post_id,cookiecontent, 1);
 	return true;
 }

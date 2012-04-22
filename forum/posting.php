@@ -184,7 +184,7 @@ if ($mode=='multi'){
 
 if ($mode=='select'){
 		if(isset($_COOKIE["ugEvYSDJEOAz2bHadHvOPOST_$post_id"])) {
-			$selectmessage = $_COOKIE["ugEvYSDJEOAz2bHadHvOPOST_$post_id"];
+			$selectmessage = rawurldecode($_COOKIE["ugEvYSDJEOAz2bHadHvOPOST_$post_id"]);
 		}
 }
 
@@ -714,19 +714,18 @@ if ($submit || $preview || $refresh)
 	***/
 	
 	/***
-	$str = "&#46;";
-	echo("Str Len: " . strlen($str) . "<br/>");
-	$str = htmlspecialchars_decode($str);
-	echo("Str Len: " . strlen($str) . "<br/>");
+	$str = "[quote=&quot;In [url=http://www.mafiascum.net/forum/viewtopic.php?p=3859328#p3859328]post 5[/url], Kison&quot;][quote=&quot;In [url=http://www.mafiascum.net/forum/viewtopic.php?p=3859323#p3859323]post 0[/url], Kison&quot;]test[/quote][/quote]";
+	echo("Str Len: " . strlen($str) . " " . $str . "<br/>");
+	$str = htmlspecialchars(html_entity_decode($str));
+	echo("Str Len: " . strlen($str) . " " . $str . "<br/>");
 	exit;
 	***/
-	
 	if ($mode == 'multi' && $QR){
-		$message_parser->message = decode_bbcodes_non_preview($message_parser->message);
+		$message_parser->message = decode_bbcodes_non_preview(htmlspecialchars(html_entity_decode($message_parser->message)));
 		if ($mode == 'multi'){
 			if(count($multipost_ids) > 0){
 				for ($i = 0; $i < count($multipost_ids); $i++){
-					$multimessages[$i]->message = decode_bbcodes_non_preview($multimessages[$i]->message);
+					$multimessages[$i]->message = decode_bbcodes_non_preview(htmlspecialchars(html_entity_decode($multimessages[$i]->message)));
 				}
 			}
 		}
@@ -762,7 +761,7 @@ if ($submit || $preview || $refresh)
 			$message = '';
 			if(count($multipost_ids) > 0){
 				for ($i = 0; $i < count($multipost_ids); $i++){
-					$message = $message . "[quote=&quot;In [url=" . $root . "/viewtopic.php?p=$multipost_ids[$i]#p$multipost_ids[$i]]post " . $realpost_id_array[$multipost_ids[$i]] . " [/url], " . $multipostdata[$i]['quote_username'] . '&quot;]' . htmlspecialchars_decode(censor_text(trim($multimessages[$i]->message))) . "[/quote]\n";
+					$message = $message . "[quote=&quot;In [url=" . $root . "/viewtopic.php?p=$multipost_ids[$i]#p$multipost_ids[$i]]post " . $realpost_id_array[$multipost_ids[$i]] . "[/url], " . $multipostdata[$i]['quote_username'] . '&quot;]' . censor_text(trim($multimessages[$i]->message)) . "[/quote]\n";
 				}
 			}
 			$message_parser->message = $message . $message_parser->message; //Kison 2012-02-21 - Need to call utf8_normalize_nfc to undo character escapings.
@@ -1455,7 +1454,7 @@ if($mode == 'select' && !$submit && !$preview && !$refresh){
 				WHERE tmp.post_id=$post_id";
 		$result = $db->sql_query($sql);
 		$realpost = $db->sql_fetchrow($result);
-			$message_parser->message .= "[quote=&quot;In [url=" . $root . "/viewtopic.php?p=$post_id#p$post_id]post " . $realpost['post_number'] . " [/url], " . $post_data['quote_username'] . '&quot;]' . censor_text(trim(substr($tempString,0, stripos($tempString, 'NqLN5jsRe24krOHFSruT',0)))) . "[/quote]\n";
+			$message_parser->message .= "[quote=&quot;In [url=" . $root . "/viewtopic.php?p=$post_id#p$post_id]post " . $realpost['post_number'] . "[/url], " . $post_data['quote_username'] . '&quot;]' . censor_text(trim(substr($tempString,0, stripos($tempString, 'NqLN5jsRe24krOHFSruT',0)))) . "[/quote]\n";
 		}
 		else
 		{
@@ -1537,7 +1536,7 @@ if ($mode == 'multi' && !$submit && !$preview && !$refresh){
 		$message = '';
 		if(count($multipost_ids) > 0){
 			for ($i = 0; $i < count($multipost_ids); $i++){
-				$message = $message . "[quote=&quot;In [url=" . $root . "/viewtopic.php?p=$multipost_ids[$i]#p$multipost_ids[$i]]post " . $realpost_id_array[$multipost_ids[$i]] . " [/url], " . $multipostdata[$i]['quote_username'] . '&quot;]' . censor_text(trim($multimessages[$i]->message)) . "[/quote]\n";
+				$message = $message . "[quote=&quot;In [url=" . $root . "/viewtopic.php?p=$multipost_ids[$i]#p$multipost_ids[$i]]post " . $realpost_id_array[$multipost_ids[$i]] . "[/url], " . $multipostdata[$i]['quote_username'] . '&quot;]' . censor_text(trim($multimessages[$i]->message)) . "[/quote]\n";
 			}
 		}
 		$message_parser->message = $message;
