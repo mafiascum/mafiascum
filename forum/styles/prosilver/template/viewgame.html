@@ -5,6 +5,7 @@
 
 div#gameInfoMaster {
 
+	width: 100%;
 	font-size: 13px;
 	margin-bottom: 30px;
 	float: left;
@@ -30,114 +31,33 @@ span.gameFieldValue {
 
 #gameInfoRight {
 
-	float: left;
-	margin-left: 50px;
+	overflow: hidden;
+	width: 80%;
 }
 
-#gameInfoModeratorTable {
+#gameModeratorTable {
 
-	width: 300px;
-	border: 1px solid #000000;
+	font-size: 10px;
 	border-bottom: none;
 	float: left;
-	background-image: url("./styles/mafsepia/theme/images/bg_header.png");
 }
 
-.gameInfoModeratorRow {
 
-	width: 300px;
+
+#gamePlayerTable {
 	float: left;
-	border-bottom: 1px solid #000000;
+	font-size: 10px;
 }
 
-.gameInfoModeratorUsername {
-	width: 200px;
-	float: left;
-	text-align: center;
-	border-right: 1px solid #000000;
+#gameModeratorTableContainer {
+	
 }
 
-.gameInfoModeratorType {
-	width: 99px;
-	float: left;
-	text-align: center;
-}
-
-.gameInfoModeratorHeader {
-	font-weight: bold;
-	border: none;
-	color: #EFEDE8;
-}
-
-
-
-
-
-
-
-#gameInfoPlayerTable {
-
-	width: 825px;
-	border: 1px solid #000000;
-	border-bottom: none;
-	float: left;
-	clear: left;
+#gamePlayerTableContainer {
 	margin-top: 15px;
-	background-image: url("./styles/mafsepia/theme/images/bg_header.png");
 }
 
-.gameInfoPlayerRow {
-
-	width: 825px;
-	float: left;
-	border-bottom: 1px solid #000000;
-}
-
-.gameInfoPlayerUsername {
-	width: 200px;
-	float: left;
-	text-align: center;
-	border-right: 1px solid #000000;
-}
-
-.gameInfoPlayerSlotNumber {
-	width: 99px;
-	float: left;
-	text-align: center;
-	border-right: 1px solid #000000;
-}
-
-.gameInfoPlayerAlignment {
-
-	width: 99px;
-	float: left;
-	text-align: center;
-	border-right: 1px solid #000000;
-}
-
-.gameInfoPlayerFaction {
-
-	width: 149px;
-	float: left;
-	text-align: center;
-	border-right: 1px solid #000000;
-}
-
-.gameInfoPlayerRole {
-
-	width: 124px;
-	float: left;
-	text-align: center;
-	border-right: 1px solid #000000;
-}
-
-.gameInfoPlayerStartDate {
-
-	width: 149px;
-	float: left;
-	text-align: center;
-}
-.gameInfoPlayerHeader {
+.gamePlayerHeader {
 	font-weight: bold;
 	border: none;
 	color: #EFEDE8;
@@ -147,6 +67,63 @@ span.gameFieldValue {
 	margin-top: 7px;
 }
 
+.gameInfoUnorderedListButtonIcon
+{
+	float: right;
+	width: auto;
+	padding: 0;
+}
+
+ul.gameInfoUnorderedListButtonIcon li
+{
+	float: left;
+	list-style: none;
+}
+
+ul.gameInfoUnorderedListButtonIcon li.removeIcon
+{
+	width: 17px;
+	height: 20px;
+	background-image: url("./styles/prosilver/imageset/icon_post_delete.png");
+}
+
+ul.gameInfoUnorderedListButtonIcon li.removeIcon:hover
+{
+	background-position: 0px -20px !important;
+}
+
+ul.gameInfoUnorderedListButtonIcon li.editIcon
+{
+	width: 53px;
+	height: 20px;
+	background-image: url("./styles/prosilver/imageset/en/icon_post_edit.png");
+}
+
+ul.gameInfoUnorderedListButtonIcon li.editIcon:hover
+{
+	background-position: 0px -20px !important;
+}
+
+ul.gameInfoUnorderedListButtonIcon li.removeIcon
+{
+	width: 17px;
+	height: 20px;
+	background-image: url("./styles/prosilver/imageset/icon_post_delete.png");
+}
+
+ul.gameInfoUnorderedListButtonIcon li.removeIcon:hover
+{
+	background-position: 0px -20px !important;
+}
+
+ul.gameInfoUnorderedListButtonIcon li a
+{
+	display: block;
+	background-position: 0 0;
+	width: 100%;
+	height: 100%;
+}
+
 input.gameInfoLabel {
 	width: 125px;
 	font-weight:bold;
@@ -154,6 +131,43 @@ input.gameInfoLabel {
 
 .hidden {
 	display:none;
+}
+
+div#addModeratorContainer
+{
+	margin-top: 15px;
+}
+
+div#addModeratorContainer .label
+{
+	display: inline-block;
+	width: 150px;
+	height: 27px;
+}
+
+div#addModeratorContainer .addModeratorInput
+{
+	width: 200px;
+	display: inline-block;
+}
+
+
+div#addPlayerContainer
+{
+	margin-top: 15px;
+}
+
+div#addPlayerContainer .label
+{
+	display: inline-block;
+	width: 150px;
+	height: 27px;
+}
+
+div#addPlayerContainer .addPlayerInput
+{
+	width: 200px;
+	display: inline-block;
 }
 </style>
 
@@ -167,6 +181,30 @@ $(document).ready(function() {
 		$("#gameInfoGameCompletedInputField").show();
 		$("#gameInfoGameTypeInputField").show();
 		$("#gameInfoGameStatusInputField").show();
+	});
+
+	$(".moderatorRemoveButton").bind("click", function() {
+
+		var moderatorId = $(this).attr("moderatorid");
+
+		//TODO: Send ajax request, handle response.
+
+		$(this).closest("tr").hide("slow", function() { $(this).remove(); });
+	});
+
+	$(".playerRemoveButton").bind("click", function() {
+
+		var playerId = $(this).attr("playerid");
+
+		//TODO: Send ajax request, handle response.
+
+		$(this).closest("tr").hide("slow", function() { $(this).remove(); });
+	});
+
+	$(".playerEditButton").bind("click", function() {
+
+		var playerId = $(this).attr("playerid");
+		alert("Editing player #" + playerId + ".");
 	});
 });
 </script>
@@ -216,50 +254,145 @@ $(document).ready(function() {
  </div>
 
  <div id="gameInfoRight">
-
-  <div id="gameInfoModeratorTable">
-
-   <div class="gameInfoModeratorRow">
-    <div class="gameInfoModeratorUsername gameInfoModeratorHeader">Moderator Name</div>
-    <div class="gameInfoModeratorType gameInfoModeratorHeader">Type</div>
-   </div>
+  <div id="gameModeratorTableContainer" class="forumbg forumbg-table">
+   <div class="inner">
+    <span class="corners-top">
+     <span></span>
+    </span>
+    <table class="table1" cellpadding="10" cellspacing="1" id="gameModeratorTable">
+     <thead>
+      <tr>
+       <th class="gameListHeaderCell">Moderator Name</th>
+       <th class="gameListHeaderCell">Type</th>
+      </tr>
+     </thead>
+     <tbody>
 <!-- BEGIN moderator -->
-   <div class="gameInfoModeratorRow  bg1">
-    <div class="gameInfoModeratorUsername">{moderator.USER_URL}</div>
-    <div class="gameInfoModeratorType">{moderator.TYPE}</div>
-   </div>
+      <tr class="bg1">
+       <td class="">
+        {moderator.USER_URL}
+        <ul class="gameInfoUnorderedListButtonIcon">
+         <li class="editIcon">
+          <a href="#" class="edit" onclick="return 0;" class="moderatorEditButton" moderatorid="{moderator.ID}" /></a>
+         </li>
+         <li class="removeIcon">
+          <a href="#" class="delete" onclick="return 0;" class="moderatorRemoveButton" moderatorid="{moderator.ID}" /></a>
+         </li>
+        </ul>
+       </td>
+       <td class="">{moderator.TYPE}</td>
+      </tr>
 <!-- END moderator -->
-
+     </tbody>
+    </table>
+    <span class="corners-bottom"><span></span></span>
+   </div> <!--- End gameModeratorTableContainer -->
   </div>
 
+<!-- Moderator Edit Panel -->
+  <div id="addModeratorContainer">
+   <div class="label">Moderator Name:</div>
+   <input type="text" id="addModeratorName" name="addModeratorName" class="addModeratorInput inputbox"/><br/>
+   <div class="label">Type:</div>
+   <select name="addModeratorType" name="addModeratorType">
+    <option value = "0" selected="selected">Primary</option>
+    <option value = "1">Backup</option>
+   </select><br/>
+   <input type="hidden" name="addModeratorId" value="-1" />
+   <input type="button" class="button2" name="addModeratorSaveButton" value="Save Changes" />
+  </div>
 
-  <div id="gameInfoPlayerTable">
-
-   <div class="gameInfoPlayerRow">
-    <div class="gameInfoPlayerUsername gameInfoPlayerHeader">Player Name</div>
-    <div class="gameInfoPlayerSlotNumber gameInfoPlayerHeader">Slot #</div>
-    <div class="gameInfoPlayerAlignment gameInfoPlayerHeader">Alignment</div>
-    <div class="gameInfoPlayerFaction gameInfoPlayerHeader">Faction</div>
-    <div class="gameInfoPlayerRole gameInfoPlayerHeader">Role</div>
-    <div class="gameInfoPlayerStartDate gameInfoPlayerHeader">Start Date</div>
-   </div>
-
+  <div id="gamePlayerTableContainer" class="forumbg forumbg-table">
+   <div class="inner">
+    <span class="corners-top">
+     <span></span>
+    </span>
+    <table class="table1" cellspacing="1" id="gamePlayerTable">
+     <thead>
+      <tr>
+       <th class="gameListHeaderCell">Player Name</th>
+       <th class="gameListHeaderCell">Slot #</th>
+       <th class="gameListHeaderCell">Alignment</th>
+       <th class="gameListHeaderCell">Faction</th>
+       <th class="gameListHeaderCell">Role</th>
+       <th class="gameListHeaderCell">Start Date</th>
+      </tr>
+     </thead>
+     <tbody>
 <!-- BEGIN player -->
-   <div class="gameInfoPlayerRow bg1">
-    <div class="gameInfoPlayerUsername">{player.USER_URL}</div>
-    <div class="gameInfoPlayerSlotNumber">??</div>
-    <div class="gameInfoPlayerAlignment">{player.ALIGNMENT}</div>
-    <div class="gameInfoPlayerFaction">{player.FACTION}</div>
-    <div class="gameInfoPlayerRole">&nbsp;</div>
-    <div class="gameInfoPlayerStartDate">{player.FIRST_ACTIVE_TIME}</div>
-   </div>
+      <tr class="bg1">
+       <td>
+        {player.USER_URL}
+        <ul class="gameInfoUnorderedListButtonIcon">
+         <li class="editIcon">
+          <a href="#" onclick="return 0;" class="playerEditButton" playerid="{player.ID}" /></a>
+         </li>
+         <li class="removeIcon">
+          <a href="#" onclick="return 0;" class="playerRemoveButton" playerid="{player.ID}" /></a>
+         </li>
+        </ul>
+       </td>
+       <td>??</td>
+       <td>{player.ALIGNMENT}</td>
+       <td>{player.FACTION}</td>
+       <td>??</td>
+       <td>{player.FIRST_ACTIVE_TIME}</td>
+      </tr>
 <!-- END player -->
+     </tbody>
+    </table>
+    <span class="corners-bottom"><span></span></span>
+   </div>
+  </div> <!--- End gamePlayerContainer -->
 
+  <!-- Player Edit Panel -->
+  <div id="addPlayerContainer">
+
+   <!-- Player Name -->
+   <div class="label">Player Name:</div>
+   <input type="text" id="addPlayerName" name="addPlayerName" class="addPlayerInput inputbox"/><br/>
+   
+   <!-- Slot Number -->
+   <div class="label">Slot Number:</div>
+   <input type="text" id="addPlayerSlotNumber" name="addPlayerSlotNumber" class="addPlayerInput inputbox"/><br/>
+
+   <!-- Player Alignment -->
+   <div class="label">Aligmnet:</div>
+   <select name="addPlayerAlignment" name="addPlayerAlignment">
+    <option value = "0" selected="selected">Town</option>
+    <option value = "1">Mafia</option>
+    <option value = "2">Third Party</option>
+   </select><br/>
+
+   <!-- Player Faction -->
+   <div class="label">Faction:</div>
+   <select name="addPlayerFaction" name="addPlayerFaction">
+    <option value = "0" selected="selected">Innocent Characters</option>
+    <option value = "1">Scum/option>
+   </select><br/>
+
+   <!-- Player Role -->
+   <div class="label">Role:</div>
+   <select name="addPlayerRole" name="addPlayerRole">
+   </select><br/>
+
+   <!-- Player First Post ID -->
+   <div class="label">First Post ID:</div>
+   <input type="text" id="addPlayerFirstPostId" name="addPlayerFirstPostId" class="addPlayerInput inputbox"/><br/>
+
+   <!-- Player Last Post ID -->
+   <div class="label">Last Post ID:</div>
+   <input type="text" id="addPlayerLastPostId" name="addPlayerLastPostId" class="addPlayerInput inputbox"/><br/>
+
+   <input type="hidden" name="addPlayerId" value="-1" />
+   <input type="button" class="button2" name="addPlayerSaveButton" value="Save Changes" />
   </div>
+  <!-- End Player Edit Panel -->
 
+  <div style="clear: left;"></div>
  </div>
-
 </div>
+<div style="clear: left;"></div>
 
 <!-- IF S_DISPLAY_POST_INFO -->
 	<h3>{L_FORUM_PERMISSIONS}</h3>

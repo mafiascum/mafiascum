@@ -1,22 +1,29 @@
 //<-----------------------------------Choose Quote method--------------------------------------------->
 
 function toggle_user_select_display() {
-	var userSelectElement = document.getElementById('user_select2');
+	var userSelectElement2 = document.getElementById('user_select2');
+	var userSelectElement3 = document.getElementById('user_select3');
 	var toggleLinkElement = document.getElementById('user_select_toggle_link');
-	if(userSelectElement.style.display == 'none') {
-		userSelectElement.style.display = '';
+	if(userSelectElement2.style.display == 'none') {
+		userSelectElement2.style.display = '';
+	}
+	else if(userSelectElement3.style.display == 'none'){
+		userSelectElement3.style.display = '';
 		if(toggleLinkElement.innerText)
 			toggleLinkElement.innerText = "[ - ]";
 		else if(toggleLinkElement.textContent)
 			toggleLinkElement.textContent = "[ - ]";
 	}
 	else {
-		userSelectElement.style.display = 'none';
+		userSelectElement2.style.display = 'none';
+		userSelectElement3.style.display = 'none';
+		count = 1;
 		if(toggleLinkElement.innerText)
 			toggleLinkElement.innerText = "[ + ]";
 		else if(toggleLinkElement.textContent)
 			toggleLinkElement.textContent = "[ + ]";
 		document.getElementById('user_select2').selectedIndex = 0;
+		document.getElementById('user_select3').selectedIndex = 0;
 	}
 }
 

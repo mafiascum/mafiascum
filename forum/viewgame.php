@@ -94,15 +94,17 @@ $sql = " SELECT"
      . " WHERE mafia_moderators.user_id = users.user_id"
      . " AND mafia_moderators.game_id = " . $gameId
      . " ORDER BY type";
-     
+
 $result = $db->sql_query($sql);
 while( $moderator_row = $db->sql_fetchrow($result) )
 {
 	$moderatorType = getMafiaModeratorTypeName($moderator_row['type']);
+	$moderatorId = $moderator_row['moderator_id'];
 	$template->assign_block_vars('moderator', array(
 	
 		'USER_URL' 	=> get_username_string('full', $moderator_row['user_id'], $moderator_row['username'], $moderator_row['user_colour']),
-		'TYPE'		=> $moderatorType
+		'TYPE'		=> $moderatorType,
+		'ID'		=> $moderatorId
 	
 	));
 }
@@ -141,6 +143,7 @@ while( $player_row = $db->sql_fetchrow($result) )
 	$status = getMafiaSlotStatusName($player_row['slot_status']);
 	$role = "";
 	$firstActiveTime = strftime("%Y-%m-%d", $player_row['first_active_time']);
+	$playerId = $player_row['player_id'];
 
 	$template->assign_block_vars('player', array(
 	
@@ -150,6 +153,7 @@ while( $player_row = $db->sql_fetchrow($result) )
 		'FACTION'		=> $factionName,
 		'ALIGNMENT'		=> $alignmentName,
 		'ROLE'			=> $role,
+		'ID'			=> $playerId,
 		'FIRST_ACTIVE_TIME'	=> $firstActiveTime
 	
 	));

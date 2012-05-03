@@ -713,19 +713,19 @@ if ($submit || $preview || $refresh)
 	exit;
 	***/
 	
-	/***
-	$str = "[quote=&quot;In [url=http://www.mafiascum.net/forum/viewtopic.php?p=3859328#p3859328]post 5[/url], Kison&quot;][quote=&quot;In [url=http://www.mafiascum.net/forum/viewtopic.php?p=3859323#p3859323]post 0[/url], Kison&quot;]test[/quote][/quote]";
+	/**
+	$str = "[quote=&quot;In [url=http://www.mafiascum.net/forum/viewtopic.php?p=3859328#p3859328]post 5[/url], Kison&quot;][quote=&quot;In [url=http&#58;//www&#46;mafiascum&#46;net/forum/viewtopic&#46;php?p=3859323#p3859323]post 0[/url], Kison&quot;]test[/quote][/quote]";
 	echo("Str Len: " . strlen($str) . " " . $str . "<br/>");
-	$str = htmlspecialchars(html_entity_decode($str));
+	$str = str_replace('&#46;', '.' , str_replace('&#58;', ':', $message_parser->message));
 	echo("Str Len: " . strlen($str) . " " . $str . "<br/>");
 	exit;
-	***/
+	**/
 	if ($mode == 'multi' && $QR){
-		$message_parser->message = decode_bbcodes_non_preview(htmlspecialchars(html_entity_decode($message_parser->message)));
+		$message_parser->message = decode_bbcodes_non_preview(str_replace('&#46;', '.' , str_replace('&#58;', ':', $message_parser->message)));
 		if ($mode == 'multi'){
 			if(count($multipost_ids) > 0){
 				for ($i = 0; $i < count($multipost_ids); $i++){
-					$multimessages[$i]->message = decode_bbcodes_non_preview(htmlspecialchars(html_entity_decode($multimessages[$i]->message)));
+					$multimessages[$i]->message = decode_bbcodes_non_preview(str_replace('&#46;', '.' , str_replace('&#58;', ':', $multimessages[$i]->message)));
 				}
 			}
 		}

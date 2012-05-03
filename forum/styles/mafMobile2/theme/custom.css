@@ -44,12 +44,13 @@ label{font-weight:bold;}
 .custom_buttons{float:left;}
 .right{float:right;}
 .markbuttons{margin: 1em 0;}
-.markbuttons .ui-radio{margin: 4px 0 10px;}
-.markbuttons .ui-checkbox{margin: 4px 0 10px;}
+.markbuttons .ui-radio{margin: 4px 0px 10px;}
+.markbuttons .ui-checkbox{margin: 0px;}
+.markbuttons fieldset.ui-controlgroup{margin:5px 0px 10px;}
 #subscription{float:right;}
 hr {color:rgba(130,130,130,.3);}
-.eighttworatio .ui-block-a{min-width:80%;}
-.eighttworatio .ui-block-b{max-width:20%;}
+.eighttworatio .ui-block-a{display: block; width:80%; clear:none;}
+.eighttworatio .ui-block-b{width:55px; float:left;}
 .sixtwotworatio .ui-block-a{min-width:60%;}
 .sixtwotworatio .ui-block-b{max-width:20%;}
 .sixtwotworatio .ui-block-c{max-width:20%;}
@@ -57,3 +58,5 @@ hr {color:rgba(130,130,130,.3);}
 	#subscription{display:none;}
 	.post_date{display:none;}
 }
+#pmControls{float:right;}
+.bg5{background-color:white; }

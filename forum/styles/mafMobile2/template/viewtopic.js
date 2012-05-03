@@ -1,5 +1,13 @@
 //<-----------------------------------Mobile Skin post Action chooser--------------------------------->
-
+function toggleMobile(){
+	if (getCookie('disableMobile') == 'true')
+	{
+		setCookie('disableMobile','',-1);
+	}
+	else{
+		setCookie('disableMobile','true', 1);
+	}
+}
 function postActions(post_id){
 	var link ="";
 	var select_id = "action_" + post_id;

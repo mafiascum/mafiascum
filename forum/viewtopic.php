@@ -51,6 +51,15 @@ $posts_per_page_param = request_var('ppp', 0);
 //----[ User Post Isolation ]----\\
 $s_sort_user_id = request_var('user_select', 0);
 $s_sort_user_id2= request_var('user_select2', 0);
+$s_sort_user_id3= request_var('user_select3', 0);
+
+$isolationUserArray = array();
+if($s_sort_user_id !== 0)
+	$isolationUserArray[] = $s_sort_user_id;
+if($s_sort_user_id2 !== 0)
+	$isolationUserArray[] = $s_sort_user_id2;
+if($s_sort_user_id3 !== 0)
+	$isolationUserArray[] = $s_sort_user_id3;
 //----[ End User Post Isolation ]----\\
 
 $update		= request_var('update', false);
@@ -405,7 +414,7 @@ $posts_per_page = $config['posts_per_page'];
 if($posts_per_page_param !== 0) {
 	$posts_per_page = $posts_per_page_param;
 }
-else if($s_sort_user_id !== 0) {
+else if(count($isolationUserArray) > 0) {
 	$posts_per_page = 200;
 }
 
@@ -471,14 +480,14 @@ if ($sort_days)
 }
 
 //----[ User Post Isolation ]----\\
-elseif($s_sort_user_id !== 0)
+elseif(count($isolationUserArray) > 0)
 {
 	$sql = 'SELECT COUNT(post_id) AS num_posts
 		FROM ' . POSTS_TABLE . "
 		WHERE topic_id = $topic_id
-		AND (poster_id = $s_sort_user_id"
-		. ( ($s_sort_user_id2 !== 0) ? " OR poster_id=$s_sort_user_id2" : "") . ")
-		" . (($auth->acl_get('m_approve', $forum_id)) ? '' : 'AND post_approved = 1');
+		AND " . $db->sql_in_set('poster_id', $isolationUserArray, false, false)
+		. (($auth->acl_get('m_approve', $forum_id)) ? '' : 'AND post_approved = 1');
+
 	$result = $db->sql_query($sql);
 	$total_posts = (int) $db->sql_fetchfield('num_posts');
 	$db->sql_freeresult($result);
@@ -508,7 +517,7 @@ if ($hilit_words)
 		{
 			$word = str_replace('\*', '\w+?', preg_quote($word, '#'));
 			$word = preg_replace('#(^|\s)\\\\w\*\?(\s|$)#', '$1\w+?$2', $word);
-			$highlight_match .= (($highlight_match != '') ? '|' : '') . $word;
+			$highlight_match .= (($highlight_match != '') ? '|' : '') . $word; 
 		}
 	}
 
@@ -729,9 +738,9 @@ $topic_mod .= ($allow_change_type && $auth->acl_get('f_announce', $forum_id) && 
 $topic_mod .= ($auth->acl_get('m_', $forum_id)) ? '<option value="topic_logs">' . $user->lang['VIEW_TOPIC_LOGS'] . '</option>' : '';
 
 // If we've got a hightlight set pass it on to pagination.
-$pagination = generate_pagination(append_sid("{$phpbb_root_path}viewtopic.$phpEx", "f=$forum_id&amp;t=$topic_id" . ((isset($s_sort_user_id) && $s_sort_user_id !== 0) ? "&amp;user_select={$s_sort_user_id}" : '') . (($s_sort_user_id2 !== 0) ? "&amp;user_select2={$s_sort_user_id2}" : '') . ((strlen($u_sort_param)) ? "&amp;$u_sort_param" : '') . ($posts_per_page_param !== 0 ? ('&amp;ppp=' . $posts_per_page) : '') . (($highlight_match) ? "&amp;hilit=$highlight" : '')), $total_posts, $posts_per_page, $start);
+$pagination = generate_pagination(append_sid("{$phpbb_root_path}viewtopic.$phpEx", "f=$forum_id&amp;t=$topic_id" . ((isset($s_sort_user_id) && $s_sort_user_id !== 0) ? "&amp;user_select={$s_sort_user_id}" : '') . (($s_sort_user_id2 !== 0) ? "&amp;user_select2={$s_sort_user_id2}" : '') . (($s_sort_user_id3 !== 0) ? "&amp;user_select3={$s_sort_user_id3}" : '') . ((strlen($u_sort_param)) ? "&amp;$u_sort_param" : '') . ($posts_per_page_param !== 0 ? ('&amp;ppp=' . $posts_per_page) : '') . (($highlight_match) ? "&amp;hilit=$highlight" : '')), $total_posts, $posts_per_page, $start);
 
-// Navigation links
+// Navigation links 
 generate_forum_nav($topic_data);
 
 // Forum Rules
@@ -818,7 +827,7 @@ $template->assign_vars(array(
 	'S_DISPLAY_REPLY_INFO'	=> ($topic_data['forum_type'] == FORUM_POST && ($auth->acl_get('f_reply', $forum_id) || $user->data['user_id'] == ANONYMOUS)) ? true : false,
 	'S_ENABLE_FEEDS_TOPIC'	=> ($config['feed_topic'] && !phpbb_optionget(FORUM_OPTION_FEED_EXCLUDE, $topic_data['forum_options'])) ? true : false,
 
-	'S_ENABLE_ISO_POST_NUM' => ($s_sort_user_id !== 0 ? 1 : 0),
+	'S_ENABLE_ISO_POST_NUM' => (count($isolationUserArray) > 0 ? 1 : 0),
 
 	'U_TOPIC'				=> "{$server_path}viewtopic.$phpEx?f=$forum_id&amp;t=$topic_id",
 	'U_FORUM'				=> $server_path,
@@ -852,24 +861,29 @@ $template->assign_vars(array(
             ' ORDER BY u.username_clean';
         $result = $db->sql_query($sql);
         $user_ary = array();
+        
         while($urow = $db->sql_fetchrow($result))
         {
             $selected = (isset($s_sort_user_id) && $s_sort_user_id == $urow['poster_id']) ? ' selected="selected"' : '';
-            $selected2= (isset($s_sort_user_id2)&& $s_sort_user_id2 ==$urow['poster_id']) ? ' selected="selected"' : '';
+            $selected2 = (isset($s_sort_user_id2)&& $s_sort_user_id2 == $urow['poster_id']) ? ' selected="selected"' : '';
+			$selected3 = (isset($s_sort_user_id3)&& $s_sort_user_id3 == $urow['poster_id']) ? ' selected="selected"' : '';
             $user_ary[] = '<option value="' . $urow['poster_id'] . '"' . $selected . '>' . $urow['username'] . '</option>';
             $user_ary2[]= '<option value="' . $urow['poster_id'] . '"' . $selected2. '>' . $urow['username'] . '</option>';
-            
+			$user_ary3[]= '<option value="' . $urow['poster_id'] . '"' . $selected3. '>' . $urow['username'] . '</option>';
         }
         
         $s_topic_users = implode(' ', $user_ary);
         $s_topic_users2 = implode(' ', $user_ary2);
+		$s_topic_users3 = implode(' ', $user_ary3);
         $db->sql_freeresult($result);
+        
         $template->assign_vars(array(
-            'S_SELECT_SORT_USERS'    => ($s_topic_users) ? '<select name="user_select"><option value="0">' . $user->lang['VIEW_ALL_POSTERS'] . '</option>' . $s_topic_users . '</select>' : '',
-            'S_SELECT_SORT_USERS2'   => ($s_topic_users2) ? '<select name="user_select2" id="user_select2" style="' . ($s_sort_user_id2 !== 0 ? '' : 'display:none;') . '"><option value="0">&#60;Second User&#62;</option>' . $s_topic_users2 . '</select>' : '',
-			'TOGGLE_ANCHOR_DISPLAY'  => ($s_sort_user_id2 !== 0 ? '[ - ]' : '[ + ]'),            
+            'S_SELECT_SORT_USERS'      => ($s_topic_users) ? '<select name="user_select"  class="iso_select"><option value="0">' . $user->lang['VIEW_ALL_POSTERS'] . '</option>' . $s_topic_users . '</select>' : '',
+            'S_SELECT_SORT_USERS2'     => ($s_topic_users2) ? '<select name="user_select2" id="user_select2" class="iso_select" style="' . ($s_sort_user_id2 !== 0 ? '' : 'display:none;') . '"><option value="0">&#60;Second User&#62;</option>' . $s_topic_users2 . '</select>' : '',
+			'S_SELECT_SORT_USERS3'     => ($s_topic_users3) ? '<select name="user_select3" id="user_select3"  class="iso_select" style="' . ($s_sort_user_id3 !== 0 ? '' : 'display:none;') . '"><option value="0">&#60;Third User&#62;</option>' . $s_topic_users3 . '</select>' : '',
+			'NUMBER_OF_ISOLATED_USERS' => count($isolationUserArray)
         ));
-    //----[ End User Post Isolation ]----\\    
+    //----[ End User Post Isolation ]----\\     
 
 // Does this topic contain a poll?
 if (!empty($topic_data['poll_start']))
@@ -1139,19 +1153,12 @@ $has_attachments = $display_notice = false;
 $bbcode_bitfield = '';
 $i = $i_total = 0;
 //----[ User Post Isolation ]----\\
-$usort_where = "";
-if($s_sort_user_id !== 0) {
-	$usort_where .= " AND (p.poster_id=$s_sort_user_id";
-	
-	if($s_sort_user_id2 !== 0) {
-		$usort_where .= " OR p.poster_id=$s_sort_user_id2)";
-	}
-	else {
-		$usort_where .= ")";
-	}
+$iso_where = "";
+if(count($isolationUserArray) > 0) {
+	$iso_where .= $db->sql_in_set("p.poster_id", $isolationUserArray, false, false);
 }
 
-if($s_sort_user_id !== 0) {
+if(count($isolationUserArray) > 0) {
 
 	//Let's get the real post numbers. Kison, 2011-06-19
 	$db->sql_query('SET @post_count := -1;');
@@ -1166,7 +1173,7 @@ if($s_sort_user_id !== 0) {
 		  WHERE topic_id=' . $topic_id . '
 		  ORDER BY post_time ASC
 		) AS tmp
-		WHERE (tmp.poster_id=' . $s_sort_user_id . ($s_sort_user_id2 !== 0 ? " OR tmp.poster_id=$s_sort_user_id2)" : ")");
+		WHERE ' . $db->sql_in_set("tmp.poster_id", $isolationUserArray, false, false);
 
 	$result = $db->sql_query($sql);
 
@@ -1177,7 +1184,7 @@ if($s_sort_user_id !== 0) {
 		$postIdToPostNumberMap[(int)$row['post_id']] = $row['post_number'];
 	}
 
-	$db->sql_freeresult($result);
+	$db->sql_freeresult($result); 
 }
 //----[ End User Post Isolation ]----\\
 
@@ -1187,9 +1194,10 @@ $sql = 'SELECT p.post_id
 	WHERE p.topic_id = $topic_id
 		" . ((!$auth->acl_get('m_approve', $forum_id)) ? 'AND p.post_approved = 1' : '') . "
 		" . (($join_user_sql[$sort_key]) ? 'AND u.user_id = p.poster_id': '') . "
+		" . (count($isolationUserArray) > 0 ? ("AND " . $iso_where) : "") . "
 		$limit_posts_time
-            $usort_where
 	ORDER BY $sql_sort_order";
+	
 $result = $db->sql_query_limit($sql, $sql_limit, $sql_start);
 
 $i = ($store_reverse) ? $sql_limit - 1 : 0;
@@ -1893,7 +1901,7 @@ for ($i = 0, $end = sizeof($post_list); $i < $end; ++$i)
 		$postrow = array_merge($postrow, $cp_row['row']);
 	}
 
-	if($s_sort_user_id !== 0) {
+	if(count($isolationUserArray) > 0) {
 
 		$postrow['POST_NUM'] = $postIdToPostNumberMap[(int)$row['post_id']];
 		$postrow['ISO_POST_NUM'] = $start + ($i);

@@ -12,10 +12,7 @@
 
 #gameListTable {
 
-	font-size: 13px;
-	width: 950px;
-	border: 1px solid #000000;
-	background-image: url("./styles/mafsepia/theme/images/bg_header.png");
+	font-size: 11px;
 }
 
 .gameListRow {
@@ -30,61 +27,6 @@
 	color: #EFEDE8;
 	border: none;
 }
-
-.gameListIdCell {
-
-	width: 50px;
-	display: inline-block;
-	border-right: 1px solid #000000;
-	padding-bottom: 5px;
-	padding-top: 5px;
-	margin-left: 5px;
-}
-
-.gameListGameNameCell {
-
-	width: 400px;
-	display: inline-block;
-	border-right: 1px solid #000000;
-	padding-bottom: 5px;
-	padding-top: 5px;
-}
-
-.gameListStatusCell {
-
-	width: 75px;
-	display: inline-block;
-	border-right: 1px solid #000000;
-	padding-bottom: 5px;
-	padding-top: 5px;
-}
-
-.gameListTypeCell {
-
-	width: 150px;
-	display: inline-block;
-	border-right: 1px solid #000000;
-	padding-bottom: 5px;
-	padding-top: 5px;
-}
-
-.gameListStartDateCell {
-
-	width: 100px;
-	display: inline-block;
-	border-right: 1px solid #000000;
-	padding-bottom: 5px;
-	padding-top: 5px;
-}
-
-.gameListEndDateCell {
-
-	width: 100px;
-	display: inline-block;
-	padding-bottom: 5px;
-	padding-top: 5px;
-}
-
 #createGamePanel {
 
 	margin-top: 5px;
@@ -98,27 +40,37 @@
 </style>
 
 <div id="gameListMaster">
- <div id="gameListTable">
-
-  <div class="gameListRow">
-   <span class="gameListIdCell gameListHeaderCell">ID</span>
-   <span class="gameListGameNameCell gameListHeaderCell">Game Name</span>
-   <span class="gameListTypeCell gameListHeaderCell">Type</span>
-   <span class="gameListStatusCell gameListHeaderCell">Status</span>
-   <span class="gameListStartDateCell gameListHeaderCell">Start Date</span>
-   <span class="gameListEndDateCell gameListHeaderCell">End Date</span>
-  </div>
-
+ <div class="forumbg forumbg-table">
+  <div class="inner">
+   <span class="corners-top">
+    <span></span>
+   </span>
+   <table class="table1" cellspacing="1" id="gameListTable">
+    <thead>
+     <tr>
+      <th class="gameListHeaderCell">ID</th>
+      <th class="gameListHeaderCell">Game Name</th>
+      <th class="gameListHeaderCell">Type</th>
+      <th class="gameListHeaderCell">Status</th>
+      <th class="gameListHeaderCell">Start Date</th>
+      <th class="gameListHeaderCell">End Date</th>
+     </tr>
+    </thead>
 <!-- BEGIN gamerow -->
-  <div class="gameListRow bg1">
-   <span class="gameListIdCell">{gamerow.GAME_ID}</span>
-   <span class="gameListGameNameCell">{gamerow.GAME_URL}</span>
-   <span class="gameListTypeCell">{gamerow.GAME_TYPE}</span>
-   <span class="gameListStatusCell">{gamerow.GAME_STATUS}</span>
-   <span class="gameListStartDateCell">{gamerow.STARTED_DATE}</span>
-   <span class="gameListEndDateCell">{gamerow.COMPLETED_DATE}</span>
-  </div>
+    <tbody>
+     <tr class="bg1">
+      <td class="">{gamerow.GAME_ID}</td>
+      <td class="">{gamerow.GAME_URL}</td>
+      <td class="">{gamerow.GAME_TYPE}</td>
+      <td class="">{gamerow.GAME_STATUS}</td>
+      <td class="">{gamerow.STARTED_DATE}</td>
+      <td class="">{gamerow.COMPLETED_DATE}</td>
+     </tr>
+    </tbody>
 <!-- END gamerow -->
+   </table>
+   <span class="corners-bottom"><span></span></span>
+  </div>
  </div>
  <div id="createGamePanel">
   <form method="post" id="createGameForm" action="{CREATE_GAME_ACTION}">

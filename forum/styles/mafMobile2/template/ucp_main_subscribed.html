@@ -5,8 +5,6 @@
 <h2>{L_TITLE}</h2>
 {PAGE_NUMBER}
 
-<div class="panel">
-
 <!-- IF .forumrow -->
 <div class="ui-grid-a eighttworatio">
 	<div class="ui-block-a">
@@ -31,12 +29,14 @@
 <!-- IF .topicrow -->
 <div class="ui-grid-a eighttworatio">
 	<div class="ui-block-a">
-	<ul data-role="listview" data-split-theme="d" data-split-icon="star" data-inset="true">
+	<ul data-role="listview" data-split-theme="d" data-inset="true">
 
 	<!-- BEGIN topicrow -->
 		<li <!-- IF topicrow.S_ROW_COUNT is even --> data-theme="c"<!-- ELSE --> data-theme="d"<!-- ENDIF -->>
 			<a href="{topicrow.U_VIEW_TOPIC}" class="topictitle"><img class="ui-li-thumb" src="{topicrow.TOPIC_FOLDER_IMG_SRC}"/>{topicrow.TOPIC_TITLE}</a>
-			<!-- IF topicrow.S_UNREAD_TOPIC --><a href="{topicrow.U_NEWEST_POST}">New</a><!-- ENDIF -->
+			<!-- IF topicrow.S_UNREAD_TOPIC --><a href="{topicrow.U_NEWEST_POST}" data-theme="e">New</a><!-- ELSE -->
+			<a href="{topicrow.U_NEWEST_POST}">Last Page</a>
+			<!-- ENDIF -->
 		</li>
 		
 	<!-- END topicrow -->
@@ -62,10 +62,6 @@
 <!-- ELSEIF S_TOPIC_NOTIFY -->
 	<p><strong>{L_NO_WATCHED_TOPICS}</strong></p>
 <!-- ENDIF -->
-
-</div>
-
-	<div class="panel">
 <!-- IF .topicrow or .forumrow -->
 		<fieldset class="display-actions">
 			<input class="button2" type="submit" name="unwatch" value="Unwatch Marked" />
@@ -73,7 +69,6 @@
 			{S_FORM_TOKEN}
 		</fieldset>
 <!-- ENDIF -->
-</div>
 </form>
 
 <!-- INCLUDE ucp_footer.html -->

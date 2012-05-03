@@ -1644,7 +1644,9 @@ class user extends session
 
 		$this->add_lang($lang_set);
 		unset($lang_set);
+		
 
+		$mobileStyle = request_var('disableMobile', MOBILE_STYLE);
 		if (!empty($_GET['style']) && $auth->acl_get('a_styles') && !defined('ADMIN_START'))
 		{
 			global $SID, $_EXTRA_URL;
@@ -1656,8 +1658,8 @@ class user extends session
 		else
 		{
 			if($mobile && $this->optionget('autodetectmobile')){
-				$tempdefault_style=MOBILE_STYLE;
-				$tempstyle=MOBILE_STYLE;
+				$tempdefault_style=$mobileStyle;
+				$tempstyle=$mobileStyle;
 			}else{
 				$tempdefault_style=$config['default_style'];
 				$tempstyle=$this->data['user_style'];

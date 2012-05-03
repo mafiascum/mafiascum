@@ -258,7 +258,14 @@
 		<!-- IF not S_IS_BOT -->
 		<label>{L_DISPLAY_POSTS}: {S_SELECT_SORT_DAYS}</label>
 		<label>{L_SORT_BY} {S_SELECT_SORT_KEY}</label> <label>{S_SELECT_SORT_DIR} <input type="submit" name="sort" value="{L_GO}" class="button2" /></label>
-	        <br /><label>{L_DISPLAY_USER_POSTS}: {S_SELECT_SORT_USERS}</label> <label> {S_SELECT_SORT_USERS2}</label> <a href="#" id="user_select_toggle_link" onclick="toggle_user_select_display();return false;">{TOGGLE_ANCHOR_DISPLAY}</a> <input type="submit" name="user_sort" value="{L_GO}" class="button2" /></label>
+	        <br />
+		<label>{L_DISPLAY_USER_POSTS}: {S_SELECT_SORT_USERS}</label>
+		<label> {S_SELECT_SORT_USERS2}</label>
+		<label> {S_SELECT_SORT_USERS3}</label>
+		<a href="#" id="user_select_toggle_link_contract" <!-- IF NUMBER_OF_ISOLATED_USERS <= 1 --> style="display: none" <!-- ENDIF -->  onclick="toggle_user_select_display('contract');return false;">[ - ]</a>
+		<a href="#" id="user_select_toggle_link_expand"   <!-- IF NUMBER_OF_ISOLATED_USERS >= 3 --> style="display: none" <!-- ENDIF -->  onclick="toggle_user_select_display('expand');return false;">[ + ]</a>
+		<input type="submit" name="user_sort" value="{L_GO}" class="button2" />
+		</label>
 		<!-- ENDIF -->
 	</fieldset>
 

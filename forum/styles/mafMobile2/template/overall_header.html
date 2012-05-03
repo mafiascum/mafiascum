@@ -25,9 +25,9 @@
 	<!-- IF S_ENABLE_FEEDS_FORUM and S_FORUM_ID --><link rel="alternate" type="application/atom+xml" title="{L_FEED} - {L_FORUM} - {FORUM_NAME}" href="{U_FEED}?f={S_FORUM_ID}" /><!-- ENDIF -->
 	<!-- IF S_ENABLE_FEEDS_TOPIC and S_TOPIC_ID --><link rel="alternate" type="application/atom+xml" title="{L_FEED} - {L_TOPIC} - {TOPIC_TITLE}" href="{U_FEED}?f={S_FORUM_ID}&amp;t={S_TOPIC_ID}" /><!-- ENDIF -->
 <!-- ENDIF -->
-<script src="http://code.jquery.com/jquery-1.6.4.min.js"></script>
+<script src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
 <script src="./styles/mafMobile2/template/custom.js"></script>
-<script src="http://code.jquery.com/mobile/1.0rc2/jquery.mobile-1.0rc2.min.js"></script>
+<script src="http://code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.js"></script>
 <script type="text/javascript">
 // <![CDATA[
 	var jump_page = '{LA_JUMP_PAGE}:';
@@ -78,7 +78,7 @@
 <script type="text/javascript" src="./styles/mafMobile2/template/editor.js"></script>
 <!-- ENDIF -->
 <link href="{T_THEME_PATH}/print.css" rel="stylesheet" type="text/css" media="print" title="printonly" />
-<link rel="stylesheet" href="http://code.jquery.com/mobile/1.0rc2/jquery.mobile-1.0rc2.min.css" />
+<link rel="stylesheet" href="http://code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.css" />
 <link href="{T_STYLESHEET_LINK}" rel="stylesheet" type="text/css" media="screen, projection" />
 <link rel="stylesheet"  href="./styles/mafMobile2/theme/custom.css" />
 <link rel="stylesheet"  href="./styles/mafMobile2/theme/bbcodes.css" />
@@ -90,18 +90,16 @@
 	<link href="{T_THEME_PATH}/bidi.css" rel="stylesheet" type="text/css" media="screen, projection" />
 <!-- ENDIF -->
 <script type="text/javascript">
-
   var _gaq = _gaq || [];
   _gaq.push(['_setAccount', 'UA-31225517-1']);
   _gaq.push(['_setDomainName', 'mafiascum.net']);
   _gaq.push(['_trackPageview']);
-
   (function() {
     var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
     ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
     var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
   })();
-  _gaq.push(['_trackEvent', 'Mobile', 'Load', 'mafMobile2']);
+	_gaq.push(['_trackEvent', 'Mobile', 'Load', 'mafMobile2']);
 </script>
 </head>
 
@@ -123,21 +121,19 @@
 
 		<div data-role="navbar">
 			<ul>
-				<!-- IF not S_IS_BOT and S_USER_LOGGED_IN and not (SCRIPT_NAME eq 'ucp')-->
+				<!-- IF not S_IS_BOT and S_USER_LOGGED_IN -->
 				<li class="icon-ucp">
-					<a <!-- IF not (PRIVATE_MESSAGE_INFO eq '<strong>0</strong> new messages')--> data-theme="b" <!-- ENDIF -->href="{U_PROFILE}" title="{L_PROFILE}" accesskey="e">Control Panel</a>
+					<a <!-- IF not (PRIVATE_MESSAGE_INFO eq '<strong>0</strong> new messages')--> data-theme="b" <!-- ENDIF -->href="{U_PRIVATEMSGS}" title="{U_PRIVATEMSGS}" accesskey="e">Control Panel</a>
 						<!-- IF S_DISPLAY_PM --> 
 						<!-- ENDIF -->
 				</li>
 				<!-- ENDIF -->
-				<!-- IF S_DISPLAY_SEARCH and not S_IN_SEARCH --><li class="icon-search"><a href="{U_SEARCH}" title="{L_SEARCH_ADV_EXPLAIN}">{L_SEARCH}</a></li><!-- ENDIF  -->
+				<!-- IF S_DISPLAY_SEARCH --><li class="icon-search"><a href="{U_SEARCH}" title="{L_SEARCH_ADV_EXPLAIN}">{L_SEARCH}</a></li><!-- ENDIF  -->
 				<!-- IF not S_IS_BOT -->
-				<!-- IF not (SCRIPT_NAME eq 'memberlist') -->
 					<!-- IF S_DISPLAY_MEMBERLIST -->
 					<li class="icon-members"><a href="{U_MEMBERLIST}" title="{L_MEMBERLIST_EXPLAIN}">{L_MEMBERLIST}</a></li><!-- ENDIF -->
 					<!-- IF not S_USER_LOGGED_IN and S_REGISTER_ENABLED and not (S_SHOW_COPPA or S_REGISTRATION) -->
 					<li class="icon-register"><a href="{U_REGISTER}">{L_REGISTER}</a></li><!-- ENDIF -->
-					<!-- ENDIF -->
 					<li class="icon-wiki"><a href="http://wiki.mafiascum.net/" title="MafiaWiki">Wiki</a></li>
 				<!-- ENDIF -->
 			</ul>
