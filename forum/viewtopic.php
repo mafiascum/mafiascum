@@ -485,7 +485,7 @@ elseif(count($isolationUserArray) > 0)
 	$sql = 'SELECT COUNT(post_id) AS num_posts
 		FROM ' . POSTS_TABLE . "
 		WHERE topic_id = $topic_id
-		AND " . $db->sql_in_set('poster_id', $isolationUserArray, false, false)
+		AND " . $db->sql_in_set('poster_id', $isolationUserArray, false, false). ' '
 		. (($auth->acl_get('m_approve', $forum_id)) ? '' : 'AND post_approved = 1');
 
 	$result = $db->sql_query($sql);

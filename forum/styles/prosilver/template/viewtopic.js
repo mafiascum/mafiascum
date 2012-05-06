@@ -16,9 +16,15 @@ function toggle_user_select_display(contractOrExpand) {
 	    if(totalVisibleIsolationSelectionElements - 1 >= 1)
 	    {
 	        if($(userSelectElement3).is(":visible"))
+	        {
 	            $(userSelectElement3).hide();
+	            $(userSelectElement3).val(0);
+	        }
 	        else if($(userSelectElement2).is(":visible"))
+	        {
 	            $(userSelectElement2).hide();
+	            $(userSelectElement2).val(0);
+	        }
 	            
 	        --totalVisibleIsolationSelectionElements;
 	    }
