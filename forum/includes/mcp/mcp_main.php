@@ -232,11 +232,30 @@ function lock_unlock($action, $ids)
 		{
 			foreach($orig_ids as $topic_id)
 			{
+				$sql = " SELECT"
+				     . "   t.*,"
+				     . "   f.*"
+				     . " FROM " . TOPICS_TABLE . " t, " . FORUMS_TABLE . " f"
+				     . " WHERE t.forum_id = f.forum_id"
+				     . " AND t.topic_id = $topic_id";
 				
+				$result = $db->sql_query($sql);
+				$topic_row = $db->sql_fetchrow($result);
+				$db->sql_freeresult($result);
+				
+				if($topic_row) {
+				
+					$topic_moderators = get_topic_mods($topic_id);
+					if(is_topic_moderator($user->data['user_id'], $topic_row, $topic_moderators))
+						$ids[] = $topic_id;
+				}
 			}
-			
-			return;
+		
+			if(count($ids) == 0) {
+				return;
+			}
 		}
+		
 	}
 	unset($orig_ids);
 

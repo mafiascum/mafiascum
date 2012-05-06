@@ -46,6 +46,7 @@ $mode		= ($delete && !$preview && !$refresh && $submit) ? 'delete' : request_var
 
 $error = $post_data= array();
 $multipostdata= array();
+$topic_moderators = array();
 $current_time = time();
 
 $root = $config['server_protocol'] . $config['server_name'] . $config['script_path'];
@@ -181,6 +182,14 @@ if ($mode=='multi'){
 	}
 }
 
+//Load topic moderators.
+if(isset($post_data['topic_id'])) {
+	$topic_moderators = get_topic_mods($post_data['topic_id']);
+	$isTopicModerator = is_topic_moderator($user->data['user_id'], $post_data, $topic_moderators);
+}
+else {
+	$isTopicModerator = false;
+}
 
 if ($mode=='select'){
 		if(isset($_COOKIE["ugEvYSDJEOAz2bHadHvOPOST_$post_id"])) {
@@ -322,7 +331,7 @@ if ($post_data['forum_type'] != FORUM_POST && in_array($mode, array('post', 'bum
 }
 
 // Forum/Topic locked?
-if (($post_data['forum_status'] == ITEM_LOCKED || (isset($post_data['topic_status']) && $post_data['topic_status'] == ITEM_LOCKED)) && !$auth->acl_get('m_edit', $forum_id) && !(($user->data['user_id'] == $post_data['topic_poster'] || in_array($user->data['user_id'], get_topic_mods($post_data['topic_id']))) && $post_data['topic_author_moderation'] == 1)) 
+if (($post_data['forum_status'] == ITEM_LOCKED || (isset($post_data['topic_status']) && $post_data['topic_status'] == ITEM_LOCKED)) && !$auth->acl_get('m_edit', $forum_id) && !$isTopicModerator) 
 {
 	trigger_error(($post_data['forum_status'] == ITEM_LOCKED) ? 'FORUM_LOCKED' : 'TOPIC_LOCKED');
 }
@@ -1203,6 +1212,9 @@ if ($submit || $preview || $refresh)
 			$change_topic_status = $post_data['topic_status'];
 			$perm_lock_unlock = ($auth->acl_get('m_lock', $forum_id) || ($auth->acl_get('f_user_lock', $forum_id) && $user->data['is_registered'] && !empty($post_data['topic_poster']) && $user->data['user_id'] == $post_data['topic_poster'] && $post_data['topic_status'] == ITEM_UNLOCKED)) ? true : false;
 
+			if($isTopicModerator && !$perm_lock_unlock)
+				$perm_lock_unlock = true;
+
 			if ($post_data['topic_status'] == ITEM_LOCKED && !$topic_lock && $perm_lock_unlock)
 			{
 				$change_topic_status = ITEM_UNLOCKED;
@@ -1689,7 +1701,6 @@ $form_enctype = (@ini_get('file_uploads') == '0' || strtolower(@ini_get('file_up
 add_form_key('posting');
 
 // Start assigning vars for main posting page ...
-$template->assign_var('FOO', $foo);
 $template->assign_vars(array(
 	'L_POST_A'					=> $page_title,
 	'L_ICON'					=> ($mode == 'reply' || $mode == 'quote' || $mode == 'select' || $mode == 'multi' || ($mode == 'edit' && $post_id != $post_data['topic_first_post_id'])) ? $user->lang['POST_ICON'] : $user->lang['TOPIC_ICON'],
@@ -1733,7 +1744,7 @@ $template->assign_vars(array(
 	'S_SIGNATURE_CHECKED'		=> ($sig_checked) ? ' checked="checked"' : '',
 	'S_NOTIFY_ALLOWED'			=> (!$user->data['is_registered'] || ($mode == 'edit' && $user->data['user_id'] != $post_data['poster_id']) || !$config['allow_topic_notify'] || !$config['email_enable']) ? false : true,
 	'S_NOTIFY_CHECKED'			=> ($notify_checked) ? ' checked="checked"' : '',
-	'S_LOCK_TOPIC_ALLOWED'		=> (($mode == 'edit' || $mode == 'reply' || $mode == 'quote' || $mode == 'multi' || $mode == 'select') && ($auth->acl_get('m_lock', $forum_id) || ($auth->acl_get('f_user_lock', $forum_id) && $user->data['is_registered'] && !empty($post_data['topic_poster']) && $user->data['user_id'] == $post_data['topic_poster'] && $post_data['topic_status'] == ITEM_UNLOCKED))) ? true : false,
+	'S_LOCK_TOPIC_ALLOWED'		=> (($mode == 'edit' || $mode == 'reply' || $mode == 'quote' || $mode == 'multi' || $mode == 'select') && ($isTopicModerator || $auth->acl_get('m_lock', $forum_id) || ($auth->acl_get('f_user_lock', $forum_id) && $user->data['is_registered'] && !empty($post_data['topic_poster']) && $user->data['user_id'] == $post_data['topic_poster'] && $post_data['topic_status'] == ITEM_UNLOCKED))) ? true : false,
 	'S_LOCK_TOPIC_CHECKED'		=> ($lock_topic_checked) ? ' checked="checked"' : '',
 	'S_LOCK_POST_ALLOWED'		=> ($mode == 'edit' && $auth->acl_get('m_edit', $forum_id)) ? true : false,
 	'S_LOCK_POST_CHECKED'		=> ($lock_post_checked) ? ' checked="checked"' : '',

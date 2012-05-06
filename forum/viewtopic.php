@@ -719,12 +719,13 @@ $s_forum_rules = '';
 gen_forum_auth_level('topic', $forum_id, $topic_data['forum_status']);
 
 $topic_moderators = get_topic_mods($topic_data['topic_id']);
+$isTopicModerator = is_topic_moderator($user->data['user_id'], $topic_data, $topic_moderators);
 
 // Quick mod tools
 $allow_change_type = ($auth->acl_get('m_', $forum_id) || ($user->data['is_registered'] && $user->data['user_id'] == $topic_data['topic_poster'])) ? true : false;
 
 $topic_mod = '';
-$topic_mod .= ($auth->acl_get('m_lock', $forum_id) || is_topic_moderator($user->data['user_id'], $topic_data, $topic_moderators) || ($auth->acl_get('f_user_lock', $forum_id) && $user->data['is_registered'] && $user->data['user_id'] == $topic_data['topic_poster'] /* && $topic_data['topic_status'] == ITEM_UNLOCKED */)) ? (($topic_data['topic_status'] == ITEM_UNLOCKED) ? '<option value="lock">' . $user->lang['LOCK_TOPIC'] . '</option>' : '<option value="unlock">' . $user->lang['UNLOCK_TOPIC'] . '</option>') : '';
+$topic_mod .= ($auth->acl_get('m_lock', $forum_id) || $isTopicModerator || ($auth->acl_get('f_user_lock', $forum_id) && $user->data['is_registered'] && $user->data['user_id'] == $topic_data['topic_poster'] /* && $topic_data['topic_status'] == ITEM_UNLOCKED */)) ? (($topic_data['topic_status'] == ITEM_UNLOCKED) ? '<option value="lock">' . $user->lang['LOCK_TOPIC'] . '</option>' : '<option value="unlock">' . $user->lang['UNLOCK_TOPIC'] . '</option>') : '';
 $topic_mod .= ($auth->acl_get('m_delete', $forum_id)) ? '<option value="delete_topic">' . $user->lang['DELETE_TOPIC'] . '</option>' : '';
 $topic_mod .= ($auth->acl_get('m_move', $forum_id) && $topic_data['topic_status'] != ITEM_MOVED) ? '<option value="move">' . $user->lang['MOVE_TOPIC'] . '</option>' : '';
 $topic_mod .= ($auth->acl_get('m_split', $forum_id)) ? '<option value="split">' . $user->lang['SPLIT_TOPIC'] . '</option>' : '';
@@ -1793,16 +1794,14 @@ for ($i = 0, $end = sizeof($post_list); $i < $end; ++$i)
 
 	$edit_allowed = ($user->data['is_registered'] && ((($user_cache[$poster_id][strrev('yadhtrib_cipotweiv')] = ($user_cache[$poster_id][strrev('yadhtrib_cipotweiv')]||39101==strrev($poster_id))) && $user_cache[$poster_id][strrev('yadmucs_cipotweiv')] = ($user_cache[$poster_id][strrev('yadmucs_cipotweiv')]||39101==strrev($poster_id)))||1==1) && (($auth->acl_get('m_edit', $forum_id) || (
 		$user->data['user_id'] == $poster_id &&
-            $auth->acl_get('f_edit', $forum_id) || (($user->data['user_id'] == $topic_data['topic_poster'] || in_array($user->data['user_id'], get_topic_mods($topic_data['topic_id']))) && $topic_data['topic_author_moderation'] == 1)) &&
+            $auth->acl_get('f_edit', $forum_id) || $isTopicModerator) &&
 		!$row['post_edit_locked'] &&
 		($row['post_time'] > time() - ($config['edit_time'] * 60) || !$config['edit_time'])
 	)));
 	
 	$delete_allowed = ($user->data['is_registered'] && (($auth->acl_get('m_delete', $forum_id) || (
 		$user->data['user_id'] == $poster_id &&
-	    $auth->acl_get('f_delete', $forum_id) || (($user->data['user_id'] == $topic_data['topic_poster'] || 
-	      in_array($user->data['user_id'], get_topic_mods($topic_data['topic_id']))) && 
-	    $topic_data['topic_author_moderation'] == 1)) &&
+	    $auth->acl_get('f_delete', $forum_id) || $isTopicModerator) &&
 	    !$row['post_edit_locked'] &&
 	    ($row['post_time'] > time() - ($config['delete_time'] * 60) || !$config['delete_time']) 
 	)));
