@@ -62,8 +62,9 @@ $lang = array_merge($lang, array(
 	'BBCODE_U_HELP'				=> 'Underline text: [u]text[/u]',
 	'BBCODE_W_HELP'				=> 'Insert URL: [url]http://url[/url] or [url=http://url]URL text[/url]',
 	'BBCODE_D_HELP'				=> 'Flash: [flash=width,height]http://url[/flash]',
-	'BBCODE_COUNTDOWN_HELP'			=> 'Countdown: [countdown]YYYY-mm-dd HH:MM:SS[/countdown]',
+	'BBCODE_COUNTDOWN_HELP'		=> 'Countdown: [countdown]YYYY-mm-dd HH:MM:SS[/countdown]',
 	'BBCODE_DICE_HELP'			=> 'Dice tag: [dice]1d6[/dice]',
+	'BBCODE_POST_HELP'			=> 'Two varieties: [post=<ISO_POST_NUMBER>]Text[/post] OR [post=#<POST_ID>]Text[/post]',
 	'BCC_ROLEPM'				=> 'use for Role PMs!',
 	'BUMP_ERROR'				=> 'You cannot bump this topic so soon after the last post.',
 

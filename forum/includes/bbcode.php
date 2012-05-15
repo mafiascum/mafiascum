@@ -633,7 +633,7 @@ class bbcode
 	function bbcode_second_pass_post($post_id, $content)
 	{
 		global $config;
-		return "<a class='post_tag' href=" . '"' . $config['server_protocol'] . $config['server_name'] . $config['script_path'] . "/viewtopic.php?p=$post_id#p$post_id" . '"' . ">" . $content . "</a>";
+		return "<a class='postlink post_tag' href=" . '"' . $config['server_protocol'] . $config['server_name'] . $config['script_path'] . "/viewtopic.php?p=$post_id#p$post_id" . '"' . ">" . $content . "</a>";
 	}
 	/**
 	 * Second parse countdown tag
