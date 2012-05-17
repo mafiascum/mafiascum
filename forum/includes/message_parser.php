@@ -127,7 +127,7 @@ class bbcode_firstpass extends bbcode
 			'flash'			=> array('bbcode_id' => 11,	'regexp' => array('#\[flash=([0-9]+),([0-9]+)\](.*?)\[/flash\]#uie' => "\$this->bbcode_flash('\$1', '\$2', '\$3')")),
 			'countdown'		=> array('bbcode_id' => 1450,	'regexp' => array('#\[countdown\](.*?)\[/countdown\]#uise' => "\$this->bbcode_countdown('\$1', '\$2')")),
 			'dice'			=> array('bbcode_id' => 1451,	'regexp' => array('#\[dice](((\d+)d(\d+)(?:([\+-\/\*])(\d+))?) ?(\d+)? ?)\[/dice\]#uise' => "\$this->bbcode_dice('\$3', '\$4', '\$1', '\$2', '\$5', '\$6', '\$7')")),
-			'post'			=> array('bbcode_id' => 1452,	'regexp' => array('#\[post=(.*?)\](.*?)\[/post\]#uise' => "\$this->bbcode_post('\$1','\$2')"))
+			'post'			=> array('bbcode_id' => 1452,	'regexp' => array('#\[post=?(.*?)\](.*?)\[/post\]#uise' => "\$this->bbcode_post('\$1','\$2')"))
 		);
 
 		// Zero the parsed items array
@@ -581,12 +581,12 @@ class bbcode_firstpass extends bbcode
 		global $topic_id, $db, $config;
 		$is_post_id = false;
 		$error = true;
+		
 		if (empty($topic_id)){
 			return '[post=' . $post_number . ']' . $in . '[/post]';
 		}
-		if (!$this->check_bbcode('post', $in)) {
-
-			$in = "Post $post_number";
+		if (!($post_number)){
+			$post_number=$in;
 		}
 		if($post_number == '') {
 			return $in;
@@ -597,7 +597,10 @@ class bbcode_firstpass extends bbcode
 			$is_post_id = true;
 		}
 		if(!preg_match('/\d+/', $post_number)) {//Must be integer.
-			return $in;
+			return '[post=' . $post_number . ']' . $in . '[/post]';
+		}
+		if (!$this->check_bbcode('post', $in)) {
+			$in = "Post $post_number";
 		}
 		
 		//We need for $post_number to be the internal post id.
