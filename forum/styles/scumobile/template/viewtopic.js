@@ -188,8 +188,8 @@ function postNotContains(post_id, text){
 		divarea = document.getElementById(message_name);
 	}
 	var array = divarea.getElementsByTagName("div");
-	content = array[5].innerHTML;
-	return (stripWhiteSpace(stripHTML(content)).indexOf(stripWhiteSpace(text), 0)==-1);
+	content = $(array[5]).text();
+	return (stripWhiteSpace(content).indexOf(stripWhiteSpace(text), 0)==-1);
 }
 
 //Strips HTML from a string
