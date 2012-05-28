@@ -602,6 +602,7 @@ class bbcode_firstpass extends bbcode
 		if (!$this->check_bbcode('post', $in)) {
 			$in = "Post $post_number";
 		}
+
 		
 		//We need for $post_number to be the internal post id.
 		
@@ -704,7 +705,7 @@ class bbcode_firstpass extends bbcode
 	 */
 	function bbcode_dice($dice, $sides, $in, $inExcludingSeed, $operator, $operand, $previousSeed)
 	{
-		global $user, $config;
+		global $user, $config, $mode;
 
 		if (!$this->check_bbcode('dice', $in))
 			return $in;
@@ -717,14 +718,19 @@ class bbcode_firstpass extends bbcode
 
 		if($previousSeed != '') {
 			$seed = $previousSeed;
-			
-			$seedString = ' ' . $seed;
 		}
 		else {
 			mt_srand((double)microtime()*100000);
-
 			$seed = mt_rand();
-
+		}
+		
+		//Determine whether this is a static or normal dice roll.
+		if($previousSeed != '' || $mode == 'edit') {//We are rolling static dice(edited post, quoted dice tag, etc)
+		
+			$seedString = ' ' . $seed;
+		}
+		else {//Normal dice roll.
+		
 			$seedString = '<!--' . $seed . '-->';
 		}
 

@@ -801,6 +801,12 @@ function delete_posts($where_type, $where_ids, $auto_sync = true, $posted_sync =
 
 	$table_ary = array(POSTS_TABLE, REPORTS_TABLE);
 
+	$sql = " INSERT IGNORE INTO " . POSTS_ARCHIVE_TABLE
+	     . " SELECT * FROM " . POSTS_TABLE
+	     . " WHERE " . $db->sql_in_set('post_id', $post_ids);
+	     
+	$db->sql_query($sql);
+
 	foreach ($table_ary as $table)
 	{
 		$sql = "DELETE FROM $table
