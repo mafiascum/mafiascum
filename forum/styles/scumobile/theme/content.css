@@ -391,6 +391,7 @@ p.author {
 	font-family: Verdana, Helvetica, Arial, sans-serif;
 	font-size: 1em;
 	line-height: 1.2em;
+	width: 100%;
 }
 
 /* Post signature */
