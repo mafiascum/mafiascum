@@ -1670,7 +1670,7 @@ for ($i = 0, $end = sizeof($post_list); $i < $end; ++$i)
 
 		$line_array = preg_split('#<br\s*/?>#i', $user_cache[$poster_id]['sig'] );
 		$num_lines = count( $line_array );
-		if ($num_lines>3){
+		if ($num_lines>4){
 			$user_cache[$poster_id]['longsig']=true;
 		}
 			$user_cache[$poster_id]['sig'] = smiley_text($user_cache[$poster_id]['sig']);
