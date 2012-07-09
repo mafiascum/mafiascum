@@ -870,7 +870,7 @@ $template->assign_vars(array(
 			$selected3 = (isset($s_sort_user_id3)&& $s_sort_user_id3 == $urow['poster_id']) ? ' selected="selected"' : '';
             $user_ary[] = '<option value="' . $urow['poster_id'] . '"' . $selected . '>' . $urow['username'] . '</option>';
             $user_ary2[]= '<option value="' . $urow['poster_id'] . '"' . $selected2. '>' . $urow['username'] . '</option>';
-			$user_ary3[]= '<option value="' . $urow['poster_id'] . '"' . $selected3. '>' . $urow['username'] . '</option>';
+			$user_ary3[]= '<option value="' . $urow['poster_id'] . '"' . $selected3. '>' . $urow['username'] . '</option>'; 
         }
         
         $s_topic_users = implode(' ', $user_ary);
@@ -1157,8 +1157,8 @@ $i = $i_total = 0;
 $iso_where = "";
 if(count($isolationUserArray) > 0) {
 	$iso_where .= $db->sql_in_set("p.poster_id", $isolationUserArray, false, false);
-}
-
+	}
+	
 if(count($isolationUserArray) > 0) {
 
 	//Let's get the real post numbers. Kison, 2011-06-19
@@ -1664,10 +1664,18 @@ for ($i = 0, $end = sizeof($post_list); $i < $end; ++$i)
 		{
 			$bbcode->bbcode_second_pass($user_cache[$poster_id]['sig'], $user_cache[$poster_id]['sig_bbcode_uid'], $user_cache[$poster_id]['sig_bbcode_bitfield']);
 		}
-
+		
 		$user_cache[$poster_id]['sig'] = bbcode_nl2br($user_cache[$poster_id]['sig']);
-		$user_cache[$poster_id]['sig'] = smiley_text($user_cache[$poster_id]['sig']);
-		$user_cache[$poster_id]['sig_parsed'] = true;
+		
+
+		$line_array = preg_split('#<br\s*/?>#i', $user_cache[$poster_id]['sig'] );
+		$num_lines = count( $line_array );
+		if ($num_lines>3){
+			$user_cache[$poster_id]['longsig']=true;
+		}
+			$user_cache[$poster_id]['sig'] = smiley_text($user_cache[$poster_id]['sig']);
+			$user_cache[$poster_id]['sig_parsed'] = true;
+
 	}
 
 	// Parse the message and subject
@@ -1834,7 +1842,7 @@ for ($i = 0, $end = sizeof($post_list); $i < $end; ++$i)
 		'POST_DATE'			=> $user->format_date($row['post_time'], false, ($view == 'print') ? true : false),
 		'POST_SUBJECT'		=> $row['post_subject'],
 		'MESSAGE'			=> $message,
-		'SIGNATURE'			=> ($row['enable_sig']) ? $user_cache[$poster_id]['sig'] : '',
+		'SIGNATURE'			=> ($user_cache[$poster_id]['longsig']) ?  ("<a class='signature_hideshow' href='#' onclick='return false;' id='sigbutton" . $row['post_id'] . "'" . '>Show</a><br/>' . '<div  id=' . '"' . "sigcontent" . $row['post_id']  .  '"' . 'style="display:none;">' . $user_cache[$poster_id]['sig']  . '</div>' . '<script type="text/javascript">$(document).ready(function(){ $("#sigbutton' . $row['post_id'] .'").click(function(){ if ($("#sigcontent'  . $row['post_id']  . '").css("display") != "block"){ $("#sigcontent'  . $row['post_id']  . '").css("display", "block"); $(this).text("Hide"); } else { $("#sigcontent'  . $row['post_id']  . '").css("display", "none"); $(this).text("Show"); } }); });</script>') : (($row['enable_sig']) ? $user_cache[$poster_id]['sig'] : ''),
 		'EDITED_MESSAGE'	=> $l_edited_by,
 		'EDIT_REASON'		=> $row['post_edit_reason'],
 		'BUMPED_MESSAGE'	=> $l_bumped_by,

@@ -117,14 +117,14 @@
 
 		<dl class="postprofile<!-- IF postrow.S_ONLINE and not postrow.S_IGNORE_POST  --> online<!-- ENDIF -->" id="profile{postrow.POST_ID}">
 			<dt>
-			<!-- IF postrow.U_POST_AUTHOR  --><a href="{postrow.U_POST_AUTHOR}"><!-- IF not postrow.U_POST_AUTHOR --><strong>{postrow.POST_AUTHOR_FULL}</strong><!-- ELSE -->{postrow.POST_AUTHOR_FULL}<!-- ENDIF -->
+			<!-- IF postrow.U_POST_AUTHOR  --><!-- IF not postrow.U_POST_AUTHOR --><strong>{postrow.POST_AUTHOR_FULL}</strong><!-- ELSE -->{postrow.POST_AUTHOR_FULL}<!-- ENDIF -->
 			
 			<!-- IF postrow.BIRTHDAY_IMG --><span style="float:right; padding-right:3px;">{postrow.BIRTHDAY_IMG}</span><!-- ENDIF --><br />
 			<!-- IF postrow.RANK_TITLE or postrow.RANK_IMG --><dd>{postrow.RANK_TITLE}<!-- IF postrow.RANK_TITLE and postrow.RANK_IMG --><br /><!-- ENDIF -->{postrow.RANK_IMG}</dd><!-- ENDIF -->
 
 		<dd>&nbsp;</dd>
                                 <div class="imagecontainer"><div class="microbadges"><!--Here<br>be<br>micro<br>badges.--></div><!-- IF postrow.POSTER_AVATAR -->
-{postrow.POSTER_AVATAR}</a><!-- ELSE -->{postrow.POSTER_AVATAR}<!-- ENDIF -->
+{postrow.POSTER_AVATAR}<!-- ELSE -->{postrow.POSTER_AVATAR}<!-- ENDIF -->
 				<!-- ENDIF --></div>
 			</dt>
 

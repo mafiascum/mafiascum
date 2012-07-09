@@ -182,6 +182,7 @@ class ucp_prefs
 					'lobby'			=> request_var('lobby', (bool) $user->optionget('enterlobby')),
 					'mobile'		=> request_var('mobile', (bool) $user->optionget('autodetectmobile')),
 					'chat'			=> request_var('chat', (bool) $user->optionget('chat_disabled')),
+					'bbsigs'		=> request_var('bbsigs', (bool) $user->optionget('sigbb_disabled')),
 					// BEGIN Topic Preview Mod
 					'topic_preview'	=> request_var('topic_preview', (!empty($user->data['user_topic_preview']) ? $user->data['user_topic_preview'] : 0)),
 					// END Topic Preview Mod
@@ -213,6 +214,7 @@ class ucp_prefs
 						$user->optionset('autodetectmobile', $data['mobile']);
 						$user->optionset('chat_disabled', $data['chat']);
 						$user->optionset('enterlobby', $data['lobby']);
+						$user->optionset('sigbb_disabled', $data['bbsigs']);
 
 						if ($auth->acl_get('u_chgcensors'))
 						{
@@ -301,6 +303,7 @@ class ucp_prefs
 					'S_DISABLE_CENSORS'		=> $data['wordcensor'],
 					'S_YOUTUBE'			=> $data['youtube'],
 					'S_MOBILE'			=> $data['mobile'],
+					'S_BBSIG'			=> $data['bbsigs'],
 
 					// BEGIN Topic Preview MOD
 					'S_DISPLAY_TOPIC_PREVIEW'	=> $data['topic_preview'],

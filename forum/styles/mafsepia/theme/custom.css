@@ -132,3 +132,20 @@ span.gameFieldValue {
 	padding: 5px 10px;
 	margin-bottom: 35px;
 }
+
+a.signature_hideshow {
+	text-decoration:none;
+	color: #ac9b84;
+	font-size:.85em;
+	line-height: 100%;
+}
+a.signature_hideshow:hover{
+	
+	text-decoration:none;
+	color: #DF1B1B;
+	font-size:.85em;
+	line-height: 100%;
+}
+.postbody .noboldsig{font-weight:bold;}
+.signature .noboldsig{font-weight:normal;}
+.signature .nocolorsig{color:#333333;}

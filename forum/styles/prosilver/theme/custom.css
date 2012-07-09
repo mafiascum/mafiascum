@@ -1,4 +1,3 @@
-<style type="text/css">
 
 div#gameInfoMaster {
 
@@ -16,11 +15,22 @@ span.gameFieldValue {
 
 	font-weight: bold;
 }
-
-
-
 .gamePanel{
 	padding: 5px 10px;
 	margin-bottom: 35px;
 }
-</style>
+a.signature_hideshow {
+	text-decoration:none;
+	color: #999999;
+	font-size:.85em;
+	line-height: 100%;
+}
+a.signature_hideshow:hover{
+	text-decoration:none;
+	color: #DF1B1B;
+	font-size:.85em;
+	line-height: 100%;
+}
+.postbody .noboldsig{font-weight:bold;}
+.signature .noboldsig{font-weight:normal;}
+.signature .nocolorsig{color:#333333;}

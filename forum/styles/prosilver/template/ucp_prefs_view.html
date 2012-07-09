@@ -83,6 +83,13 @@
 				<label for="lobby0"><input type="radio" name="lobby" id="lobby0" value="0"<!-- IF S_LOBBY --> checked="checked"<!-- ENDIF --> /> {L_NO}</label>
 			</dd>
 		</dl>
+		<dl>
+			<dt><label for="bbsigs1">Disable bold and color BBcode in sigs:</label></dt>
+			<dd>
+				<label for="bbsigs1"><input type="radio" name="bbsigs" id="bbsigs1" value="1"<!-- IF S_BBSIG --> checked="checked"<!-- ENDIF --> /> {L_YES}</label> 
+				<label for="bbsigs0"><input type="radio" name="bbsigs" id="bbsigs0" value="0"<!-- IF not S_BBSIG --> checked="checked"<!-- ENDIF --> /> {L_NO}</label>
+			</dd>
+		</dl>
 
 		<!-- IF S_TOPIC_PREVIEW -->
 			<dl>
