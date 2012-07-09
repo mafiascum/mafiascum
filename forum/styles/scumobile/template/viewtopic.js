@@ -1,33 +1,69 @@
 //<-----------------------------------Choose Quote method--------------------------------------------->
+var multipost_ids = new Array();
 
-function toggle_user_select_display() {
+function toggle_user_select_display(contractOrExpand) {
 	var userSelectElement2 = document.getElementById('user_select2');
 	var userSelectElement3 = document.getElementById('user_select3');
-	var toggleLinkElement = document.getElementById('user_select_toggle_link');
-	if(userSelectElement2.style.display == 'none') {
-		userSelectElement2.style.display = '';
+	var toggleLinkElementContract = document.getElementById('user_select_toggle_link_contract');
+	var toggleLinkElementExpand = document.getElementById('user_select_toggle_link_expand');
+	
+	var upperLimit = 3;
+	var totalVisibleIsolationSelectionElements = $(".iso_select:visible").size();
+	
+	if(contractOrExpand == "contract")
+	{//We are removing one of the select elements.
+	
+	    if(totalVisibleIsolationSelectionElements - 1 >= 1)
+	    {
+	        if($(userSelectElement3).is(":visible"))
+	        {
+	            $(userSelectElement3).hide();
+	            $(userSelectElement3).val(0);
+	        }
+	        else if($(userSelectElement2).is(":visible"))
+	        {
+	            $(userSelectElement2).hide();
+	            $(userSelectElement2).val(0);
+	        }
+	            
+	        --totalVisibleIsolationSelectionElements;
+	    }
 	}
-	else if(userSelectElement3.style.display == 'none'){
-		userSelectElement3.style.display = '';
-		if(toggleLinkElement.innerText)
-			toggleLinkElement.innerText = "[ - ]";
-		else if(toggleLinkElement.textContent)
-			toggleLinkElement.textContent = "[ - ]";
+	else if(contractOrExpand == "expand")
+	{//We are adding a select element.
+	
+	    if(totalVisibleIsolationSelectionElements + 1 <= upperLimit)
+	    {
+	        if(!$(userSelectElement2).is(":visible"))
+	            $(userSelectElement2).show();
+	        else if(!$(userSelectElement3).is(":visible"))
+	            $(userSelectElement3).show();
+	            
+	        ++totalVisibleIsolationSelectionElements;
+	    }
 	}
-	else {
-		userSelectElement2.style.display = 'none';
-		userSelectElement3.style.display = 'none';
-		count = 1;
-		if(toggleLinkElement.innerText)
-			toggleLinkElement.innerText = "[ + ]";
-		else if(toggleLinkElement.textContent)
-			toggleLinkElement.textContent = "[ + ]";
-		document.getElementById('user_select2').selectedIndex = 0;
-		document.getElementById('user_select3').selectedIndex = 0;
+	
+	//Update the contract button, if necessary.
+	if(totalVisibleIsolationSelectionElements > 1)
+	{//Make sure the contract button is visible.
+	    $(toggleLinkElementContract).show();
+	}
+	else if(totalVisibleIsolationSelectionElements <= 1)
+	{//Hide the contract button.
+	    $(toggleLinkElementContract).hide();
+	}
+	
+	//Update the expand button, if necessary.
+	if(totalVisibleIsolationSelectionElements >= upperLimit)
+	{
+	    $(toggleLinkElementExpand).hide();
+	}
+	else if(totalVisibleIsolationSelectionElements < upperLimit)
+	{
+	    $(toggleLinkElementExpand).show();
 	}
 }
 
-var multipost_ids = new Array();
 function quote (post_id, username, forum, topic){
 	var append= "./posting.php?mode=";
 	if (!addRemovePost(post_id))
