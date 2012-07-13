@@ -1813,13 +1813,12 @@ for ($i = 0, $end = sizeof($post_list); $i < $end; ++$i)
 	    !$row['post_edit_locked'] &&
 	    ($row['post_time'] > time() - ($config['delete_time'] * 60) || !$config['delete_time']) 
 	)));
-
 	$postrow = array(
 		'POST_AUTHOR_FULL'		=> ($poster_id != ANONYMOUS) ? $user_cache[$poster_id]['author_full'] : get_username_string('full', $poster_id, $row['username'], $row['user_colour'], $row['post_username']),
 		'POST_AUTHOR_COLOUR'	=> ($poster_id != ANONYMOUS) ? $user_cache[$poster_id]['author_colour'] : get_username_string('colour', $poster_id, $row['username'], $row['user_colour'], $row['post_username']),
 		'POST_AUTHOR'			=> ($poster_id != ANONYMOUS) ? $user_cache[$poster_id]['author_username'] : get_username_string('username', $poster_id, $row['username'], $row['user_colour'], $row['post_username']),
 		'U_POST_AUTHOR'			=> ($poster_id != ANONYMOUS) ? $user_cache[$poster_id]['author_profile'] : get_username_string('profile', $poster_id, $row['username'], $row['user_colour'], $row['post_username']),
-
+		
 		//VLA Addition
 		'S_VLA'				=> $user_cache[$poster_id]['vla'],
 		//VLA Text for Alt Tag
@@ -1842,7 +1841,7 @@ for ($i = 0, $end = sizeof($post_list); $i < $end; ++$i)
 		'POST_DATE'			=> $user->format_date($row['post_time'], false, ($view == 'print') ? true : false),
 		'POST_SUBJECT'		=> $row['post_subject'],
 		'MESSAGE'			=> $message,
-		'SIGNATURE'			=> ($user_cache[$poster_id]['longsig']) ?  ("<a class='signature_hideshow' href='#' onclick='return false;' id='sigbutton" . $row['post_id'] . "'" . '>Show</a><br/>' . '<div  id=' . '"' . "sigcontent" . $row['post_id']  .  '"' . 'style="display:none;">' . $user_cache[$poster_id]['sig']  . '</div>' . '<script type="text/javascript">$(document).ready(function(){ $("#sigbutton' . $row['post_id'] .'").click(function(){ if ($("#sigcontent'  . $row['post_id']  . '").css("display") != "block"){ $("#sigcontent'  . $row['post_id']  . '").css("display", "block"); $(this).text("Hide"); } else { $("#sigcontent'  . $row['post_id']  . '").css("display", "none"); $(this).text("Show"); } }); });</script>') : (($row['enable_sig']) ? $user_cache[$poster_id]['sig'] : ''),
+		'SIGNATURE'			=> (!($user->optionget('sigbb_disabled')) && $user_cache[$poster_id]['longsig']) ?  ("<a class='signature_hideshow' href='#' onclick='return false;' id='sigbutton" . $row['post_id'] . "'" . '>Show</a><br/>' . '<div  id=' . '"' . "sigcontent" . $row['post_id']  .  '"' . 'style="display:none;">' . $user_cache[$poster_id]['sig']  . '</div>' . '<script type="text/javascript">$(document).ready(function(){ $("#sigbutton' . $row['post_id'] .'").click(function(){ if ($("#sigcontent'  . $row['post_id']  . '").css("display") != "block"){ $("#sigcontent'  . $row['post_id']  . '").css("display", "block"); $(this).text("Hide"); } else { $("#sigcontent'  . $row['post_id']  . '").css("display", "none"); $(this).text("Show"); } }); });</script>') : (($row['enable_sig']) ? $user_cache[$poster_id]['sig'] : ''),
 		'EDITED_MESSAGE'	=> $l_edited_by,
 		'EDIT_REASON'		=> $row['post_edit_reason'],
 		'BUMPED_MESSAGE'	=> $l_bumped_by,

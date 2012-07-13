@@ -434,7 +434,7 @@ class bbcode
 			global $user;
 
 			$bbcode_hardtpl = array(
-				'b_open'	=> $user->optionget('sigbb_disabled')? '<span class="noboldsig">' :'<span style="font-weight: bold">',
+				'b_open'	=> !$user->optionget('sigbb_disabled')? '<span class="noboldsig">' :'<span style="font-weight: bold">',
 				'b_close'	=> '</span>',
 				'i_open'	=> '<span style="font-style: italic">',
 				'i_close'	=> '</span>',
@@ -442,7 +442,7 @@ class bbcode
 				'u_close'	=> '</span>',
 				'img'		=> '<img src="$1" alt="' . $user->lang['IMAGE'] . '" />',
 				'size'		=> '<span style="font-size: $1%; line-height: normal">$2</span>',
-				'color'		=> $user->optionget('sigbb_disabled') ? '<span style="color: $1"><span class="nocolorsig" >$2</span></span>' : '<span style="color: $1">$2</span>',
+				'color'		=> !$user->optionget('sigbb_disabled') ? '<span style="color: $1"><span class="nocolorsig" >$2</span></span>' : '<span style="color: $1">$2</span>',
 				'email'		=> '<a href="mailto:$1">$2</a>'
 			);
 		}
