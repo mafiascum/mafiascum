@@ -97,12 +97,31 @@ if ($post_id)
 	}
 	unset($acl_check_ary);
 
-	if ($report_data['post_reported'])
+	// Grab all relevant data
+	$sql = 'SELECT r.user_id, r.report_closed
+		FROM ' . phpbb_reports . " r
+		WHERE r.post_id = $post_id";
+
+	$result = $db->sql_query($sql);
+	while($row = $db->sql_fetchrow($result)){
+		if ($row['user_id'] == $user->data['user_id']){
+			trigger_error("You've already reported this message.");
+		}
+		else if ($row['report_closed'] == '1'){
+			trigger_error("Reports on this post have already been closed");
+		}
+	}
+	$db->sql_freeresult($result);
+
+	
+
+// Commented to allow multiple reports per Post
+/*	if ($report_data['post_reported'])
 	{
 		$message = $user->lang['ALREADY_REPORTED'];
 		$message .= '<br /><br />' . sprintf($user->lang['RETURN_TOPIC'], '<a href="' . $redirect_url . '">', '</a>');
 		trigger_error($message);
-	}
+	}*/
 }
 else
 {

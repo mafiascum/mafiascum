@@ -55,6 +55,26 @@ class mcp_reports
 				{
 					trigger_error('NO_REPORT_SELECTED');
 				}
+				
+				$report_id = $report_id_list[0];
+					
+					$sql = 'SELECT r.post_id
+							FROM ' . REPORTS_TABLE . " r 
+							WHERE r.report_id = $report_id";
+					$result = $db->sql_query($sql);
+					$post = $db->sql_fetchrow($result);
+					$db->sql_freeresult($result);
+					$post_id = $post['post_id'];
+					$sql = 'SELECT r.report_id
+							FROM ' . REPORTS_TABLE . " r 
+							WHERE r.post_id = $post_id";
+					$result = $db->sql_query($sql);
+					$report_id_list = array();
+					while($row = $db->sql_fetchrow($result)){
+						$report_id_list[$count]=$row['report_id'] ;
+						$count++;
+					}
+					$db->sql_freeresult($result);
 
 				close_report($report_id_list, $mode, $action);
 
@@ -72,21 +92,31 @@ class mcp_reports
 				// closed reports are accessed by report id
 				$report_id = request_var('r', 0);
 
+				if( $report_id !=0 && $post_id == 0){
+					$sql = 'SELECT r.post_id
+							FROM ' . REPORTS_TABLE . " r 
+							WHERE r.report_id = $report_id";
+					$result = $db->sql_query($sql);
+					$post = $db->sql_fetchrow($result);
+					$db->sql_freeresult($result);
+					$post_id = $post['post_id'];
+				}
+
+
 				$sql = 'SELECT r.post_id, r.user_id, r.report_id, r.report_closed, report_time, r.report_text, rr.reason_title, rr.reason_description, u.username, u.username_clean, u.user_colour
 					FROM ' . REPORTS_TABLE . ' r, ' . REPORTS_REASONS_TABLE . ' rr, ' . USERS_TABLE . ' u
-					WHERE ' . (($report_id) ? 'r.report_id = ' . $report_id : "r.post_id = $post_id") . '
+					WHERE ' . ("r.post_id = $post_id") . '
 						AND rr.reason_id = r.reason_id
 						AND r.user_id = u.user_id
 						AND r.pm_id = 0
 					ORDER BY report_closed ASC';
-				$result = $db->sql_query_limit($sql, 1);
+				//$result = $db->sql_query_limit($sql, 1);
+				$result = $db->sql_query($sql);
 				$report = $db->sql_fetchrow($result);
-				$db->sql_freeresult($result);
-
-				if (!$report)
-				{
-					trigger_error('NO_REPORT');
-				}
+					if (!$report)
+					{
+						trigger_error('NO_REPORT');
+					}
 
 				if (!$report_id && $report['report_closed'])
 				{
@@ -175,15 +205,52 @@ class mcp_reports
 					{
 						$template->assign_var('S_HAS_ATTACHMENTS', true);
 
-						foreach ($attachments as $attachment)
-						{
-							$template->assign_block_vars('attachment', array(
-								'DISPLAY_ATTACHMENT'	=> $attachment)
-							);
+							foreach ($attachments as $attachment)
+							{
+								$template->assign_block_vars('attachment', array(
+									'DISPLAY_ATTACHMENT'	=> $attachment)
+								);
+							}
 						}
 					}
-				}
+					$template->assign_block_vars('reportrow', array(
+						'U_MCP_REPORTER_NOTES'		=> append_sid("{$phpbb_root_path}mcp.$phpEx", 'i=notes&amp;mode=user_notes&amp;u=' . $report['user_id']),
+						'U_MCP_WARN_REPORTER'		=> ($auth->acl_get('m_warn')) ? append_sid("{$phpbb_root_path}mcp.$phpEx", 'i=warn&amp;mode=warn_user&amp;u=' . $report['user_id']) : '',
+						'REPORT_DATE'				=> $user->format_date($report['report_time']),
+						'REPORT_ID'					=> $report_id,
+						'REPORT_REASON_TITLE'		=> $reason['title'],
+						'REPORT_REASON_DESCRIPTION'	=> $reason['description'],
+						'REPORT_TEXT'				=> $report['report_text'],
+						'REPORTER_FULL'				=> get_username_string('full', $report['user_id'], $report['username'], $report['user_colour']),
+						'REPORTER_COLOUR'			=> get_username_string('colour', $report['user_id'], $report['username'], $report['user_colour']),
+						'REPORTER_NAME'				=> get_username_string('username', $report['user_id'], $report['username'], $report['user_colour']),
+						'U_VIEW_REPORTER_PROFILE'	=> get_username_string('profile', $report['user_id'], $report['username'], $report['user_colour']),
+						));
+				while ($report = $db->sql_fetchrow($result)){
+					$report_id = $report['report_id'];
 
+					$reason = array('title' => $report['reason_title'], 'description' => $report['reason_description']);
+					if (isset($user->lang['report_reasons']['TITLE'][strtoupper($reason['title'])]) && isset($user->lang['report_reasons']['DESCRIPTION'][strtoupper($reason['title'])]))
+					{
+						$reason['description'] = $user->lang['report_reasons']['DESCRIPTION'][strtoupper($reason['title'])];
+						$reason['title'] = $user->lang['report_reasons']['TITLE'][strtoupper($reason['title'])];
+					}
+					$template->assign_block_vars('reportrow', array(
+						'U_MCP_REPORTER_NOTES'		=> append_sid("{$phpbb_root_path}mcp.$phpEx", 'i=notes&amp;mode=user_notes&amp;u=' . $report['user_id']),
+						'U_MCP_WARN_REPORTER'		=> ($auth->acl_get('m_warn')) ? append_sid("{$phpbb_root_path}mcp.$phpEx", 'i=warn&amp;mode=warn_user&amp;u=' . $report['user_id']) : '',
+						'REPORT_DATE'				=> $user->format_date($report['report_time']),
+						'REPORT_ID'					=> $report_id,
+						'REPORT_REASON_TITLE'		=> $reason['title'],
+						'REPORT_REASON_DESCRIPTION'	=> $reason['description'],
+						'REPORT_TEXT'				=> $report['report_text'],
+						'REPORTER_FULL'				=> get_username_string('full', $report['user_id'], $report['username'], $report['user_colour']),
+						'REPORTER_COLOUR'			=> get_username_string('colour', $report['user_id'], $report['username'], $report['user_colour']),
+						'REPORTER_NAME'				=> get_username_string('username', $report['user_id'], $report['username'], $report['user_colour']),
+						'U_VIEW_REPORTER_PROFILE'	=> get_username_string('profile', $report['user_id'], $report['username'], $report['user_colour']),
+						));
+					
+				}
+				$db->sql_freeresult($result);
 				$template->assign_vars(array(
 					'S_MCP_REPORT'			=> true,
 					'S_CLOSE_ACTION'		=> append_sid("{$phpbb_root_path}mcp.$phpEx", 'i=reports&amp;mode=report_details&amp;f=' . $post_info['forum_id'] . '&amp;p=' . $post_id),
@@ -196,9 +263,7 @@ class mcp_reports
 					'U_EDIT'					=> ($auth->acl_get('m_edit', $post_info['forum_id'])) ? append_sid("{$phpbb_root_path}posting.$phpEx", "mode=edit&amp;f={$post_info['forum_id']}&amp;p={$post_info['post_id']}") : '',
 					'U_MCP_APPROVE'				=> append_sid("{$phpbb_root_path}mcp.$phpEx", 'i=queue&amp;mode=approve_details&amp;f=' . $post_info['forum_id'] . '&amp;p=' . $post_id),
 					'U_MCP_REPORT'				=> append_sid("{$phpbb_root_path}mcp.$phpEx", 'i=reports&amp;mode=report_details&amp;f=' . $post_info['forum_id'] . '&amp;p=' . $post_id),
-					'U_MCP_REPORTER_NOTES'		=> append_sid("{$phpbb_root_path}mcp.$phpEx", 'i=notes&amp;mode=user_notes&amp;u=' . $report['user_id']),
 					'U_MCP_USER_NOTES'			=> append_sid("{$phpbb_root_path}mcp.$phpEx", 'i=notes&amp;mode=user_notes&amp;u=' . $post_info['user_id']),
-					'U_MCP_WARN_REPORTER'		=> ($auth->acl_get('m_warn')) ? append_sid("{$phpbb_root_path}mcp.$phpEx", 'i=warn&amp;mode=warn_user&amp;u=' . $report['user_id']) : '',
 					'U_MCP_WARN_USER'			=> ($auth->acl_get('m_warn')) ? append_sid("{$phpbb_root_path}mcp.$phpEx", 'i=warn&amp;mode=warn_user&amp;u=' . $post_info['user_id']) : '',
 					'U_VIEW_FORUM'				=> append_sid("{$phpbb_root_path}viewforum.$phpEx", 'f=' . $post_info['forum_id']),
 					'U_VIEW_POST'				=> append_sid("{$phpbb_root_path}viewtopic.$phpEx", 'f=' . $post_info['forum_id'] . '&amp;p=' . $post_info['post_id'] . '#p' . $post_info['post_id']),
@@ -210,21 +275,11 @@ class mcp_reports
 
 					'RETURN_REPORTS'			=> sprintf($user->lang['RETURN_REPORTS'], '<a href="' . append_sid("{$phpbb_root_path}mcp.$phpEx", 'i=reports' . (($post_info['post_reported']) ? '&amp;mode=reports' : '&amp;mode=reports_closed') . '&amp;start=' . $start . '&amp;f=' . $post_info['forum_id']) . '">', '</a>'),
 					'REPORTED_IMG'				=> $user->img('icon_topic_reported', $user->lang['POST_REPORTED']),
-					'REPORT_DATE'				=> $user->format_date($report['report_time']),
-					'REPORT_ID'					=> $report_id,
-					'REPORT_REASON_TITLE'		=> $reason['title'],
-					'REPORT_REASON_DESCRIPTION'	=> $reason['description'],
-					'REPORT_TEXT'				=> $report['report_text'],
 
 					'POST_AUTHOR_FULL'		=> get_username_string('full', $post_info['user_id'], $post_info['username'], $post_info['user_colour'], $post_info['post_username']),
 					'POST_AUTHOR_COLOUR'	=> get_username_string('colour', $post_info['user_id'], $post_info['username'], $post_info['user_colour'], $post_info['post_username']),
 					'POST_AUTHOR'			=> get_username_string('username', $post_info['user_id'], $post_info['username'], $post_info['user_colour'], $post_info['post_username']),
 					'U_POST_AUTHOR'			=> get_username_string('profile', $post_info['user_id'], $post_info['username'], $post_info['user_colour'], $post_info['post_username']),
-
-					'REPORTER_FULL'				=> get_username_string('full', $report['user_id'], $report['username'], $report['user_colour']),
-					'REPORTER_COLOUR'			=> get_username_string('colour', $report['user_id'], $report['username'], $report['user_colour']),
-					'REPORTER_NAME'				=> get_username_string('username', $report['user_id'], $report['username'], $report['user_colour']),
-					'U_VIEW_REPORTER_PROFILE'	=> get_username_string('profile', $report['user_id'], $report['username'], $report['user_colour']),
 
 					'POST_PREVIEW'			=> $message,
 					'POST_SUBJECT'			=> ($post_info['post_subject']) ? $post_info['post_subject'] : $user->lang['NO_SUBJECT'],
@@ -368,6 +423,21 @@ class mcp_reports
 
 				if (sizeof($report_ids))
 				{
+					$sql = 'SELECT r.post_id
+							FROM ' . REPORTS_TABLE . ' r
+							WHERE ' . $db->sql_in_set('r.report_id', $report_ids);
+					$result = $db->sql_query($sql);
+					$multireport_count = array();
+					while ($row = $db->sql_fetchrow($result))
+					{
+						$post_id=$row['post_id'];
+						if(isset($multireport_count[$post_id])){
+							$multireport_count[$post_id] +=1;
+						}else{
+							$multireport_count[$post_id] =1;
+						}
+					}
+					$db->sql_freeresult($result);
 					$sql = 'SELECT t.forum_id, t.topic_id, t.topic_title, p.post_id, p.post_subject, p.post_username, p.poster_id, p.post_time, u.username, u.username_clean, u.user_colour, r.user_id as reporter_id, ru.username as reporter_name, ru.user_colour as reporter_colour, r.report_time, r.report_id
 						FROM ' . REPORTS_TABLE . ' r, ' . POSTS_TABLE . ' p, ' . TOPICS_TABLE . ' t, ' . USERS_TABLE . ' u, ' . USERS_TABLE . ' ru
 						WHERE ' . $db->sql_in_set('r.report_id', $report_ids) . '
@@ -380,8 +450,16 @@ class mcp_reports
 					$result = $db->sql_query($sql);
 
 					$report_data = $rowset = array();
+					$mutlireport = array();
 					while ($row = $db->sql_fetchrow($result))
 					{
+						$post_id = $row['post_id'];
+						if(isset($multireport[$post_id])){
+							$multireport[$post_id] = 1;
+							continue;
+						}else{
+							$multireport[$post_id] = 1;
+						}
 						$global_topic = ($row['forum_id']) ? false : true;
 						if ($global_topic)
 						{
@@ -402,7 +480,7 @@ class mcp_reports
 							'REPORTER_COLOUR'		=> get_username_string('colour', $row['reporter_id'], $row['reporter_name'], $row['reporter_colour']),
 							'REPORTER'				=> get_username_string('username', $row['reporter_id'], $row['reporter_name'], $row['reporter_colour']),
 							'U_REPORTER'			=> get_username_string('profile', $row['reporter_id'], $row['reporter_name'], $row['reporter_colour']),
-
+							'U_NUM_REPORTER'		=> $multireport_count[$post_id],
 							'FORUM_NAME'	=> (!$global_topic) ? $forum_data[$row['forum_id']]['forum_name'] : $user->lang['GLOBAL_ANNOUNCEMENT'],
 							'POST_ID'		=> $row['post_id'],
 							'POST_SUBJECT'	=> ($row['post_subject']) ? $row['post_subject'] : $user->lang['NO_SUBJECT'],

@@ -1976,7 +1976,33 @@ function get_recipient_strings($pm_by_id)
 			{
 				if ($type == 'u')
 				{
-					$address_list[$message_id][] = get_username_string('full', $ug_id, $recipient_list[$type][$ug_id]['name'], $recipient_list[$type][$ug_id]['colour']);
+				
+					//Grab whether the pm has been read by this user_id.
+					$sql = 'SELECT pm_unread FROM '. PRIVMSGS_TO_TABLE .'
+					WHERE msg_id = '.$message_id.'
+					AND user_id = '.$ug_id;
+					$result = $db->sql_query($sql);
+					
+					if($row = $db->sql_fetchrow($result))
+					{
+						$read = ($row['pm_unread']) ? false : true;
+					}
+					else
+					{
+						$read = true; //Triggers when a message no longer exists in the priv_msg table. Its obviously been read.
+					}
+					
+					$db->sql_freeresult($result);
+					
+					
+					if($read)
+					{
+						$address_list[$message_id][] = '<span class="read_flag">&nbsp;</span>' . get_username_string('full', $ug_id, $recipient_list[$type][$ug_id]['name'], $recipient_list[$type][$ug_id]['colour']);
+					}
+					else
+					{
+						$address_list[$message_id][] = '<span class="unread_flag">&nbsp;</span>' . get_username_string('full', $ug_id, $recipient_list[$type][$ug_id]['name'], $recipient_list[$type][$ug_id]['colour']);
+					}
 				}
 				else
 				{

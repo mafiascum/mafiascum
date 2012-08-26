@@ -188,67 +188,69 @@ class ucp_vla
 				));
 				
 				//Assign the available V/LA dates for selection.
-
-					//Start Dates.
-					$s_vlastart_day_options = '<option value="0"' . ((!$data['vlastart_day']) ? ' selected="selected"' : '') . '>--</option>';
-						for ($i = 1; $i < 32; $i++)
-						{
-							$selected = ($i == $data['vlastart_day']) ? ' selected="selected"' : '';
-							$s_vlastart_day_options .= "<option value=\"$i\"$selected>$i</option>";
-						}
+				
+				//Select the proper display date based on V/LA status. Select today's date if none specified.
+				$selectionDay = ($data['vlastart_day']) ? $data['vlastart_day'] : date('j');
+				$selectionMonth = ($data['vlastart_month']) ? $data['vlastart_month'] : date('n');
+				$selectionYear = ($data['vlastart_year']) ? $data['vlastart_year'] : date('Y');
+				
+				//Start Dates.
+				for ($i = 1; $i < 32; $i++)
+				{
+					$selected = ($i == $selectionDay) ? ' selected="selected"' : '';
+					$s_vlastart_day_options .= "<option value=\"$i\"$selected>$i</option>";
+				}
 	
-						$s_vlastart_month_options = '<option value="0"' . ((!$data['vlastart_month']) ? ' selected="selected"' : '') . '>--</option>';
-						for ($i = 1; $i < 13; $i++)
-						{
-							$selected = ($i == $data['vlastart_month']) ? ' selected="selected"' : '';
-							$s_vlastart_month_options .= "<option value=\"$i\"$selected>$i</option>";
-						}
-						$s_vlastart_year_options = '';
+				for ($i = 1; $i < 13; $i++)
+				{
+					$selected = ($i == $selectionMonth) ? ' selected="selected"' : '';
+					$s_vlastart_month_options .= "<option value=\"$i\"$selected>" . date('F', mktime(0, 0, 0, $i, 1, date('Y'))) ."</option>";
+				}
+				$s_vlastart_year_options = '';
 	
-						$now = getdate();
-						$s_vlastart_year_options = '<option value="0"' . ((!$data['vlastart_year']) ? ' selected="selected"' : '') . '>--</option>';
-						for ($i = $now['year']; $i <= ($now['year'] + 1); $i++)
-						{
-							$selected = ($i == $data['vlastart_year']) ? ' selected="selected"' : '';
-							$s_vlastart_year_options .= "<option value=\"$i\"$selected>$i</option>";
-						}
-						unset($now);
-						
-					//End Dates.
-					$s_vlatill_day_options = '<option value="0"' . ((!$data['vlatill_day']) ? ' selected="selected"' : '') . '>--</option>';
-					for ($i = 1; $i < 32; $i++)
-					{
-						$selected = ($i == $data['vlatill_day']) ? ' selected="selected"' : '';
-						$s_vlatill_day_options .= "<option value=\"$i\"$selected>$i</option>";
-					}
+				$now = getdate();
+				for ($i = $now['year']; $i <= ($now['year'] + 1); $i++)
+				{
+					$selected = ($i == $selectionyear) ? ' selected="selected"' : '';
+					$s_vlastart_year_options .= "<option value=\"$i\"$selected>$i</option>";
+				}
+				unset($now);
+					
+				//End Dates.
+				$s_vlatill_day_options = '<option value=""' . ((!$data['vlatill_day']) ? ' selected="selected"' : '') . '>--</option>';
+				for ($i = 1; $i < 32; $i++)
+				{
+					$selected = ($i == $data['vlatill_day']) ? ' selected="selected"' : '';
+					$s_vlatill_day_options .= "<option value=\"$i\"$selected>$i</option>";
+				}
 
-					$s_vlatill_month_options = '<option value="0"' . ((!$data['vlatill_month']) ? ' selected="selected"' : '') . '>--</option>';
-					for ($i = 1; $i < 13; $i++)
-					{
-						$selected = ($i == $data['vlatill_month']) ? ' selected="selected"' : '';
-						$s_vlatill_month_options .= "<option value=\"$i\"$selected>$i</option>";
-					}
-					$s_vlatill_year_options = '';
+				$s_vlatill_month_options = '<option value="0"' . ((!$data['vlatill_month']) ? ' selected="selected"' : '') . '>--</option>';
+				for ($i = 1; $i < 13; $i++)
+				{
+					$selected = ($i == $data['vlatill_month']) ? ' selected="selected"' : '';
+					$s_vlatill_month_options .= "<option value=\"$i\"$selected>" . date('F', mktime(0, 0, 0, $i, 1, date('Y'))) ."</option>";
+				}
+				$s_vlatill_year_options = '';
 
-					$now = getdate();
-					$s_vlatill_year_options = '<option value="0"' . ((!$data['vlatill_year']) ? ' selected="selected"' : '') . '>--</option>';
-					for ($i = $now['year'] ; $i <= ($now['year'] + 1); $i++)
-					{
-						$selected = ($i == $data['vlatill_year']) ? ' selected="selected"' : '';
-						$s_vlatill_year_options .= "<option value=\"$i\"$selected>$i</option>";
-					}
-					unset($now);
+				$now = getdate();
+				$s_vlatill_year_options = '<option value="0"' . ((!$data['vlatill_year']) ? ' selected="selected"' : '') . '>--</option>';
+				for ($i = $now['year'] ; $i <= ($now['year'] + 1); $i++)
+				{
+					$selected = ($i == $data['vlatill_year']) ? ' selected="selected"' : '';
+					$s_vlatill_year_options .= "<option value=\"$i\"$selected>$i</option>";
+				}
+				unset($now);
 
-					$template->assign_vars(array(
-						'S_VLATILL_DAY_OPTIONS'	=> $s_vlatill_day_options,
-						'S_VLATILL_MONTH_OPTIONS'	=> $s_vlatill_month_options,
-						'S_VLATILL_YEAR_OPTIONS'	=> $s_vlatill_year_options,
-						'S_VLATILL_ENABLED'		=> true,
-						'S_VLASTART_DAY_OPTIONS'	=> $s_vlastart_day_options,
-						'S_VLASTART_MONTH_OPTIONS'	=> $s_vlastart_month_options,
-						'S_VLASTART_YEAR_OPTIONS'	=> $s_vlastart_year_options,
-						'S_VLASTART_ENABLED'		=> true,
-					));
+				$template->assign_vars(array(
+					'S_VLATILL_DAY_OPTIONS'	=> $s_vlatill_day_options,
+					'S_VLATILL_MONTH_OPTIONS'	=> $s_vlatill_month_options,
+					'S_VLATILL_YEAR_OPTIONS'	=> $s_vlatill_year_options,
+					'S_VLATILL_ENABLED'		=> true,
+					'S_VLASTART_DAY_OPTIONS'	=> $s_vlastart_day_options,
+					'S_VLASTART_MONTH_OPTIONS'	=> $s_vlastart_month_options,
+					'S_VLASTART_YEAR_OPTIONS'	=> $s_vlastart_year_options,
+					'S_VLASTART_ENABLED'		=> true,
+				));
 				
 
 			break;

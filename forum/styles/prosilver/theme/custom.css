@@ -34,3 +34,30 @@ a.signature_hideshow:hover{
 .postbody .noboldsig{font-weight:bold;}
 .signature .noboldsig{font-weight:normal;}
 .signature .nocolorsig{color:#333333;}
+
+/* Unread PM Indicator */
+.unread_flag{
+display:inline-block;
+width:5px;
+height:5px;
+position:relative;
+bottom:-.5em;
+border-radius:5px;
+margin-right:3px;
+background-color:#d90000;
+}
+/* Read PM Indicator */
+.read_flag{
+display:inline-block;
+width:5px;
+height:5px;
+position:relative;
+bottom:-.5em;
+border-radius:5px;
+margin-right:3px;
+background-color:#0000FF;
+}
+/*Unread Indicator Legend*/
+.indi-legend{
+margin-bottom:6px;
+}

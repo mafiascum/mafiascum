@@ -167,6 +167,26 @@ function mcp_front_view($id, $mode, $action)
 			if ($total)
 			{
 				$global_id = $forum_list[0];
+					
+					$sql = 'SELECT r.post_id
+							FROM ' . REPORTS_TABLE . ' r, ' . POSTS_TABLE . ' p
+							WHERE ' . 'r.post_id = p.post_id
+								AND r.pm_id = 0
+								AND r.report_closed = 0
+								AND p.forum_id IN (0, ' . implode(', ', $forum_list) . ')';
+
+					$result = $db->sql_query($sql);
+					$multireport_count = array();
+					while ($row = $db->sql_fetchrow($result))
+					{
+						$post_id=$row['post_id'];
+						if(isset($multireport_count[$post_id])){
+							$multireport_count[$post_id] +=1;
+						}else{
+							$multireport_count[$post_id] =1;
+						}
+					}
+					$db->sql_freeresult($result);
 
 				$sql = $db->sql_build_query('SELECT', array(
 					'SELECT'	=> 'r.report_time, p.post_id, p.post_subject, p.post_time, u.username, u.username_clean, u.user_colour, u.user_id, u2.username as author_name, u2.username_clean as author_name_clean, u2.user_colour as author_colour, u2.user_id as author_id, t.topic_id, t.topic_title, f.forum_id, f.forum_name',
@@ -201,6 +221,14 @@ function mcp_front_view($id, $mode, $action)
 
 				while ($row = $db->sql_fetchrow($result))
 				{
+
+					$post_id = $row['post_id'];
+						if(isset($multireport[$post_id])){
+							$multireport[$post_id] = 1;
+							continue;
+						}else{
+							$multireport[$post_id] = 1;
+						}
 					$global_topic = ($row['forum_id']) ? false : true;
 					if ($global_topic)
 					{
@@ -218,7 +246,7 @@ function mcp_front_view($id, $mode, $action)
 						'REPORTER'			=> get_username_string('username', $row['user_id'], $row['username'], $row['user_colour']),
 						'REPORTER_COLOUR'	=> get_username_string('colour', $row['user_id'], $row['username'], $row['user_colour']),
 						'U_REPORTER'		=> get_username_string('profile', $row['user_id'], $row['username'], $row['user_colour']),
-
+						'U_NUM_REPORTER'		=> $multireport_count[$post_id],
 						'AUTHOR_FULL'		=> get_username_string('full', $row['author_id'], $row['author_name'], $row['author_colour']),
 						'AUTHOR'			=> get_username_string('username', $row['author_id'], $row['author_name'], $row['author_colour']),
 						'AUTHOR_COLOUR'		=> get_username_string('colour', $row['author_id'], $row['author_name'], $row['author_colour']),
