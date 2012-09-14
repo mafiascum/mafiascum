@@ -146,7 +146,6 @@ class dbal_mysqli extends dbal
 		if ($query != '')
 		{
 			global $cache;
-
 			// EXPLAIN only in extra debug mode
 			if (defined('DEBUG_EXTRA'))
 			{
@@ -162,12 +161,10 @@ class dbal_mysqli extends dbal
 				{
 					$this->sql_error($query);
 				}
-
 				if (defined('DEBUG_EXTRA'))
 				{
 					$this->sql_report('stop', $query);
 				}
-
 				if ($cache_ttl && method_exists($cache, 'sql_save'))
 				{
 					$cache->sql_save($query, $this->query_result, $cache_ttl);

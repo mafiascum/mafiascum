@@ -464,7 +464,6 @@ class session
 				}
 			}
 		}
-
 		// If we reach here then no (valid) session exists. So we'll create a new one
 		return $this->session_create();
 	}
@@ -744,7 +743,6 @@ class session
 		}
 
 		$db->sql_return_on_error(true);
-
 		$sql = 'DELETE
 			FROM ' . SESSIONS_TABLE . '
 			WHERE session_id = \'' . $db->sql_escape($this->session_id) . '\'
@@ -784,17 +782,18 @@ class session
 			// This is a temporary variable, only set for the very first visit
 			$this->data['session_created'] = true;
 		}
-
 		$this->session_id = $this->data['session_id'] = md5(unique_id());
+
+
 
 		$sql_ary['session_id'] = (string) $this->session_id;
 		$sql_ary['session_page'] = (string) substr($this->page['page'], 0, 199);
 		$sql_ary['session_forum_id'] = $this->page['forum'];
-
+		
 		$sql = 'INSERT INTO ' . SESSIONS_TABLE . ' ' . $db->sql_build_array('INSERT', $sql_ary);
 		$db->sql_query($sql);
-
 		$db->sql_return_on_error(false);
+
 
 		// Regenerate autologin/persistent login key
 		if ($session_autologin)
@@ -824,7 +823,6 @@ class session
 			$result = $db->sql_query($sql);
 			$row = $db->sql_fetchrow($result);
 			$db->sql_freeresult($result);
-
 			if ((int) $row['sessions'] <= 1 || empty($this->data['user_form_salt']))
 			{
 				$this->data['user_form_salt'] = unique_id();
@@ -942,7 +940,6 @@ class session
 	function session_gc()
 	{
 		global $db, $config, $phpbb_root_path, $phpEx;
-
 		$batch_size = 10;
 
 		if (!$this->time_now)
@@ -1416,7 +1413,6 @@ class session
 		// If it's the current user then we'll leave this session intact
 		$sql_where = 'session_user_id = ' . (int) $user_id;
 		$sql_where .= ($user_id === (int) $this->data['user_id']) ? " AND session_id <> '" . $db->sql_escape($this->session_id) . "'" : '';
-
 		$sql = 'DELETE FROM ' . SESSIONS_TABLE . "
 			WHERE $sql_where";
 		$db->sql_query($sql);
@@ -1573,12 +1569,14 @@ class user extends session
 		 
 		if ($mobile_browser > 0) {
 		   $mobile = true;
+		   $this->data['mobile'] = true;
 		}
 		else {
-		   //echo "non-mobile view";
 		   $mobile= false;;
+		   $this->data['mobile'] = false;
 		} 
 	//end detect mobile device.
+
 		if ($this->data['user_id'] != ANONYMOUS)
 		{
 			$this->lang_name = (file_exists($this->lang_path . $this->data['user_lang'] . "/common.$phpEx")) ? $this->data['user_lang'] : basename($config['default_lang']);

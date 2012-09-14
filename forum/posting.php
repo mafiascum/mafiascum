@@ -31,6 +31,9 @@ $topic_id	= request_var('t', 0);
 $forum_id	= request_var('f', 0);
 $draft_id	= request_var('d', 0);
 $multipost_ids = request_var('m',  array('' => 0));
+for ($i = 0; $i < count($multipost_ids); $i++){
+	$multipost_ids[$i] = (int)$db->sql_escape($multipost_ids[$i]);
+}
 $lastclick	= request_var('lastclick', 0);
 
 $QR			= (isset($_POST['postqr']) || isset($_POST['previewqr']));
