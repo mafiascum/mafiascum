@@ -116,7 +116,7 @@
 	<!-- IF not postrow.S_IGNORE_POST -->
 		<div class="postprofilecontainer <!-- IF postrow.S_VLA and not postrow.S_IGNORE_POST --> vla" title="On Vacation/Limited Access Until {postrow.S_VLA_END}"<!-- ELSE -->"<!-- ENDIF -->>
 		<!-- IF not postrow.S_IGNORE_POST -->
-	<!-- ENDIF -->
+
 
 		<dl class="postprofile<!-- IF postrow.S_ONLINE and not postrow.S_IGNORE_POST  --> online<!-- ENDIF -->" id="profile{postrow.POST_ID}">
 			<dt>
@@ -150,6 +150,7 @@
 		</dl>
 <!-- ENDIF -->
 		</div>
+	<!-- ENDIF -->
 		<div class="postbody">
 			<!-- IF postrow.S_IGNORE_POST -->
 				<div class="ignore">{postrow.L_IGNORE_POST}</div>
