@@ -304,6 +304,32 @@ if (!$topic_data)
 }
 
 $forum_id = (int) $topic_data['forum_id'];
+
+/*********************************************
+ * Friend/Foe Modification for Mafia Forums  *
+/*********************************************/
+$isMafiaForums = false;
+$checkingForum = $forum_id;
+$parentForum = $topic_data['parent_id'];
+//echo $config['mafia_forums_id'];
+while(($checkingForum != 0) && !$isMafiaForums)
+{
+	$isMafiaForums = ($checkingForum == $config['mafia_forums_id']) ? true : false;
+	if(!$isMafiaForums)
+	{
+		$sql =   ' SELECT forum_id, parent_id'
+		       . ' FROM '. FORUMS_TABLE
+		       . ' WHERE forum_id = ' . $db->sql_escape($parentForum);
+		$result = $db->sql_query($sql);
+		$da = $db->sql_fetchrow($result);
+		$db->sql_freeresult($result);
+		$checkingForum = $da['forum_id'];
+		$parentForum = $da['parent_id'];
+	}
+}
+/*********************************************/
+
+
 // This is for determining where we are (page)
 if ($post_id)
 {
@@ -1898,8 +1924,8 @@ for ($i = 0, $end = sizeof($post_list); $i < $end; ++$i)
 		'S_CUSTOM_FIELDS'	=> (isset($cp_row['row']) && sizeof($cp_row['row'])) ? true : false,
 		'S_TOPIC_POSTER'	=> ($topic_data['topic_poster'] == $poster_id) ? true : false,
 
-		'S_IGNORE_POST'		=> ($row['hide_post']) ? true : false,
-		'L_IGNORE_POST'		=> ($row['hide_post']) ? sprintf($user->lang['POST_BY_FOE'], get_username_string('full', $poster_id, $row['username'], $row['user_colour'], $row['post_username']), '<a href="' . $viewtopic_url . "&amp;p={$row['post_id']}&amp;view=show#p{$row['post_id']}" . '">', '</a>') : '',
+		'S_IGNORE_POST'		=> ($isMafiaForums) ? false : (($row['hide_post']) ? true : false),
+		'L_IGNORE_POST'		=> ($isMafiaForums) ? false : (($row['hide_post']) ? sprintf($user->lang['POST_BY_FOE'], get_username_string('full', $poster_id, $row['username'], $row['user_colour'], $row['post_username']), '<a href="' . $viewtopic_url . "&amp;p={$row['post_id']}&amp;view=show#p{$row['post_id']}" . '">', '</a>') : ''),
 	);
 	
 	if (isset($cp_row['row']) && sizeof($cp_row['row']))

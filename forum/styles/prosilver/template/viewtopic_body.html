@@ -112,8 +112,11 @@
 	<!-- IF postrow.S_FIRST_UNREAD --><a id="unread"></a><!-- ENDIF -->
 	<div id="p{postrow.POST_ID}" class="post <!-- IF postrow.S_ROW_COUNT is odd -->bg1<!-- ELSE -->bg2<!-- ENDIF --><!-- IF postrow.S_UNREAD_POST --> unreadpost<!-- ENDIF --><!-- IF postrow.S_POST_REPORTED --> reported<!-- ENDIF --><!-- IF postrow.S_ONLINE and not postrow.S_IGNORE_POST --> online<!-- ENDIF -->">
 		<div class="inner"><span class="corners-top"><span></span></span>
+
+	<!-- IF not postrow.S_IGNORE_POST -->
 		<div class="postprofilecontainer <!-- IF postrow.S_VLA and not postrow.S_IGNORE_POST --> vla" title="On Vacation/Limited Access Until {postrow.S_VLA_END}"<!-- ELSE -->"<!-- ENDIF -->>
 		<!-- IF not postrow.S_IGNORE_POST -->
+	<!-- ENDIF -->
 
 		<dl class="postprofile<!-- IF postrow.S_ONLINE and not postrow.S_IGNORE_POST  --> online<!-- ENDIF -->" id="profile{postrow.POST_ID}">
 			<dt>
@@ -126,6 +129,7 @@
                                 <div class="imagecontainer"><div class="microbadges"><!--Here<br>be<br>micro<br>badges.--></div><!-- IF postrow.POSTER_AVATAR -->
 {postrow.POSTER_AVATAR}<!-- ELSE -->{postrow.POSTER_AVATAR}<!-- ENDIF -->
 				<!-- ENDIF --></div>
+
 			</dt>
 
 		<!-- IF postrow.S_PROFILE_FIELD1  -->
@@ -144,7 +148,7 @@
 
 
 		</dl>
-
+<!-- ENDIF -->
 		</div>
 		<div class="postbody">
 			<!-- IF postrow.S_IGNORE_POST -->
@@ -215,9 +219,7 @@
 		<!-- ENDIF -->
 
 		</div>
-
-				<!-- ENDIF -->
-
+	<!-- IF not postrow.S_IGNORE_POST -->
 		<div class="back2top">
 		<!-- IF not S_IS_BOT -->
 		<!-- IF postrow.U_PM or postrow.U_EMAIL or postrow.U_WWW or postrow.U_MSN or postrow.U_ICQ or postrow.U_YIM or postrow.U_AIM or postrow.U_JABBER -->
@@ -238,6 +240,7 @@
 		<!-- ENDIF -->
 
                 <a href="#wrap" class="top" title="{L_BACK_TO_TOP}">{L_BACK_TO_TOP}</a></div>
+	<!-- ENDIF -->
 
 		<span class="corners-bottom"><span></span></span></div>
 	</div>
