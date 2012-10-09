@@ -508,55 +508,51 @@ class acp_main
 		$result = $db->sql_query($sql);
 
 		$backupRow = $db->sql_fetchrow($result);
+		$db->sql_freeresult($result);
+		$backupId = $backupRow['id'];
+		$backupStatus = getBackupStatusName($backupRow['status']);
+		$backupStartTime = $backupRow['start_time'];
+		$backupStartTimestamp = strftime("%b %d, %Y %H:%M", $backupStartTime);
 		
-		if($backupRow)
+		$sql = 'SELECT
+		          status
+		        FROM ' . BACKUP_REMOTE_FILE_TABLE . '
+		        WHERE backup_id = ' . $backupId;
+		
+		$result = $db->sql_query($sql);
+		while($row = $db->sql_fetchrow($result))
 		{
-			$db->sql_freeresult($result);
-			$backupId = $backupRow['id'];
-			$backupStatus = getBackupStatusName($backupRow['status']);
-			$backupStartTime = $backupRow['start_time'];
-			$backupStartTimestamp = strftime("%b %d, %Y %H:%M", $backupStartTime);
-		
-			$sql = 'SELECT
-		    	      status
-		        	FROM ' . BACKUP_REMOTE_FILE_TABLE . '
-		        	WHERE backup_id = ' . $backupId;
-		
-			$result = $db->sql_query($sql);
-			while($row = $db->sql_fetchrow($result))
-			{
-				if($row['status'] == BACKUP_REMOTE_FILE_STATUS_PENDING)
-					++$pendingBackupRemoteFiles;
-				else if($row['status'] == BACKUP_REMOTE_FILE_STATUS_FAILED)
-					++$failedBackupRemoteFiles;
-				else if($row['status'] == BACKUP_REMOTE_FILE_STATUS_COMPLETE)
-					++$successfulBackupRemoteFiles;
-			}
-		
-			if($failedBackupRemoteFiles > 0)
-			{
-				$backupFilesColor = "#BC2A4D";
-			}
-			else if($pendingBackupRemoteFiles > 0)
-			{
-				$backupFilesColor = "";
-			}
-			else
-			{
-				$backupFilesColor = "#282";
-			}
-		
-			if(time() - $backupStartTime > (24 * 60 * 60 * 2))
-			{
-				$backupTimeColor = "#BC2A4D";
-			}
-			else
-			{
-				$backupTimeColor = "";
-			}
-		
-			$db->sql_freeresult($result);
+			if($row['status'] == BACKUP_REMOTE_FILE_STATUS_PENDING)
+				++$pendingBackupRemoteFiles;
+			else if($row['status'] == BACKUP_REMOTE_FILE_STATUS_FAILED)
+				++$failedBackupRemoteFiles;
+			else if($row['status'] == BACKUP_REMOTE_FILE_STATUS_COMPLETE)
+				++$successfulBackupRemoteFiles;
 		}
+		
+		if($failedBackupRemoteFiles > 0)
+		{
+			$backupFilesColor = "#BC2A4D";
+		}
+		else if($pendingBackupRemoteFiles > 0)
+		{
+			$backupFilesColor = "";
+		}
+		else
+		{
+			$backupFilesColor = "#282";
+		}
+		
+		if(time() - $backupStartTime > (24 * 60 * 60 * 2))
+		{
+			$backupTimeColor = "#BC2A4D";
+		}
+		else
+		{
+			$backupTimeColor = "";
+		}
+		
+		$db->sql_freeresult($result);
 		
 		$template->assign_vars(array(
 			'TOTAL_POSTS'		=> $total_posts,
