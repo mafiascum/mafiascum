@@ -153,7 +153,8 @@ class ucp_zebra
 								if ($mode == 'foes')
 								{
 									$perms = array();
-									foreach ($auth->acl_get_list($user_id_ary, array('a_', 'm_')) as $forum_id => $forum_ary)
+									//foreach ($auth->acl_get_list($user_id_ary, array('a_', 'm_')) as $forum_id => $forum_ary)
+									foreach ($auth->acl_get_list($user_id_ary, array('a_')) as $forum_id => $forum_ary)
 									{
 										foreach ($forum_ary as $auth_option => $user_ary)
 										{
