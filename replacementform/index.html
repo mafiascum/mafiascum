@@ -156,10 +156,11 @@ em{
 			<select name="gametype" onchange="large_check(this);">
 			<option value=""></option>
 			<option value="Open">Open</option>
-				<option value="Mini">Mini Normal</option>
-				<option value="Mini Theme">Mini Theme</option>
-				<option value="New York">Large Normal</option>
-				<option value="LT">Large Theme</option>
+			<option value="Micro">Micro</option>
+			<option value="Mini">Mini Normal</option>
+			<option value="Mini Theme">Mini Theme</option>
+			<option value="New York">Large Normal</option>
+			<option value="LT">Large Theme</option>
 			</select>
 			</p>
 		</div>
@@ -220,10 +221,11 @@ em{
 		</div>
 		<div class="col2">
 			<p>
-				<select name="phase">
+				<select name="phase" onchange="pregame_check(this);">
 					<option value=""></option>
 					<option value="Day">Day</option>
 					<option value="Night">Night</option>
+					<option value="Pregame">Pregame</option>
 				  </select>
 			</p>
 		</div>
@@ -236,7 +238,7 @@ em{
 		</div>
 		<div class="col2">
 			<p>
-				<input type="text" name="phasenum" maxlength="2"/>
+				<input type="text" id="phasenum" name="phasenum" maxlength="2"/>
 			</p>
 		</div>
 		<div class="col3">
@@ -248,7 +250,7 @@ em{
 		</div>
 		<div class="col2">
 			<p>
-				<input type="text" name="pagenum" maxlength="3"/>
+				<input type="text" id="pagenum" name="pagenum" maxlength="3"/>
 			</p>
 		</div>
 		<div class="col3">
@@ -413,23 +415,45 @@ function validateForm()
 	noerrors += validateField(dayfield, document.getElementById('dateerror'), false);
 	noerrors += validateField(gametypelist, document.getElementById('gametypeerror'), false);
 
+	if (phaselist != "Pregame"){
+
+		noerrors += validateField(phasenumfield, document.getElementById('phasenumerror'), true);
+		noerrors += validateField(pagenumfield, document.getElementById('pagenumerror'), true);
+	}
 	if (gametypelist != "LT"){
 	
 		noerrors += validateField(gamenumfield, document.getElementById('gamenumerror'), true);
 	}
-	if (gametypelist == "LT" || gametypelist == "Mini Theme" || gametypelist == "")
+	if (gametypelist == "LT" || gametypelist == "Mini Theme" || gametypelist == "" || gametypelist == "Micro")
 	{
 		noerrors += validateField(gamenamefield, document.getElementById('gamenameerror'), false);
 	}
 	noerrors += validateField(modnamefield, document.getElementById('modnameerror'), false);
 	noerrors += validateField(phaselist, document.getElementById('phaseerror'), false);
-	noerrors += validateField(phasenumfield, document.getElementById('phasenumerror'), true);
-	noerrors += validateField(pagenumfield, document.getElementById('pagenumerror'), true);
 	noerrors += validateField(repnamefield, document.getElementById('repnameerror'), false);
 	noerrors += validateField(modlinkfield, document.getElementById('modlinkerror'), false);
 	noerrors += validateField(gamelinkfield, document.getElementById('gamelinkerror'), false);
 	
 	return noerrors == 0;
+}
+
+// Hide unnecessary elements for requests in Pregame.
+function pregame_check(type){
+	// Find the game phase.
+	var gamephase = type.value;
+
+	// Find the elements to be hidden.
+	var phasenum = document.getElementById('phasenum');
+	var pagenum = document.getElementById('pagenum');
+
+	if (gamephase == 'Pregame'){
+		phasenum.disabled=true;
+		pagenum.disabled=true;
+	}
+	else {
+		phasenum.disabled=false;
+		pagenum.disabled=false;
+	}
 }
 
 // Hide unnecessary elements for Large Theme requests.
@@ -469,14 +493,23 @@ var repnamefield = oForm.elements['repname'].value;
 var modlinkfield = oForm.elements['modlink'].value;
 var gamelinkfield = oForm.elements['gamelink'].value;
 var themegame = gametypelist + ' ' + gamenumfield + ': ';
+var phasestuff = ' ' + phasenumfield + ', ' + pagenumfield + ' pages';
 
 if (gametypelist == 'LT'){
 	var themegame = "";
 }
 
-document.getElementById('preview').innerHTML='<span style="font-family:Verdana, Geneva, sans-serif; font-size:13px;">' + monthlist + ' ' + dayfield + ' - <em><a href="' + gamelinkfield + '">' + themegame + gamenamefield + '<\/a><\/em><br \/><span style="padding-left:60px;"><strong>Moderator: <\/strong><a href="' + modlinkfield + '">' + modnamefield + '<\/a><\/span><span style="padding-left:30px;"><strong>Status: <\/strong>' + phaselist + ' ' + phasenumfield + ', ' + pagenumfield + ' pages<\/span><span style="padding-left:30px;"><strong>Replacing: <\/strong>' + repnamefield + '<\/span>';
+if (phaselist == 'Pregame'){
+	var phasestuff = "";
+}
 
-document.getElementById('bbcode').innerHTML= monthlist + ' ' + dayfield + ' - [i][url=' + gamelinkfield + ']' + themegame + gamenamefield + '[\/url][\/i]\u000D[tab]7[\/tab][b]Moderator: [\/b] [url=' + modlinkfield + ']' + modnamefield + '[\/url] [tab]3[\/tab][b]Status: [\/b]' + phaselist + ' ' + phasenumfield + ', ' + pagenumfield + ' pages[tab]3[\/tab][b]Replacing: [\/b]' + repnamefield + '\u000A'
+if (pagenumfield == '1'){
+	var phasestuff = ' ' + phasenumfield + ', ' + pagenumfield + ' page';
+}
+
+document.getElementById('preview').innerHTML='<span style="font-family:Verdana, Geneva, sans-serif; font-size:13px;">' + monthlist + ' ' + dayfield + ' - <em><a href="' + gamelinkfield + '">' + themegame + gamenamefield + '<\/a><\/em><br \/><strong>Moderator: <\/strong><a href="' + modlinkfield + '">' + modnamefield + '<\/a><\/span><span style="padding-left:30px;"><strong>Status: <\/strong>' + phaselist + phasestuff + '<\/span><span style="padding-left:30px;"><strong>Replacing: <\/strong>' + repnamefield + '<\/span>';
+
+document.getElementById('bbcode').innerHTML= monthlist + ' ' + dayfield + ' - [i][url=' + gamelinkfield + ']' + themegame + gamenamefield + '[\/url][\/i]\u000D[b]Moderator: [\/b] [url=' + modlinkfield + ']' + modnamefield + '[\/url] [tab]3[\/tab][b]Status: [\/b]' + phaselist + ' ' + phasenumfield + ', ' + pagenumfield + ' pages[tab]3[\/tab][b]Replacing: [\/b]' + repnamefield + '\u000A'
 }
 </script>
 </body>
