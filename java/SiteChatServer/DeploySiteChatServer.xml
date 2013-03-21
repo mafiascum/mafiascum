@@ -1,0 +1,35 @@
+<project name="deploy site chat server" default="build" basedir=".">
+
+	<property name="checkout-root" value="./SiteChatServer"/>
+	<property name="checkout-lib" value="${checkout-root}/lib"/>
+	<property name="checkout-src" value="${checkout-root}/src"/>
+	<property name="checkout-classes" value="${checkout-root}/classes"/>
+
+	<property name="branch" value="trunk" />
+	<property name="revision" value="" />
+
+	<path id="classpath">
+			<fileset dir="${checkout-lib}">
+					<include name="**/*.jar"/>
+			</fileset>
+	</path>
+
+	<target name="build">
+
+		<antcall target="compile"/>
+
+	</target>
+
+	<target name="compile">
+
+		<delete dir="${checkout-classes}" failonerror="false"/>
+		<mkdir dir="${checkout-classes}"/>
+
+		<javac srcdir="${checkout-src}" destdir="${checkout-classes}" classpathref="classpath">
+			<include name="**/*.java"/>
+		</javac>
+
+		<jar basedir="${checkout-classes}" destfile="${checkout-lib}/site-chat-server.jar"/>
+
+	</target>
+</project>
