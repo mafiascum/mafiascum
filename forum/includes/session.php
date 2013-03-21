@@ -1569,14 +1569,12 @@ class user extends session
 		 
 		if ($mobile_browser > 0) {
 		   $mobile = true;
-		   $this->data['mobile'] = true;
 		}
 		else {
+		   //echo "non-mobile view";
 		   $mobile= false;;
-		   $this->data['mobile'] = false;
 		} 
 	//end detect mobile device.
-
 		if ($this->data['user_id'] != ANONYMOUS)
 		{
 			$this->lang_name = (file_exists($this->lang_path . $this->data['user_lang'] . "/common.$phpEx")) ? $this->data['user_lang'] : basename($config['default_lang']);

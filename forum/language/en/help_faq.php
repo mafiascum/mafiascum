@@ -68,7 +68,7 @@ $help = array(
 	),
 	array(
 		0 => 'Why can’t I register?',
-		1 => 'It is possible the website owner has banned your IP address or disallowed the username you are attempting to register. The website owner could have also disabled registration to prevent new visitors from signing up. Contact a board administrator for assistance.',
+		1 => 'It is possible the website owner has banned your IP address or disallowed the username you are attempting to register. The Help subforum allows unregistered or non-active accounts to post to ask for assistance.',
 	),
 	array(
 		0 => 'What does the “Delete all board cookies” do?',

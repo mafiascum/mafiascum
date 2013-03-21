@@ -1,0 +1,149 @@
+
+.chatPanel
+{
+	position: fixed;
+	bottom: 0%;
+	right: 2%;
+	font-size: 16px !important;
+}
+
+.chatWindow
+{
+	float: right;
+	margin-right: 5px;
+	height: 300px;
+}
+
+.chatWindow.collapsed
+{
+	width: 200px;
+}
+
+.chatWindow.expanded
+{
+	width: 300px;
+}
+
+.chatWindowInner
+{
+	border: 1px solid #999;
+	position:absolute;
+	bottom: 0;
+	width: inherit;
+	border-radius: 3px 3px 0 0;
+}
+
+/*** Title Bar ***/
+.chatWindow .title
+{
+	padding: 3px 5px 3px 5px;
+}
+
+.chatWindow .title:hover
+{
+	cursor: pointer;
+}
+
+.chatWindow.expanded .title
+{
+	background-color: #477D9E;
+	color: #FFF;
+	font-weight: bold;
+	padding: 5px;
+}
+
+.chatWindow.expanded .title:hover
+{
+	background-color: #4E89AD;
+}
+
+.chatWindow.collapsed .title
+{
+	background-color: #E1DFE6;
+}
+
+.chatWindow.collapsed .title:hover
+{
+	background-color: #FFF;
+}
+
+.chatWindow .title .close
+{
+	display:none;
+	padding: 0 5px 0 5px;
+	margin-right: 5px;
+	float: right;
+	font-weight: bold;
+	font-size: 18px;
+}
+
+.chatWindow.collapsed .title:hover .close
+{
+	display:inline-block;
+	color: #869CF7;
+}
+
+.chatWindow.collapsed .title:hover .close:hover
+{
+	display:inline-block;
+	float: right;
+	color: red;
+	z-index: 200;
+	background: #869CF7;
+	color: #FFF;
+}
+
+
+/*** Output Buffer ***/
+.chatWindow.collapsed .outputBuffer
+{
+	display: none;
+}
+.chatWindow.expanded .outputBuffer
+{
+	display: block;
+	height: 300px;
+	overflow: auto;
+	padding: 0 5px 0 5px;
+	background: #FFF;
+}
+.chatWindow.expanded .outputBuffer .message
+{
+	float: left;
+	width: 100%;
+	border-bottom: 1px solid #999;
+	padding: 0 0 5px 0;
+	margin: 0 0 5px 0;
+}
+
+.chatWindow.expanded .outputBuffer .message .profile
+{
+	float: left;
+	width: 40px;
+	display: block;
+	padding: 0;
+	margin: 0;
+	margin-right: 5px;
+}
+
+.chatWindow.expanded .outputBuffer .message .content
+{
+	overflow: hidden;
+}
+
+
+/*** Input Buffer ***/
+.chatWindow.collapsed .inputBuffer
+{
+	display: none;
+	box-sizing: border-box;
+}
+.chatWindow.expanded .inputBuffer
+{
+	display: block;
+	width: 100%;
+	margin: 0;
+	padding: 5px;
+	cursor: auto;
+	box-sizing: border-box;
+}

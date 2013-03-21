@@ -1357,4 +1357,40 @@ class bitfield
 	}
 }
 
+/*********************************************
+* Friend/Foe Modification for Mafia Forums  *
+/*********************************************/
+function isMafiaForum($forum_id)
+{
+	global $db, $config;
+	$sql =   ' SELECT forum_id, parent_id'
+		. ' FROM '. FORUMS_TABLE
+		. ' WHERE forum_id = ' . $db->sql_escape($forum_id);
+	$result = $db->sql_query($sql);
+	$da = $db->sql_fetchrow($result);
+	$db->sql_freeresult($result);
+	$checkingForum = $da['forum_id'];
+	$parentForum = $da['parent_id'];
+
+	$isMafiaForums = false;
+
+	while(($checkingForum != 0) && !$isMafiaForums)
+	{
+		$isMafiaForums = ($checkingForum == $config['mafia_forums_id']) ? true : false;
+		if(!$isMafiaForums)
+		{
+			$sql =   ' SELECT forum_id, parent_id'
+				. ' FROM '. FORUMS_TABLE
+				. ' WHERE forum_id = ' . $db->sql_escape($parentForum);
+			$result = $db->sql_query($sql);
+			$da = $db->sql_fetchrow($result);
+			$db->sql_freeresult($result);
+			$checkingForum = $da['forum_id'];
+			$parentForum = $da['parent_id'];
+		}
+	}
+	
+	return $isMafiaForums;
+}
+
 ?>

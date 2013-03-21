@@ -981,6 +981,8 @@ function topic_review($topic_id, $forum_id, $mode = 'topic_review', $cur_post_id
         
         $db->sql_freeresult($result); 
 
+		$isMafiaForum = isMafiaForum($forum_id); //Check where we are for ignore.
+		
 	// Go ahead and pull all data for this topic
 	$sql = 'SELECT p.post_id
 		FROM ' . POSTS_TABLE . ' p' . "
@@ -1128,8 +1130,8 @@ function topic_review($topic_id, $forum_id, $mode = 'topic_review', $cur_post_id
 
 			'S_HAS_ATTACHMENTS'	=> (!empty($attachments[$row['post_id']])) ? true : false,
 			'S_FRIEND'			=> ($row['friend']) ? true : false,
-			'S_IGNORE_POST'		=> ($row['foe']) ? true : false,
-			'L_IGNORE_POST'		=> ($row['foe']) ? sprintf($user->lang['POST_BY_FOE'], get_username_string('full', $poster_id, $row['username'], $row['user_colour'], $row['post_username']), "<a href=\"{$u_show_post}\" onclick=\"dE('{$post_anchor}', 1); return false;\">", '</a>') : '',
+			'S_IGNORE_POST'		=> ($isMafiaForum) ? false : ($row['foe']) ? true : false,
+			'L_IGNORE_POST'		=> ($isMafiaForum) ? false : ($row['foe']) ? sprintf($user->lang['POST_BY_FOE'], get_username_string('full', $poster_id, $row['username'], $row['user_colour'], $row['post_username']), "<a href=\"{$u_show_post}\" onclick=\"dE('{$post_anchor}', 1); return false;\">", '</a>') : '',
 
 			'POST_SUBJECT'		=> $post_subject,
 			'MINI_POST_IMG'		=> $user->img('icon_post_target', $user->lang['POST']),

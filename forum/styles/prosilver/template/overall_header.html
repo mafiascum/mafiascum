@@ -95,46 +95,26 @@
 <link href="{T_THEME_PATH}/normal.css" rel="stylesheet" type="text/css" title="A" />
 <link href="{T_THEME_PATH}/medium.css" rel="alternate stylesheet" type="text/css" title="A+" />
 <link href="{T_THEME_PATH}/large.css" rel="alternate stylesheet" type="text/css" title="A++" />
+<link href="{T_THEME_PATH}/sitechat.css" rel="stylesheet" type="text/css" media="screen" />
+<script type="text/javascript" src="{T_TEMPLATE_PATH}/sitechat.js"></script>
 
 <!-- IF S_CONTENT_DIRECTION eq 'rtl' -->
 <link href="{T_THEME_PATH}/bidi.css" rel="stylesheet" type="text/css" media="screen, projection" />
 <!-- ENDIF -->
 <script type="text/javascript" src="http://code.jquery.com/jquery-1.7.2.min.js"></script>
+
+
+<!-- IF not S_IS_BOT and S_USER_LOGGED_IN -->
+
 <script>
 $(document).ready(function(){
- });
-</script>
-<!-- IF S_CHAT -->
-<!-- IF not S_IS_BOT and S_USER_LOGGED_IN -->
-<script type="text/javascript" src="http://www.mafiascum.net/jappix/php/get.php?l=en&amp;t=js&amp;g=mini.xml"></script>
-
-<script type="text/javascript">
-jQuery(document).ready(function() {
-  current_sessid = "{SESSION_ID}";
-  saved_sessid = getDB("jappix-mini", "phpbb_sessid");
-  if (saved_sessid != current_sessid) removeDB('jappix-mini', 'dom');
-  setDB("jappix-mini", "phpbb_sessid", current_sessid);
+	client = new Client();
+	client.setup("{_SID}", {S_USER_ID});
 });
 </script>
+<!-- ENDIF -->
 
-<script type="text/javascript">
-   jQuery(document).ready(function() {
-      <!-- IF U_OMERTA and not S_LOBBY -->
-      MINI_GROUPCHATS = ["lobby@conference.mafiascum.net", "omerta@conference.mafiascum.net"];
-	  <!-- ELSEIF U_OMERTA -->
-	  MINI_GROUPCHATS = ["omerta@conference.mafiascum.net"];
-	  <!-- ELSEIF not S_LOBBY -->
-	  MINI_GROUPCHATS = ["lobby@conference.mafiascum.net"];
-	  <!-- ELSE -->
-	  MINI_GROUPCHATS = [];
-	  <!-- ENDIF -->
-      MINI_ANIMATE = true;
-      MINI_NICKNAME = "{S_USERNAME}";
-      launchMini(false, true, "mafiascum.net", "{S_USER_ID}", "{SESSION_ID}");
-   });
-</script>
-<!-- ENDIF -->
-<!-- ENDIF -->
+
 <script type="text/javascript">
 
   var _gaq = _gaq || [];
