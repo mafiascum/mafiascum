@@ -196,12 +196,6 @@ function Client()
 		siteChatPacket.conversationIdSet = client.getConversationIdSet();
 	
 		client.sendSiteChatPacket(siteChatPacket);
-	
-		var siteChatPacket = new Object();
-		siteChatPacket.command = "Connect";
-		siteChatPacket.siteChatConversationName = "ScumChat";
-	
-		client.sendSiteChatPacket(siteChatPacket);
 	}
 	
 	this.handleSocketClose = function()
@@ -470,7 +464,7 @@ function Client()
 			return;
 		}
 
-		client.socket = new WebSocket("ws://localhost:4241", "site-chat");
+		client.socket = new WebSocket("ws://apollo.corbe.net:4241", "site-chat");
 		client.socket.onopen = client.handleSocketOpen;
 		client.socket.onclose = client.handleSocketClose;
 		client.socket.onmessage = client.handleSocketMessage;
