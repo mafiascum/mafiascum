@@ -9,7 +9,7 @@ public class SiteChatConversationMessage extends DataObjectWithIntId {
   protected int userId;
   protected Date createdDatetime;
   protected int siteChatConversationId;
-  protected String content;
+  protected String message;
   
   public SiteChatConversationMessage() {
     
@@ -40,11 +40,11 @@ public class SiteChatConversationMessage extends DataObjectWithIntId {
     this.siteChatConversationId = siteChatConversationId;
   }
 
-  public String getContent() {
-    return content;
+  public String getMessage() {
+    return message;
   }
 
-  public void setContent(String content) {
-    this.content = content;
+  public void setMessage(String message) {
+    this.message = message;
   }
 }

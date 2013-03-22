@@ -12,6 +12,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -19,8 +20,10 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.servlet.http.HttpServletRequest;
 
+import net.mafiascum.jdbc.BatchInsertStatement;
 import net.mafiascum.provider.Provider;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversation;
+import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationMessage;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationWithUserList;
 import net.mafiascum.web.sitechat.server.inboundpacket.SiteChatInboundPacketType;
 import net.mafiascum.web.sitechat.server.inboundpacket.operator.SiteChatInboundConnectPacketOperator;
@@ -59,7 +62,9 @@ public class SiteChatServer extends Server implements SignalHandler {
   protected ConcurrentLinkedQueue<SiteChatWebSocket> descriptors = new ConcurrentLinkedQueue<SiteChatWebSocket>();
   protected Map<Integer, SiteChatConversationWithUserList> siteChatConversationWithMemberListMap = new HashMap<Integer, SiteChatConversationWithUserList>();
   protected Map<Integer, SiteChatUser> siteChatUserMap = new HashMap<Integer, SiteChatUser>();
+  protected List<SiteChatConversationMessage> siteChatConversationMessagesToSave = new LinkedList<SiteChatConversationMessage>();
   
+  protected final int MESSAGE_BATCH_SIZE = 100;
   
   protected static final Map<SiteChatInboundPacketType, SiteChatInboundPacketOperator> siteChatInboundPacketTypeToSiteChatInboundPacketOperatorMap = new HashMap<SiteChatInboundPacketType, SiteChatInboundPacketOperator>();
   static {
@@ -201,6 +206,33 @@ public class SiteChatServer extends Server implements SignalHandler {
     //TODO: Add code to look for user ID that does not exist in the cache.
     return siteChatUserMap.get(userId);
   }
+  
+  public void recordSiteChatConversationMessage(int userId, int siteChatConversationId, String message) throws Exception {
+    
+    SiteChatConversationMessage siteChatConversationMessage = new SiteChatConversationMessage();
+    siteChatConversationMessage.setMessage(message);
+    siteChatConversationMessage.setCreatedDatetime(new Date());
+    siteChatConversationMessage.setSiteChatConversationId(siteChatConversationId);
+    siteChatConversationMessage.setUserId(userId);
+    
+    siteChatConversationMessagesToSave.add(siteChatConversationMessage);
+    
+    if(siteChatConversationMessagesToSave.size() >= MESSAGE_BATCH_SIZE) {
+      
+      saveSiteChatConversationMessages();
+    }
+  }
+  
+  public void saveSiteChatConversationMessages() throws Exception {
+
+    if(siteChatConversationMessagesToSave.size() > 0) {
+      Connection connection = provider.getConnection();
+      SiteChatUtil.putNewSiteChatConversationMessages(connection, siteChatConversationMessagesToSave);
+      connection.close();
+    
+      siteChatConversationMessagesToSave.clear();
+    }
+  }
 
   public void processInboundDataPacket(SiteChatWebSocket webSocket, String data) {
     
@@ -296,7 +328,6 @@ public class SiteChatServer extends Server implements SignalHandler {
       }
     }
     
-    
     //Notify all users in the chat room that this user has joined.
     if(notifyConversationMembers) {
       SiteChatOutboundUserJoinPacket siteChatOutboundUserJoinPacket = new SiteChatOutboundUserJoinPacket();
@@ -305,6 +336,13 @@ public class SiteChatServer extends Server implements SignalHandler {
     
       sendOutboundPacketToUsers(siteChatUserMap.keySet(), siteChatOutboundUserJoinPacket, siteChatUser.getId());
     }
+  }
+  
+  public void cleanup() throws Exception {
+    
+    System.out.println("Saving queued conversation messages. Number in buffer: " + siteChatConversationMessagesToSave.size());
+    
+    saveSiteChatConversationMessages();
   }
   
   public boolean authenticateUserLogin(int userId, String sessionId) throws Exception {
@@ -376,7 +414,10 @@ public class SiteChatServer extends Server implements SignalHandler {
       server.start();
       server.join();
       
-      System.out.println("Server has been stopped. Shutting down program.");
+      System.out.println("Server has been stopped.\n");
+      
+      server.cleanup();
+      
       System.exit(1);
     }
     catch (Exception e)

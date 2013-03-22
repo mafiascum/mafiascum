@@ -10,9 +10,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import net.mafiascum.jdbc.BatchInsertStatement;
 import net.mafiascum.util.QueryUtil;
 import net.mafiascum.util.SQLUtil;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversation;
+import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationMessage;
 
 public class SiteChatUtil {
 
@@ -224,5 +226,31 @@ public class SiteChatUtil {
     System.out.println("Authentication SQL: " + sql);
     
     return QueryUtil.hasAtLeastOneRow(statement, sql);
+  }
+  
+  public static void putNewSiteChatConversationMessages(Connection connection, List<SiteChatConversationMessage> siteChatConversationMessages) throws SQLException {
+    
+    BatchInsertStatement batchInsertStatement = new BatchInsertStatement(connection, "siteChatConversationMessage", siteChatConversationMessages.size() + 1);
+    
+    batchInsertStatement.addField("site_chat_conversation_id");
+    batchInsertStatement.addField("user_id");
+    batchInsertStatement.addField("created_datetime");
+    batchInsertStatement.addField("message");
+    
+    batchInsertStatement.start();
+    
+    for(SiteChatConversationMessage siteChatConversationMessage : siteChatConversationMessages) {
+      
+      batchInsertStatement.beginEntry();
+      
+      batchInsertStatement.putInt(siteChatConversationMessage.getSiteChatConversationId());
+      batchInsertStatement.putInt(siteChatConversationMessage.getUserId());
+      batchInsertStatement.putDate(siteChatConversationMessage.getCreatedDatetime());
+      batchInsertStatement.putString(siteChatConversationMessage.getMessage());
+      
+      batchInsertStatement.endEntry();
+    }
+    
+    batchInsertStatement.finish();
   }
 }

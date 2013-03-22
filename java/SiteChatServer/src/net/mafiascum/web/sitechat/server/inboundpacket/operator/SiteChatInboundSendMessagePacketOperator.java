@@ -1,5 +1,6 @@
 package net.mafiascum.web.sitechat.server.inboundpacket.operator;
 
+import net.mafiascum.util.StringUtil;
 import net.mafiascum.web.sitechat.server.SiteChatServer;
 import net.mafiascum.web.sitechat.server.SiteChatServer.SiteChatWebSocket;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationWithUserList;
@@ -31,13 +32,14 @@ public class SiteChatInboundSendMessagePacketOperator implements SiteChatInbound
       return;//User is not in the conversation.
     }
     
+    siteChatServer.recordSiteChatConversationMessage(siteChatInboundSendMessagePacket.getUserId(), siteChatInboundSendMessagePacket.getSiteChatConversationId(), siteChatInboundSendMessagePacket.getMessage());
     //TODO: Record the message to the database.
     
     //Send the message to all users in the conversation(including the user who sent it).
     SiteChatOutboundNewMessagePacket siteChatOutboundNewMessagePacket = new SiteChatOutboundNewMessagePacket();
     siteChatOutboundNewMessagePacket.setUserId(siteChatWebSocket.getSiteChatUser().getId());
     siteChatOutboundNewMessagePacket.setSiteChatConversationId(siteChatInboundSendMessagePacket.getSiteChatConversationId());
-    siteChatOutboundNewMessagePacket.setMessage(siteChatInboundSendMessagePacket.getMessage());
+    siteChatOutboundNewMessagePacket.setMessage(StringUtil.escapeHTMLCharacters(siteChatInboundSendMessagePacket.getMessage()));
     
     siteChatServer.sendOutboundPacketToUsers(siteChatConversationWithUserList.getUserIdSet(), siteChatOutboundNewMessagePacket, null);
   }
