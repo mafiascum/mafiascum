@@ -1,0 +1,82 @@
+#!/usr/local/bin/bash
+
+IsProcessRunning() {
+
+	RUNNING_PROCESSES=`ps | grep $1 | grep -v grep`
+
+	if [[ "$RUNNING_PROCESSES" == *"$1"* ]];
+	then
+		PROCESS_IS_RUNNING=true
+	else
+		PROCESS_IS_RUNNING=false
+	fi
+}
+
+PROCESS_IS_RUNNING=false
+PID=`cat ~/prod/sitechat/ProcessID`
+
+echo "Server Process ID: $PID"
+
+IsProcessRunning $PID
+
+if $PROCESS_IS_RUNNING;
+then
+
+	echo -ne "Attempting nice kill"
+	kill $PID
+
+	COUNTER=0
+	while [ $COUNTER -lt 5 ]
+	do
+		sleep 1
+		IsProcessRunning $PID
+
+		COUNTER=$(($COUNTER+1))
+		echo -ne "...$COUNTER"
+
+		if ! $PROCESS_IS_RUNNING ;
+		then
+			break
+		fi
+	done
+else
+	echo "Server is not running."
+	exit
+fi
+
+
+echo ""
+IsProcessRunning $PID
+
+
+if $PROCESS_IS_RUNNING;
+then
+
+	echo -ne "Attempting hard kill"
+	kill -9 $PID
+
+	COUNTER=0
+	while [ $COUNTER -lt 5 ]
+	do
+		sleep 1
+		IsProcessRunning $PID
+
+		COUNTER=$(($COUNTER+1))
+		echo -ne "...$COUNTER"
+
+		if ! $PROCESS_IS_RUNNING ;
+		then
+			break
+		fi
+	done
+fi
+
+echo ""
+IsProcessRunning $PID
+
+if ! $PROCESS_IS_RUNNING;
+then
+	echo "Server is no longer running."
+else
+	echo "Server is still running."
+fi

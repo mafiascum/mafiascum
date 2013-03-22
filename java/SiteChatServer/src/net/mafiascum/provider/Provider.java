@@ -13,6 +13,7 @@ public class Provider {
   protected String mysqlUrl;
   protected String mysqlUsername;
   protected String mysqlPassword;
+  protected String docRoot;
   
   protected Connection connection;
   protected Date connectionLastObtainedDatetime = null;
@@ -66,6 +67,16 @@ public class Provider {
       throw new Exception("Could not create connection", throwable); 
     }
       ***/
+  }
+
+  public String getDocRoot() {
+    
+    return docRoot;
+  }
+  
+  public void setDocRoot(String docRoot) {
+    
+    this.docRoot = docRoot;
   }
   
   public void loadConfiguration(String configurationFilePath) throws Exception {

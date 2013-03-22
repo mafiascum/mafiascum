@@ -4,20 +4,63 @@
 	<property name="checkout-lib" value="${checkout-root}/lib"/>
 	<property name="checkout-src" value="${checkout-root}/src"/>
 	<property name="checkout-classes" value="${checkout-root}/classes"/>
+	<property name="sitechat-root" value=""/>
+    <property name="branch" value="trunk" />
+    <property name="revision" value="" />
 
 	<property name="branch" value="trunk" />
 	<property name="revision" value="" />
 
 	<path id="classpath">
-			<fileset dir="${checkout-lib}">
-					<include name="**/*.jar"/>
-			</fileset>
+		<fileset dir="${checkout-lib}">
+			<include name="**/*.jar"/>
+		</fileset>
 	</path>
 
 	<target name="build">
-
+<!--
+		<antcall target="svn-cleanup"/>
+		<antcall target="svn-checkout"/>
+-->
 		<antcall target="compile"/>
+		<antcall target="shutdown-server"/>
+		<antcall target="inject-updates"/>
+		<antcall target="start-server"/>
+<!--
+		<antcall target="svn-cleanup"/>
+-->
+	</target>
 
+	<target name="svn-cleanup">
+		<delete dir="${checkout-root}" />
+    </target>
+
+	<target name="svn-checkout">
+		<exec dir="." executable="svn">
+			<arg line="checkout http://199.217.116.144/svn/mafiascum/${branch}/java/SiteChatServer${revision} --username=mmason --password='W@qsablast'" />
+		</exec>
+	</target>
+	
+	<target name="shutdown-server">
+		<echo>Shutting Server...</echo>
+		<exec executable="bash" newenvironment="false" dir=".">
+			<arg line="StopProdSiteChatServer"/>
+		</exec>
+	</target>
+		
+	<target name="start-server">
+		<echo>Starting Server...</echo>
+		<exec executable="bash" newenvironment="false" dir=".">
+			<arg line="StartProdSiteChatServer"/>
+		</exec>
+	</target>
+	
+	<target name="inject-updates">
+		<copy todir="${sitechat-root}/lib" flatten="true">
+			<fileset dir="${checkout-lib}">
+				<include name="**/*.jar"/>
+			</fileset>
+		</copy>
 	</target>
 
 	<target name="compile">

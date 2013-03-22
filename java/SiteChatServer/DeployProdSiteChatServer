@@ -1,0 +1,24 @@
+#!/usr/local/bin/bash
+COMMAND="/u1/home/mafiascum/apache-ant-1.9.0/bin/ant -buildfile ./DeploySiteChatServer.xml"
+
+if [ ! -z "$1" ]
+then
+	if [ "$1" == "trunk" ]
+	then
+		COMMAND=$COMMAND" -Dbranch=$1"
+	elif [[ $1 == REV_* ]]
+	then
+		COMMAND=$COMMAND" -Dbranch=tags/$1"
+	else
+		COMMAND=$COMMAND" -Dbranch=branches/$1"
+	fi
+fi
+
+if [ ! -z "$2" ]
+then
+		COMMAND=$COMMAND" -Drevision=@$2"
+fi
+
+COMMAND=$COMMAND" -Dsitechat-root=/u1/home/mafiascum/prod/sitechat/"
+
+$COMMAND

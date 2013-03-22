@@ -1,6 +1,11 @@
 package net.mafiascum.web.sitechat.server;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Collection;
@@ -32,14 +37,16 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.server.nio.SelectChannelConnector;
 import org.eclipse.jetty.util.TypeUtil;
-import org.eclipse.jetty.util.log.Log;
 import org.eclipse.jetty.websocket.WebSocket;
 import org.eclipse.jetty.websocket.WebSocketHandler;
 
+import sun.misc.Signal;
+import sun.misc.SignalHandler;
+
 import com.google.gson.Gson;
 
-public class SiteChatServer extends Server
-{
+public class SiteChatServer extends Server implements SignalHandler {
+  
   protected boolean _verbose;
 
   protected WebSocket webSocket;
@@ -72,6 +79,13 @@ public class SiteChatServer extends Server
   {
     this.provider = provider;
     Connection connection = provider.getConnection();
+    
+    //Record Process ID.
+    recordProcessId(provider.getDocRoot());
+    
+    //Add handler for interruption signal.
+    Signal.handle(new Signal("INT"), this);
+    Signal.handle(new Signal("TERM"), this);
     
     selectChannelConnector = new SelectChannelConnector();
     selectChannelConnector.setPort(port);
@@ -337,7 +351,7 @@ public class SiteChatServer extends Server
     {
       int port=8080;
       boolean verbose=false;
-      String docroot=".";
+      String docRoot=".";
       
       for (int i=0;i<args.length;i++)
       {
@@ -347,23 +361,27 @@ public class SiteChatServer extends Server
         else if ("-v".equals(a)||"--verbose".equals(a))
           verbose=true;
         else if ("-d".equals(a)||"--docroot".equals(a))
-          docroot=args[++i];
+          docRoot=args[++i];
         else if (a.startsWith("-"))
           usage();
       }
       
       Provider provider = new Provider();
-      provider.loadConfiguration(docroot + "/" + "config.txt");
+      provider.setDocRoot(docRoot);
+      provider.loadConfiguration(docRoot + "/" + "config.txt");
       
       SiteChatServer server = new SiteChatServer(port, provider);
       server.setVerbose(verbose);
-      server.setResourceBase(docroot);
+      server.setResourceBase(docRoot);
       server.start();
       server.join();
+      
+      System.out.println("Server has been stopped. Shutting down program.");
+      System.exit(1);
     }
     catch (Exception e)
     {
-      Log.warn(e);
+      e.printStackTrace();
     }
   }
   
@@ -448,5 +466,29 @@ public class SiteChatServer extends Server
       
       this.getConnection().sendMessage(siteChatOutboundPacketJson);
     }
+  }
+  
+  public void recordProcessId(String docRoot) throws IOException, URISyntaxException {
+
+    String processName = ManagementFactory.getRuntimeMXBean().getName();
+    
+    FileWriter fileWriter = new FileWriter(new File(new URI(docRoot + "/ProcessID")));
+    fileWriter.write(processName.substring(0, processName.indexOf("@")));
+    fileWriter.close();
+  }
+
+  public void handle(Signal signal) {
+    
+    try {
+      
+      stop();
+      System.out.println("Attempting to shut down Web Socket Server...");
+    }
+    catch(Exception exception) {
+      
+      System.out.println("Could not shut down Web Socket Server:\n");
+      exception.printStackTrace();
+    }
+    
   }
 }
