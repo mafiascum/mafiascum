@@ -463,6 +463,8 @@ public class SiteChatServer extends Server implements SignalHandler {
     {
       if (_verbose)
         System.out.printf("%s#onDisonnect %d %s\n",this.getClass().getSimpleName(),code,message);
+      
+      descriptors.remove(this);
     }
     
     public boolean onFrame(byte flags, byte opcode, byte[] data, int offset, int length)
