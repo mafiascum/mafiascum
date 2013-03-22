@@ -228,7 +228,7 @@ function Client()
 		$("#chat" + conversationId + " .title").bind("click", client.handleWindowTitleClick);
 		$("#chat" + conversationId + " .inputBuffer").bind("keypress", client.handleWindowInputSubmission);
 		$("#chat" + conversationId + " .title .close").bind("click", client.handleWindowCloseButtonClick);
-
+		
 		var chatWindow = new ChatWindow();
 		chatWindow.siteChatConversationId = conversationId;
 		chatWindow.userIdSet = [];
@@ -249,11 +249,12 @@ function Client()
 		}
 
 		client.chatWindows[conversationId] = chatWindow;
-
+		$("#chat" + conversationId + " .inputBuffer").focus();
 		if(save)
 		{
 			client.saveChatWindow(chatWindow);
 		}
+		
 	}
 
 	this.saveChatWindow = function(chatWindow)
@@ -267,11 +268,18 @@ function Client()
 	this.addUser = function(siteChatUser, save)
 	{
 		console.log("ADDING USER #" + siteChatUser.id + ": " + siteChatUser.name + ", Save: " + save);
-		client.userMap[ siteChatUser.id ] = siteChatUser;
-
-		if(save)
-		{
-			client.saveUser(siteChatUser);
+		if ( client.userMap[ siteChatUser.id ] == null){
+			client.userMap[ siteChatUser.id ] = siteChatUser;
+			$("#onlinelist").append
+					(
+						'<li class="username" id="username' + siteChatUser.id + '"><a href="#" onClick="return false;">'
+					+	siteChatUser.name
+					+	'</a></li>'
+					);
+			if(save)
+			{
+				client.saveUser(siteChatUser);
+			}
 		}
 	}
 
@@ -428,15 +436,15 @@ function Client()
 	{
 		$("body").append("<div class='chatPanel' id='chatPanel'></div>");
 	}
-	
 	this.createUtilityWindow = function()
 	{
 		$("#chatPanel").prepend
 				(
 					'<div class="chatWindow collapsed" id="utilitywindow">'
 				+	'	<div class="chatWindowInner">'
-				+	'		<div class="title">' + 'Online' + '</div>'
-				+	'		<div id="onlinelist"></div>'
+				+	'		<div class="title">' + 'Join Chat' + '</div>'
+				+	'		<p id="onlinelisttitle">Online Users</p>'
+				+	'		<ul id="onlinelist"></ul>'
 				+	'		<div id="joindiv"><label>Chatroom:</label><input id="joinconversationinput" type="text" name="input"></input></div>'
 				+	'	</div>'
 				+	'</div>'
@@ -444,7 +452,7 @@ function Client()
 		$("#utilitywindow .title").bind("click", client.handleWindowTitleClick);
 		$("#utilitywindow .inputBuffer").bind("keypress", client.handleWindowInputSubmission);
 		$('#joinconversationinput').keyup(function(e) {
-				if(e.keyCode == 13) {
+				if(e.keyCode == 13 || e.keyCode == 10) {
 					  var siteChatPacket = new Object(); 
 					  siteChatPacket.command = "Connect";
 					  siteChatPacket.siteChatConversationName = $("#joinconversationinput").val();
