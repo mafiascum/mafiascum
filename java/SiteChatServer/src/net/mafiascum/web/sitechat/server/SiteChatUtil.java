@@ -221,6 +221,8 @@ public class SiteChatUtil {
         + " WHERE session_id = " + SQLUtil.escapeQuoteString(sessionId)
         + " AND session_user_id = " + userId;
     
+    System.out.println("Authentication SQL: " + sql);
+    
     return QueryUtil.hasAtLeastOneRow(statement, sql);
   }
 }
