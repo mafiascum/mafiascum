@@ -3,6 +3,7 @@ package net.mafiascum.web.sitechat.server.inboundpacket.operator;
 import net.mafiascum.util.StringUtil;
 import net.mafiascum.web.sitechat.server.SiteChatServer;
 import net.mafiascum.web.sitechat.server.SiteChatServer.SiteChatWebSocket;
+import net.mafiascum.web.sitechat.server.SiteChatUtil;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationWithUserList;
 import net.mafiascum.web.sitechat.server.inboundpacket.SiteChatInboundSendMessagePacket;
 import net.mafiascum.web.sitechat.server.outboundpacket.SiteChatOutboundNewMessagePacket;
@@ -31,15 +32,21 @@ public class SiteChatInboundSendMessagePacketOperator implements SiteChatInbound
       
       return;//User is not in the conversation.
     }
+
+    //Truncate long messages.
+    if(siteChatInboundSendMessagePacket.getMessage().length() > SiteChatUtil.MAX_SITE_CHAT_CONVERSATION_MESSAGE_LENGTH) {
+      
+     siteChatInboundSendMessagePacket.setMessage(siteChatInboundSendMessagePacket.getMessage().substring(0, SiteChatUtil.MAX_SITE_CHAT_CONVERSATION_MESSAGE_LENGTH));
+    }
     
-    siteChatServer.recordSiteChatConversationMessage(siteChatInboundSendMessagePacket.getUserId(), siteChatInboundSendMessagePacket.getSiteChatConversationId(), siteChatInboundSendMessagePacket.getMessage());
-    //TODO: Record the message to the database.
+    int siteChatConversationMessageId = siteChatServer.recordSiteChatConversationMessage(siteChatInboundSendMessagePacket.getUserId(), siteChatInboundSendMessagePacket.getSiteChatConversationId(), siteChatInboundSendMessagePacket.getMessage());
     
     //Send the message to all users in the conversation(including the user who sent it).
     SiteChatOutboundNewMessagePacket siteChatOutboundNewMessagePacket = new SiteChatOutboundNewMessagePacket();
     siteChatOutboundNewMessagePacket.setUserId(siteChatWebSocket.getSiteChatUser().getId());
     siteChatOutboundNewMessagePacket.setSiteChatConversationId(siteChatInboundSendMessagePacket.getSiteChatConversationId());
     siteChatOutboundNewMessagePacket.setMessage(StringUtil.escapeHTMLCharacters(siteChatInboundSendMessagePacket.getMessage()));
+    siteChatOutboundNewMessagePacket.setSiteChatConversationMessageId(siteChatConversationMessageId);
     
     siteChatServer.sendOutboundPacketToUsers(siteChatConversationWithUserList.getUserIdSet(), siteChatOutboundNewMessagePacket, null);
   }

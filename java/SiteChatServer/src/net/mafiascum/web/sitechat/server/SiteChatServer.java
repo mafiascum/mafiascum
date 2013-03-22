@@ -20,7 +20,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.servlet.http.HttpServletRequest;
 
-import net.mafiascum.jdbc.BatchInsertStatement;
 import net.mafiascum.provider.Provider;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversation;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationMessage;
@@ -65,6 +64,7 @@ public class SiteChatServer extends Server implements SignalHandler {
   protected List<SiteChatConversationMessage> siteChatConversationMessagesToSave = new LinkedList<SiteChatConversationMessage>();
   
   protected final int MESSAGE_BATCH_SIZE = 100;
+  protected int topSiteChatConversationMessageId;
   
   protected static final Map<SiteChatInboundPacketType, SiteChatInboundPacketOperator> siteChatInboundPacketTypeToSiteChatInboundPacketOperatorMap = new HashMap<SiteChatInboundPacketType, SiteChatInboundPacketOperator>();
   static {
@@ -86,7 +86,9 @@ public class SiteChatServer extends Server implements SignalHandler {
     Connection connection = provider.getConnection();
     
     //Record Process ID.
-    recordProcessId(provider.getDocRoot());
+    if(!provider.getIsWindows()) {
+      recordProcessId(provider.getDocRoot());
+    }
     
     //Add handler for interruption signal.
     Signal.handle(new Signal("INT"), this);
@@ -115,6 +117,7 @@ public class SiteChatServer extends Server implements SignalHandler {
     System.out.println("Loading Site Chat Users...");
     this.siteChatUserMap = SiteChatUtil.loadSiteChatUserMap(connection);
     
+    System.out.println("Loading Site Chat Conversations...");
     List<SiteChatConversation> siteChatConversationList = SiteChatUtil.getSiteChatConversations(connection);
     for(SiteChatConversation siteChatConversation : siteChatConversationList) {
       
@@ -123,6 +126,9 @@ public class SiteChatServer extends Server implements SignalHandler {
       
       siteChatConversationWithMemberListMap.put(siteChatConversation.getId(), siteChatConversationWithUserList);
     }
+    
+    System.out.println("Loading Top Site Chat Conversation Message ID...");
+    topSiteChatConversationMessageId = SiteChatUtil.getTopSiteChatConversationMessageId(connection);
     
     resourceHandler=new ResourceHandler();
     resourceHandler.setDirectoriesListed(true);
@@ -207,13 +213,14 @@ public class SiteChatServer extends Server implements SignalHandler {
     return siteChatUserMap.get(userId);
   }
   
-  public void recordSiteChatConversationMessage(int userId, int siteChatConversationId, String message) throws Exception {
+  public int recordSiteChatConversationMessage(int userId, int siteChatConversationId, String message) throws Exception {
     
     SiteChatConversationMessage siteChatConversationMessage = new SiteChatConversationMessage();
     siteChatConversationMessage.setMessage(message);
     siteChatConversationMessage.setCreatedDatetime(new Date());
     siteChatConversationMessage.setSiteChatConversationId(siteChatConversationId);
     siteChatConversationMessage.setUserId(userId);
+    siteChatConversationMessage.setId(++topSiteChatConversationMessageId);
     
     siteChatConversationMessagesToSave.add(siteChatConversationMessage);
     
@@ -221,6 +228,8 @@ public class SiteChatServer extends Server implements SignalHandler {
       
       saveSiteChatConversationMessages();
     }
+    
+    return siteChatConversationMessage.getId();
   }
   
   public void saveSiteChatConversationMessages() throws Exception {

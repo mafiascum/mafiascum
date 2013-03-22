@@ -5,7 +5,7 @@ import java.util.Date;
 import net.mafiascum.web.misc.DataObjectWithIntId;
 
 public class SiteChatConversationMessage extends DataObjectWithIntId {
-
+  
   protected int userId;
   protected Date createdDatetime;
   protected int siteChatConversationId;

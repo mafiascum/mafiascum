@@ -18,6 +18,9 @@ import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationMessag
 
 public class SiteChatUtil {
 
+  public static final int MAX_SITE_CHAT_CONVERSATION_MESSAGE_LENGTH = 255;
+  public static final int MAX_SITE_CHAT_CONVERSATION_NAME_LENGTH = 40;
+  
   public static Map<Integer, SiteChatUser> loadSiteChatUserMap(Connection connection) throws SQLException {
     
     Statement statement = connection.createStatement();
@@ -252,5 +255,25 @@ public class SiteChatUtil {
     }
     
     batchInsertStatement.finish();
+  }
+  
+  public static int getTopSiteChatConversationMessageId(Connection connection) throws SQLException {
+    
+    String sql = " SELECT MAX(id) AS id"
+               + " FROM siteChatConversationMessage";
+    
+    Statement statement = connection.createStatement();
+    ResultSet resultSet = statement.executeQuery(sql);
+    int topId = 0;
+    
+    if(resultSet.next()) {
+      
+      topId = resultSet.getInt("id");
+    }
+    
+    resultSet.close();
+    statement.close();
+    
+    return topId;
   }
 }

@@ -3,6 +3,7 @@ package net.mafiascum.web.sitechat.server.inboundpacket.operator;
 import net.mafiascum.web.sitechat.server.SiteChatServer;
 import net.mafiascum.web.sitechat.server.SiteChatServer.SiteChatWebSocket;
 import net.mafiascum.web.sitechat.server.SiteChatUser;
+import net.mafiascum.web.sitechat.server.SiteChatUtil;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversation;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationWithUserList;
 import net.mafiascum.web.sitechat.server.inboundpacket.SiteChatInboundConnectPacket;
@@ -26,6 +27,12 @@ public class SiteChatInboundConnectPacketOperator implements SiteChatInboundPack
     }
     
     String siteChatConversationName = siteChatInboundConnectPacket.getSiteChatConversationName();
+    
+    //Truncate long conversation names.
+    if(siteChatConversationName.length() > SiteChatUtil.MAX_SITE_CHAT_CONVERSATION_NAME_LENGTH) {
+      
+      siteChatConversationName = siteChatConversationName.substring(0, SiteChatUtil.MAX_SITE_CHAT_CONVERSATION_NAME_LENGTH);
+    }
     
     siteChatConversationWithUserList = siteChatServer.getSiteChatConversationWithUserList(siteChatConversationName);
     

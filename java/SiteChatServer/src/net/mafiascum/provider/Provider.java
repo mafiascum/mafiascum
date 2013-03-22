@@ -6,7 +6,7 @@ import java.util.Date;
 import java.util.Properties;
 
 import net.mafiascum.util.MiscUtil;
-import net.mafiascum.util.QueryUtil;
+import net.mafiascum.util.StringUtil;
 
 public class Provider {
 
@@ -14,6 +14,7 @@ public class Provider {
   protected String mysqlUsername;
   protected String mysqlPassword;
   protected String docRoot;
+  protected boolean isWindows;
   
   protected Connection connection;
   protected Date connectionLastObtainedDatetime = null;
@@ -79,6 +80,16 @@ public class Provider {
     this.docRoot = docRoot;
   }
   
+  public boolean getIsWindows() {
+    
+    return isWindows;
+  }
+  
+  public void setIsWindows(boolean isWindows) {
+    
+    this.isWindows = isWindows;
+  }
+  
   public void loadConfiguration(String configurationFilePath) throws Exception {
     
     Properties properties = MiscUtil.loadPropertiesResource(configurationFilePath);
@@ -86,5 +97,6 @@ public class Provider {
     mysqlUrl = properties.getProperty("Mysql.Main.Url");
     mysqlUsername = properties.getProperty("Mysql.Main.Username");
     mysqlPassword = properties.getProperty("Mysql.Main.Password");
+    isWindows = StringUtil.removeNull(properties.getProperty("IsWindows")).equals("true");
   }
 }

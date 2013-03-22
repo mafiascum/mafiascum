@@ -4,6 +4,7 @@ public class SiteChatOutboundNewMessagePacket extends SiteChatOutboundPacket {
 
   protected int userId;
   protected int siteChatConversationId;
+  protected int siteChatConversationMessageId;
   protected String message;
   
   public int getUserId() {
@@ -17,6 +18,12 @@ public class SiteChatOutboundNewMessagePacket extends SiteChatOutboundPacket {
   }
   public void setSiteChatConversationId(int siteChatConversationId) {
     this.siteChatConversationId = siteChatConversationId;
+  }
+  public int getSiteChatConversationMessageId() {
+    return siteChatConversationMessageId;
+  }
+  public void setSiteChatConversationMessageId(int siteChatConversationMessageId) {
+    this.siteChatConversationMessageId = siteChatConversationMessageId;
   }
   public String getMessage() {
     return message;
