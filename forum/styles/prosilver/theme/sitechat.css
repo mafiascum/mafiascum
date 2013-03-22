@@ -147,3 +147,22 @@
 	cursor: auto;
 	box-sizing: border-box;
 }
+
+/*** Join a chat room ***/
+
+.chatWindow.collapsed #joindiv{
+	display: none;
+	box-sizing: border-box;
+}
+
+.chatWindow.expanded #joindiv{
+	display: block;
+	margin: 0;
+	background-color:white;
+	padding: 5px;
+	box-sizing: border-box;
+}
+
+.chatWindow.expanded #joinconversationinput{
+	cursor: auto;
+}

@@ -24,6 +24,15 @@ function ChatWindow()
 	}
 }
 
+function UtilityWindow()
+{
+	this.id = undefined;
+	this.title = undefined;
+	this.expanded = false;
+	this.onlineUserIDs = [];
+	
+}
+
 function Client()
 {
 	this.chatWindows = new Object();//Associative array
@@ -32,6 +41,7 @@ function Client()
 	this.userId = null;
 	this.sessionId = null;
 	this.pendingMessages = [];
+	this.utilityWindow = null;
 
 	this.loadFromLocalStorage = function()
 	{
@@ -418,7 +428,31 @@ function Client()
 	{
 		$("body").append("<div class='chatPanel' id='chatPanel'></div>");
 	}
-
+	
+	this.createUtilityWindow = function()
+	{
+		$("#chatPanel").prepend
+				(
+					'<div class="chatWindow collapsed" id="utilitywindow">'
+				+	'	<div class="chatWindowInner">'
+				+	'		<div class="title">' + 'Online' + '</div>'
+				+	'		<div id="onlinelist"></div>'
+				+	'		<div id="joindiv"><label>Chatroom:</label><input id="joinconversationinput" type="text" name="input"></input></div>'
+				+	'	</div>'
+				+	'</div>'
+				);
+		$("#utilitywindow .title").bind("click", client.handleWindowTitleClick);
+		$("#utilitywindow .inputBuffer").bind("keypress", client.handleWindowInputSubmission);
+		$('#joinconversationinput').keyup(function(e) {
+				if(e.keyCode == 13) {
+					  var siteChatPacket = new Object(); 
+					  siteChatPacket.command = "Connect";
+					  siteChatPacket.siteChatConversationName = $("#joinconversationinput").val();
+					  $("#joinconversationinput").val('');
+					  client.sendSiteChatPacket(siteChatPacket);
+				}
+		});
+	}
 	this.setup = function(sessionId, userId)
 	{
 		client.sessionId = sessionId;
@@ -434,6 +468,7 @@ function Client()
 		client.socket.onmessage = client.handleSocketMessage;
 
 		client.createChatPanel();
+		client.createUtilityWindow();
 		client.loadFromLocalStorage();
 	}
 }
