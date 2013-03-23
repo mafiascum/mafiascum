@@ -33,8 +33,6 @@ function Client()
 	this.userId = null;
 	this.sessionId = null;
 	this.pendingMessages = [];
-	this.blinkstate = 0;
-	this.blinkstates = ['#ead8c4','#e6c299','#edb678','#eea34f','#f09b3c'];
 	this.loadFromLocalStorage = function()
 	{
 		console.log("BEGIN LOAD FROM LOCAL STORAGE...");
