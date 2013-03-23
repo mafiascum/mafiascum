@@ -21,6 +21,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import javax.servlet.http.HttpServletRequest;
 
 import net.mafiascum.provider.Provider;
+import net.mafiascum.util.MiscUtil;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversation;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationMessage;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationWithUserList;
@@ -114,10 +115,10 @@ public class SiteChatServer extends Server implements SignalHandler {
 
     setHandler(webSocketHandler);
     
-    System.out.println("Loading Site Chat Users...");
+    MiscUtil.log("Loading Site Chat Users...");
     this.siteChatUserMap = SiteChatUtil.loadSiteChatUserMap(connection);
     
-    System.out.println("Loading Site Chat Conversations...");
+    MiscUtil.log("Loading Site Chat Conversations...");
     List<SiteChatConversation> siteChatConversationList = SiteChatUtil.getSiteChatConversations(connection);
     for(SiteChatConversation siteChatConversation : siteChatConversationList) {
       
@@ -127,7 +128,7 @@ public class SiteChatServer extends Server implements SignalHandler {
       siteChatConversationWithMemberListMap.put(siteChatConversation.getId(), siteChatConversationWithUserList);
     }
     
-    System.out.println("Loading Top Site Chat Conversation Message ID...");
+    MiscUtil.log("Loading Top Site Chat Conversation Message ID...");
     topSiteChatConversationMessageId = SiteChatUtil.getTopSiteChatConversationMessageId(connection);
     
     resourceHandler=new ResourceHandler();
@@ -180,7 +181,7 @@ public class SiteChatServer extends Server implements SignalHandler {
       }
       else{
         
-        System.out.println("getSiteChatUserMap() : Could not find user #" + userId + ".");
+        MiscUtil.log("getSiteChatUserMap() : Could not find user #" + userId + ".");
       }
     }
     
@@ -288,7 +289,7 @@ public class SiteChatServer extends Server implements SignalHandler {
             }
             catch(IOException ioException) {
               
-              System.out.println("Could not send outbound packet: " + ioException.getMessage());
+              MiscUtil.log("Could not send outbound packet: " + ioException.getMessage());
             }
           }
         }
@@ -304,7 +305,7 @@ public class SiteChatServer extends Server implements SignalHandler {
     Map<Integer, SiteChatUser> siteChatUserMap = getSiteChatUserMap(siteChatConversationWithUserList.getUserIdSet());
     
     //Add user to user list.
-    System.out.println("Adding user #" + siteChatUser.getId() + " to chat #" + siteChatConversationWithUserList.getSiteChatConversation().getId() + ".");
+    MiscUtil.log("Adding user #" + siteChatUser.getId() + " to chat #" + siteChatConversationWithUserList.getSiteChatConversation().getId() + ".");
     siteChatConversationWithUserList.getUserIdSet().add(siteChatUser.getId());
     
     //Generate response packet to user.
@@ -349,7 +350,7 @@ public class SiteChatServer extends Server implements SignalHandler {
   
   public void cleanup() throws Exception {
     
-    System.out.println("Saving queued conversation messages. Number in buffer: " + siteChatConversationMessagesToSave.size());
+    MiscUtil.log("Saving queued conversation messages. Number in buffer: " + siteChatConversationMessagesToSave.size());
     
     saveSiteChatConversationMessages();
   }
@@ -385,10 +386,10 @@ public class SiteChatServer extends Server implements SignalHandler {
 
   private static void usage()
   {
-    System.out.println("java -cp CLASSPATH "+SiteChatServer.class+" [ OPTIONS ]");
-    System.out.println("  -p|--port PORT  (default 8080)");
-    System.out.println("  -v|--verbose ");
-    System.out.println("  -d|--docroot file (default '.')");
+    MiscUtil.log("java -cp CLASSPATH "+SiteChatServer.class+" [ OPTIONS ]");
+    MiscUtil.log("  -p|--port PORT  (default 8080)");
+    MiscUtil.log("  -v|--verbose ");
+    MiscUtil.log("  -d|--docroot file (default '.')");
     System.exit(1);
   }
   
@@ -423,7 +424,7 @@ public class SiteChatServer extends Server implements SignalHandler {
       server.start();
       server.join();
       
-      System.out.println("Server has been stopped.\n");
+      MiscUtil.log("Server has been stopped.\n");
       
       server.cleanup();
       
@@ -534,11 +535,11 @@ public class SiteChatServer extends Server implements SignalHandler {
     try {
       
       stop();
-      System.out.println("Attempting to shut down Web Socket Server...");
+      MiscUtil.log("Attempting to shut down Web Socket Server...");
     }
     catch(Exception exception) {
       
-      System.out.println("Could not shut down Web Socket Server:\n");
+      MiscUtil.log("Could not shut down Web Socket Server:\n");
       exception.printStackTrace();
     }
     

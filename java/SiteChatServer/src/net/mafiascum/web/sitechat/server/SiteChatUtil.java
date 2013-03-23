@@ -232,7 +232,8 @@ public class SiteChatUtil {
   public static void putNewSiteChatConversationMessages(Connection connection, List<SiteChatConversationMessage> siteChatConversationMessages) throws SQLException {
     
     BatchInsertStatement batchInsertStatement = new BatchInsertStatement(connection, "siteChatConversationMessage", siteChatConversationMessages.size() + 1);
-    
+
+    batchInsertStatement.addField("id");
     batchInsertStatement.addField("site_chat_conversation_id");
     batchInsertStatement.addField("user_id");
     batchInsertStatement.addField("created_datetime");
@@ -244,6 +245,7 @@ public class SiteChatUtil {
       
       batchInsertStatement.beginEntry();
       
+      batchInsertStatement.putInt(siteChatConversationMessage.getId());
       batchInsertStatement.putInt(siteChatConversationMessage.getSiteChatConversationId());
       batchInsertStatement.putInt(siteChatConversationMessage.getUserId());
       batchInsertStatement.putDate(siteChatConversationMessage.getCreatedDatetime());

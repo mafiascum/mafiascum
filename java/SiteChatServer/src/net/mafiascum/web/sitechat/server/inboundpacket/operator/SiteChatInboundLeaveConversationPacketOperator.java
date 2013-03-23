@@ -1,9 +1,9 @@
 package net.mafiascum.web.sitechat.server.inboundpacket.operator;
 
+import net.mafiascum.util.MiscUtil;
 import net.mafiascum.web.sitechat.server.SiteChatServer;
 import net.mafiascum.web.sitechat.server.SiteChatServer.SiteChatWebSocket;
 import net.mafiascum.web.sitechat.server.SiteChatUser;
-import net.mafiascum.web.sitechat.server.conversation.SiteChatConversation;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationWithUserList;
 import net.mafiascum.web.sitechat.server.inboundpacket.SiteChatInboundLeaveConversationPacket;
 import net.mafiascum.web.sitechat.server.outboundpacket.SiteChatOutboundLeaveConversationPacket;
@@ -21,7 +21,7 @@ public class SiteChatInboundLeaveConversationPacketOperator implements SiteChatI
     if(siteChatUser == null) {
       //Not logged in.
       
-      System.out.println("User trying to leave conversation without first logging in.");
+      MiscUtil.log("User trying to leave conversation without first logging in.");
       return;
     }
     

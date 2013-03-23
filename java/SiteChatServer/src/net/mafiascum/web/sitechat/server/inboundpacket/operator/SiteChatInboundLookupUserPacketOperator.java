@@ -1,5 +1,6 @@
 package net.mafiascum.web.sitechat.server.inboundpacket.operator;
 
+import net.mafiascum.util.MiscUtil;
 import net.mafiascum.web.sitechat.server.SiteChatServer;
 import net.mafiascum.web.sitechat.server.SiteChatServer.SiteChatWebSocket;
 import net.mafiascum.web.sitechat.server.SiteChatUser;
@@ -14,12 +15,12 @@ public class SiteChatInboundLookupUserPacketOperator implements SiteChatInboundP
     
     SiteChatInboundLookupUserPacket siteChatInboundLookupUserPacket = new Gson().fromJson(siteChatInboundPacketJson, SiteChatInboundLookupUserPacket.class);
     SiteChatUser siteChatUser = siteChatWebSocket.getSiteChatUser();
-    System.out.println("User ID: " + siteChatInboundLookupUserPacket.getUserId());
+    MiscUtil.log("User ID: " + siteChatInboundLookupUserPacket.getUserId());
     
     if(siteChatUser == null) {
       //Not Logged In.
       
-      System.out.println("User not logged in, looking up user. Target User ID: " + siteChatInboundLookupUserPacket.getUserId());
+      MiscUtil.log("User not logged in, looking up user. Target User ID: " + siteChatInboundLookupUserPacket.getUserId());
       return;
     }
     

@@ -7,6 +7,8 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
+import net.mafiascum.util.MiscUtil;
+
 class ConnectionInvocationHandler implements InvocationHandler {
 
   protected Connection connection;
@@ -19,7 +21,7 @@ class ConnectionInvocationHandler implements InvocationHandler {
   @Override
   public Object invoke(Object arg0, Method arg1, Object[] arg2) throws Throwable {
     
-    System.out.println("INVOKE!");
+    MiscUtil.log("INVOKE!");
     
     return null;
   }
@@ -47,6 +49,6 @@ class ConnectionInvocationHandler implements InvocationHandler {
     
     connectionProxy.clearWarnings();
     
-    System.out.println("Closing Main");
+    MiscUtil.log("Closing Main");
   }
 }
