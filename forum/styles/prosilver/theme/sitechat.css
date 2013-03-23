@@ -112,7 +112,6 @@
 {
 	float: left;
 	width: 100%;
-	border-bottom: 1px solid #999;
 	padding: 0 0 5px 0;
 	margin: 0 0 5px 0;
 }
@@ -127,7 +126,7 @@
 	margin-right: 5px;
 }
 
-.chatWindow.expanded .outputBuffer .message .content
+.chatWindow.expanded .outputBuffer .message .messagecontent
 {
 	overflow: hidden;
 	font-size: 12px;

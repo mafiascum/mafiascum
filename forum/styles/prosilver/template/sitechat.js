@@ -288,7 +288,7 @@ function Client()
 				'<div class="message">'
 			+	'	<img src="' + avatarUrl + '" class="profile"></img>'
 			+	'	<div class="messageUserName">' + siteChatUser.name + '</div>'
-			+	'	<div class="content">' + siteChatConversationMessage.message + '</div>'
+			+	'	<div class="messagecontent">' + siteChatConversationMessage.message + '</div>'
 			+	'</div>'
 		);
 		if (chatWindow.expanded == false && isNew){
