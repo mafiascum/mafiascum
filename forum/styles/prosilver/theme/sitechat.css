@@ -130,7 +130,14 @@
 .chatWindow.expanded .outputBuffer .message .content
 {
 	overflow: hidden;
+	font-size: 12px;
 	word-wrap: break-word;
+}
+.chatWindow.expanded .outputBuffer .message .messageUserName
+{
+	font-size: 12px;
+	font-weight:bold;
+	color: #105289;
 }
 
 

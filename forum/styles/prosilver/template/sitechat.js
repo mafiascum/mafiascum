@@ -1,5 +1,5 @@
 var client = null;
-var defaultAvatar = 'http://forum.mafiascum.net/styles/prosilver/images/defaultAvatar.png';
+var defaultAvatar = './styles/prosilver/imageset/defaultAvatar.png';
 function supportsHtml5Storage()
 {
 	try
@@ -249,7 +249,7 @@ function Client()
 			var messageArrayLength = messages.length;
 			for(var messageIndex = 0;messageIndex < messageArrayLength;++messageIndex)
 			{
-				client.addSiteChatConversationMessage(messages[ messageIndex ], save);
+				client.addSiteChatConversationMessage(messages[ messageIndex ], save, false);
 			}
 		}
 		
@@ -268,7 +268,7 @@ function Client()
 		localStorage["conversation" + chatWindow.siteChatConversationId] = JSON.stringify(chatWindow);
 	}
 	
-	this.addSiteChatConversationMessage = function(siteChatConversationMessage, save)
+	this.addSiteChatConversationMessage = function(siteChatConversationMessage, save, isNew)
 	{
 		var chatWindow = client.chatWindows[ siteChatConversationMessage.siteChatConversationId ];
 		var siteChatUser = client.userMap[ siteChatConversationMessage.userId ];
@@ -277,15 +277,21 @@ function Client()
 		console.log("Chat Window: " + chatWindow);
 		
 		chatWindow.messages.push(siteChatConversationMessage);
-		
+		if (siteChatUser.avatarUrl != 'http://forum.mafiascum.net/download/file.php?avatar='){
+			avatarUrl = siteChatUser.avatarUrl;
+		}
+		else {
+			avatarUrl = defaultAvatar;
+		}
 		$("#chat" + siteChatConversationMessage.siteChatConversationId + " .outputBuffer").append
 		(
 				'<div class="message">'
-			+	'	<img src="' + siteChatUser.avatarUrl + '" class="profile"></img>'
+			+	'	<img src="' + avatarUrl + '" class="profile"></img>'
+			+	'	<div class="messageUserName">' + siteChatUser.name + '</div>'
 			+	'	<div class="content">' + siteChatConversationMessage.message + '</div>'
 			+	'</div>'
 		);
-		if (chatWindow.expanded == false){
+		if (chatWindow.expanded == false && isNew){
 			chatWindow.blinking = true;
 		}
 		var outputBuffer = $("#chat" + siteChatConversationMessage.siteChatConversationId + " .outputBuffer").get(0);
@@ -339,7 +345,7 @@ function Client()
 				break;
 			}
 
-			client.addSiteChatConversationMessage(siteChatPacket, true);
+			client.addSiteChatConversationMessage(siteChatPacket, true, true);
 			client.pendingMessages.splice(index, 1);
 			--index;
 		}
@@ -394,7 +400,7 @@ function Client()
 					client.sendSiteChatPacket(lookupUserPacket);
 				}
 				else
-					client.addSiteChatConversationMessage(siteChatPacket, true);
+					client.addSiteChatConversationMessage(siteChatPacket, true, true);
 			}
 		}
 		else if(siteChatPacket.command == "UserJoin")
