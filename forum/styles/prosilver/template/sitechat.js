@@ -88,7 +88,7 @@ function Client()
 		event.stopPropagation();
 		var $window = $(this).closest(".chatWindow");
 		var siteChatConversation = client.chatWindows[ parseInt($window.attr("id").replace("chat", "")) ];
-		if (siteChatConversation.blinking = true){
+		if (siteChatConversation != null && siteChatConversation.blinking == true){
 			siteChatConversation.blinking = false;
 		}
 		
