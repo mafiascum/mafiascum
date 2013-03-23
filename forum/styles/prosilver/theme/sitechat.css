@@ -11,17 +11,18 @@
 {
 	float: right;
 	margin-right: 5px;
-	height: 300px;
 }
 
 .chatWindow.collapsed
 {
 	width: 200px;
+	height: 30px;
 }
 
 .chatWindow.expanded
 {
 	width: 300px;
+	height: 300px;
 }
 
 .chatWindowInner

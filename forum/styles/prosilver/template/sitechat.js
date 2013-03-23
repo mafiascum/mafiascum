@@ -1,4 +1,5 @@
 var client = null;
+var defaultAvatar = 'http://forum.mafiascum.net/styles/prosilver/images/defaultAvatar.png';
 function supportsHtml5Storage()
 {
 	try
@@ -17,20 +18,11 @@ function ChatWindow()
 	this.title = undefined;
 	this.expanded = false;
 	this.userIdSet = [];
-
+	this.blinking = false;
 	this.userIsInChat = function(userId)
 	{
 		return $.inArray(userId, this.userIdSet) != -1;
 	}
-}
-
-function UtilityWindow()
-{
-	this.id = undefined;
-	this.title = undefined;
-	this.expanded = false;
-	this.onlineUserIDs = [];
-	
 }
 
 function Client()
@@ -41,8 +33,8 @@ function Client()
 	this.userId = null;
 	this.sessionId = null;
 	this.pendingMessages = [];
-	this.utilityWindow = null;
-
+	this.blinkstate = 0;
+	this.blinkstates = ['#ead8c4','#e6c299','#edb678','#eea34f','#f09b3c'];
 	this.loadFromLocalStorage = function()
 	{
 		console.log("BEGIN LOAD FROM LOCAL STORAGE...");
@@ -96,11 +88,16 @@ function Client()
 		event.stopPropagation();
 		var $window = $(this).closest(".chatWindow");
 		var siteChatConversation = client.chatWindows[ parseInt($window.attr("id").replace("chat", "")) ];
-
+		if (siteChatConversation.blinking = true){
+			siteChatConversation.blinking = false;
+		}
+		
 		if($window.hasClass("expanded"))
 		{
 			$window.removeClass("expanded");
 			$window.addClass("collapsed");
+			$($window).find('.title').stop(true);
+			$($window).find('.title').css('backgroundColor', '#E1DFE6');
 			if(siteChatConversation)
 				siteChatConversation.expanded = false;
 		}
@@ -108,6 +105,8 @@ function Client()
 		{
 			$window.removeClass("collapsed");
 			$window.addClass("expanded");
+			$($window).find('.title').stop(true);
+			$($window).find('.title').css('backgroundColor', '#4E89AD');
 			if(siteChatConversation)
 				siteChatConversation.expanded = true;
 		}
@@ -288,10 +287,11 @@ function Client()
 			+	'	<div class="content">' + siteChatConversationMessage.message + '</div>'
 			+	'</div>'
 		);
-
+		if (chatWindow.expanded == false){
+			chatWindow.blinking = true;
+		}
 		var outputBuffer = $("#chat" + siteChatConversationMessage.siteChatConversationId + " .outputBuffer").get(0);
 		outputBuffer.scrollTop = outputBuffer.scrollHeight;
-		
 		if(save)
 			client.saveChatWindow(chatWindow);
 	}
@@ -477,6 +477,21 @@ function Client()
 				}
 		});
 	}
+	this.blink = function(){
+		for(var siteChatConversationId in client.chatWindows) {
+			if(client.blinkstate == 0){
+				if (client.chatWindows[siteChatConversationId].blinking == true){
+					$('#chat' + siteChatConversationId + ' .title').animate({backgroundColor: '#F09B3C'}, 699);
+					client.blinkstate = 1;
+				}
+			} else {
+				if (client.chatWindows[siteChatConversationId].blinking == true){
+					$('#chat' + siteChatConversationId + ' .title').animate({backgroundColor: '#E1DFE6'}, 699);
+					client.blinkstate = 0;
+				}
+			}
+		}
+	}
 	this.setup = function(sessionId, userId)
 	{
 		client.sessionId = sessionId;
@@ -486,7 +501,7 @@ function Client()
 			return;
 		}
 
-		client.socket = new WebSocket("ws://apollo.corbe.net:4241", "site-chat");
+		client.socket = new WebSocket("ws://localhost:4241", "site-chat");
 		client.socket.onopen = client.handleSocketOpen;
 		client.socket.onclose = client.handleSocketClose;
 		client.socket.onmessage = client.handleSocketMessage;
@@ -494,5 +509,6 @@ function Client()
 		client.createChatPanel();
 		client.createUtilityWindow();
 		client.loadFromLocalStorage();
+		setInterval(this.blink, 700);
 	}
 }
