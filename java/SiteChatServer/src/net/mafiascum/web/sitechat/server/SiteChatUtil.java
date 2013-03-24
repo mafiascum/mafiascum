@@ -66,7 +66,7 @@ public class SiteChatUtil {
     
     siteChatUser.setId(resultSet.getInt("user_id"));
     siteChatUser.setName(resultSet.getString("username"));
-    siteChatUser.setAvatarUrl("http://forum.mafiascum.net/download/file.php?avatar=" + resultSet.getString("user_avatar"));
+    siteChatUser.setAvatarUrl(resultSet.getString("user_avatar"));
     
     return siteChatUser;
   }
