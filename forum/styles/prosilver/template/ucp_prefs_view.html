@@ -70,17 +70,10 @@
 			</dd>
 		</dl>
 		<dl>
-			<dt><label for="chat1">Disable Chat:</label></dt>
+			<dt><label for="chat1">Enable Chat:</label></dt>
 			<dd>
-				<label for="chat1"><input type="radio" name="chat" id="chat1" value="1"<!-- IF not S_CHAT --> checked="checked"<!-- ENDIF --> /> {L_YES}</label> 
-				<label for="chat0"><input type="radio" name="chat" id="chat0" value="0"<!-- IF S_CHAT --> checked="checked"<!-- ENDIF --> /> {L_NO}</label>
-			</dd>
-		</dl>
-		<dl>
-			<dt><label for="lobby1">Enter lobby on login:</label></dt>
-			<dd>
-				<label for="lobby1"><input type="radio" name="lobby" id="lobby1" value="1"<!-- IF not S_LOBBY --> checked="checked"<!-- ENDIF --> /> {L_YES}</label> 
-				<label for="lobby0"><input type="radio" name="lobby" id="lobby0" value="0"<!-- IF S_LOBBY --> checked="checked"<!-- ENDIF --> /> {L_NO}</label>
+				<label for="chat1"><input type="radio" name="chat" id="chat1" value="1"<!-- IF S_CHAT --> checked="checked"<!-- ENDIF --> /> {L_YES}</label> 
+				<label for="chat0"><input type="radio" name="chat" id="chat0" value="0"<!-- IF not S_CHAT --> checked="checked"<!-- ENDIF --> /> {L_NO}</label>
 			</dd>
 		</dl>
 		<dl>

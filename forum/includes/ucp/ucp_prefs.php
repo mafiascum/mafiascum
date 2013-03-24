@@ -181,7 +181,7 @@ class ucp_prefs
 					'youtube'		=> request_var('youtube', (bool) $user->optionget('viewyoutube')),
 					'lobby'			=> request_var('lobby', (bool) $user->optionget('enterlobby')),
 					'mobile'		=> request_var('mobile', (bool) $user->optionget('autodetectmobile')),
-					'chat'			=> request_var('chat', (bool) $user->optionget('chat_disabled')),
+					'chat'			=> request_var('chat', (bool) $user->optionget('chat_enabled')),
 					'bbsigs'		=> request_var('bbsigs', (bool) $user->optionget('sigbb_disabled')),
 					// BEGIN Topic Preview Mod
 					'topic_preview'	=> request_var('topic_preview', (!empty($user->data['user_topic_preview']) ? $user->data['user_topic_preview'] : 0)),
@@ -212,7 +212,7 @@ class ucp_prefs
 						$user->optionset('viewavatars', $data['avatars']);
 						$user->optionset('viewyoutube', $data['youtube']);
 						$user->optionset('autodetectmobile', $data['mobile']);
-						$user->optionset('chat_disabled', $data['chat']);
+						$user->optionset('chat_enabled', $data['chat']);
 						$user->optionset('enterlobby', $data['lobby']);
 						$user->optionset('sigbb_disabled', $data['bbsigs']);
 

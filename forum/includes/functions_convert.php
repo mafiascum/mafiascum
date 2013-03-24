@@ -1032,7 +1032,7 @@ function set_user_options()
 		'viewyoutube'				=> array('bit' => 19, 'default' => 1),
 		'autodetectmobile'			=> array('bit' => 20, 'default' => 0),
 		'enter_lobby'				=> array('bit' => 21, 'default' => 1),
-		'chat_disabled'				=> array('bit' => 22, 'default' => 0),
+		'chat_enabled'				=> array('bit' => 22, 'default' => 0),
 		'sigbb_disabled'			=> array('bit' => 22, 'default' => 0),
 	);
 

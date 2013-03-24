@@ -100,20 +100,22 @@
 {
 	display: none;
 }
+
 .chatWindow.expanded .outputBuffer
 {
 	display: block;
-	height: 300px;
-	overflow: auto;
 	padding: 0 5px 0 5px;
+	height: 300px;
 	background: #FFF;
+	overflow: auto;
 }
+
 .chatWindow.expanded .outputBuffer .message
 {
-	float: left;
 	width: 100%;
 	padding: 0 0 5px 0;
-	margin: 0 0 5px 0;
+	clear:both;
+	min-height: 40px;
 }
 
 .chatWindow.expanded .outputBuffer .message .profile

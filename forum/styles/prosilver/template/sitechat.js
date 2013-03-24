@@ -74,7 +74,6 @@ function Client()
 
 				var siteChatConversation = JSON.parse(localStorage["conversation" + siteChatConversationId]);
 				client.createChatWindow(siteChatConversationId, siteChatConversation.title, siteChatConversation.userIdSet, siteChatConversation.expanded, siteChatConversation.messages, false);
-				
 				console.log("Loaded Chat Window Marked Expanded: " + siteChatConversation.expanded);
 			}
 		}
@@ -105,8 +104,11 @@ function Client()
 			$window.addClass("expanded");
 			$($window).find('.title').stop(true);
 			$($window).find('.title').css('backgroundColor', '#4E89AD');
-			if(siteChatConversation)
+			if(siteChatConversation){
 				siteChatConversation.expanded = true;
+				var outputbuffer = $("#chat" + siteChatConversation.id + " .outputBuffer");
+				outputbuffer.scrollTop(outputbuffer.scrollHeight);
+			}
 		}
 		
 		if(siteChatConversation)
@@ -221,7 +223,7 @@ function Client()
 		$("#chat" + conversationId + " .title .close").bind("click", client.handleWindowCloseButtonClick);
 		
 		var chatWindow = new ChatWindow();
-		chatWindow.siteChatConversationId = conversationId;
+		chatWindow.id = conversationId;
 		chatWindow.userIdSet = [];
 		chatWindow.title = title;
 		chatWindow.messages = [];
@@ -241,8 +243,6 @@ function Client()
 		}
 
 		client.chatWindows[conversationId] = chatWindow;
-		$("#chat" + conversationId + " .inputBuffer").focus();
-		
 		if(messages && messages.length > 0)
 		{
 			console.log("Loading Messages: " + messages.length);
@@ -251,6 +251,12 @@ function Client()
 			{
 				client.addSiteChatConversationMessage(messages[ messageIndex ], save, false);
 			}
+		}
+		
+		if(save){
+			$("#chat" + conversationId + " .inputBuffer").focus();
+		} else {
+			$("#chat" + conversationId + " .outputBuffer").scrollTop($("#chat" + conversationId + " .outputBuffer").scrollHeight);
 		}
 		
 		if(save)
