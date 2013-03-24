@@ -14,7 +14,7 @@ function supportsHtml5Storage()
 
 function ChatWindow()
 {
-	this.siteChatConversationId = undefined;
+	this.id = undefined;
 	this.title = undefined;
 	this.expanded = false;
 	this.userIdSet = [];
@@ -383,7 +383,7 @@ function Client()
 					client.addUser(siteChatUser, true);
 				}
 
-				client.createChatWindow(siteChatPacket.siteChatConversationId, siteChatPacket.titleText, siteChatUserIdSet, true, true);
+				client.createChatWindow(siteChatPacket.siteChatConversationId, siteChatPacket.titleText, siteChatUserIdSet, true, new Array(), true);
 			}
 		}
 		else if(siteChatPacket.command == "NewMessage")
@@ -487,6 +487,12 @@ function Client()
 				}
 		});
 	}
+	this.heartbeat = function(){
+		var siteChatPacket = new Object();
+		siteChatPacket.command = "Heartbeat";
+		siteChatPacket.isAlive = "true";
+		client.sendSiteChatPacket(siteChatPacket);
+	}
 	this.blink = function(){
 		for(var siteChatConversationId in client.chatWindows) {
 			if(client.blinkstate == 0){
@@ -519,6 +525,7 @@ function Client()
 		client.createChatPanel();
 		client.createUtilityWindow();
 		client.loadFromLocalStorage();
-		setInterval(this.blink, 700);
+		setInterval('client.blink()', 700);
+		setInterval('client.heartbeat()', 300000);
 	}
 }
