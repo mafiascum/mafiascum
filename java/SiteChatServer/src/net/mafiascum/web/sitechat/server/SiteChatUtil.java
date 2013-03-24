@@ -20,6 +20,7 @@ public class SiteChatUtil {
 
   public static final int MAX_SITE_CHAT_CONVERSATION_MESSAGE_LENGTH = 255;
   public static final int MAX_SITE_CHAT_CONVERSATION_NAME_LENGTH = 40;
+  public static final int MAX_MESSAGES_PER_CONVERSATION_CACHE = 100;
   
   public static Map<Integer, SiteChatUser> loadSiteChatUserMap(Connection connection) throws SQLException {
     

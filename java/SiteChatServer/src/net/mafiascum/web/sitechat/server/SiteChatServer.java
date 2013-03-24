@@ -22,17 +22,18 @@ import javax.servlet.http.HttpServletRequest;
 
 import net.mafiascum.provider.Provider;
 import net.mafiascum.util.MiscUtil;
+import net.mafiascum.util.StringUtil;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversation;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationMessage;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationWithUserList;
 import net.mafiascum.web.sitechat.server.inboundpacket.SiteChatInboundPacketType;
 import net.mafiascum.web.sitechat.server.inboundpacket.operator.SiteChatInboundConnectPacketOperator;
+import net.mafiascum.web.sitechat.server.inboundpacket.operator.SiteChatInboundHeartbeatPacketOperator;
 import net.mafiascum.web.sitechat.server.inboundpacket.operator.SiteChatInboundLeaveConversationPacketOperator;
 import net.mafiascum.web.sitechat.server.inboundpacket.operator.SiteChatInboundLogInPacketOperator;
 import net.mafiascum.web.sitechat.server.inboundpacket.operator.SiteChatInboundLookupUserPacketOperator;
 import net.mafiascum.web.sitechat.server.inboundpacket.operator.SiteChatInboundPacketOperator;
 import net.mafiascum.web.sitechat.server.inboundpacket.operator.SiteChatInboundSendMessagePacketOperator;
-import net.mafiascum.web.sitechat.server.inboundpacket.operator.SiteChatInboundHeartbeatPacketOperator;
 import net.mafiascum.web.sitechat.server.outboundpacket.SiteChatOutboundConnectPacket;
 import net.mafiascum.web.sitechat.server.outboundpacket.SiteChatOutboundPacket;
 import net.mafiascum.web.sitechat.server.outboundpacket.SiteChatOutboundUserJoinPacket;
@@ -64,6 +65,7 @@ public class SiteChatServer extends Server implements SignalHandler {
   protected Map<Integer, SiteChatConversationWithUserList> siteChatConversationWithMemberListMap = new HashMap<Integer, SiteChatConversationWithUserList>();
   protected Map<Integer, SiteChatUser> siteChatUserMap = new HashMap<Integer, SiteChatUser>();
   protected List<SiteChatConversationMessage> siteChatConversationMessagesToSave = new LinkedList<SiteChatConversationMessage>();
+  protected SiteChatServerServiceThread serviceThread;
   
   protected final int MESSAGE_BATCH_SIZE = 100;
   protected int topSiteChatConversationMessageId;
@@ -96,6 +98,10 @@ public class SiteChatServer extends Server implements SignalHandler {
     //Add handler for interruption signal.
     Signal.handle(new Signal("INT"), this);
     Signal.handle(new Signal("TERM"), this);
+    
+    //Service thread.
+    serviceThread = new SiteChatServerServiceThread(this);
+    serviceThread.start();
     
     selectChannelConnector = new SelectChannelConnector();
     selectChannelConnector.setPort(port);
@@ -166,24 +172,28 @@ public class SiteChatServer extends Server implements SignalHandler {
   
   protected void addSiteChatUser(SiteChatUser siteChatUser) {
     
-    siteChatUserMap.put(siteChatUser.getId(), siteChatUser);
+    synchronized(this.siteChatUserMap) {
+      siteChatUserMap.put(siteChatUser.getId(), siteChatUser);
+    }
   }
   
   public Map<Integer, SiteChatUser> getSiteChatUserMap(Collection<Integer> userIdCollection) {
-    
+
     Map<Integer, SiteChatUser> siteChatUserMap = new HashMap<Integer, SiteChatUser>();
-    
-    for(Integer userId : userIdCollection) {
+    synchronized(this.siteChatUserMap) {
       
-      SiteChatUser siteChatUser = this.siteChatUserMap.get(userId);
-      
-      if(siteChatUser != null) {
+      for(Integer userId : userIdCollection) {
         
-        siteChatUserMap.put(siteChatUser.getId(), siteChatUser);
-      }
-      else{
+        SiteChatUser siteChatUser = this.siteChatUserMap.get(userId);
         
-        MiscUtil.log("getSiteChatUserMap() : Could not find user #" + userId + ".");
+        if(siteChatUser != null) {
+          
+          siteChatUserMap.put(siteChatUser.getId(), siteChatUser);
+        }
+        else{
+          
+          MiscUtil.log("getSiteChatUserMap() : Could not find user #" + userId + ".");
+        }
       }
     }
     
@@ -212,11 +222,12 @@ public class SiteChatServer extends Server implements SignalHandler {
   
   public SiteChatUser getSiteChatUser(int userId) {
     
-    //TODO: Add code to look for user ID that does not exist in the cache.
-    return siteChatUserMap.get(userId);
+    synchronized(this.siteChatUserMap) {
+      return siteChatUserMap.get(userId);
+    }
   }
   
-  public int recordSiteChatConversationMessage(int userId, int siteChatConversationId, String message) throws Exception {
+  public SiteChatConversationMessage recordSiteChatConversationMessage(int userId, int siteChatConversationId, String message) throws Exception {
     
     SiteChatConversationMessage siteChatConversationMessage = new SiteChatConversationMessage();
     siteChatConversationMessage.setMessage(message);
@@ -232,7 +243,27 @@ public class SiteChatServer extends Server implements SignalHandler {
       saveSiteChatConversationMessages();
     }
     
-    return siteChatConversationMessage.getId();
+    //Save to local conversation cache.
+    SiteChatConversationWithUserList siteChatConversationWithUserList = siteChatConversationWithMemberListMap.get(siteChatConversationId);
+    if(siteChatConversationWithUserList.getSiteChatConversationMessages().size() > SiteChatUtil.MAX_MESSAGES_PER_CONVERSATION_CACHE) {
+      siteChatConversationWithUserList.getSiteChatConversationMessages().remove(0);
+    }
+    siteChatConversationWithUserList.getSiteChatConversationMessages().add(siteChatConversationMessage);
+    
+    
+    return siteChatConversationMessage;
+  }
+  
+  public void refreshUserCache() throws Exception {
+    
+    MiscUtil.log("Refreshing User Cache");
+    Connection connection = provider.getConnection();
+    Map<Integer, SiteChatUser> siteChatUserMap = SiteChatUtil.loadSiteChatUserMap(connection);
+    connection.close();
+    
+    synchronized(this.siteChatUserMap) {
+      this.siteChatUserMap = siteChatUserMap;
+    }
   }
   
   public void saveSiteChatConversationMessages() throws Exception {
@@ -301,52 +332,54 @@ public class SiteChatServer extends Server implements SignalHandler {
   
   public void attemptJoinConversation(int siteChatUserId, int siteChatConversationId, boolean notifyUser, boolean notifyConversationMembers) throws IOException {
     
-    SiteChatUser siteChatUser = siteChatUserMap.get(siteChatUserId);
-    SiteChatConversationWithUserList siteChatConversationWithUserList = siteChatConversationWithMemberListMap.get(siteChatConversationId);
-    SiteChatConversation siteChatConversation = siteChatConversationWithUserList.getSiteChatConversation();
-    Map<Integer, SiteChatUser> siteChatUserMap = getSiteChatUserMap(siteChatConversationWithUserList.getUserIdSet());
-    
-    //Add user to user list.
-    MiscUtil.log("Adding user #" + siteChatUser.getId() + " to chat #" + siteChatConversationWithUserList.getSiteChatConversation().getId() + ".");
-    siteChatConversationWithUserList.getUserIdSet().add(siteChatUser.getId());
-    
-    //Generate response packet to user.
-    if(notifyUser) {
-      SiteChatOutboundConnectPacket siteChatOutboundConnectPacket = new SiteChatOutboundConnectPacket();
-      siteChatOutboundConnectPacket.setWasSuccessful(true);
-      siteChatOutboundConnectPacket.setSiteChatConversationId(siteChatConversationWithUserList.getSiteChatConversation().getId());
-      siteChatOutboundConnectPacket.setTitleText(siteChatConversation.getName());
-    
-      Set<SiteChatUser> siteChatUserSet = new HashSet<SiteChatUser>();
-    
-      for(Integer userId : siteChatUserMap.keySet()) {
+    synchronized(this.siteChatUserMap) {
+      SiteChatUser siteChatUser = siteChatUserMap.get(siteChatUserId);
+      SiteChatConversationWithUserList siteChatConversationWithUserList = siteChatConversationWithMemberListMap.get(siteChatConversationId);
+      SiteChatConversation siteChatConversation = siteChatConversationWithUserList.getSiteChatConversation();
+      Map<Integer, SiteChatUser> siteChatUserMap = getSiteChatUserMap(siteChatConversationWithUserList.getUserIdSet());
       
-        siteChatUserSet.add(siteChatUserMap.get(userId));
-      }
+      //Add user to user list.
+      MiscUtil.log("Adding user #" + siteChatUser.getId() + " to chat #" + siteChatConversationWithUserList.getSiteChatConversation().getId() + ".");
+      siteChatConversationWithUserList.getUserIdSet().add(siteChatUser.getId());
       
-      siteChatOutboundConnectPacket.setUsers(siteChatUserSet);
+      //Generate response packet to user.
+      if(notifyUser) {
+        SiteChatOutboundConnectPacket siteChatOutboundConnectPacket = new SiteChatOutboundConnectPacket();
+        siteChatOutboundConnectPacket.setWasSuccessful(true);
+        siteChatOutboundConnectPacket.setSiteChatConversationId(siteChatConversationWithUserList.getSiteChatConversation().getId());
+        siteChatOutboundConnectPacket.setTitleText(StringUtil.escapeHTMLCharacters(siteChatConversation.getName()));
       
-      for(SiteChatWebSocket siteChatWebSocket : descriptors) {
+        Set<SiteChatUser> siteChatUserSet = new HashSet<SiteChatUser>();
+      
+        for(Integer userId : siteChatUserMap.keySet()) {
         
-        if(siteChatWebSocket.getSiteChatUser() != null && siteChatWebSocket.getSiteChatUser().getId() == siteChatUserId) {
+          siteChatUserSet.add(siteChatUserMap.get(userId));
+        }
+        
+        siteChatOutboundConnectPacket.setUsers(siteChatUserSet);
+        
+        for(SiteChatWebSocket siteChatWebSocket : descriptors) {
           
-          try {
-            siteChatWebSocket.sendOutboundPacket(siteChatOutboundConnectPacket);
-          }
-          catch(IOException ioException) {
-            ioException.printStackTrace();
+          if(siteChatWebSocket.getSiteChatUser() != null && siteChatWebSocket.getSiteChatUser().getId() == siteChatUserId) {
+            
+            try {
+              siteChatWebSocket.sendOutboundPacket(siteChatOutboundConnectPacket);
+            }
+            catch(IOException ioException) {
+              ioException.printStackTrace();
+            }
           }
         }
       }
-    }
     
-    //Notify all users in the chat room that this user has joined.
-    if(notifyConversationMembers) {
-      SiteChatOutboundUserJoinPacket siteChatOutboundUserJoinPacket = new SiteChatOutboundUserJoinPacket();
-      siteChatOutboundUserJoinPacket.setSiteChatConversationId(siteChatConversationWithUserList.getSiteChatConversation().getId());
-      siteChatOutboundUserJoinPacket.setSiteChatUser(siteChatUser);
-    
-      sendOutboundPacketToUsers(siteChatUserMap.keySet(), siteChatOutboundUserJoinPacket, siteChatUser.getId());
+      //Notify all users in the chat room that this user has joined.
+      if(notifyConversationMembers) {
+        SiteChatOutboundUserJoinPacket siteChatOutboundUserJoinPacket = new SiteChatOutboundUserJoinPacket();
+        siteChatOutboundUserJoinPacket.setSiteChatConversationId(siteChatConversationWithUserList.getSiteChatConversation().getId());
+        siteChatOutboundUserJoinPacket.setSiteChatUser(siteChatUser);
+      
+        sendOutboundPacketToUsers(siteChatUserMap.keySet(), siteChatOutboundUserJoinPacket, siteChatUser.getId());
+      }
     }
   }
   
@@ -449,7 +482,7 @@ public class SiteChatServer extends Server implements SignalHandler {
     }
     
     public void setSiteChatUser(SiteChatUser siteChatUser) {
-      
+    
       this.siteChatUser = siteChatUser;
     }
     

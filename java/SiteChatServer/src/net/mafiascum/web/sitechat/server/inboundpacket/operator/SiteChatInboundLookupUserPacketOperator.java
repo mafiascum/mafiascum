@@ -24,7 +24,6 @@ public class SiteChatInboundLookupUserPacketOperator implements SiteChatInboundP
       return;
     }
     
-    
     //Create the response
     SiteChatOutboundLookupUserPacket siteChatOutboundLookupUserPacket = new SiteChatOutboundLookupUserPacket();
     siteChatOutboundLookupUserPacket.setUserId(siteChatInboundLookupUserPacket.getUserId());

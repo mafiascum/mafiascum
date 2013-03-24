@@ -5,8 +5,8 @@
 	<property name="checkout-src" value="${checkout-root}/src"/>
 	<property name="checkout-classes" value="${checkout-root}/classes"/>
 	<property name="sitechat-root" value=""/>
-    <property name="branch" value="trunk" />
-    <property name="revision" value="" />
+	<property name="branch" value="trunk" />
+	<property name="revision" value="" />
 
 	<property name="branch" value="trunk" />
 	<property name="revision" value="" />
