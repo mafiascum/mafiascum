@@ -35,8 +35,6 @@ function Client()
 	this.pendingMessages = [];
 	this.loadFromLocalStorage = function()
 	{
-		console.log("BEGIN LOAD FROM LOCAL STORAGE...");
-
 		var userIdSet, converstionIdSet;
 		//Load users.
 		if(localStorage["userIdSet"])
@@ -45,8 +43,6 @@ function Client()
 			for(var index = 0;index < userIdSet.length;++index)
 			{
 				var userId = userIdSet[ index ];
-
-				console.log("LOADING USER #" + userId);
 
 				if(localStorage["user" + userId])
 				{
@@ -70,11 +66,9 @@ function Client()
 			{
 				var siteChatConversationId = conversationIdSet[ index ];
 
-				console.log("LOADING CONVERSATION #" + siteChatConversationId);
-
+				console.log("Loading Conversation: " + localStorage["conversation" + siteChatConversationId]);
 				var siteChatConversation = JSON.parse(localStorage["conversation" + siteChatConversationId]);
 				client.createChatWindow(siteChatConversationId, siteChatConversation.title, siteChatConversation.userIdSet, siteChatConversation.expanded, siteChatConversation.messages, false);
-				console.log("Loaded Chat Window Marked Expanded: " + siteChatConversation.expanded);
 			}
 		}
 	}
@@ -186,13 +180,23 @@ function Client()
 	
 	this.handleSocketOpen = function()
 	{
-		console.log("Connection Opened.");
-		
-					var siteChatPacket = new Object();
+		var siteChatPacket = new Object();
 		siteChatPacket.command = "LogIn";
 		siteChatPacket.userId = client.userId;
 		siteChatPacket.sessionId = client.sessionId;
 		siteChatPacket.conversationIdSet = client.getConversationIdSet();
+		siteChatPacket.conversationIdToMostRecentMessageIdMap = new Object();
+		
+		for(var siteChatConversationId in client.chatWindows)
+		{
+			console.log("Scanning Conversation #" + siteChatConversationId);
+			var chatWindow = client.chatWindows[ siteChatConversationId ];
+			if(chatWindow.messages && chatWindow.messages.length > 0)
+			{
+				console.log(" - Adding Message #" + chatWindow.messages[ chatWindow.messages.length - 1 ].id);
+				siteChatPacket.conversationIdToMostRecentMessageIdMap[ siteChatConversationId ] = chatWindow.messages[ chatWindow.messages.length - 1 ].id;
+			}
+		}
 	
 		client.sendSiteChatPacket(siteChatPacket);
 	}
@@ -204,9 +208,6 @@ function Client()
 
 	this.createChatWindow = function(conversationId, title, userIdSet, expanded, messages, save)
 	{
-	
-		console.log("Creating Chat Window.");
-	
 		$("#chatPanel").append
 			(
 				'<div class="chatWindow collapsed" id="chat' + conversationId + '">'
@@ -245,7 +246,6 @@ function Client()
 		client.chatWindows[conversationId] = chatWindow;
 		if(messages && messages.length > 0)
 		{
-			console.log("Loading Messages: " + messages.length);
 			var messageArrayLength = messages.length;
 			for(var messageIndex = 0;messageIndex < messageArrayLength;++messageIndex)
 			{
@@ -268,19 +268,16 @@ function Client()
 
 	this.saveChatWindow = function(chatWindow)
 	{
-		console.log("SAVING CONVERSATION #" + chatWindow.siteChatConversationId);
-
+		console.log("SAVING CHAT WINDOW: " + chatWindow);
 		localStorage["conversationIdSet"] = JSON.stringify(client.getConversationIdSet());
 		localStorage["conversation" + chatWindow.siteChatConversationId] = JSON.stringify(chatWindow);
 	}
 	
 	this.addSiteChatConversationMessage = function(siteChatConversationMessage, save, isNew)
 	{
+		console.log("Adding Message #" + siteChatConversationMessage.id);
 		var chatWindow = client.chatWindows[ siteChatConversationMessage.siteChatConversationId ];
 		var siteChatUser = client.userMap[ siteChatConversationMessage.userId ];
-		
-		console.log("Conversation ID: " + siteChatConversationMessage.siteChatConversationId);
-		console.log("Chat Window: " + chatWindow);
 		
 		chatWindow.messages.push(siteChatConversationMessage);
 		if (siteChatUser.avatarUrl != ''){
@@ -306,6 +303,16 @@ function Client()
 			client.saveChatWindow(chatWindow);
 	}
 
+	//////////////////////////////////////////////////////////////////////////////////////////////////////
+	this.printUsers = function()
+	{
+		for(var userId in client.userMap)
+		{
+			console.log(" - " + userId + ": " + client.userMap[ userId ].name + ", " + client.userMap[ userId ].avatarUrl);
+		}
+	}
+	//////////////////////////////////////////////////////////////////////////////////////////////////////
+
 	this.addUser = function(siteChatUser, save)
 	{
 		console.log("ADDING USER #" + siteChatUser.id + ": " + siteChatUser.name + ", Save: " + save);
@@ -326,8 +333,6 @@ function Client()
 
 	this.saveUser = function(siteChatUser)
 	{
-		console.log("SAVING USER #" + siteChatUser.id);
-
 		var userIdSet = [];
 		for(var userId in client.userMap)
 		{
@@ -351,7 +356,7 @@ function Client()
 				break;
 			}
 
-			client.addSiteChatConversationMessage(siteChatPacket, true, true);
+			client.addSiteChatConversationMessage(siteChatPacket.siteChatConversationMessage, true, true);
 			client.pendingMessages.splice(index, 1);
 			--index;
 		}
@@ -366,11 +371,19 @@ function Client()
 		if(siteChatPacket.command == "LogIn")
 		{
 			console.log("Log In Result: " + siteChatPacket.wasSuccessful);
+			
+			if(siteChatPacket.missedSiteChatConversationMessages && siteChatPacket.missedSiteChatConversationMessages.length > 0)
+			{
+				var missedMessagesLength = siteChatPacket.missedSiteChatConversationMessages.length;
+				for(var messageIndex = 0;messageIndex < missedMessagesLength;++messageIndex)
+				{
+					console.log("Adding Missed Message. ID: " + siteChatPacket.missedSiteChatConversationMessages[ messageIndex ].id);
+					client.addSiteChatConversationMessage(siteChatPacket.missedSiteChatConversationMessages[ messageIndex ], true, true);
+				}
+			}
 		}
 		else if(siteChatPacket.command == "Connect")
 		{
-			console.log("Connect Message Received.");
-
 			if(client.chatWindows[siteChatPacket.siteChatConversationId] == undefined)
 			{//Create the chat window.
 
@@ -383,30 +396,31 @@ function Client()
 					client.addUser(siteChatUser, true);
 				}
 
-				client.createChatWindow(siteChatPacket.siteChatConversationId, siteChatPacket.titleText, siteChatUserIdSet, true, new Array(), true);
+				client.createChatWindow(siteChatPacket.siteChatConversationId, siteChatPacket.titleText, siteChatUserIdSet, true, [], true);
 			}
 		}
 		else if(siteChatPacket.command == "NewMessage")
 		{
-			console.log("New Message. User ID: " + siteChatPacket.userId + ", Conversation ID: " + siteChatPacket.siteChatConversationId + ", Message: " + siteChatPacket.message);
-
-			if(client.chatWindows[ siteChatPacket.siteChatConversationId ] != undefined)
+			if(client.chatWindows[ siteChatPacket.siteChatConversationMessage.siteChatConversationId ] != undefined)
 			{
-				var siteChatUser = client.userMap[ siteChatPacket.userId ];
+				var siteChatUser = client.userMap[ siteChatPacket.siteChatConversationMessage.userId ];
 
 				if(!siteChatUser || client.pendingMessages.length > 0)
-				{
+				{//If for some reason we have no data on a user(or if there are other pending messages), queue the message to process later and kick off a user lookup request.
 					console.log("Adding pending message. Site Chat User: " + siteChatUser + ", Previous Pending Messages: " + client.pendingMessages.length);
-					client.pendingMessages.push(siteChatPacket);
+					client.pendingMessages.push(siteChatPacket.siteChatConversationMessage);
 
-					var lookupUserPacket = new Object();
-					lookupUserPacket.command = "LookupUser";
-					lookupUserPacket.userId = siteChatPacket.userId;
+					if(!siteChatUser)
+					{
+						var lookupUserPacket = new Object();
+						lookupUserPacket.command = "LookupUser";
+						lookupUserPacket.userId = siteChatPacket.siteChatConversationMessage.userId;
 
-					client.sendSiteChatPacket(lookupUserPacket);
+						client.sendSiteChatPacket(lookupUserPacket);
+					}
 				}
 				else
-					client.addSiteChatConversationMessage(siteChatPacket, true, true);
+					client.addSiteChatConversationMessage(siteChatPacket.siteChatConversationMessage, true, true);
 			}
 		}
 		else if(siteChatPacket.command == "UserJoin")
@@ -416,8 +430,6 @@ function Client()
 			
 			if(client.chatWindows[ siteChatPacket.siteChatConversationId ] != undefined)
 				client.chatWindows[ siteChatPacket.siteChatConversationId ].userIdSet.push( siteChatPacket.siteChatUser.id );
-
-			console.log("User `" + siteChatPacket.siteChatUser.name + "` has joined chat #" + siteChatPacket.siteChatConversationId + ".");
 		}
 		else if(siteChatPacket.command == "LookupUser")
 		{
@@ -437,8 +449,6 @@ function Client()
 			{
 				console.log("Adding User From Lookup. User ID: " + siteChatPacket.siteChatUser.id + ", Name: " + siteChatPacket.siteChatUser.name);
 				client.addUser(siteChatPacket.siteChatUser, true);
-
-				console.log("Processing pending messages...");
 				client.processPendingMessages();
 			}
 		}
@@ -517,7 +527,7 @@ function Client()
 			return;
 		}
 
-		client.socket = new WebSocket("ws://localhost:4241", "site-chat");
+		client.socket = new WebSocket("ws://apollo.corbe.net:4241", "site-chat");
 		client.socket.onopen = client.handleSocketOpen;
 		client.socket.onclose = client.handleSocketClose;
 		client.socket.onmessage = client.handleSocketMessage;
