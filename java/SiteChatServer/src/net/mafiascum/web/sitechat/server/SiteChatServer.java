@@ -32,6 +32,7 @@ import net.mafiascum.web.sitechat.server.inboundpacket.operator.SiteChatInboundL
 import net.mafiascum.web.sitechat.server.inboundpacket.operator.SiteChatInboundLookupUserPacketOperator;
 import net.mafiascum.web.sitechat.server.inboundpacket.operator.SiteChatInboundPacketOperator;
 import net.mafiascum.web.sitechat.server.inboundpacket.operator.SiteChatInboundSendMessagePacketOperator;
+import net.mafiascum.web.sitechat.server.inboundpacket.operator.SiteChatInboundHeartbeatPacketOperator;
 import net.mafiascum.web.sitechat.server.outboundpacket.SiteChatOutboundConnectPacket;
 import net.mafiascum.web.sitechat.server.outboundpacket.SiteChatOutboundPacket;
 import net.mafiascum.web.sitechat.server.outboundpacket.SiteChatOutboundUserJoinPacket;
@@ -74,6 +75,7 @@ public class SiteChatServer extends Server implements SignalHandler {
     siteChatInboundPacketTypeToSiteChatInboundPacketOperatorMap.put(SiteChatInboundPacketType.sendMessage, new SiteChatInboundSendMessagePacketOperator());
     siteChatInboundPacketTypeToSiteChatInboundPacketOperatorMap.put(SiteChatInboundPacketType.leaveConversation, new SiteChatInboundLeaveConversationPacketOperator());
     siteChatInboundPacketTypeToSiteChatInboundPacketOperatorMap.put(SiteChatInboundPacketType.lookupUser, new SiteChatInboundLookupUserPacketOperator());
+    siteChatInboundPacketTypeToSiteChatInboundPacketOperatorMap.put(SiteChatInboundPacketType.heartbeat, new SiteChatInboundHeartbeatPacketOperator());
   }
   
   public static class SiteChatInboundPacketSkeleton {
