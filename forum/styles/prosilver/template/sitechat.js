@@ -283,8 +283,8 @@ function Client()
 		console.log("Chat Window: " + chatWindow);
 		
 		chatWindow.messages.push(siteChatConversationMessage);
-		if (siteChatUser.avatarUrl != 'http://forum.mafiascum.net/download/file.php?avatar='){
-			avatarUrl = siteChatUser.avatarUrl;
+		if (siteChatUser.avatarUrl != ''){
+			avatarUrl = 'http://forum.mafiascum.net/download/file.php?avatar=' + siteChatUser.avatarUrl;
 		}
 		else {
 			avatarUrl = defaultAvatar;
