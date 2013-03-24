@@ -14,6 +14,7 @@ import com.google.gson.Gson;
 public class SiteChatInboundHeartbeatPacketOperator implements SiteChatInboundPacketOperator {
 
   public void process(SiteChatServer siteChatServer, SiteChatWebSocket siteChatWebSocket, String siteChatInboundPacketJson) throws Exception {
-    MiscUtil.log("heartbeat");
+    SiteChatUser siteChatUser = siteChatWebSocket.getSiteChatUser();
+    siteChatServer.updateUserActivity(siteChatUser.getId());
   }
 }

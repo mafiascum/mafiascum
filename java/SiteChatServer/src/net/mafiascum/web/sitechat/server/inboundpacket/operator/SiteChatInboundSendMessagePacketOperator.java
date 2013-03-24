@@ -3,6 +3,7 @@ package net.mafiascum.web.sitechat.server.inboundpacket.operator;
 import net.mafiascum.web.sitechat.server.SiteChatServer;
 import net.mafiascum.web.sitechat.server.SiteChatServer.SiteChatWebSocket;
 import net.mafiascum.web.sitechat.server.SiteChatUtil;
+import net.mafiascum.web.sitechat.server.SiteChatUser;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationMessage;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationWithUserList;
 import net.mafiascum.web.sitechat.server.inboundpacket.SiteChatInboundSendMessagePacket;
@@ -15,12 +16,12 @@ public class SiteChatInboundSendMessagePacketOperator implements SiteChatInbound
   public void process(SiteChatServer siteChatServer, SiteChatWebSocket siteChatWebSocket, String siteChatInboundPacketJson) throws Exception {
 
     SiteChatInboundSendMessagePacket siteChatInboundSendMessagePacket = new Gson().fromJson(siteChatInboundPacketJson, SiteChatInboundSendMessagePacket.class);
-    
-    if(siteChatWebSocket.getSiteChatUser() == null) {
+    SiteChatUser siteChatUser = siteChatWebSocket.getSiteChatUser();
+    if( siteChatUser == null) {
       
       return;//User is not logged in.
     }
-    
+    siteChatServer.updateUserActivity(siteChatUser.getId());
     SiteChatConversationWithUserList siteChatConversationWithUserList = siteChatServer.getSiteChatConversationWithUserList(siteChatInboundSendMessagePacket.getSiteChatConversationId());
     
     if(siteChatConversationWithUserList == null) {

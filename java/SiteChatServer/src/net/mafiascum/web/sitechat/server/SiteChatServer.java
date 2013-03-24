@@ -63,6 +63,7 @@ public class SiteChatServer extends Server implements SignalHandler {
   
   protected ConcurrentLinkedQueue<SiteChatWebSocket> descriptors = new ConcurrentLinkedQueue<SiteChatWebSocket>();
   protected Map<Integer, SiteChatConversationWithUserList> siteChatConversationWithMemberListMap = new HashMap<Integer, SiteChatConversationWithUserList>();
+  protected Map<Integer, Date> userIdToLastActivityDatetime = new HashMap<Integer, Date>();
   protected Map<Integer, SiteChatUser> siteChatUserMap = new HashMap<Integer, SiteChatUser>();
   protected List<SiteChatConversationMessage> siteChatConversationMessagesToSave = new LinkedList<SiteChatConversationMessage>();
   protected SiteChatServerServiceThread serviceThread;
@@ -578,5 +579,8 @@ public class SiteChatServer extends Server implements SignalHandler {
       exception.printStackTrace();
     }
     
+  }
+  public void updateUserActivity(int userId) {
+    userIdToLastActivityDatetime.put(userId, new Date());
   }
 }

@@ -34,7 +34,7 @@ public class SiteChatInboundLogInPacketOperator implements SiteChatInboundPacket
       MiscUtil.log("Non Existant User Attempted To Log In. User ID: " + siteChatInboundLogInPacket.getUserId());
       return;
     }
-    
+    siteChatServer.updateUserActivity(siteChatUser.getId());
     boolean loginResult = siteChatServer.authenticateUserLogin(siteChatInboundLogInPacket.getUserId(), siteChatInboundLogInPacket.getSessionId());
     
     if(!loginResult) {

@@ -26,7 +26,7 @@ public class SiteChatInboundConnectPacketOperator implements SiteChatInboundPack
       MiscUtil.log("User trying to connect to chat without first logging in.");
       return;
     }
-    
+    siteChatServer.updateUserActivity(siteChatUser.getId());
     String siteChatConversationName = siteChatInboundConnectPacket.getSiteChatConversationName();
     
     //Truncate long conversation names.

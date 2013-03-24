@@ -24,7 +24,7 @@ public class SiteChatInboundLeaveConversationPacketOperator implements SiteChatI
       MiscUtil.log("User trying to leave conversation without first logging in.");
       return;
     }
-    
+    siteChatServer.updateUserActivity(siteChatUser.getId());
     siteChatConversationWithUserList = siteChatServer.getSiteChatConversationWithUserList(siteChatInboundLeaveConversationPacket.getSiteChatConversationId());
     
     if(siteChatConversationWithUserList == null) {

@@ -23,6 +23,7 @@ public class SiteChatInboundLookupUserPacketOperator implements SiteChatInboundP
       MiscUtil.log("User not logged in, looking up user. Target User ID: " + siteChatInboundLookupUserPacket.getUserId());
       return;
     }
+    siteChatServer.updateUserActivity(siteChatUser.getId());
     
     //Create the response
     SiteChatOutboundLookupUserPacket siteChatOutboundLookupUserPacket = new SiteChatOutboundLookupUserPacket();
