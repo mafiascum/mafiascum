@@ -157,7 +157,7 @@
 	border-left: 0px;
 	border-right:0px;
 	width: 100%;
-	cursor: auto;
+	cursor: text;
 }
 
 /*** Join a chat room ***/
@@ -173,6 +173,12 @@
 	margin: 0;
 	background-color:white;
 	padding: 5px;
+}
+.collapsed #joinconversationinput {
+	display: none;
+}
+.expanded #joinconversationinput {
+	cursor: text;
 }
 /*** Display user name ***/
 .chatWindow.collapsed .username{
