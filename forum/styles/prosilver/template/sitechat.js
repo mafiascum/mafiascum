@@ -14,7 +14,7 @@ function supportsHtml5Storage()
 
 function ChatWindow()
 {
-	this.id = undefined;
+	this.siteChatConversationId = undefined;
 	this.title = undefined;
 	this.expanded = false;
 	this.userIdSet = [];
@@ -85,9 +85,6 @@ function Client()
 		event.stopPropagation();
 		var $window = $(this).closest(".chatWindow");
 		var siteChatConversation = client.chatWindows[ parseInt($window.attr("id").replace("chat", "")) ];
-		if (siteChatConversation != null && siteChatConversation.blinking == true){
-			siteChatConversation.blinking = false;
-		}
 		
 		if($window.hasClass("expanded"))
 		{
@@ -104,13 +101,16 @@ function Client()
 			$window.addClass("expanded");
 			$($window).find('.title').stop(true);
 			$($window).find('.title').css('backgroundColor', '#4E89AD');
+			$window.show();
 			if(siteChatConversation){
 				siteChatConversation.expanded = true;
-				var outputbuffer = $("#chat" + siteChatConversation.id + " .outputBuffer");
-				outputbuffer.scrollTop(outputbuffer.scrollHeight);
+				var outputbuffer = $("#chat" + siteChatConversation.siteChatConversationId + " .outputBuffer");F
+				outputbuffer.scrollTop(outputbuffer[0].scrollHeight);
 			}
 		}
-		
+		if (siteChatConversation != null && siteChatConversation.blinking == true){
+			siteChatConversation.blinking = false;
+		}
 		if(siteChatConversation)
 			client.saveChatWindow(siteChatConversation);
 	}
@@ -223,7 +223,7 @@ function Client()
 		$("#chat" + conversationId + " .title .close").bind("click", client.handleWindowCloseButtonClick);
 		
 		var chatWindow = new ChatWindow();
-		chatWindow.id = conversationId;
+		chatWindow.siteChatConversationId = conversationId;
 		chatWindow.userIdSet = [];
 		chatWindow.title = title;
 		chatWindow.messages = [];
