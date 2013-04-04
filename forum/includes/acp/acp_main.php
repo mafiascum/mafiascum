@@ -507,52 +507,54 @@ class acp_main
 			ORDER BY start_time DESC LIMIT 1';
 		$result = $db->sql_query($sql);
 
-		$backupRow = $db->sql_fetchrow($result);
-		$db->sql_freeresult($result);
-		$backupId = $backupRow['id'];
-		$backupStatus = getBackupStatusName($backupRow['status']);
-		$backupStartTime = $backupRow['start_time'];
-		$backupStartTimestamp = strftime("%b %d, %Y %H:%M", $backupStartTime);
-		
-		$sql = 'SELECT
-		          status
-		        FROM ' . BACKUP_REMOTE_FILE_TABLE . '
-		        WHERE backup_id = ' . $backupId;
-		
-		$result = $db->sql_query($sql);
-		while($row = $db->sql_fetchrow($result))
+		if($backupRow = $db->sql_fetchrow($result))	//Ensure that we actually have a result to check against.
 		{
-			if($row['status'] == BACKUP_REMOTE_FILE_STATUS_PENDING)
-				++$pendingBackupRemoteFiles;
-			else if($row['status'] == BACKUP_REMOTE_FILE_STATUS_FAILED)
-				++$failedBackupRemoteFiles;
-			else if($row['status'] == BACKUP_REMOTE_FILE_STATUS_COMPLETE)
-				++$successfulBackupRemoteFiles;
+			$db->sql_freeresult($result);
+			$backupId = $backupRow['id'];
+			$backupStatus = getBackupStatusName($backupRow['status']);
+			$backupStartTime = $backupRow['start_time'];
+			$backupStartTimestamp = strftime("%b %d, %Y %H:%M", $backupStartTime);
+			
+			$sql = 'SELECT
+					status
+					FROM ' . BACKUP_REMOTE_FILE_TABLE . '
+					WHERE backup_id = ' . $backupId;
+			
+			$result = $db->sql_query($sql);
+			while($row = $db->sql_fetchrow($result))
+			{
+				if($row['status'] == BACKUP_REMOTE_FILE_STATUS_PENDING)
+					++$pendingBackupRemoteFiles;
+				else if($row['status'] == BACKUP_REMOTE_FILE_STATUS_FAILED)
+					++$failedBackupRemoteFiles;
+				else if($row['status'] == BACKUP_REMOTE_FILE_STATUS_COMPLETE)
+					++$successfulBackupRemoteFiles;
+			}
+			
+			if($failedBackupRemoteFiles > 0)
+			{
+				$backupFilesColor = "#BC2A4D";
+			}
+			else if($pendingBackupRemoteFiles > 0)
+			{
+				$backupFilesColor = "";
+			}
+			else
+			{
+				$backupFilesColor = "#282";
+			}
+			
+			if(time() - $backupStartTime > (24 * 60 * 60 * 2))
+			{
+				$backupTimeColor = "#BC2A4D";
+			}
+			else
+			{
+				$backupTimeColor = "";
+			}
+			
+			$db->sql_freeresult($result);
 		}
-		
-		if($failedBackupRemoteFiles > 0)
-		{
-			$backupFilesColor = "#BC2A4D";
-		}
-		else if($pendingBackupRemoteFiles > 0)
-		{
-			$backupFilesColor = "";
-		}
-		else
-		{
-			$backupFilesColor = "#282";
-		}
-		
-		if(time() - $backupStartTime > (24 * 60 * 60 * 2))
-		{
-			$backupTimeColor = "#BC2A4D";
-		}
-		else
-		{
-			$backupTimeColor = "";
-		}
-		
-		$db->sql_freeresult($result);
 		
 		$template->assign_vars(array(
 			'TOTAL_POSTS'		=> $total_posts,
@@ -576,9 +578,9 @@ class acp_main
 			'PENDING_FILES'		=> $pendingBackupRemoteFiles,
 			'FAILED_FILES'		=> $failedBackupRemoteFiles,
 			'SUCCESSFUL_FILES'	=> $successfulBackupRemoteFiles,
-			'BACKUP_TIMESTAMP'	=> $backupStartTimestamp,
-			'BACKUP_FILES_COLOR'	=> $backupFilesColor,
-			'BACKUP_TIME_COLOR'	=> $backupTimeColor,
+			'BACKUP_TIMESTAMP'	=> (isset($backupStartTimestamp)) ? $backupStartTimestamp : 'N/A',
+			'BACKUP_FILES_COLOR'	=> (isset($backupFilesColor)) ? $backupFilesColor : "#282",
+			'BACKUP_TIME_COLOR'	=> (isset($backupTimeColor)) ? $backupTimeColor : "#BC2A4D",
 
 			'U_ACTION'			=> $this->u_action,
 			'U_ADMIN_LOG'		=> append_sid("{$phpbb_admin_path}index.$phpEx", 'i=logs&amp;mode=admin'),

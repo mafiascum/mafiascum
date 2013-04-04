@@ -1569,6 +1569,7 @@ class user extends session
 		 
 		if ($mobile_browser > 0) {
 		   $mobile = true;
+
 		}
 		else {
 		   //echo "non-mobile view";

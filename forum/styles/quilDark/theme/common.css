@@ -26,20 +26,20 @@ body {
 
 h1 {
 	/* Forum name */
-	font-family: Verdana, Helvetica, Arial, sans-serif;
+	font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
 	margin-right: 200px;
 	color: #FFFFFF;
-	margin-top: 10px;
+	margin-top: 15px;
 	font-weight: bold;
-	font-size: 2.4em;
+	font-size: 2em;
 }
 
 h2 {
 	/* Forum header titles */
-	font-family: Verdana, Helvetica, Arial, sans-serif;
+	font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
 	font-weight: normal;
 	color: #3f3f3f;
-	font-size: 2.1em;
+	font-size: 2em;
 	margin: 0.8em 0 0.2em 0;
 }
 
@@ -49,8 +49,8 @@ h2.solo {
 
 h3 {
 	/* Sub-headers (also used as post headers, but defined later) */
-	font-family: Verdana, Helvetica, Arial, sans-serif;
-	font-weight: bold;
+	font-family: "Verdana", Arial, Helvetica, sans-serif;
+	font-weight: normal;
 	text-transform: uppercase;
 	border-bottom: 1px solid #CCCCCC;
 	margin-bottom: 3px;
@@ -62,14 +62,14 @@ h3 {
 
 h4 {
 	/* Forum and topic list titles */
-	font-family: Verdana, Helvetica, Arial, sans-serif;
+	font-family: "Trebuchet MS", Verdana, Helvetica, Arial, Sans-serif;
 	font-size: 1.3em;
 }
 
 p {
 	line-height: 1.3em;
 	font-size: 1.1em;
-	margin-bottom: 1.5em;
+	margin-bottom: 30px;
 }
 
 img {
@@ -103,7 +103,7 @@ p.right {
 ---------------------------------------- */
 #wrap {
 	padding: 0 20px;
-	min-width: 300px;
+	min-width: 650px;
 }
 
 #simple-wrap {
@@ -126,7 +126,7 @@ p.right {
 #logo {
 	float: left;
 	width: auto;
-	padding: 4px 20px 0 5px;
+	padding: 10px 13px 0 0px;
 }
 
 a#logo:hover {
@@ -147,7 +147,7 @@ a#logo:hover {
 }
 
 #search-box #keywords {
-	width: 105px;
+	width: 95px;
 	background-color: #FFF;
 }
 
@@ -183,26 +183,32 @@ a#logo:hover {
 /* Round cornered boxes and backgrounds
 ---------------------------------------- */
 .headerbar {
-	background: #2D2D2D none repeat-x 0 0;
+	background: #ebebeb none repeat-x 0 0;
 	color: #FFFFFF;
 	margin-bottom: 4px;
 	padding: 0 5px;
+	display: none;
 }
 
 .navbar {
 	background-color: #ebebeb;
 	padding: 0 10px;
+	margin: 15px 0 25px 0;
+}
+
+.navbar a {
+	color: #cfcfcf !important;
 }
 
 .forabg {
 	background: #b1b1b1 none repeat-x 0 0;
-	margin-bottom: 4px;
+	margin-top: 10px;
 	padding: 0 5px;
 	clear: both;
 }
 
 .forumbg {
-	background: #232323 none repeat-x 0 0;
+	background: #ebebeb none repeat-x 0 0;
 	margin-bottom: 4px;
 	padding: 0 5px;
 	clear: both;
@@ -307,7 +313,7 @@ ul.linklist li {
 	float: left;
 	width: auto;
 	margin-right: 5px;
-	font-size: 1.1em;
+	font-size: 1.05em;
 	line-height: 2.2em;
 }
 
@@ -316,18 +322,32 @@ ul.linklist li.rightside, p.rightside {
 	margin-right: 0;
 	margin-left: 5px;
 	text-align: right;
+	color: #cfcfcf !important;
+}
+
+ul.linklist li {
+	color: #cf1c1c !important;
+}
+
+ul.linklist li.lastvisit {
+	color: #cfcfcf !important;
+}
+
+#page-footer ul.linklist li.rightside {
+	color: #cf1c1c !important;
 }
 
 ul.navlinks {
 	padding-bottom: 1px;
 	margin-bottom: 1px;
 	border-bottom: 1px solid #FFFFFF;
-	font-weight: bold;
+	font-weight: normal;
 }
 
-ul.navlinks-footer {
-	padding-top: 4px;
-	border-top: 1px solid #CF3434;
+ul.logo-navlinks {
+	padding-bottom: 1px;
+	margin-bottom: 1px;
+	border-bottom: 1px solid #FFFFFF;
 	font-weight: bold;
 }
 
@@ -349,7 +369,6 @@ ul.rightside {
 ----------------------------------------*/
 table.table1 {
 	/* See tweaks.css */
-	border-collapse: collapse;
 }
 
 #ucp-main table.table1 {
@@ -370,7 +389,7 @@ table.table1 thead th span {
 }
 
 table.table1 tbody tr {
-	/* border: none; */
+	border: 1px solid #cfcfcf;
 }
 
 table.table1 tbody tr:hover, table.table1 tbody tr.hover {
@@ -385,7 +404,7 @@ table.table1 td {
 
 table.table1 tbody td {
 	padding: 5px;
-	/* border-top: 1px solid #FAFAFA; */
+	border-top: 1px solid #FAFAFA;
 }
 
 table.table1 tbody th {
@@ -458,7 +477,7 @@ table.info tbody th {
 }
 
 dl.details {
-	/*font-family: Verdana, Helvetica, Arial, sans-serif;*/
+	/*font-family: "Lucida Grande", Verdana, Helvetica, Arial, sans-serif;*/
 	font-size: 1.1em;
 }
 
@@ -478,12 +497,6 @@ dl.details dd {
 	color: #828282;
 	float: left;
 	width: 65%;
-}
-
-ul.watchedtopics {
-	float: right;
-	font-weight: bold;
-	padding: 4px;
 }
 
 /* Pagination
@@ -525,7 +538,7 @@ li.pagination {
 	margin: 0 2px;
 	padding: 0 2px;
 	background-color: #eeeeee;
-	/* border: 1px solid #bababa; */
+	border: 1px solid #bababa;
 	font-size: 0.9em;
 	line-height: 1.5em;
 }
@@ -572,9 +585,15 @@ li.pagination {
 }
 
 .copyright {
-	padding: 5px;
-	text-align: center;
+	padding: 5px 0px 0px 0px;
+	text-align: left;
 	color: #555555;
+	position: relative;
+	bottom: 25px;
+}
+
+.copyright a {
+	color: #cf1c1c !important;
 }
 
 .small {

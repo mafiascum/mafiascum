@@ -38,7 +38,7 @@ ul.topiclist dt {
 ul.topiclist dd {
 	display: block;
 	float: left;
-	/* border-left: 1px solid #FFFFFF; */
+	border-left: 1px solid #FFFFFF;
 	padding: 4px 0;
 }
 
@@ -65,8 +65,8 @@ ul.topiclist li.row dt a.subforum {
 }
 
 li.row {
-	padding-top: 2px;
-	padding-bottom: 2px;
+	border-top: 1px solid #FFFFFF;
+	border-bottom: 1px solid #8f8f8f;
 }
 
 li.row strong {
@@ -89,8 +89,9 @@ li.header dt, li.header dd {
 	color: #FFFFFF;
 	padding-top: 2px;
 	padding-bottom: 2px;
-	font-size: 1em;
-	font-family: Verdana, Helvetica, Arial, sans-serif;
+	font-size: 1.1em;
+	font-family: "Verdana", Arial, Helvetica, sans-serif;
+	font-weight: normal !important;
 	text-transform: uppercase;
 }
 
@@ -99,7 +100,6 @@ li.header dt {
 }
 
 li.header dd {
-	font-weight: bold;
 	margin-left: 1px;
 }
 
@@ -110,7 +110,7 @@ li.header dl.icon {
 li.header dl.icon dt {
 	/* Tweak for headers alignment when folder icon used */
 	padding-left: 0;
-	padding-right: 60px;
+	padding-right: 50px;
 }
 
 /* Forum list column styles */
@@ -121,9 +121,9 @@ dl.icon {
 }
 
 dl.icon dt {
-	padding-left: 55px;					/* Space for folder icon */
+	padding-left: 45px;					/* Space for folder icon */
 	background-repeat: no-repeat;
-	background-position: 5px 25%;		/* Position of topic icon */
+	background-position: 5px 95%;		/* Position of topic icon */
 }
 
 dd.posts, dd.topics, dd.views {
@@ -146,7 +146,7 @@ dl.icon dt li {
 }
 
 dd.lastpost {
-	width: 20%;
+	width: 25%;
 	font-size: 1.1em;
 }
 
@@ -230,8 +230,9 @@ div[class].topic-actions {
 	padding: 0;
 	line-height: 1.48em;
 	color: #333333;
-	width: auto;
-	margin: 0 0 0 175px;
+	width: 76%;
+	float: left;
+	clear: both;
 }
 
 .postbody .ignore {
@@ -250,7 +251,7 @@ div[class].topic-actions {
 	margin: 0 0 0.3em 0 !important;
 	text-transform: none;
 	border: none;
-	font-family: Verdana, Helvetica, Arial, sans-serif;
+	font-family: "Trebuchet MS", Verdana, Helvetica, Arial, sans-serif;
 	line-height: 125%;
 }
 
@@ -265,14 +266,6 @@ div[class].topic-actions {
 
 .search .postbody {
 	width: 68%
-}
-
-.postbody img {
-	max-width: 800px;   
-}
-
-.panel .inner .postbody {
-	margin: 0 0 0 10px;
 }
 
 /* Topic review panel
@@ -326,9 +319,9 @@ div[class].topic-actions {
 	min-height: 3em;
 	overflow: hidden;
 	line-height: 1.4em;
-	font-family: Verdana, Helvetica, Arial, sans-serif;
+	font-family: "Lucida Grande", "Trebuchet MS", Verdana, Helvetica, Arial, sans-serif;
 	font-size: 1em;
-	color: #000000;
+	color: #333333;
 	padding-bottom: 1px;
 }
 
@@ -353,14 +346,14 @@ div[class].topic-actions {
 }
 
 .content p {
-	font-family: Verdana, Helvetica, Arial, sans-serif;
+	font-family: "Lucida Grande", "Trebuchet MS", Verdana, Helvetica, Arial, sans-serif;
 	font-size: 1.2em;
 	margin-bottom: 1em;
 	line-height: 1.4em;
 }
 
 dl.faq {
-	font-family: Verdana, Helvetica, Arial, sans-serif;
+	font-family: "Lucida Grande", Verdana, Helvetica, Arial, sans-serif;
 	font-size: 1.1em;
 	margin-top: 1em;
 	margin-bottom: 2em;
@@ -410,11 +403,11 @@ p.author {
 /* Post signature */
 .signature {
 	margin-top: 1.5em;
-	padding-top: 0.3em;
-	padding-bottom: 0.4em;
+	padding-top: 0.2em;
 	font-size: 1.1em;
 	border-top: 1px solid #CCCCCC;
-	line-height: 120%;
+	clear: left;
+	line-height: 140%;
 	overflow: hidden;
 	width: 100%;
 }
@@ -435,9 +428,9 @@ dd .signature {
 	margin-left: 3em;
 }
 
-/* Post notices */
+/* Post noticies */
 .notice {
-	font-family: Verdana, Helvetica, Arial, sans-serif;
+	font-family: "Lucida Grande", Verdana, Helvetica, Arial, sans-serif;
 	width: auto;
 	margin-top: 1.5em;
 	padding-top: 0.2em;
@@ -474,11 +467,6 @@ blockquote blockquote {
 }
 
 blockquote blockquote blockquote {
-	/* Nested quotes */
-	background-color: #e4e4e4;
-}
-
-blockquote blockquote blockquote blockquote {
 	/* Nested quotes */
 	background-color: #e4e4e4;
 }
@@ -535,43 +523,6 @@ dl.codebox code {
 	margin: 2px 0;
 }
 
-/* Dice block */
-div.dicebox {
-	background-color: #FFF7DF;
-	border: 1px solid #47751D;
-	font-size: 1em;
-	min-width: 100px;
-}
-
-div.dicetop {
-	text-transform: uppercase;
-	border-bottom: 1px solid  #47751D;
-	padding: 3px;
-	font-size: 0.8em;
-	font-weight: bold;
-	margin-left: 1em;
-	margin-right: 2em;
-	display: block;
-}
-
-div.diceroll {
-	text-transform: uppercase;
-	padding: 3px;
-	font-size: 0.8em;
-	display: block;
-	margin-left: 1em;
-	margin-right: 2em; 
-}
-
-
-div.dicetop fixed {
-    color:  #C42927;
-}
-
-div.diceroll emph {
-   font-weight: bold;
-}
-
 .syntaxbg		{ color: #FFFFFF; }
 .syntaxcomment	{ color: #000000; }
 .syntaxdefault	{ color: #bcbcbc; }
@@ -596,7 +547,7 @@ div.diceroll emph {
 }
 
 .attachbox dt {
-	font-family: Verdana, Helvetica, Arial, sans-serif;
+	font-family: Arial, Helvetica, sans-serif;
 	text-transform: uppercase;
 }
 
@@ -650,7 +601,7 @@ div.inline-attachment p {
 }
 
 dl.file {
-	font-family: Verdana, Helvetica, Arial, sans-serif;
+	font-family: Verdana, Arial, Helvetica, sans-serif;
 	display: block;
 }
 
@@ -695,7 +646,7 @@ dl.thumbnail dt a:hover img {
 /* Post poll styles
 ----------------------------------------*/
 fieldset.polls {
-	font-family: Verdana, Helvetica, Arial, sans-serif;
+	font-family: "Trebuchet MS", Verdana, Helvetica, Arial, sans-serif;
 }
 
 fieldset.polls dl {
@@ -741,7 +692,7 @@ fieldset.polls dd input {
 
 fieldset.polls dd div {
 	text-align: right;
-	font-family: Verdana, Helvetica, Arial, sans-serif;
+	font-family: Arial, Helvetica, sans-serif;
 	color: #FFFFFF;
 	font-weight: bold;
 	padding: 0 2px;
@@ -781,44 +732,23 @@ fieldset.polls dd div {
 
 /* Poster profile block
 ----------------------------------------*/
-.postprofilecontainer {
-	width: 170px;
-	float: left;
-	margin-right: 3px;
-	margin-bottom: 3px;
-	min-height: 100px;
-	border-right: 2px solid #232323;
-}
-
-.pmprofilecontainer {
-	width: 120px;
-	float: left;
-	margin-right: 3px;
-	margin-bottom: 3px;
-	border-right: 2px solid #F9F9F9;
-}
-
 .postprofile {
 	/* Also see tweaks.css */
-	margin: 5px 0;
-	padding-bottom: 5px;
+	margin: 5px 0 10px 0;
 	min-height: 80px;
 	color: #666666;
-	min-width: 150px;
+	border-left: 1px solid #FFFFFF;
+	width: 22%;
+	float: right;
 	display: inline;
 }
 .pm .postprofile {
-	border-right: 2px solid #F9F9F9;
+	border-left: 1px solid #DDDDDD;
 }
 
-.postprofile dd, .postprofile dt, .postprofile img {
+.postprofile dd, .postprofile dt {
 	line-height: 1.2em;
-	margin-top: 1px;
-}
-
-.postprofile .microbadges{
-	float:right;
-	margin-right:3px;
+	margin-left: 8px;
 }
 
 .postprofile strong {
