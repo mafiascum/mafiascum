@@ -1735,6 +1735,10 @@ function get_unread_topics($user_id = false, $sql_extra = '', $sql_sort = '', $s
 					'FROM'	=> array(FORUMS_TRACK_TABLE => 'ft'),
 					'ON'	=> "ft.user_id = $user_id AND t.forum_id = ft.forum_id",
 				),
+				array(
+					'FROM' => array(phpbb_private_topic_users => 'ptu'),
+					'ON'   => "(" . "t.is_private=1 AND ptu.user_id =" . $user->data['user_id'] . " AND t.topic_id=ptu.topic_id)",
+				),
 			),
 
 			'WHERE'			=> "
