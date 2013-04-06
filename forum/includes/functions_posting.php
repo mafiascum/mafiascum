@@ -2251,7 +2251,7 @@ function submit_post($mode, $subject, $username, $topic_type, &$poll, &$data, $u
 	// we need to update the last forum information
 	// only applicable if the topic is not global and it is approved
 	// we also check to make sure we are not dealing with globaling the latest topic (pretty rare but still needs to be checked)
-	if ($topic_type != POST_GLOBAL && !$make_global && ($post_approved || !$data['post_approved']) && $data['is_private'])
+	if ($topic_type != POST_GLOBAL && !$make_global && ($post_approved || !$data['post_approved']) && $topic_privacy)
 	{
 		// the last post makes us update the forum table. This can happen if...
 		// We make a new topic
@@ -2341,7 +2341,7 @@ function submit_post($mode, $subject, $username, $topic_type, &$poll, &$data, $u
 			}
 		}
 	}
-	else if ($make_global)
+	else if ($make_global || ($topic_privacy && !$data['is_private']))
 	{
 		// somebody decided to be a party pooper, we must recalculate the whole shebang (maybe)
 		$sql = 'SELECT forum_last_post_id
