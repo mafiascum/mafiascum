@@ -279,6 +279,7 @@ function mcp_forum_view($id, $mode, $action, $forum_info)
 				'U_MCP_QUEUE'		=> $u_mcp_queue,
 				'U_MCP_REPORT'		=> ($auth->acl_get('m_report', $forum_id)) ? append_sid("{$phpbb_root_path}mcp.$phpEx", 'i=main&amp;mode=topic_view&amp;t=' . $row['topic_id'] . '&amp;action=reports') : '',
 				'TOPIC_ID'			=> $row['topic_id'],
+				'IS_PRIVATE'		=> $row['is_private'],	
 				'S_TOPIC_CHECKED'	=> ($topic_id_list && in_array($row['topic_id'], $topic_id_list)) ? true : false,
 			));
 		}
