@@ -64,7 +64,7 @@ function toggle_user_select_display(contractOrExpand) {
 	}
 }
 
-function quote (post_id, username, forum, topic){
+function quote (post_id, username, forum, topic, event){
 	var append= "./posting.php?mode=";
 	if (!addRemovePost(post_id))
 	{
@@ -82,7 +82,25 @@ function quote (post_id, username, forum, topic){
 		append += "multi&f=" + forum + getPHPArrayMultiPostIds();
 		eraseMultiCookie(topic);
 	}
-	window.location = append;
+	if ('which' in event){
+		if (event.which=='2')
+		{
+			window.open(append,'');
+		}
+		else{
+			window.open(append,'_self');
+		}
+	}
+	else if('button' in event){
+		if (event.button=='4')
+		{
+			window.open(append,'');
+		}
+		else{
+			window.open(append,'_self');
+		}
+	}
+
 	return false;
 }
 function replyquote (topic_id, forum){
@@ -228,13 +246,14 @@ function postNotContains(post_id, text){
 
 //Strips HTML from a string
 function stripHTML(text){
-	var strippedText = text.replace(/<br>/ig, '\n');
+	var strippedText = text.replace(/<\/?[^>]+(>|$)/ig, "")
+	strippedText = strippedText.replace(/<br>/ig, '\n');
 	strippedText = strippedText.replace(/<br\/>/ig, '\n');
 	strippedText = strippedText.replace(/&lt\;/ig, '<');
 	strippedText = strippedText.replace(/&gt\;/ig, '>');
 	strippedText = strippedText.replace(/&amp\;/ig, '&');
 	strippedText = strippedText.replace(/&nbsp\;/ig, ' ');
-	return strippedText.replace(/<\/?[^>]+(>|$)/g, "");	
+	return ;	
 }
 //Strips whitespace from a string
 function stripWhiteSpace(text){

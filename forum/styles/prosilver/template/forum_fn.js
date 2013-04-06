@@ -35,6 +35,55 @@ function jumpto()
 		}
 	}
 }
+function jumptopage(page)
+{
+	if (page !== null && !isNaN(page) && page == Math.floor(page) && page > 0)
+	{
+		if (base_url.indexOf('?') == -1)
+		{
+			document.location.href = base_url + '?start=' + ((page - 1) * per_page);
+		}
+		else
+		{
+			document.location.href = base_url.replace(/&amp;/g, '&') + '&start=' + ((page - 1) * per_page);
+		}
+	}
+}
+$(document).ready(function() {
+	$('#jumpto1').keyup(function(e) {
+			jumptobinding(e, '#jumpto1');
+		});
+	$('#jumpto2').keyup(function(e) {
+			jumptobinding(e, '#jumpto2');
+		});
+	$('.repeatable-add').click(function() {
+		field2 = $(this).closest('div')
+        field = $(this).closest('div').find('.custom_repeatable li:last').clone(true);
+		console.log(field);
+        fieldLocation = $(this).closest('div').find('.custom_repeatable li:last');
+		console.log(fieldLocation);		
+        $('input', field).val('').attr('name', function(index, name) {  
+			console.log('hello');
+            return name.replace(/(\d+)/, function(fullMatch, n) {  
+				return Number(n) + 1; 
+				
+            });
+        }); 
+        field.insertAfter(fieldLocation, $(this).closest('li')) ; 
+        return false;  
+    });  
+      
+    $('.repeatable-remove').click(function(){  
+        $(this).parent().remove();  
+        return false;  
+    });  
+});
+
+function jumptobinding(e, id){
+	if(e.keyCode == 13 || e.keyCode == 10) {
+			jumptopage($(id).val());
+		}
+}
 
 /**
 * Mark/unmark checklist

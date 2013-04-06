@@ -23,8 +23,7 @@ include($phpbb_root_path . 'includes/message_parser.' . $phpEx);
 // Start session management
 $user->session_begin();
 $auth->acl($user->data);
-
-
+include($phpbb_root_path . 'includes/functions_user.' . $phpEx);
 // Grab only parameters needed here
 $post_id	= request_var('p', 0);
 $topic_id	= request_var('t', 0);
@@ -712,6 +711,17 @@ if ($load && ($mode == 'reply' || $mode == 'quote' || $mode == 'multi' || $mode 
 	load_drafts($topic_id, $forum_id);
 }
 
+//PRIVATE TOPICS
+	$private_users_old = array();
+	$sql = 'SELECT user_id FROM phpbb_private_topic_users WHERE permission_type=1 AND topic_id=' . $topic_id;
+	$result = $db->sql_query($sql);
+	while ($row = $db->sql_fetchrow($result)){
+		$private_users_old[] = $row['user_id'];
+	}
+	$db->sql_freeresult($result);
+	$post_data['private_users'] = $private_users_old;
+//
+
 if ($submit || $preview || $refresh)
 {
 	$post_data['topic_cur_post_id']	= request_var('topic_cur_post_id', 0);
@@ -817,6 +827,43 @@ if ($submit || $preview || $refresh)
 
 	$post_data['orig_topic_type']	= $post_data['topic_type'];
 	$post_data['topic_type']		= request_var('topic_type', (($mode != 'post') ? (int) $post_data['topic_type'] : POST_NORMAL));
+	
+	// PRIVATE TOPICS
+	if ($forum_id ==6){
+		$post_data['is_private_old']	= $post_data['is_private'];
+		$post_data['is_private']	= request_var('topic_privacy', (($mode != 'post') ? $post_data['is_private'] : 0));
+		if ($post_data['is_private']){
+			$post_data['private_users'] = array();
+			$private_users	= isset($_REQUEST['private_users']) ? $_REQUEST['private_users'] : array();
+			if (!is_array($private_users)){
+				$private_users = array();
+			}
+			if (sizeof($private_users)){
+				$user_id_ary = array();
+				user_get_id_name($user_id_ary, $private_users, array(USER_NORMAL, USER_FOUNDER));
+				$post_data['private_users'] = $user_id_ary;
+				if(!sizeof($user_id_ary)){
+					$error[] = $user->lang['PM_NO_USERS'];
+				}
+			}
+			$private_users_add = array_diff($post_data['private_users'], $private_users_old);
+			$private_users_remove = array_diff ($private_users_old, $post_data['private_users']);
+			if (sizeof($private_users_remove)){
+				$sql = 'DELETE FROM phpbb_private_topic_users WHERE topic_id=' . $topic_id . ' AND user_id IN(' . implode(',',$private_users_remove) . ');';
+				$db->sql_query($sql);
+			}
+			if (sizeof($private_users_add)){
+				foreach ($private_users_add as $users){
+					if (($mode=='post' && $users != $user->data['user_id']) || ($mode=='edit' && $users != $post_data['topic_poster'])){
+						$sql = 'INSERT INTO phpbb_private_topic_users (user_id, topic_id, permission_type) VALUES('.$users .','.$topic_id .',1);';
+						$db->sql_query($sql);
+					}
+				}
+				
+			}
+		}
+	}
+	// END PRIVATE TOPICS
 	$post_data['topic_time_limit']	= request_var('topic_time_limit', (($mode != 'post') ? (int) $post_data['topic_time_limit'] : 0));
 
 	if ($post_data['enable_icons'] && $auth->acl_get('f_icons', $forum_id))
@@ -1009,8 +1056,7 @@ if ($submit || $preview || $refresh)
 	// Validate username
 	if (($post_data['username'] && !$user->data['is_registered']) || ($mode == 'edit' && $post_data['poster_id'] == ANONYMOUS && $post_data['username'] && $post_data['post_username'] && $post_data['post_username'] != $post_data['username']))
 	{
-		include($phpbb_root_path . 'includes/functions_user.' . $phpEx);
-
+		//include($phpbb_root_path . 'includes/functions_user.' . $phpEx);
 		$user->add_lang('ucp');
 
 		if (($result = validate_username($post_data['username'], (!empty($post_data['post_username'])) ? $post_data['post_username'] : '')) !== false)
@@ -1282,7 +1328,7 @@ if ($submit || $preview || $refresh)
 				'message'				=> $message_parser->message,
 				'attachment_data'		=> $message_parser->attachment_data,
 				'filename_data'			=> $message_parser->filename_data,
-
+				'is_private'			=> !$post_data['is_private_old'],
 				'topic_approved'		=> (isset($post_data['topic_approved'])) ? $post_data['topic_approved'] : false,
 				'post_approved'			=> (isset($post_data['post_approved'])) ? $post_data['post_approved'] : false,
 			);
@@ -1294,8 +1340,8 @@ if ($submit || $preview || $refresh)
 			}
 
 			// The last parameter tells submit_post if search indexer has to be run
-			$redirect_url = submit_post($mode, $post_data['post_subject'], $post_data['username'], $post_data['topic_type'], $poll, $data, $update_message, ($update_message || $update_subject) ? true : false);
-
+			$redirect_url = submit_post($mode, $post_data['post_subject'], $post_data['username'], $post_data['topic_type'], $poll, $data, $update_message, ($update_message || $update_subject) ? true : false, !$post_data['is_private']);
+			
 			if ($config['enable_post_confirm'] && !$user->data['is_registered'] && (isset($captcha) && $captcha->is_solved() === true) && ($mode == 'post' || $mode == 'reply' || $mode == 'quote' || $mode == 'select' || $mode == 'multi'))
 			{
 				$captcha->reset();
@@ -1619,10 +1665,13 @@ posting_gen_inline_attachments($attachment_data);
 
 // Do show topic type selection only in first post.
 $topic_type_toggle = false;
-
+$forum_allow_private = false;
 if ($mode == 'post' || ($mode == 'edit' && $post_id == $post_data['topic_first_post_id']))
 {
 	$topic_type_toggle = posting_gen_topic_types($forum_id, $post_data['topic_type']);
+	if ($forum_id==6){
+		$forum_allow_private = true;
+	}
 }
 
 $s_topic_icons = false;
@@ -1703,6 +1752,25 @@ if (isset($captcha) && $captcha->is_solved() !== false)
 $form_enctype = (@ini_get('file_uploads') == '0' || strtolower(@ini_get('file_uploads')) == 'off' || !$config['allow_attachments'] || !$auth->acl_get('u_attach') || !$auth->acl_get('f_attach', $forum_id)) ? '' : ' enctype="multipart/form-data"';
 add_form_key('posting');
 
+//PRIVATE USERS
+if (sizeof($post_data['private_users']) && $forum_id==6){
+$count = 0;
+	$user_name_ary = array();
+	$user_ids = $post_data['private_users'];
+	user_get_id_name($user_ids, $user_name_ary, array(USER_NORMAL, USER_FOUNDER));
+	foreach ($post_data['private_users'] as $users){
+			$template->assign_block_vars('private_users', array(
+				'NAME'		=> 'private_users[' . $count . ']',
+				'ID'		=> 'private_users[' . $count . ']',
+				'VALUE'		=> $user_name_ary[$users],
+				'NUM'		=> $count
+			));
+			$count++;
+	}
+}
+//END PRIVATE USERS
+//print_r($post_data['private_users']);
+//print_r(sizeof($post_data['private_users']));
 // Start assigning vars for main posting page ...
 $template->assign_vars(array(
 	'L_POST_A'					=> $page_title,
@@ -1731,7 +1799,13 @@ $template->assign_vars(array(
 	'U_VIEW_TOPIC'			=> ($mode != 'post') ? append_sid("{$phpbb_root_path}viewtopic.$phpEx", "f=$forum_id&amp;t=$topic_id") : '',
 	'U_PROGRESS_BAR'		=> append_sid("{$phpbb_root_path}posting.$phpEx", "f=$forum_id&amp;mode=popup"),
 	'UA_PROGRESS_BAR'		=> addslashes(append_sid("{$phpbb_root_path}posting.$phpEx", "f=$forum_id&amp;mode=popup")),
-
+	
+	'HAS_PRIVATE_USERS'			=> sizeof($post_data['private_users']),
+	'S_ALLOW_PRIVATE'			=> $forum_allow_private,
+	'S_PUBLIC'					=> (($mode == 'post') ? (false): ($post_data['is_private'])),
+	'PRIVATE_USER_NAME'			=> 'private_users[0]',
+	'PRIVATE_USER_ID'			=> 'private_users[0]',
+	
 	'S_PRIVMSGS'				=> false,
 	'S_CLOSE_PROGRESS_WINDOW'	=> (isset($_POST['add_file'])) ? true : false,
 	'S_EDIT_POST'				=> ($mode == 'edit') ? true : false,

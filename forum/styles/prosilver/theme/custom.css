@@ -41,7 +41,8 @@ display:inline-block;
 width:5px;
 height:5px;
 position:relative;
-bottom:-.5em;
+vertical-align:middle;
+margin-bottom:.1em;
 border-radius:5px;
 margin-right:3px;
 background-color:#d90000;
@@ -52,7 +53,8 @@ display:inline-block;
 width:5px;
 height:5px;
 position:relative;
-bottom:-.5em;
+vertical-align:middle;
+margin-bottom:.1em;
 border-radius:5px;
 margin-right:3px;
 background-color:#0000FF;
@@ -60,4 +62,7 @@ background-color:#0000FF;
 /*Unread Indicator Legend*/
 .indi-legend{
 margin-bottom:6px;
+}
+#add_private_topic_user li {
+	list-style-type: none;
 }

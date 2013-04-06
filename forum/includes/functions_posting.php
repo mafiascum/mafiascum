@@ -1635,7 +1635,7 @@ function delete_post($forum_id, $topic_id, $post_id, &$data)
 * Submit Post
 * @todo Split up and create lightweight, simple API for this.
 */
-function submit_post($mode, $subject, $username, $topic_type, &$poll, &$data, $update_message = true, $update_search_index = true)
+function submit_post($mode, $subject, $username, $topic_type, &$poll, &$data, $update_message = true, $update_search_index = true, $topic_privacy = true)
 {
 	global $db, $auth, $user, $config, $phpEx, $template, $phpbb_root_path;
 
@@ -1825,6 +1825,7 @@ function submit_post($mode, $subject, $username, $topic_type, &$poll, &$data, $u
 				'topic_first_poster_name'	=> (!$user->data['is_registered'] && $username) ? $username : (($user->data['user_id'] != ANONYMOUS) ? $user->data['username'] : ''),
 				'topic_first_poster_colour'	=> $user->data['user_colour'],
 				'topic_type'				=> $topic_type,
+				'is_private'				=> !$topic_privacy,
 				'topic_time_limit'			=> ($topic_type == POST_STICKY || $topic_type == POST_ANNOUNCE) ? ($data['topic_time_limit'] * 86400) : 0,
 				'topic_attachment'			=> (!empty($data['attachment_data'])) ? 1 : 0,
 			);
@@ -1856,11 +1857,11 @@ function submit_post($mode, $subject, $username, $topic_type, &$poll, &$data, $u
 
 			if ($topic_type != POST_GLOBAL)
 			{
-				if ($post_approval)
+				if ($post_approval && $topic_privacy)
 				{
 					$sql_data[FORUMS_TABLE]['stat'][] = 'forum_posts = forum_posts + 1';
 				}
-				$sql_data[FORUMS_TABLE]['stat'][] = 'forum_topics_real = forum_topics_real + 1' . (($post_approval) ? ', forum_topics = forum_topics + 1' : '');
+				$sql_data[FORUMS_TABLE]['stat'][] = 'forum_topics_real = forum_topics_real + 1' . ((($post_approval) && ($topic_privacy)) ? ', forum_topics = forum_topics + 1' : '');
 			}
 		break;
 
@@ -1904,6 +1905,7 @@ function submit_post($mode, $subject, $username, $topic_type, &$poll, &$data, $u
 				'topic_title'				=> $subject,
 				'topic_first_poster_name'	=> $username,
 				'topic_type'				=> $topic_type,
+				'is_private'				=> !$topic_privacy,
 				'topic_time_limit'			=> ($topic_type == POST_STICKY || $topic_type == POST_ANNOUNCE) ? ($data['topic_time_limit'] * 86400) : 0,
 				'poll_title'				=> (isset($poll['poll_options'])) ? $poll['poll_title'] : '',
 				'poll_start'				=> (isset($poll['poll_options'])) ? $poll_start : 0,
@@ -1945,7 +1947,20 @@ function submit_post($mode, $subject, $username, $topic_type, &$poll, &$data, $u
 					$sql_data[USERS_TABLE]['stat'][] = 'user_posts = user_posts - 1';
 				}
 			}
-
+			if (!$topic_privacy && $data['is_private']){
+				$sql_data[FORUMS_TABLE]['stat'][] = 'forum_topics = forum_topics - 1';
+				$sql_data[FORUMS_TABLE]['stat'][] = 'forum_posts = forum_posts - ' . ($topic_row['topic_replies'] + 1);
+				$sql = "INSERT INTO phpbb_private_topic_users (topic_id, user_id, permission_type) VALUES (" . $data['topic_id'] . ',' . $data['poster_id'] . ",2);";
+				$db->sql_query($sql);
+			}
+			elseif ($topic_privacy && !$data['is_private']){
+				$sql_data[FORUMS_TABLE]['stat'][] = 'forum_topics = forum_topics + 1';
+				$sql_data[FORUMS_TABLE]['stat'][] = 'forum_posts = forum_posts + ' . ($topic_row['topic_replies'] + 1);
+				$sql = "DELETE FROM phpbb_private_topic_users WHERE topic_id=" . $data['topic_id'] . ";";
+				$db->sql_query($sql);
+				
+			}
+			
 		break;
 
 		case 'edit':
@@ -1980,6 +1995,10 @@ function submit_post($mode, $subject, $username, $topic_type, &$poll, &$data, $u
 		$sql_data[POSTS_TABLE]['sql'] = array_merge($sql_data[POSTS_TABLE]['sql'], array(
 			'topic_id' => $data['topic_id'])
 		);
+		if (!$topic_privacy){
+			$sql = "INSERT INTO phpbb_private_topic_users (topic_id, user_id, permission_type) VALUES (" . $data['topic_id'] . ',' . $data['poster_id']. ",2);";
+			$db->sql_query($sql);
+		}
 		unset($sql_data[TOPICS_TABLE]['sql']);
 	}
 
@@ -2232,7 +2251,7 @@ function submit_post($mode, $subject, $username, $topic_type, &$poll, &$data, $u
 	// we need to update the last forum information
 	// only applicable if the topic is not global and it is approved
 	// we also check to make sure we are not dealing with globaling the latest topic (pretty rare but still needs to be checked)
-	if ($topic_type != POST_GLOBAL && !$make_global && ($post_approved || !$data['post_approved']))
+	if ($topic_type != POST_GLOBAL && !$make_global && ($post_approved || !$data['post_approved']) && $data['is_private'])
 	{
 		// the last post makes us update the forum table. This can happen if...
 		// We make a new topic
@@ -2327,7 +2346,7 @@ function submit_post($mode, $subject, $username, $topic_type, &$poll, &$data, $u
 		// somebody decided to be a party pooper, we must recalculate the whole shebang (maybe)
 		$sql = 'SELECT forum_last_post_id
 			FROM ' . FORUMS_TABLE . '
-			WHERE forum_id = ' . (int) $data['forum_id'];
+			WHERE forum_id = ' . (int) $data['forum_id'] . ' AND is_private=0';
 		$result = $db->sql_query($sql);
 		$forum_row = $db->sql_fetchrow($result);
 		$db->sql_freeresult($result);

@@ -344,7 +344,7 @@ class fulltext_mysql extends search_backend
 	*/
 	function keyword_search($type, $fields, $terms, $sort_by_sql, $sort_key, $sort_dir, $sort_days, $ex_fid_ary, $m_approve_fid_ary, $topic_id, $author_ary, $author_name, &$id_ary, $start, $per_page)
 	{
-		global $config, $db;
+		global $config, $db, $user;
 
 		// No keywords? No posts.
 		if (!$this->search_query)
@@ -464,10 +464,16 @@ class fulltext_mysql extends search_backend
 		$sql_where_options .= ($sort_days) ? ' AND p.post_time >= ' . (time() - ($sort_days * 86400)) : '';
 		$sql_where_options .= $sql_match_where;
 
+		$sql_from = $sql_sort_table . POSTS_TABLE . " p,";
+		$sql_sort_table = 'phpbb_topics t ';
+
 		$sql = "SELECT $sql_select
-			FROM $sql_from$sql_sort_table" . POSTS_TABLE . " p
+			FROM $sql_from$sql_sort_table
+			LEFT JOIN phpbb_private_topic_users ptu ON (" . "t.is_private=1 AND ptu.user_id =" . $user->data['user_id'] . " AND t.topic_id=ptu.topic_id)" . "
 			WHERE MATCH ($sql_match) AGAINST ('" . $db->sql_escape(htmlspecialchars_decode($this->search_query)) . "' IN BOOLEAN MODE)
 				$sql_where_options
+				AND t.topic_id = p.topic_id
+				AND" . "(p.topic_id IS NULL OR t.is_private = 0 OR ptu.topic_id IS NOT NULL)
 			ORDER BY $sql_sort";
 		$result = $db->sql_query_limit($sql, $config['search_block_size'], $start);
 
@@ -528,7 +534,7 @@ class fulltext_mysql extends search_backend
 	*/
 	function author_search($type, $firstpost_only, $sort_by_sql, $sort_key, $sort_dir, $sort_days, $ex_fid_ary, $m_approve_fid_ary, $topic_id, $author_ary, $author_name, &$id_ary, $start, $per_page)
 	{
-		global $config, $db;
+		global $config, $db, $user;
 
 		// No author? No posts.
 		if (!sizeof($author_ary))
@@ -617,7 +623,9 @@ class fulltext_mysql extends search_backend
 		if ($type == 'posts')
 		{
 			$sql = "SELECT {$calc_results}p.post_id
-				FROM " . $sql_sort_table . POSTS_TABLE . ' p' . (($firstpost_only) ? ', ' . TOPICS_TABLE . ' t ' : ' ') . "
+				FROM " . $sql_sort_table . POSTS_TABLE . ' p' .  '
+				LEFT JOIN ' . TOPICS_TABLE . ' t ' . "ON t.topic_id = p.topic_id
+				LEFT JOIN phpbb_private_topic_users ptu ON (" . "t.is_private=1 AND ptu.user_id =" . $user->data['user_id'] . " AND t.topic_id=ptu.topic_id)" . "
 				WHERE $sql_author
 					$sql_topic_id
 					$sql_firstpost
@@ -625,13 +633,15 @@ class fulltext_mysql extends search_backend
 					$sql_fora
 					$sql_sort_join
 					$sql_time
+					AND" . "(p.topic_id IS NULL OR t.is_private = 0 OR ptu.topic_id IS NOT NULL)
 				ORDER BY $sql_sort";
 			$field = 'post_id';
 		}
 		else
 		{
-			$sql = "SELECT {$calc_results}t.topic_id
-				FROM " . $sql_sort_table . TOPICS_TABLE . ' t, ' . POSTS_TABLE . " p
+			$sql = "SELECT DISTINCT {$calc_results}t.topic_id
+				FROM "  . POSTS_TABLE . " p," . $sql_sort_table . TOPICS_TABLE . " t
+				LEFT JOIN phpbb_private_topic_users ptu ON (" . "t.is_private=1 AND ptu.user_id =" . $user->data['user_id'] . " AND t.topic_id=ptu.topic_id)" . "
 				WHERE $sql_author
 					$sql_topic_id
 					$sql_firstpost
@@ -640,6 +650,7 @@ class fulltext_mysql extends search_backend
 					AND t.topic_id = p.topic_id
 					$sql_sort_join
 					$sql_time
+					AND" . "(p.topic_id IS NULL OR t.is_private = 0 OR ptu.topic_id IS NOT NULL)
 				GROUP BY t.topic_id
 				ORDER BY $sql_sort";
 			$field = 'topic_id';

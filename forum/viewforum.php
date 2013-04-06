@@ -337,7 +337,7 @@ $sql_array = array(
 );
 
 $sql_approved = ($auth->acl_get('m_approve', $forum_id)) ? '' : 'AND t.topic_approved = 1';
-
+//$sql_array['LEFT_JOIN'][] = array('FROM' => array(phpbb_private_topic_users => ptu), 'ON' => 't.topic_id = ptu.topic_id AND ptu.user_id=' . $user->data['user_id']);
 if ($user->data['is_registered'])
 {
 	if ($config['load_db_track'])
@@ -439,10 +439,13 @@ else
 // Grab just the sorted topic ids
 $sql = 'SELECT t.topic_id
 	FROM ' . TOPICS_TABLE . " t
+	LEFT JOIN phpbb_private_topic_users ptu
+	ON t.topic_id = ptu.topic_id
 	WHERE $sql_where
 		AND t.topic_type IN (" . POST_NORMAL . ', ' . POST_STICKY . ")
 		$sql_approved
-		$sql_limit_time
+		$sql_limit_time 
+		AND ((" . ($auth->acl_get('m_report', $forum_id) ? '1=1' : ("t.is_private=1 AND ptu.user_id =" . $user->data['user_id'])) . ") OR (t.is_private=0))
 	ORDER BY t.topic_type " . ((!$store_reverse) ? 'DESC' : 'ASC') . ', ' . $sql_sort_order;
 $result = $db->sql_query_limit($sql, $sql_limit, $sql_start);
 

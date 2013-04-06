@@ -48,7 +48,8 @@
 	<!-- IF PAGINATION or TOTAL_POSTS -->
 		<div class="pagination">
 			<!-- IF U_VIEW_UNREAD_POST and not S_IS_BOT --><a href="{U_VIEW_UNREAD_POST}">{L_VIEW_UNREAD_POST}</a> &bull; <!-- ENDIF -->{TOTAL_POSTS}
-			<!-- IF PAGE_NUMBER --><!-- IF PAGINATION --> &bull; <a href="#" onclick="jumpto(); return false;" title="{L_JUMP_TO_PAGE}">{PAGE_NUMBER}</a> &bull; <span>{PAGINATION}</span><!-- ELSE --> &bull; {PAGE_NUMBER}<!-- ENDIF --><!-- ENDIF -->
+			<!-- IF PAGE_NUMBER --><!-- IF PAGINATION --> &bull; Page <input type='text' size="3" id='jumpto1' value='{ON_PAGE}'/> of {TOTAL_PAGES} &bull; <span>{PAGINATION}</span><!-- ELSE --> &bull; {PAGE_NUMBER}<!-- ENDIF --><!-- ENDIF -->
+
 		</div>
 	<!-- ENDIF -->
 
@@ -287,8 +288,9 @@
 	<!-- IF PAGINATION or TOTAL_POSTS -->
 		<div class="pagination">
 			{TOTAL_POSTS}
-			<!-- IF PAGE_NUMBER --><!-- IF PAGINATION --> &bull; <a href="#" onclick="jumpto(); return false;" title="{L_JUMP_TO_PAGE}">{PAGE_NUMBER}</a> &bull; <span>{PAGINATION}</span><!-- ELSE --> &bull; {PAGE_NUMBER}<!-- ENDIF --><!-- ENDIF -->
-			<!-- IF U_ACTIVITY_OVERVIEW --> <br/><a style="display: inline-block; margin-top:5px;" href="{U_ACTIVITY_OVERVIEW}" title="{L_ACTIVITY_OVERVIEW}">{L_ACTIVITY_OVERVIEW}</a><!-- ENDIF -->
+			<!-- IF PAGE_NUMBER --><!-- IF PAGINATION --> &bull; Page <input type='text' size="3" id='jumpto2' value='{ON_PAGE}'/> of {TOTAL_PAGES} &bull; <span>{PAGINATION}</span><!-- ELSE --> &bull; {PAGE_NUMBER}<!-- ENDIF --><!-- ENDIF -->
+
+			<!-- IF U_ACTIVITY_OVERVIEW --> <br/><a href="{U_ACTIVITY_OVERVIEW}" title="{L_ACTIVITY_OVERVIEW}">{L_ACTIVITY_OVERVIEW}</a><!-- ENDIF -->
 		</div>
 		<div style="clear:both;"></div>
 	<!-- ENDIF -->

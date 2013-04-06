@@ -241,10 +241,53 @@
 			<!-- IF S_TYPE_TOGGLE -->
 			<dl>
 				<dt><label for="topic_type-0"><!-- IF S_EDIT_POST -->{L_CHANGE_TOPIC_TO}<!-- ELSE -->{L_POST_TOPIC_AS}<!-- ENDIF -->:</label></dt>
-				<dd><!-- BEGIN topic_type --><label for="topic_type-{topic_type.VALUE}"><input type="radio" name="topic_type" id="topic_type-{topic_type.VALUE}" value="{topic_type.VALUE}"{topic_type.S_CHECKED} />{topic_type.L_TOPIC_TYPE}</label> <!-- END topic_type --></dd>
+				<dd><!-- BEGIN topic_type --><label for="topic_type-{topic_type.VALUE}"><input type="radio" name="topic_type" id="topic_type-{topic_type.VALUE}" value="{topic_type.VALUE}"{topic_type.S_CHECKED} />{topic_type.L_TOPIC_TYPE}</label> <!-- END topic_type --></dd>	
 			</dl>
 			<!-- ENDIF -->
 
+			<!-- IF S_ALLOW_PRIVATE -->
+			<dl>
+				<dt><label for="topic_type-0"><!-- IF S_EDIT_POST -->Change topic privacy to<!-- ELSE -->Post topic privacy as<!-- ENDIF -->:</label></dt>
+				<dd><label for="topic_type-public"><input type="radio" name="topic_privacy" id="topic_type-public" value="0" <!-- IF not S_PUBLIC --> checked='checked'<!-- ENDIF -->/>Public</label><label for="topic_type-private"><input type="radio" name="topic_privacy" id="topic_type-private" value="1" <!-- IF S_PUBLIC --> checked='checked'<!-- ENDIF -->/>Private</label></dd>	
+			</dl>
+				<!-- IF S_PUBLIC -->
+				<div>
+					<a class="repeatable-add button" href="#">Add Private Topic Users</a>
+					<ul id="add_private_topic_user" class="custom_repeatable">
+						<!-- IF HAS_PRIVATE_USERS -->
+							<!-- BEGIN private_users -->
+							<li><span class="sort hndle"></span>
+								<input name="{private_users.NAME}" id="{private_users.ID}" value="{private_users.VALUE}"/> 
+								<a class="repeatable-remove button" href="#">Remove User</a></li>  
+							<!-- END private_users -->
+						<!-- ELSE -->
+						<li><span class="sort hndle"></span>
+							<input name="{PRIVATE_USER_NAME}" id="{PRIVATE_USER_ID}" value="" />
+							<a class="repeatable-remove button" href="#">Remove User</a></li>
+						<!-- ENDIF -->
+					</ul>
+				</div>
+				<!-- ELSEIF not S_EDIT_POST-->
+				<div>
+					<a class="repeatable-add button" href="#">Add Private Topic Users</a>
+					<ul id="add_private_topic_user" class="custom_repeatable">
+						<!-- IF HAS_PRIVATE_USERS -->
+							<!-- BEGIN private_users -->
+							<li><span class="sort hndle"></span>
+								<input name="{private_users.NAME}" id="{private_users.ID}" value="{private_users.VALUE}"/> 
+								<a class="repeatable-remove button" href="#">Remove User</a></li>  
+							<!-- END private_users -->
+						<!-- ELSE -->
+						<li><span class="sort hndle"></span>
+							<input name="{PRIVATE_USER_NAME}" id="{PRIVATE_USER_ID}" value="" />
+							<a class="repeatable-remove button" href="#">Remove User</a></li>
+						<!-- ENDIF -->
+					</ul>
+				</div>
+				<!-- ENDIF -->
+			<!-- ENDIF -->
+	
+	
 			<!-- IF S_TOPIC_TYPE_ANNOUNCE or S_TOPIC_TYPE_STICKY -->
 			<dl>
 				<dt><label for="topic_time_limit">{L_STICK_TOPIC_FOR}:</label></dt>
