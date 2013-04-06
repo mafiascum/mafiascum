@@ -334,10 +334,12 @@ if ($keywords || $author || $author_id || $search_id || $submit)
 
 				$sql = 'SELECT t.topic_last_post_time, t.topic_id
 					FROM ' . TOPICS_TABLE . " t
+					LEFT JOIN phpbb_private_topic_users ptu ON (" . "t.is_private=1 AND ptu.user_id =" . $user->data['user_id'] . " AND t.topic_id=ptu.topic_id)" . "
 					WHERE t.topic_moved_id = 0
 						$last_post_time_sql
 						" . str_replace(array('p.', 'post_'), array('t.', 'topic_'), $m_approve_fid_sql) . '
 						' . ((sizeof($ex_fid_ary)) ? ' AND ' . $db->sql_in_set('t.forum_id', $ex_fid_ary, true) : '') . '
+						AND' . '(t.is_private = 0 OR ptu.topic_id IS NOT NULL)
 					ORDER BY t.topic_last_post_time DESC';
 				$field = 'topic_id';
 			break;
@@ -371,11 +373,13 @@ if ($keywords || $author || $author_id || $search_id || $submit)
 				{
 					$sql = "SELECT p.post_id
 						FROM $sort_join" . POSTS_TABLE . ' p, ' . TOPICS_TABLE . " t
+						LEFT JOIN phpbb_private_topic_users ptu ON (" . "t.is_private=1 AND ptu.user_id =" . $user->data['user_id'] . " AND t.topic_id=ptu.topic_id)" . "
 						WHERE t.topic_replies = 0
 							AND p.topic_id = t.topic_id
 							$last_post_time
 							$m_approve_fid_sql
 							" . ((sizeof($ex_fid_ary)) ? ' AND ' . $db->sql_in_set('p.forum_id', $ex_fid_ary, true) : '') . "
+							AND" . "(p.topic_id IS NULL OR t.is_private = 0 OR ptu.topic_id IS NOT NULL)
 							$sql_sort";
 					$field = 'post_id';
 				}
@@ -383,12 +387,14 @@ if ($keywords || $author || $author_id || $search_id || $submit)
 				{
 					$sql = 'SELECT DISTINCT ' . $sort_by_sql[$sort_key] . ", p.topic_id
 						FROM $sort_join" . POSTS_TABLE . ' p, ' . TOPICS_TABLE . " t
+						LEFT JOIN phpbb_private_topic_users ptu ON (" . "t.is_private=1 AND ptu.user_id =" . $user->data['user_id'] . " AND t.topic_id=ptu.topic_id)" . "
 						WHERE t.topic_replies = 0
 							AND t.topic_moved_id = 0
 							AND p.topic_id = t.topic_id
 							$last_post_time
 							$m_approve_fid_sql
 							" . ((sizeof($ex_fid_ary)) ? ' AND ' . $db->sql_in_set('p.forum_id', $ex_fid_ary, true) : '') . "
+							AND" . "(p.topic_id IS NULL OR t.is_private = 0 OR ptu.topic_id IS NOT NULL)
 						$sql_sort";
 					$field = 'topic_id';
 				}
@@ -425,21 +431,25 @@ if ($keywords || $author || $author_id || $search_id || $submit)
 				if ($show_results == 'posts')
 				{
 					$sql = 'SELECT p.post_id
-						FROM ' . POSTS_TABLE . ' p
+						FROM ' . POSTS_TABLE . ' p, ' . TOPICS_TABLE . " t
+						LEFT JOIN phpbb_private_topic_users ptu ON (" . "t.is_private=1 AND ptu.user_id =" . $user->data['user_id'] . " AND t.topic_id=ptu.topic_id)" . '
 						WHERE p.post_time > ' . $user->data['user_lastvisit'] . "
 							$m_approve_fid_sql
 							" . ((sizeof($ex_fid_ary)) ? ' AND ' . $db->sql_in_set('p.forum_id', $ex_fid_ary, true) : '') . "
+							AND" . "(p.topic_id IS NULL OR t.is_private = 0 OR ptu.topic_id IS NOT NULL)
 						$sql_sort";
 					$field = 'post_id';
 				}
 				else
 				{
 					$sql = 'SELECT t.topic_id
-						FROM ' . TOPICS_TABLE . ' t
+						FROM ' . TOPICS_TABLE . " t
+						LEFT JOIN phpbb_private_topic_users ptu ON (" . "t.is_private=1 AND ptu.user_id =" . $user->data['user_id'] . " AND t.topic_id=ptu.topic_id)" . '
 						WHERE t.topic_last_post_time > ' . $user->data['user_lastvisit'] . '
 							AND t.topic_moved_id = 0
 							' . str_replace(array('p.', 'post_'), array('t.', 'topic_'), $m_approve_fid_sql) . '
 							' . ((sizeof($ex_fid_ary)) ? 'AND ' . $db->sql_in_set('t.forum_id', $ex_fid_ary, true) : '') . "
+							AND" . "(t.is_private = 0 OR ptu.topic_id IS NOT NULL)
 						$sql_sort";
 /*
 		[Fix] queued replies missing from "view new posts" (Bug #42705 - Patch by Paul)
