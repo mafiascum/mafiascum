@@ -838,6 +838,13 @@ if ($submit || $preview || $refresh)
 			if (!is_array($private_users)){
 				$private_users = array();
 			}
+			$temp_users = $private_users;
+			$private_users = array();
+			foreach ($temp_users as $users){
+				if ($users != ''){
+					$private_users[] = $users;
+				}
+			}
 			if (sizeof($private_users)){
 				$user_id_ary = array();
 				user_get_id_name($user_id_ary, $private_users, array(USER_NORMAL, USER_FOUNDER));
