@@ -575,7 +575,7 @@ if (($config['email_enable'] || $config['jab_enable']) && $config['allow_topic_n
 	$sort_order = request_var('sort_order', "");
 
 	$order_type = "DESC";
-	$order_by = "ORDER BY tmp.post_time";
+	$order_by = "ORDER BY time_of_first_post";
 
 	if($sort_type != "") {
 		$order_type = "ASC";
