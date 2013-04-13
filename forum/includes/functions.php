@@ -4871,73 +4871,8 @@ function get_topic_mods($topic_id)
 
 function handle_topic_not_found($post_id, $topic_id, $forum_id)
 {
-	global $archive_dbuser;
-	global $archive_dbhost;
-	global $archive_dbport;
-	global $archive_dbname;
-	global $archive_dbpasswd;
-	global $archive_table_prefix;
-	global $archive_base_url;
-
-	if(!$topic_id && !$post_id)
-	{
-		trigger_error('NO_TOPIC');
-	}
-
-	$link = mysql_connect($archive_dbhost . ":" . $archive_dbport, $archive_dbuser, $archive_dbpasswd, True);
-	@mysql_select_db($archive_dbname, $link);
-
-	$found = False;
-
-	if($post_id)
-	{
-		$sql = "SELECT "
-		     . " 1 "
-		     . "FROM"
-		     . " " . $archive_table_prefix . "posts p,"
-		     . " " . $archive_table_prefix . "topics t,"
-		     . " " . $archive_table_prefix . "forums f "
-		     . "WHERE p.topic_id=t.topic_id "
-		     . "AND p.forum_id=t.forum_id "
-		     . "AND p.post_id=$post_id";
-
-		$rs = mysql_query($sql, $link);
-
-		$row = mysql_fetch_assoc($rs);
-
-		if($row)
-		{
-			$found = True;
-		}
-
-		mysql_free_result($rs);
-	}
-	else if($topic_id)
-	{
-		$sql = "SELECT topic_id FROM " . $archive_table_prefix . "topics WHERE topic_id=$topic_id";
-
-		$rs = mysql_query($sql);
-
-		$row = mysql_fetch_assoc($rs);
-
-		if($row)
-		{
-			$found = True;
-		}
-
-		mysql_free_result($rs);
-	}
-
-	if($found == True)
-	{
-		$url = $archive_base_url . "viewtopic.php?" . $_SERVER['QUERY_STRING'];
-		mysql_close($link);
-		header("Location: $url");
-		exit;
-	}
-
-	mysql_close($link);
 	trigger_error('NO_TOPIC');
+
 }
 
 function is_topic_moderator($user_id, &$topic_data, $topic_moderators) {

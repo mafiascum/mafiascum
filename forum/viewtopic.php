@@ -581,13 +581,16 @@ if (($config['email_enable'] || $config['jab_enable']) && $config['allow_topic_n
 		$order_type = "ASC";
 
 		if($sort_type == 'pc') {
-			$order_by = "ORDER BY post_count";
+			$order_by = "ORDER BY number_of_posts";
 		}
 		else if($sort_type == 'pt' || $sort_type == 'et') {
-			$order_by = "ORDER BY post_time";
+			$order_by = "ORDER BY time_of_last_post";
 		}
 		else if($sort_type == 'un') {
 			$order_by = "ORDER BY username_clean";
+		}
+		else if($sort_type == 'fpt') {
+			$order_by = "ORDER BY time_of_first_post";
 		}
 	}
 	if($sort_order != "") {
@@ -601,34 +604,28 @@ if (($config['email_enable'] || $config['jab_enable']) && $config['allow_topic_n
 
 	$order_by_complete = $order_by . " " . $order_type;
 
-        $sql = " SELECT"
-             . " tmp.*,"
-			 . " COUNT(tmp.user_id) AS post_count"
-             . " FROM ("
-             . "  SELECT"
-             . "  phpbb_posts.post_time,"
-             . "  phpbb_users.user_id,"
-             . "  phpbb_users.username,"
-             . "  phpbb_users.user_colour,"
-	         . "  phpbb_users.username_clean,"
-	         . "  phpbb_users.user_vla_start,"
-	         . "  phpbb_users.user_vla_till"
-             . "  FROM"
-             . "  phpbb_posts,"
-             . "  phpbb_users"
-             . "  WHERE phpbb_posts.topic_id=$topic_id"
-             . "  AND phpbb_posts.poster_id=phpbb_users.user_id"
-             . "  ORDER BY phpbb_posts.post_time DESC"
-             . "  )"
-             . " AS tmp"
-             . " GROUP BY tmp.user_id"
-             . " " . $order_by_complete;
-
+	$sql = " SELECT"
+	     . "   COUNT(*) AS number_of_posts,"
+	     . "   MIN(phpbb_posts.post_time) AS time_of_first_post,"
+	     . "   MAX(phpbb_posts.post_time) AS time_of_last_post,"
+	     . "   phpbb_users.user_id,"
+	     . "   phpbb_users.username,"
+	     . "   phpbb_users.user_colour,"
+	     . "   phpbb_users.username_clean,"
+	     . "   phpbb_users.user_vla_start,"
+	     . "   phpbb_users.user_vla_till"
+	     . " FROM"
+	     . "   phpbb_posts, phpbb_users"
+	     . " WHERE phpbb_posts.topic_id = $topic_id"
+	     . " AND phpbb_users.user_id = phpbb_posts.poster_id"
+	     . " GROUP BY phpbb_users.user_id"
+	     . " $order_by $order_type";
 
         $resultSet = $db->sql_query($sql);
         $template->assign_vars(array(
 		'USERNAME_SORT_URL' => " {$server_path}viewtopic.$phpEx?f=$forum_id&amp;t=$topic_id&amp;activity_overview=1&amp;sort_type=un&amp;sort_order=" . ($sort_type == 'un' && $sort_order == 'd' ? "a" : "d") ,
 		'POST_TIME_SORT_URL' => " {$server_path}viewtopic.$phpEx?f=$forum_id&amp;t=$topic_id&amp;activity_overview=1&amp;sort_type=pt&amp;sort_order=" . ($sort_type == 'pt' && $sort_order == 'd' ? "a" : "d") ,
+		'FIRST_POST_TIME_SORT_URL' => " {$server_path}viewtopic.$phpEx?f=$forum_id&amp;t=$topic_id&amp;activity_overview=1&amp;sort_type=fpt&amp;sort_order=" . ($sort_type == 'fpt' && $sort_order == 'd' ? "a" : "d") ,
 		'POST_COUNT_SORT_URL' => " {$server_path}viewtopic.$phpEx?f=$forum_id&amp;t=$topic_id&amp;activity_overview=1&amp;sort_type=pc&amp;sort_order=" . ($sort_type == 'pc' && $sort_order == 'd' ? "a" : "d") ,
 		'TOPIC_TITLE' => $topic_data['topic_title'],
 		'U_VIEW_TOPIC' => "{$server_path}viewtopic.$phpEx?f=$forum_id&amp;t=$topic_id",
@@ -636,10 +633,10 @@ if (($config['email_enable'] || $config['jab_enable']) && $config['allow_topic_n
         ) );
 	while( ($row = $db->sql_fetchrow($resultSet)) ) {
 		$user_id = $row['user_id'];
-		$daysSince = (int) ((time() - $row['post_time']) / 60 / 60 / 24);
-		$hoursSince = (int) ((time() - $row['post_time']) / 60 / 60) % 24;
+		$daysSince = (int) ((time() - $row['time_of_last_post']) / 60 / 60 / 24);
+		$hoursSince = (int) ((time() - $row['time_of_last_post']) / 60 / 60) % 24;
  		$idleTime = "$daysSince day" . ($daysSince==1?"":"s") . " $hoursSince hour" . ($hoursSince==1?"":"s");
-		$postCount = $row['post_count'];
+		$postCount = $row['number_of_posts'];
 		
 		$isVla = false;
 		$vlaEndTimeStr = "";
@@ -662,7 +659,8 @@ if (($config['email_enable'] || $config['jab_enable']) && $config['allow_topic_n
 		$template->assign_block_vars("activity_row", array
 		(
 			'USER_URL'			=> get_username_string('full',$row['user_id'],$row['username'],$row['user_colour']),
-			'LAST_POST_TIME'	=> gmstrftime("%Y-%m-%d %H:%M:%S", (int)$row['post_time'] + $user->timezone + $user->dst),
+			'LAST_POST_TIME'	=> gmstrftime("%Y-%m-%d %H:%M:%S", (int)$row['time_of_last_post'] + $user->timezone + $user->dst),
+			'FIRST_POST_TIME'	=> gmstrftime("%Y-%m-%d %H:%M:%S", (int)$row['time_of_first_post'] + $user->timezone + $user->dst),
 			'IDLE_TIME'			=> $idleTime,
 			'POST_COUNT'		=> $postCount,
 			'U_PM'				=> "address_list[u][$user_id]",
@@ -1178,7 +1176,7 @@ if(count($isolationUserArray) > 0) {
 if(count($isolationUserArray) > 0) {
 
 	//Let's get the real post numbers. Kison, 2011-06-19
-	$db->sql_query('SET @post_count := -1;');
+	$db->sql_query('SET @ := -1;');
 
 	$sql = 'SELECT tmp.post_id, tmp.post_number FROM
 		(
