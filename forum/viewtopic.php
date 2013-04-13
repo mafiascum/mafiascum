@@ -1176,7 +1176,7 @@ if(count($isolationUserArray) > 0) {
 if(count($isolationUserArray) > 0) {
 
 	//Let's get the real post numbers. Kison, 2011-06-19
-	$db->sql_query('SET @ := -1;');
+	$db->sql_query('SET @post_count := -1;');
 
 	$sql = 'SELECT tmp.post_id, tmp.post_number FROM
 		(
