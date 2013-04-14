@@ -18,17 +18,13 @@
 	</path>
 
 	<target name="build">
-<!--
 		<antcall target="svn-cleanup"/>
 		<antcall target="svn-checkout"/>
--->
 		<antcall target="compile"/>
 		<antcall target="shutdown-server"/>
 		<antcall target="inject-updates"/>
 		<antcall target="start-server"/>
-<!--
 		<antcall target="svn-cleanup"/>
--->
 	</target>
 
 	<target name="svn-cleanup">
@@ -36,8 +32,8 @@
     </target>
 
 	<target name="svn-checkout">
-		<exec dir="." executable="svn">
-			<arg line="checkout http://199.217.116.144/svn/mafiascum/${branch}/java/SiteChatServer${revision} --username=mmason --password='W@qsablast'" />
+		<exec dir="." executable="ssh">
+			<arg line="ms-nfs svn export http://199.217.116.144/svn/mafiascum/${branch}/java/SiteChatServer${revision} ~/control/SiteChatServer/ --username=mmason --password='W@qsablast' -q" />
 		</exec>
 	</target>
 	

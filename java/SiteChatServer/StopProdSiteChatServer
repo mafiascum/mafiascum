@@ -13,7 +13,13 @@ IsProcessRunning() {
 }
 
 PROCESS_IS_RUNNING=false
-PID=`cat ~/prod/sitechat/ProcessID`
+PID=`sockstat -4 -l | grep :4241 | awk '{print $3}' | head -1`
+
+if [ -z "$PID" ];
+then
+	echo "No Process Found For Server..."
+	exit
+fi
 
 echo "Server Process ID: $PID"
 

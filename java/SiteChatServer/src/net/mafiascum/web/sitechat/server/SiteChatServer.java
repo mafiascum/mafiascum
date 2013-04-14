@@ -1,11 +1,6 @@
 package net.mafiascum.web.sitechat.server;
 
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.lang.management.ManagementFactory;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Collection;
@@ -90,11 +85,6 @@ public class SiteChatServer extends Server implements SignalHandler {
   {
     this.provider = provider;
     Connection connection = provider.getConnection();
-    
-    //Record Process ID.
-    if(!provider.getIsWindows()) {
-      recordProcessId(provider.getDocRoot());
-    }
     
     //Add handler for interruption signal.
     Signal.handle(new Signal("INT"), this);
@@ -555,15 +545,6 @@ public class SiteChatServer extends Server implements SignalHandler {
       
       this.getConnection().sendMessage(siteChatOutboundPacketJson);
     }
-  }
-  
-  public void recordProcessId(String docRoot) throws IOException, URISyntaxException {
-
-    String processName = ManagementFactory.getRuntimeMXBean().getName();
-    
-    FileWriter fileWriter = new FileWriter(new File(new URI(docRoot + "/ProcessID")));
-    fileWriter.write(processName.substring(0, processName.indexOf("@")));
-    fileWriter.close();
   }
 
   public void handle(Signal signal) {
