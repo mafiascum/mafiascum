@@ -575,7 +575,7 @@ if (($config['email_enable'] || $config['jab_enable']) && $config['allow_topic_n
 	$sort_order = request_var('sort_order', "");
 
 	$order_type = "DESC";
-	$order_by = "ORDER BY time_of_first_post";
+	$order_by = "ORDER BY time_of_last_post";
 
 	if($sort_type != "") {
 		$order_type = "ASC";
@@ -659,8 +659,8 @@ if (($config['email_enable'] || $config['jab_enable']) && $config['allow_topic_n
 		$template->assign_block_vars("activity_row", array
 		(
 			'USER_URL'			=> get_username_string('full',$row['user_id'],$row['username'],$row['user_colour']),
-			'LAST_POST_TIME'	=> gmstrftime("%Y-%m-%d %H:%M:%S", (int)$row['time_of_last_post'] + $user->timezone + $user->dst),
-			'FIRST_POST_TIME'	=> gmstrftime("%Y-%m-%d %H:%M:%S", (int)$row['time_of_first_post'] + $user->timezone + $user->dst),
+			'LAST_POST_TIME'	=> gmdate("M d, h:ia", (int)$row['time_of_last_post'] + $user->timezone + $user->dst),
+			'FIRST_POST_TIME'	=> gmdate("M d, h:ia", (int)$row['time_of_first_post'] + $user->timezone + $user->dst),
 			'IDLE_TIME'			=> $idleTime,
 			'POST_COUNT'		=> $postCount,
 			'U_PM'				=> "address_list[u][$user_id]",
