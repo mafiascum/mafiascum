@@ -37,7 +37,8 @@
 /*** Title Bar ***/
 .chatWindow .title
 {
-	padding: 3px 5px 3px 5px;
+	padding: 3px 5px 0px 5px;
+	height: 23px;
 }
 
 .chatWindow .title:hover
@@ -136,9 +137,15 @@
 }
 .chatWindow.expanded .outputBuffer .message .messageUserName
 {
+	display: inline-block;
 	font-size: 12px;
 	font-weight:bold;
 	color: #105289;
+}
+
+.chatWindow.expanded .outputBuffer .message .messageTimestamp
+{
+	font-size: 12px;
 }
 
 
