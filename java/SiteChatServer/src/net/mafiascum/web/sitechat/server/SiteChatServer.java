@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +40,7 @@ import org.eclipse.jetty.server.nio.SelectChannelConnector;
 import org.eclipse.jetty.util.TypeUtil;
 import org.eclipse.jetty.websocket.WebSocket;
 import org.eclipse.jetty.websocket.WebSocketHandler;
+import org.omg.SendingContext.RunTime;
 
 import sun.misc.Signal;
 import sun.misc.SignalHandler;
@@ -63,6 +65,7 @@ public class SiteChatServer extends Server implements SignalHandler {
   protected List<SiteChatConversationMessage> siteChatConversationMessagesToSave = new LinkedList<SiteChatConversationMessage>();
   protected SiteChatServerServiceThread serviceThread;
   
+  protected final long MILLISECONDS_UNTIL_USER_IS_INACTIVE = 50000;
   protected final int MESSAGE_BATCH_SIZE = 100;
   protected int topSiteChatConversationMessageId;
   
@@ -247,13 +250,80 @@ public class SiteChatServer extends Server implements SignalHandler {
   
   public void refreshUserCache() throws Exception {
     
-    MiscUtil.log("Refreshing User Cache");
     Connection connection = provider.getConnection();
     Map<Integer, SiteChatUser> siteChatUserMap = SiteChatUtil.loadSiteChatUserMap(connection);
     connection.close();
     
     synchronized(this.siteChatUserMap) {
       this.siteChatUserMap = siteChatUserMap;
+    }
+  }
+  
+  public void removeIdleUsers(Date contextDatetime) throws Exception {
+    
+    Set<Integer> inactiveUserIdSet = new HashSet<Integer>();
+    long contextDatetimeMilliseconds = contextDatetime.getTime();
+    
+    //Quickly grab a set of users that we will remove.
+    synchronized(userIdToLastActivityDatetime) {
+      
+      for(Integer userId : userIdToLastActivityDatetime.keySet()) {
+        
+        if(contextDatetimeMilliseconds - userIdToLastActivityDatetime.get(userId).getTime() >= MILLISECONDS_UNTIL_USER_IS_INACTIVE) {
+          
+          inactiveUserIdSet.add(userId);
+        }
+      }
+    }
+    
+    MiscUtil.log("Removing Inactive Users: " + inactiveUserIdSet);
+    for(Integer userId : inactiveUserIdSet) {
+      
+      removeUser(userId);
+    }
+  }
+  
+  public void removeUser(int userId) {
+    
+    synchronized(userIdToLastActivityDatetime) {
+      
+      userIdToLastActivityDatetime.remove(userId);
+    }
+    
+    synchronized(siteChatUserMap) {
+      
+      siteChatUserMap.remove(userId);
+    }
+    
+    synchronized(descriptors) {
+      
+      Iterator<SiteChatWebSocket> siteChatWebSocketIter = descriptors.iterator();
+      while(siteChatWebSocketIter.hasNext()) {
+        SiteChatWebSocket siteChatWebSocket = siteChatWebSocketIter.next();
+        
+        if(siteChatWebSocket.getSiteChatUser() != null && siteChatWebSocket.getSiteChatUser().getId() == userId) {
+          
+          try {
+            
+            siteChatWebSocket.getConnection().close();
+            siteChatWebSocketIter.remove();
+            break;
+          }
+          catch(Throwable throwable) {
+            
+            MiscUtil.log("Exception thrown while trying to disconnect web socket in removeUser() : " + throwable);
+          }
+        }
+      }
+    }
+    
+    synchronized(siteChatConversationWithMemberListMap) {
+      
+      for(Integer siteChatConversationId : siteChatConversationWithMemberListMap.keySet()) {
+        
+        SiteChatConversationWithUserList SiteChatConversationWithUserList = siteChatConversationWithMemberListMap.get(siteChatConversationId);
+        SiteChatConversationWithUserList.getUserIdSet().remove(userId);
+      }
     }
   }
   

@@ -13,13 +13,16 @@ public class SiteChatServerServiceThread extends Thread {
   protected SiteChatServer siteChatServer;
   protected volatile boolean terminated;
   protected Date lastRefreshUserCacheDatetime;
+  protected Date lastInactiveUserRemovalDatetime;
   
-  protected final long MILLISECONDS_PER_USER_TABLE_UPDATE = (1L * 60L * 1000L);
+  protected final long MILLISECONDS_PER_USER_TABLE_UPDATE = (1L * 60L * 1000L); //Every minute.
+  protected final long MILLISECONDS_PER_INACTIVE_USER_REMOVAL = (1L * 60L * 1000L); //Every minute.
   
   public SiteChatServerServiceThread(SiteChatServer siteChatServer) {
     
     this.siteChatServer = siteChatServer;
     this.lastRefreshUserCacheDatetime = new Date();
+    this.lastInactiveUserRemovalDatetime = new Date();
   }
   
   public void run() {
@@ -29,20 +32,22 @@ public class SiteChatServerServiceThread extends Thread {
         
         Date nowDatetime = new Date();
         
-        //refresh conversation list members.
-        Iterator<Map.Entry<Integer, SiteChatConversationWithUserList>> it = siteChatServer.siteChatConversationWithMemberListMap.entrySet().iterator();
-        Map<Integer, Date> userActivity = siteChatServer.userIdToLastActivityDatetime;
-        int currentUser = 0;
-        while(it.hasNext()){
-          Set<Integer> userIdSet = it.next().getValue().getUserIdSet();
-          Iterator<Integer> currentUsers = userIdSet.iterator();
-          while(currentUsers.hasNext()){
-            currentUser = currentUsers.next();
-            if (nowDatetime.getTime() - userActivity.get(currentUser).getTime() >5000){
-              userIdSet.remove(currentUser);
-            }
+        //Refresh conversation list members.
+        if(nowDatetime.getTime() - lastInactiveUserRemovalDatetime.getTime() >= MILLISECONDS_PER_INACTIVE_USER_REMOVAL) {
+          
+          try {
+            siteChatServer.removeIdleUsers(nowDatetime);
           }
+          catch(Throwable throwable) {
+              
+            MiscUtil.log("Could not remove idle users:\n");
+            throwable.printStackTrace();
+          }
+          
+          
+          lastInactiveUserRemovalDatetime = nowDatetime;
         }
+        
         //Refresh User Cache
         if(nowDatetime.getTime() - lastRefreshUserCacheDatetime.getTime() >= MILLISECONDS_PER_USER_TABLE_UPDATE) {
           

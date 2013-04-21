@@ -2,8 +2,8 @@ package net.mafiascum.web.sitechat.server.inboundpacket.operator;
 
 import net.mafiascum.web.sitechat.server.SiteChatServer;
 import net.mafiascum.web.sitechat.server.SiteChatServer.SiteChatWebSocket;
-import net.mafiascum.web.sitechat.server.SiteChatUtil;
 import net.mafiascum.web.sitechat.server.SiteChatUser;
+import net.mafiascum.web.sitechat.server.SiteChatUtil;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationMessage;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationWithUserList;
 import net.mafiascum.web.sitechat.server.inboundpacket.SiteChatInboundSendMessagePacket;
@@ -15,10 +15,12 @@ public class SiteChatInboundSendMessagePacketOperator implements SiteChatInbound
 
   public void process(SiteChatServer siteChatServer, SiteChatWebSocket siteChatWebSocket, String siteChatInboundPacketJson) throws Exception {
 
+    System.out.println("Processing SendChat Message...");
     SiteChatInboundSendMessagePacket siteChatInboundSendMessagePacket = new Gson().fromJson(siteChatInboundPacketJson, SiteChatInboundSendMessagePacket.class);
     SiteChatUser siteChatUser = siteChatWebSocket.getSiteChatUser();
     if( siteChatUser == null) {
       
+      System.out.println("User not logged in.");
       return;//User is not logged in.
     }
     siteChatServer.updateUserActivity(siteChatUser.getId());
@@ -26,11 +28,13 @@ public class SiteChatInboundSendMessagePacketOperator implements SiteChatInbound
     
     if(siteChatConversationWithUserList == null) {
       
+      System.out.println("No Site Chat Conversation could be found.");
       return;//Conversation does not exist.
     }
     
     if(!siteChatConversationWithUserList.getUserIdSet().contains(siteChatWebSocket.getSiteChatUser().getId())) {
       
+      System.out.println("User not in chat.");
       return;//User is not in the conversation.
     }
 

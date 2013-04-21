@@ -65,43 +65,45 @@ public class SiteChatInboundLogInPacketOperator implements SiteChatInboundPacket
     
     //Determine which messages the user has missed(if any, most of the time this should result in nothing).
     List<SiteChatConversationMessage> missedSiteChatConversationMessages = new LinkedList<SiteChatConversationMessage>();
-    for(Integer siteChatConversationId : siteChatInboundLogInPacket.getConversationIdToMostRecentMessageIdMap().keySet()) {
-      
-      int siteChatConversationMessageId = siteChatInboundLogInPacket.getConversationIdToMostRecentMessageIdMap().get(siteChatConversationId);
-      SiteChatConversationWithUserList siteChatConversationWithUserList = siteChatServer.getSiteChatConversationWithUserList(siteChatConversationId);
-      List<SiteChatConversationMessage> siteChatConversationMessages = siteChatConversationWithUserList.getSiteChatConversationMessages();
-      
-      
-      MiscUtil.log("Conversation " + siteChatConversationId + ", Last Message ID: " + siteChatConversationMessageId);
-      
-      if(siteChatConversationMessages.isEmpty() == false) {
-        ListIterator<SiteChatConversationMessage> listIterator = siteChatConversationMessages.listIterator(siteChatConversationMessages.size());
+    if(siteChatInboundLogInPacket.getConversationIdToMostRecentMessageIdMap() != null) {
+      for(Integer siteChatConversationId : siteChatInboundLogInPacket.getConversationIdToMostRecentMessageIdMap().keySet()) {
         
-        while(listIterator.hasPrevious()) {
+        int siteChatConversationMessageId = siteChatInboundLogInPacket.getConversationIdToMostRecentMessageIdMap().get(siteChatConversationId);
+        SiteChatConversationWithUserList siteChatConversationWithUserList = siteChatServer.getSiteChatConversationWithUserList(siteChatConversationId);
+        List<SiteChatConversationMessage> siteChatConversationMessages = siteChatConversationWithUserList.getSiteChatConversationMessages();
+        
+        
+        MiscUtil.log("Conversation " + siteChatConversationId + ", Last Message ID: " + siteChatConversationMessageId);
+        
+        if(siteChatConversationMessages.isEmpty() == false) {
+          ListIterator<SiteChatConversationMessage> listIterator = siteChatConversationMessages.listIterator(siteChatConversationMessages.size());
           
-          SiteChatConversationMessage siteChatConversationMessage = listIterator.previous();
-          if(siteChatConversationMessage.getId() > siteChatConversationMessageId) {
+          while(listIterator.hasPrevious()) {
             
-            MiscUtil.log("Adding missed message: " + siteChatConversationMessage.getId());
-            missedSiteChatConversationMessages.add(siteChatConversationMessage);
+            SiteChatConversationMessage siteChatConversationMessage = listIterator.previous();
+            if(siteChatConversationMessage.getId() > siteChatConversationMessageId) {
+              
+              MiscUtil.log("Adding missed message: " + siteChatConversationMessage.getId());
+              missedSiteChatConversationMessages.add(siteChatConversationMessage);
+            }
           }
         }
+  
+        MiscUtil.log("Total Missed Messages: " + missedSiteChatConversationMessages.size());
       }
-
-      MiscUtil.log("Total Missed Messages: " + missedSiteChatConversationMessages.size());
-    }
-    
-    Collections.sort(missedSiteChatConversationMessages, new Comparator<SiteChatConversationMessage>() {
       
-      public int compare(SiteChatConversationMessage arg0, SiteChatConversationMessage arg1) {
+      Collections.sort(missedSiteChatConversationMessages, new Comparator<SiteChatConversationMessage>() {
         
-        if(arg0.getId() < arg1.getId())
-          return -1;
-        else if(arg0.getId() > arg1.getId())
-          return 1;
-        return 0;
-      }
-    });
+        public int compare(SiteChatConversationMessage arg0, SiteChatConversationMessage arg1) {
+          
+          if(arg0.getId() < arg1.getId())
+            return -1;
+          else if(arg0.getId() > arg1.getId())
+            return 1;
+          return 0;
+        }
+      });
+    }
     
     //Create the response
     SiteChatOutboundLogInPacket siteChatOutboundLogInPacket = new SiteChatOutboundLogInPacket();
