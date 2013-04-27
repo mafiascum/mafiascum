@@ -395,12 +395,11 @@ function submit_default_button(event, selector, class_name)
 */
 function apply_onkeypress_event()
 {
-	// jQuery code in case jQuery is used
-	if (jquery_present)
+	if (true)
 	{
-		jQuery('form input[type=text], form input[type=password]').live('keypress', function (e)
+		$(document).on('keypress', 'form input[type=text], form input[type=password]', function (e)
 		{
-			var default_button = jQuery(this).parents('form').find('input[type=submit].default-submit-action');
+			var default_button = $(this).parents('form').find('input[type=submit].default-submit-action');
 			
 			if (!default_button || default_button.length <= 0)
 				return true;
@@ -432,7 +431,3 @@ function apply_onkeypress_event()
 	}
 }
 
-/**
-* Detect JQuery existance. We currently do not deliver it, but some styles do, so why not benefit from it. ;)
-*/
-var jquery_present = typeof jQuery == 'function';

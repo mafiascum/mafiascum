@@ -1,0 +1,248 @@
+
+.chatPanel
+{
+	position: fixed;
+	bottom: 0%;
+	right: 2%;
+	font-size: 16px !important;
+}
+
+.chatWindow
+{
+	float: right;
+	margin-right: 5px;
+}
+
+.chatWindow.collapsed
+{
+	width: 200px;
+	height: 30px;
+}
+
+.chatWindow.expanded
+{
+	width: 300px;
+	height: 300px;
+}
+
+.chatWindowInner
+{
+	border: 1px solid #999;
+	position:absolute;
+	bottom: 0;
+	width: inherit;
+	border-radius: 3px 3px 0 0;
+}
+
+/*** Title Bar ***/
+.chatWindow .title
+{
+	line-height: 23px;
+	padding: 0px 5px 0px 5px;
+	height: 23px;
+	font-size: 12px !important;
+	font-weight: bold;
+}
+
+.chatWindow .title:hover
+{
+	cursor: pointer;
+}
+
+.chatWindow.expanded .title
+{
+	background-color: #477D9E;
+	color: #FFF;
+	font-weight: bold;
+	padding: 5px;
+}
+
+.chatWindow.expanded .title:hover
+{
+	background-color: #4E89AD;
+}
+
+.chatWindow.collapsed .title
+{
+	background-color: #E1DFE6;
+}
+
+.chatWindow.collapsed .title:hover
+{
+	background-color: #FFF;
+}
+
+.chatWindow .title .close
+{
+	display:none;
+	padding: 0 5px 0 5px;
+	margin-right: 5px;
+	float: right;
+	font-weight: bold;
+	font-size: 18px;
+}
+
+.chatWindow.collapsed .title:hover .close
+{
+	display:inline-block;
+	color: #869CF7;
+}
+
+.chatWindow.collapsed .title:hover .close:hover
+{
+	display:inline-block;
+	float: right;
+	color: red;
+	z-index: 200;
+	background: #869CF7;
+	color: #FFF;
+}
+
+
+/*** Output Buffer ***/
+.chatWindow.collapsed .outputBuffer
+{
+	display: none;
+}
+
+.chatWindow.expanded .outputBuffer
+{
+	display: block;
+	padding: 0 5px 0 5px;
+	height: 300px;
+	background: #FFF;
+	overflow: auto;
+}
+
+.chatWindow.expanded .outputBuffer .message
+{
+	width: 100%;
+	padding: 0 0 5px 0;
+	clear:both;
+	min-height: 40px;
+}
+
+.chatWindow.expanded .outputBuffer .message .profile
+{
+	float: left;
+	width: 40px;
+	display: block;
+	padding: 0;
+	margin: 0;
+	margin-right: 5px;
+}
+
+.chatWindow.expanded .outputBuffer .message .messagecontent
+{
+	overflow: hidden;
+	font-size: 12px;
+	word-wrap: break-word;
+}
+.chatWindow.expanded .outputBuffer .message .messageUserName
+{
+	display: inline-block;
+	font-size: 12px;
+	font-weight:bold;
+	color: #105289;
+}
+
+.chatWindow.expanded .outputBuffer .message .messageTimestamp
+{
+	font-size: 12px;
+}
+
+
+/*** Input Buffer ***/
+.chatWindow.collapsed .inputBuffer
+{
+	display: none;
+	box-sizing: border-box;
+}
+.chatWindow.expanded .inputBuffer
+{
+	display: block;
+	box-sizing: border-box;
+	margin: 0;
+	padding:0;
+	border-left: 0px;
+	border-right:0px;
+	width: 100%;
+	cursor: text;
+}
+
+/*** Join a chat room ***/
+
+.chatWindow.collapsed #joindiv{
+	display: none;
+	box-sizing: border-box;
+}
+
+.chatWindow.expanded #joindiv{
+	box-sizing: border-box;
+	display: block;
+	margin: 0;
+	background-color:white;
+	padding: 5px;
+}
+.collapsed #joinconversationinput {
+	display: none;
+}
+.expanded #joinconversationinput {
+	cursor: text;
+}
+/*** Display user name ***/
+.chatWindow.collapsed .username{
+	display: none;
+	box-sizing: border-box;
+}
+
+.chatWindow.expanded .username{
+	display: block;
+	box-sizing: border-box;
+	list-style-type: none;
+	margin: 0;
+	background-color:white;
+	padding: 2px 0px 3px 5px;
+}
+
+
+.chatWindow.collapsed #onlinelisttitle{
+	display: none;
+	box-sizing: border-box;
+}
+
+.chatWindow.expanded #onlinelisttitle{
+	display: block;
+	box-sizing: border-box;
+	margin: 0;
+	background-color:white;
+	padding: 3px;
+}
+
+.chatWindow.expanded .userlist{
+	overflow: auto;
+}
+
+.exclamation
+{
+	border: 1px solid #000;
+	border-radius: 100px;
+	-moz-border-radius: 100px;
+	-webkit-border-radius: 100px;
+	width: 15px;
+	height: 15px;
+	line-height: 15px;
+	font-weight: bold;
+	color: #FFF;
+	text-align: center;
+	background-color: #FF0000;
+	text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+	float: right;
+	position: relative;
+	top: 3px;
+}
+
+.exclamation.hidden
+{
+	display: none;
+}
