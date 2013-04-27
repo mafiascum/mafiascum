@@ -3,4 +3,4 @@
 BASEDIR=~/prod/sitechat
 CLASSPATH=$BASEDIR/classes:`find $BASEDIR/lib -type f -name '*.jar' | sed 's/^/*/' | xargs | sed 's/ \*/:/g' | sed 's/^*//'`
 CLASSNAME=`echo $1 | sed 's/^.*\.\(.*\)$/\1/'`
-java -cp $CLASSPATH net.mafiascum.web.sitechat.server.SiteChatServer -p 4241 -d file:$BASEDIR -v &>> $BASEDIR/server.out &
+java -Xms128m -Xmx256m -cp $CLASSPATH net.mafiascum.web.sitechat.server.SiteChatServer -p 4241 -d file:$BASEDIR -v &>> $BASEDIR/server.out &

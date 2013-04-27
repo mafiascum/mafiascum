@@ -26,7 +26,8 @@ public enum SiteChatOutboundPacketType implements VEnum {
   userJoin(2, "UserJoin"),
   newMessage(3, "NewMessage"),
   leaveConversation(4, "LeaveConversation"),
-  lookupUser(5, "LookupUser");
+  lookupUser(5, "LookupUser"),
+  userList(6, "UserList");
 
   private String standardName;
 

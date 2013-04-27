@@ -1,11 +1,7 @@
 package net.mafiascum.web.sitechat.server;
 
 import java.util.Date;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.Map;
 
-import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationWithUserList;
 import net.mafiascum.util.MiscUtil;
 
 public class SiteChatServerServiceThread extends Thread {
@@ -14,15 +10,18 @@ public class SiteChatServerServiceThread extends Thread {
   protected volatile boolean terminated;
   protected Date lastRefreshUserCacheDatetime;
   protected Date lastInactiveUserRemovalDatetime;
+  protected Date lastUserListDatetime;
   
   protected final long MILLISECONDS_PER_USER_TABLE_UPDATE = (1L * 60L * 1000L); //Every minute.
   protected final long MILLISECONDS_PER_INACTIVE_USER_REMOVAL = (1L * 60L * 1000L); //Every minute.
+  protected final long MILLISECONDS_PER_USER_LIST = (30L * 1000L); //Every 30 seconds.
   
   public SiteChatServerServiceThread(SiteChatServer siteChatServer) {
     
     this.siteChatServer = siteChatServer;
     this.lastRefreshUserCacheDatetime = new Date();
     this.lastInactiveUserRemovalDatetime = new Date();
+    this.lastUserListDatetime = new Date();
   }
   
   public void run() {
@@ -32,6 +31,21 @@ public class SiteChatServerServiceThread extends Thread {
         
         Date nowDatetime = new Date();
         
+        
+        if(nowDatetime.getTime() - lastUserListDatetime.getTime() >= MILLISECONDS_PER_USER_LIST) {
+          
+          try {
+            siteChatServer.sendUserListToAllWebSockets();
+          }
+          catch(Throwable throwable) {
+              
+            MiscUtil.log("Could not send user list:\n");
+            throwable.printStackTrace();
+          }
+          
+          
+          lastUserListDatetime = nowDatetime;
+        }
         //Refresh conversation list members.
         if(nowDatetime.getTime() - lastInactiveUserRemovalDatetime.getTime() >= MILLISECONDS_PER_INACTIVE_USER_REMOVAL) {
           

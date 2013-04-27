@@ -33,6 +33,7 @@ import net.mafiascum.web.sitechat.server.inboundpacket.operator.SiteChatInboundS
 import net.mafiascum.web.sitechat.server.outboundpacket.SiteChatOutboundConnectPacket;
 import net.mafiascum.web.sitechat.server.outboundpacket.SiteChatOutboundPacket;
 import net.mafiascum.web.sitechat.server.outboundpacket.SiteChatOutboundUserJoinPacket;
+import net.mafiascum.web.sitechat.server.outboundpacket.SiteChatOutboundUserListPacket;
 
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ResourceHandler;
@@ -40,7 +41,6 @@ import org.eclipse.jetty.server.nio.SelectChannelConnector;
 import org.eclipse.jetty.util.TypeUtil;
 import org.eclipse.jetty.websocket.WebSocket;
 import org.eclipse.jetty.websocket.WebSocketHandler;
-import org.omg.SendingContext.RunTime;
 
 import sun.misc.Signal;
 import sun.misc.SignalHandler;
@@ -65,7 +65,7 @@ public class SiteChatServer extends Server implements SignalHandler {
   protected List<SiteChatConversationMessage> siteChatConversationMessagesToSave = new LinkedList<SiteChatConversationMessage>();
   protected SiteChatServerServiceThread serviceThread;
   
-  protected final long MILLISECONDS_UNTIL_USER_IS_INACTIVE = 50000;
+  protected final long MILLISECONDS_UNTIL_USER_IS_INACTIVE = (1000) * (60) * (5);
   protected final int MESSAGE_BATCH_SIZE = 100;
   protected int topSiteChatConversationMessageId;
   
@@ -259,6 +259,32 @@ public class SiteChatServer extends Server implements SignalHandler {
     }
   }
   
+  public void sendUserListToAllWebSockets() throws Exception {
+    
+    List<SiteChatUser> siteChatUserList = new LinkedList<SiteChatUser>();
+    synchronized(siteChatUserMap) {
+      
+      synchronized(descriptors) {
+        
+        synchronized(userIdToLastActivityDatetime) {
+      
+          for(int userId : userIdToLastActivityDatetime.keySet()) {
+            
+            siteChatUserList.add(siteChatUserMap.get(userId));
+          }
+          
+          SiteChatOutboundUserListPacket siteChatOutboundUserListPacket = new SiteChatOutboundUserListPacket();
+          siteChatOutboundUserListPacket.setSiteChatUsers(siteChatUserList);
+          
+          for(SiteChatWebSocket siteChatWebSocket : descriptors) {
+          
+            siteChatWebSocket.sendOutboundPacket(siteChatOutboundUserListPacket);
+          }
+        }
+      }
+    }
+  }
+  
   public void removeIdleUsers(Date contextDatetime) throws Exception {
     
     Set<Integer> inactiveUserIdSet = new HashSet<Integer>();
@@ -288,11 +314,6 @@ public class SiteChatServer extends Server implements SignalHandler {
     synchronized(userIdToLastActivityDatetime) {
       
       userIdToLastActivityDatetime.remove(userId);
-    }
-    
-    synchronized(siteChatUserMap) {
-      
-      siteChatUserMap.remove(userId);
     }
     
     synchronized(descriptors) {
