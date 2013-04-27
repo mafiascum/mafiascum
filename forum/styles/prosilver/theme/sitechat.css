@@ -219,6 +219,12 @@
 	padding: 3px;
 }
 
+.chatWindow #onlinelist
+{
+	max-height: 200px;
+	overflow: auto;
+}
+
 .chatWindow.expanded .userlist{
 	overflow: auto;
 }
