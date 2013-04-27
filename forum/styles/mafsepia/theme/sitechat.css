@@ -168,6 +168,9 @@
 	border-right:0px;
 	width: 100%;
 	cursor: text;
+	font-size: 11px !important;
+	line-height: 20px;
+	resize: none;
 }
 
 /*** Join a chat room ***/
@@ -189,6 +192,8 @@
 }
 .expanded #joinconversationinput {
 	cursor: text;
+	font-size: 11px !important;
+	line-height: 20px;
 }
 /*** Display user name ***/
 .chatWindow.collapsed .username{
@@ -217,6 +222,12 @@
 	margin: 0;
 	background-color:white;
 	padding: 3px;
+}
+
+.chatWindow #onlinelist
+{
+	max-height: 200px;
+	overflow: auto;
 }
 
 .chatWindow.expanded .userlist{

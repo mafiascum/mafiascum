@@ -53,6 +53,7 @@ function Client()
 	this.pendingMessages = [];
 	this.namespace = "ms_sc_";//Prepended to all local storage variables.
 	this.attemptReconnectIntervalId = null;
+	this.onlineUserIdSet = [];
 	this.MAX_MESSAGES_PER_WINDOW = 500;
 	this.attemptReconnect = function()
 	{
@@ -72,6 +73,11 @@ function Client()
 	this.loadFromLocalStorage = function()
 	{
 		var userIdSet, converstionIdSet;
+		
+		//Load online user ID set.
+		if(localStorage[client.namespace + "onlineUserIdSet"])
+			client.onlineUserIdSet = JSON.parse(localStorage[client.namespace + "onlineUserIdSet"]);
+
 		//Load users.
 		if(localStorage[client.namespace + "userIdSet"])
 		{
@@ -84,7 +90,8 @@ function Client()
 				{
 					try {
 						var siteChatUser = JSON.parse(localStorage[client.namespace + "user" + userId]);
-						client.addUser(siteChatUser, false);
+						var addToOnlineUserList = _.contains(client.onlineUserIdSet, siteChatUser.id);
+						client.addUser(siteChatUser, false, !addToOnlineUserList);
 					}
 					catch(err)
 					{
@@ -371,21 +378,20 @@ function Client()
 	}
 	//////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	this.addUser = function(siteChatUser, save)
+	this.addUser = function(siteChatUser, save, doNotAddToOnlineList)
 	{
 		console.log("ADDING USER #" + siteChatUser.id + ": " + siteChatUser.name + ", Save: " + save);
 		if ( client.userMap[ siteChatUser.id ] == null){
 			client.userMap[ siteChatUser.id ] = siteChatUser;
-			client.addUserToOnlineList(siteChatUser);
 			
+			if(!doNotAddToOnlineList)
+				client.addUserToOnlineList(siteChatUser, false);
 			if(save)
-			{
 				client.saveUser(siteChatUser);
-			}
 		}
 	}
 	
-	this.addUserToOnlineList = function(siteChatUser)
+	this.addUserToOnlineList = function(siteChatUser, onlyAddHTML)
 	{
 		$("#onlinelist").append
 		(
@@ -393,6 +399,12 @@ function Client()
 		+	'	<a href="#" onClick="return false;">' + siteChatUser.name + '</a>'
 		+	'</li>'
 		);
+		
+		if(!onlyAddHTML && !_.contains(client.onlineUserIdSet, siteChatUser.id))
+		{
+			client.onlineUserIdSet.push(siteChatUser.id);
+			localStorage[client.namespace + "onlineUserIdSet"] = JSON.stringify(client.onlineUserIdSet);
+		}
 	}
 
 	this.saveUser = function(siteChatUser)
@@ -531,12 +543,20 @@ function Client()
 		{
 			console.log("Got list of users: " + siteChatPacket.siteChatUsers);
 			var siteChatUserListLength = siteChatPacket.siteChatUsers.length;
+			var newOnlineUserIdSet = [];
 			
 			$("#onlinelist").html("");
 			for(var siteChatUserIndex = 0;siteChatUserIndex < siteChatUserListLength;++siteChatUserIndex)
 			{
-				client.addUserToOnlineList(siteChatPacket.siteChatUsers[ siteChatUserIndex ]);
+				var siteChatUser = siteChatPacket.siteChatUsers[ siteChatUserIndex ];
+				newOnlineUserIdSet.push(siteChatUser.id);
+				if(client.userMap[siteChatUser.id] == null)
+					client.addUser(siteChatUser, true, true);
+				client.addUserToOnlineList(siteChatUser, true);
 			}
+			
+			client.onlineUserIdSet = newOnlineUserIdSet;
+			localStorage[client.namespace + "onlineUserIdSet"] = JSON.stringify(newOnlineUserIdSet);
 		}
 	}
 
