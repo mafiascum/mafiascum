@@ -37,8 +37,11 @@
 /*** Title Bar ***/
 .chatWindow .title
 {
-	padding: 3px 5px 0px 5px;
+	line-height: 23px;
+	padding: 0px 5px 0px 5px;
 	height: 23px;
+	font-size: 12px !important;
+	font-weight: bold;
 }
 
 .chatWindow .title:hover
@@ -218,4 +221,28 @@
 
 .chatWindow.expanded .userlist{
 	overflow: auto;
+}
+
+.exclamation
+{
+	border: 1px solid #000;
+	border-radius: 100px;
+	-moz-border-radius: 100px;
+	-webkit-border-radius: 100px;
+	width: 15px;
+	height: 15px;
+	line-height: 15px;
+	font-weight: bold;
+	color: #FFF;
+	text-align: center;
+	background-color: #FF0000;
+	text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+	float: right;
+	position: relative;
+	top: 3px;
+}
+
+.exclamation.hidden
+{
+	display: none;
 }

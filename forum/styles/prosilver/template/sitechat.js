@@ -52,6 +52,13 @@ function Client()
 	this.sessionId = null;
 	this.pendingMessages = [];
 	this.namespace = "ms_sc_";//Prepended to all local storage variables.
+	this.attemptReconnectIntervalId = null;
+	this.MAX_MESSAGES_PER_WINDOW = 500;
+	this.attemptReconnect = function()
+	{
+		console.log("Attempting reconnect...");
+		client.setupWebSocket();
+	}
 	
 	this.clearLocalStorage = function()
 	{
@@ -108,13 +115,13 @@ function Client()
 		event.stopPropagation();
 		var $window = $(this).closest(".chatWindow");
 		var siteChatConversation = client.chatWindows[ parseInt($window.attr("id").replace("chat", "")) ];
-		
+		var $title = $(window).find(".title");
 		if($window.hasClass("expanded"))
 		{
 			$window.removeClass("expanded");
 			$window.addClass("collapsed");
-			$($window).find('.title').stop(true);
-			$($window).find('.title').css('backgroundColor', '#E1DFE6');
+			$title.stop(true);
+			$title.css('backgroundColor', '');
 			if(siteChatConversation)
 				siteChatConversation.expanded = false;
 		}
@@ -122,8 +129,8 @@ function Client()
 		{
 			$window.removeClass("collapsed");
 			$window.addClass("expanded");
-			$($window).find('.title').stop(true);
-			$($window).find('.title').css('backgroundColor', '#4E89AD');
+			$title.stop(true);
+			$title.css('backgroundColor', '');
 			$window.show();
 			if(siteChatConversation){
 				siteChatConversation.expanded = true;
@@ -209,6 +216,15 @@ function Client()
 	
 	this.handleSocketOpen = function()
 	{
+		console.log("Socket Open.");
+		if(client.attemptReconnectIntervalId != null)
+		{
+			window.clearInterval(client.attemptReconnectIntervalId);
+			client.attemptReconnectIntervalId = null;
+			
+			console.log("Reconnect Interval Cleared.");
+		}
+		$("#utilitywindow .exclamation").addClass("hidden");
 		var siteChatPacket = new Object();
 		siteChatPacket.command = "LogIn";
 		siteChatPacket.userId = client.userId;
@@ -232,7 +248,10 @@ function Client()
 	
 	this.handleSocketClose = function()
 	{
-		console.log("Connection Closed.");
+		if(client.attemptReconnectIntervalId != null)
+			window.clearInterval(client.attemptReconnectIntervalId);
+		client.attemptReconnectIntervalId = setInterval(client.attemptReconnect, 15000);
+		$("#utilitywindow .exclamation").removeClass("hidden");
 	}
 
 	this.createChatWindow = function(conversationId, title, userIdSet, expanded, messages, save)
@@ -312,6 +331,13 @@ function Client()
 		var messageDateString = zeroFill(messageDate.getHours(), 2) + ":" + zeroFill(messageDate.getMinutes(), 2);
 		
 		chatWindow.messages.push(siteChatConversationMessage);
+		var messagesLength = chatWindow.messages.length;
+		if(messagesLength > client.MAX_MESSAGES_PER_WINDOW)
+		{
+			console.log("Message Length: " + messagesLength);
+			chatWindow.messages.splice(0, messagesLength - client.MAX_MESSAGES_PER_WINDOW);
+			console.log("Truncated to: " + chatWindow.messages.length);
+		}
 		if (siteChatUser.avatarUrl != ''){
 			avatarUrl = 'http://forum.mafiascum.net/download/file.php?avatar=' + siteChatUser.avatarUrl;
 		}
@@ -350,17 +376,23 @@ function Client()
 		console.log("ADDING USER #" + siteChatUser.id + ": " + siteChatUser.name + ", Save: " + save);
 		if ( client.userMap[ siteChatUser.id ] == null){
 			client.userMap[ siteChatUser.id ] = siteChatUser;
-			$("#onlinelist").append
-					(
-						'<li class="username" id="username' + siteChatUser.id + '"><a href="#" onClick="return false;">'
-					+	siteChatUser.name
-					+	'</a></li>'
-					);
+			client.addUserToOnlineList(siteChatUser);
+			
 			if(save)
 			{
 				client.saveUser(siteChatUser);
 			}
 		}
+	}
+	
+	this.addUserToOnlineList = function(siteChatUser)
+	{
+		$("#onlinelist").append
+		(
+			'<li class="username" id="username' + siteChatUser.id + '">'
+		+	'	<a href="#" onClick="return false;">' + siteChatUser.name + '</a>'
+		+	'</li>'
+		);
 	}
 
 	this.saveUser = function(siteChatUser)
@@ -495,6 +527,17 @@ function Client()
 			if(chatWindow)
 				chatWindow.userIdSet.splice($.inArray(siteChatPacket.userId, chatWindow.userIdSet), 1);
 		}
+		else if(siteChatPacket.command == "UserList")
+		{
+			console.log("Got list of users: " + siteChatPacket.siteChatUsers);
+			var siteChatUserListLength = siteChatPacket.siteChatUsers.length;
+			
+			$("#onlinelist").html("");
+			for(var siteChatUserIndex = 0;siteChatUserIndex < siteChatUserListLength;++siteChatUserIndex)
+			{
+				client.addUserToOnlineList(siteChatPacket.siteChatUsers[ siteChatUserIndex ]);
+			}
+		}
 	}
 
 	this.sendSiteChatPacket = function(packetObject)
@@ -514,7 +557,7 @@ function Client()
 				(
 					'<div class="chatWindow collapsed" id="utilitywindow">'
 				+	'	<div class="chatWindowInner">'
-				+	'		<div class="title">' + 'Join Chat' + '</div>'
+				+	'		<div class="title">' + 'Join Chat' + '<div class="exclamation hidden">!</div></div>'
 				+	'		<p id="onlinelisttitle">Online Users</p>'
 				+	'		<ul id="onlinelist"></ul>'
 				+	'		<div id="joindiv"><label>Chatroom:</label><input id="joinconversationinput" type="text" name="input"></input></div>'
@@ -571,16 +614,21 @@ function Client()
 			client.clearLocalStorage();
 			localStorage[client.namespace + "userId"] = client.userId;
 		}
-
-		client.socket = new WebSocket("ws://localhost:4241", "site-chat");
-		client.socket.onopen = client.handleSocketOpen;
-		client.socket.onclose = client.handleSocketClose;
-		client.socket.onmessage = client.handleSocketMessage;
+		
+		client.setupWebSocket();
 
 		client.createChatPanel();
 		client.createUtilityWindow();
 		client.loadFromLocalStorage();
 		setInterval('client.blink()', 700);
-		setInterval('client.heartbeat()', 300000);
+		setInterval('client.heartbeat()', 150000);
+	}
+	
+	this.setupWebSocket = function()
+	{
+		client.socket = new WebSocket("ws://localhost:4241", "site-chat");
+		client.socket.onopen = client.handleSocketOpen;
+		client.socket.onclose = client.handleSocketClose;
+		client.socket.onmessage = client.handleSocketMessage;
 	}
 }
