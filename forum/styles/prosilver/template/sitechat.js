@@ -55,9 +55,9 @@ function Client()
 	this.attemptReconnectIntervalId = null;
 	this.onlineUserIdSet = [];
 	this.MAX_MESSAGES_PER_WINDOW = 500;
+	this.unloading = false;
 	this.attemptReconnect = function()
 	{
-		console.log("Attempting reconnect...");
 		client.setupWebSocket();
 	}
 	
@@ -109,7 +109,6 @@ function Client()
 			{
 				var siteChatConversationId = conversationIdSet[ index ];
 
-				console.log("Loading Conversation: " + localStorage[client.namespace + "conversation" + siteChatConversationId]);
 				var siteChatConversation = JSON.parse(localStorage[client.namespace + "conversation" + siteChatConversationId]);
 				client.createChatWindow(siteChatConversationId, siteChatConversation.title, siteChatConversation.userIdSet, siteChatConversation.expanded, siteChatConversation.messages, false);
 			}
@@ -223,13 +222,10 @@ function Client()
 	
 	this.handleSocketOpen = function()
 	{
-		console.log("Socket Open.");
 		if(client.attemptReconnectIntervalId != null)
 		{
 			window.clearInterval(client.attemptReconnectIntervalId);
 			client.attemptReconnectIntervalId = null;
-			
-			console.log("Reconnect Interval Cleared.");
 		}
 		$("#utilitywindow .exclamation").addClass("hidden");
 		var siteChatPacket = new Object();
@@ -241,11 +237,9 @@ function Client()
 		
 		for(var siteChatConversationId in client.chatWindows)
 		{
-			console.log("Scanning Conversation #" + siteChatConversationId);
 			var chatWindow = client.chatWindows[ siteChatConversationId ];
 			if(chatWindow.messages && chatWindow.messages.length > 0)
 			{
-				console.log(" - Adding Message #" + chatWindow.messages[ chatWindow.messages.length - 1 ].id);
 				siteChatPacket.conversationIdToMostRecentMessageIdMap[ siteChatConversationId ] = chatWindow.messages[ chatWindow.messages.length - 1 ].id;
 			}
 		}
@@ -255,10 +249,13 @@ function Client()
 	
 	this.handleSocketClose = function()
 	{
-		if(client.attemptReconnectIntervalId != null)
-			window.clearInterval(client.attemptReconnectIntervalId);
-		client.attemptReconnectIntervalId = setInterval(client.attemptReconnect, 15000);
-		$("#utilitywindow .exclamation").removeClass("hidden");
+		if(!client.unloading)
+		{
+			if(client.attemptReconnectIntervalId != null)
+				window.clearInterval(client.attemptReconnectIntervalId);
+			client.attemptReconnectIntervalId = setInterval(client.attemptReconnect, 15000);
+			$("#utilitywindow .exclamation").removeClass("hidden");
+		}
 	}
 
 	this.createChatWindow = function(conversationId, title, userIdSet, expanded, messages, save)
@@ -323,14 +320,12 @@ function Client()
 
 	this.saveChatWindow = function(chatWindow)
 	{
-		console.log("SAVING CHAT WINDOW: " + chatWindow);
 		localStorage[client.namespace + "conversationIdSet"] = JSON.stringify(client.getConversationIdSet());
 		localStorage[client.namespace + "conversation" + chatWindow.siteChatConversationId] = JSON.stringify(chatWindow);
 	}
 	
 	this.addSiteChatConversationMessage = function(siteChatConversationMessage, save, isNew)
 	{
-		console.log("Adding Message #" + siteChatConversationMessage.id);
 		var chatWindow = client.chatWindows[ siteChatConversationMessage.siteChatConversationId ];
 		var siteChatUser = client.userMap[ siteChatConversationMessage.userId ];
 		var messageDate = new Date(siteChatConversationMessage.createdDatetime);//TODO: Time zone differences
@@ -341,9 +336,7 @@ function Client()
 		var messagesLength = chatWindow.messages.length;
 		if(messagesLength > client.MAX_MESSAGES_PER_WINDOW)
 		{
-			console.log("Message Length: " + messagesLength);
 			chatWindow.messages.splice(0, messagesLength - client.MAX_MESSAGES_PER_WINDOW);
-			console.log("Truncated to: " + chatWindow.messages.length);
 		}
 		if (siteChatUser.avatarUrl != ''){
 			avatarUrl = 'http://forum.mafiascum.net/download/file.php?avatar=' + siteChatUser.avatarUrl;
@@ -368,19 +361,8 @@ function Client()
 			client.saveChatWindow(chatWindow);
 	}
 
-	//////////////////////////////////////////////////////////////////////////////////////////////////////
-	this.printUsers = function()
-	{
-		for(var userId in client.userMap)
-		{
-			console.log(" - " + userId + ": " + client.userMap[ userId ].name + ", " + client.userMap[ userId ].avatarUrl);
-		}
-	}
-	//////////////////////////////////////////////////////////////////////////////////////////////////////
-
 	this.addUser = function(siteChatUser, save, doNotAddToOnlineList)
 	{
-		console.log("ADDING USER #" + siteChatUser.id + ": " + siteChatUser.name + ", Save: " + save);
 		if ( client.userMap[ siteChatUser.id ] == null){
 			client.userMap[ siteChatUser.id ] = siteChatUser;
 			
@@ -444,17 +426,13 @@ function Client()
 		var data = message.data;
 		var siteChatPacket = JSON.parse(data);
 
-		console.log("RECEIVING: " + data);
 		if(siteChatPacket.command == "LogIn")
 		{
-			console.log("Log In Result: " + siteChatPacket.wasSuccessful);
-			
 			if(siteChatPacket.missedSiteChatConversationMessages && siteChatPacket.missedSiteChatConversationMessages.length > 0)
 			{
 				var missedMessagesLength = siteChatPacket.missedSiteChatConversationMessages.length;
 				for(var messageIndex = 0;messageIndex < missedMessagesLength;++messageIndex)
 				{
-					console.log("Adding Missed Message. ID: " + siteChatPacket.missedSiteChatConversationMessages[ messageIndex ].id);
 					client.addSiteChatConversationMessage(siteChatPacket.missedSiteChatConversationMessages[ messageIndex ], true, true);
 				}
 			}
@@ -498,7 +476,6 @@ function Client()
 				}
 				else
 				{
-					console.log("Preparing to add NewMessage siteChatConversationMessage.");
 					client.addSiteChatConversationMessage(siteChatPacket.siteChatConversationMessage, true, true);
 				}
 			}
@@ -534,14 +511,12 @@ function Client()
 		}
 		else if(siteChatPacket.command == "LeaveConversation")
 		{
-			console.log("Removing User #" + siteChatPacket.userId + " From Conversation #" + siteChatPacket.siteChatConversationId);
 			var chatWindow = client.chatWindows[ siteChatPacket.siteChatConversationId ];
 			if(chatWindow)
 				chatWindow.userIdSet.splice($.inArray(siteChatPacket.userId, chatWindow.userIdSet), 1);
 		}
 		else if(siteChatPacket.command == "UserList")
 		{
-			console.log("Got list of users: " + siteChatPacket.siteChatUsers);
 			var siteChatUserListLength = siteChatPacket.siteChatUsers.length;
 			var newOnlineUserIdSet = [];
 			
@@ -563,7 +538,6 @@ function Client()
 	this.sendSiteChatPacket = function(packetObject)
 	{
 		var json = JSON.stringify(packetObject);
-		console.log("SENDING: " + json);
 		client.socket.send(json);
 	}
 
@@ -629,11 +603,15 @@ function Client()
 		//Before doing anything, ensure that the user that will attempt to connect is the same one for which we have localstorage data.
 		if(localStorage[client.namespace + "userId"] == null || parseInt(localStorage[client.namespace + "userId"]) != client.userId)
 		{
-			console.log("Current User ID `" + client.userId + "` does not match stored user ID `" + localStorage[client.namespace + "userId"] + "`");
-			console.log("Clearing local storage cache...");
 			client.clearLocalStorage();
 			localStorage[client.namespace + "userId"] = client.userId;
 		}
+		
+		$(window).bind('beforeunload', function() {
+		
+			client.unloading = true;
+			client.socket.close();
+		});
 		
 		client.setupWebSocket();
 
