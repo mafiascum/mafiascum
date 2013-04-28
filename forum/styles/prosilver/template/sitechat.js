@@ -2,14 +2,8 @@ var client = null;
 var defaultAvatar = './styles/prosilver/imageset/defaultAvatar.png';
 function supportsHtml5Storage()
 {
-	try
-	{
-		return 'localStorage' in window && window['localStorage'] !== null;
-	}
-	catch (e)
-	{
-		return false;
-  	}
+	try{return 'localStorage' in window && window['localStorage'] !== null;}
+	catch(e){return false;}
 }
 
 function zeroFill( number, width )
@@ -56,6 +50,7 @@ function Client()
 	this.onlineUserIdSet = [];
 	this.MAX_MESSAGES_PER_WINDOW = 500;
 	this.unloading = false;
+	this.firstConnectionThisPageLoad = true;
 	this.attemptReconnect = function()
 	{
 		client.setupWebSocket();
@@ -436,12 +431,18 @@ function Client()
 					client.addSiteChatConversationMessage(siteChatPacket.missedSiteChatConversationMessages[ messageIndex ], true, true);
 				}
 			}
+			
+			if(client.firstConnectionThisPageLoad && client.autoJoinLobby && !_.find(client.chatWindows, function(chatWindow) {return chatWindow.title == "Lobby";}))
+			{
+				client.sendConnectMessage("Lobby");
+			}
+			
+			client.firstConnectionThisPageLoad = false;
 		}
 		else if(siteChatPacket.command == "Connect")
 		{
 			if(client.chatWindows[siteChatPacket.siteChatConversationId] == undefined)
-			{//Create the chat window.
-
+			{//Create chat window
 				var siteChatUserIdSet = [];
 				for(var siteChatUserIndex = 0;siteChatUserIndex < siteChatPacket.users.length;++siteChatUserIndex)
 				{
@@ -554,21 +555,12 @@ function Client()
 				+	'		<div class="title">' + 'Join Chat' + '<div class="exclamation hidden">!</div></div>'
 				+	'		<p id="onlinelisttitle">Online Users</p>'
 				+	'		<ul id="onlinelist"></ul>'
-				+	'		<div id="joindiv"><label>Chatroom:</label><input id="joinconversationinput" type="text" name="input"></input></div>'
+				+	'		<div id="joindiv"><label>Chatroom:</label><form id="joinConversationForm"><input type="text" name="input"></input></div>'
 				+	'	</div>'
 				+	'</div>'
 				);
 		$("#utilitywindow .title").bind("click", client.handleWindowTitleClick);
 		$("#utilitywindow .inputBuffer").bind("keypress", client.handleWindowInputSubmission);
-		$('#joinconversationinput').keyup(function(e) {
-				if(e.keyCode == 13 || e.keyCode == 10) {
-					  var siteChatPacket = new Object(); 
-					  siteChatPacket.command = "Connect";
-					  siteChatPacket.siteChatConversationName = $("#joinconversationinput").val();
-					  $("#joinconversationinput").val('');
-					  client.sendSiteChatPacket(siteChatPacket);
-				}
-		});
 	}
 	this.heartbeat = function(){
 		var siteChatPacket = new Object();
@@ -591,10 +583,11 @@ function Client()
 			}
 		}
 	}
-	this.setup = function(sessionId, userId)
+	this.setup = function(sessionId, userId, autoJoinLobby)
 	{
 		client.sessionId = sessionId;
 		client.userId = userId;
+		client.autoJoinLobby = autoJoinLobby;
 		if(!supportsHtml5Storage() || typeof(WebSocket) != "function")
 		{
 			return;
@@ -607,10 +600,17 @@ function Client()
 			localStorage[client.namespace + "userId"] = client.userId;
 		}
 		
-		$(window).bind('beforeunload', function() {
+		$(window).bind("beforeunload", function() {
 		
 			client.unloading = true;
 			client.socket.close();
+		});
+		
+		$(document).on("submit", "#joinConversationForm", function(event) {
+			event.preventDefault();
+			var $input = $(this).children("input");
+			client.sendConnectMessage($input.val());
+			$input.val("");
 		});
 		
 		client.setupWebSocket();
@@ -622,9 +622,14 @@ function Client()
 		setInterval('client.heartbeat()', 150000);
 	}
 	
+	this.sendConnectMessage = function(conversationName)
+	{
+		client.sendSiteChatPacket({command: "Connect", siteChatConversationName: conversationName});
+	}
+	
 	this.setupWebSocket = function()
 	{
-		client.socket = new WebSocket("ws://localhost:4241", "site-chat");
+		client.socket = new WebSocket("ws://apollo.corbe.net:4241", "site-chat");
 		client.socket.onopen = client.handleSocketOpen;
 		client.socket.onclose = client.handleSocketClose;
 		client.socket.onmessage = client.handleSocketMessage;

@@ -77,6 +77,13 @@
 			</dd>
 		</dl>
 		<dl>
+			<dt><label for="lobby1">Enter Chat Lobby Automatically:</label></dt>
+			<dd>
+				<label for="lobby1"><input type="radio" name="lobby" id="lobby1" value="1"<!-- IF S_LOBBY --> checked="checked"<!-- ENDIF --> /> {L_YES}</label> 
+				<label for="lobby0"><input type="radio" name="lobby" id="lobby0" value="0"<!-- IF not S_LOBBY --> checked="checked"<!-- ENDIF --> /> {L_NO}</label>
+			</dd>
+		</dl>
+		<dl>
 			<dt><label for="bbsigs1">Enable bold and color BBcode in sigs; Disable automatic sig-hiding:</label></dt>
 			<dd>
 				<label for="bbsigs1"><input type="radio" name="bbsigs" id="bbsigs1" value="1"<!-- IF S_BBSIG --> checked="checked"<!-- ENDIF --> /> {L_YES}</label> 
