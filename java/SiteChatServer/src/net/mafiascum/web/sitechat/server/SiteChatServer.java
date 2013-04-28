@@ -16,6 +16,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.servlet.http.HttpServletRequest;
 
+import net.mafiascum.json.DateUnixTimestampSerializer;
 import net.mafiascum.provider.Provider;
 import net.mafiascum.util.MiscUtil;
 import net.mafiascum.util.StringUtil;
@@ -46,6 +47,7 @@ import sun.misc.Signal;
 import sun.misc.SignalHandler;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 public class SiteChatServer extends Server implements SignalHandler {
   
@@ -277,8 +279,10 @@ public class SiteChatServer extends Server implements SignalHandler {
           siteChatOutboundUserListPacket.setSiteChatUsers(siteChatUserList);
           
           for(SiteChatWebSocket siteChatWebSocket : descriptors) {
-          
-            siteChatWebSocket.sendOutboundPacket(siteChatOutboundUserListPacket);
+            
+            if(siteChatWebSocket.getSiteChatUser() != null) {//Only send to users who have logged in.
+              siteChatWebSocket.sendOutboundPacket(siteChatOutboundUserListPacket);
+            }
           }
         }
       }
@@ -632,8 +636,7 @@ public class SiteChatServer extends Server implements SignalHandler {
     
     public void sendOutboundPacket(SiteChatOutboundPacket siteChatOutboundPacket) throws IOException {
       
-      String siteChatOutboundPacketJson = new Gson().toJson(siteChatOutboundPacket);
-      
+      String siteChatOutboundPacketJson = new GsonBuilder().registerTypeAdapter(Date.class, new DateUnixTimestampSerializer()).create().toJson(siteChatOutboundPacket);
       this.getConnection().sendMessage(siteChatOutboundPacketJson);
     }
   }

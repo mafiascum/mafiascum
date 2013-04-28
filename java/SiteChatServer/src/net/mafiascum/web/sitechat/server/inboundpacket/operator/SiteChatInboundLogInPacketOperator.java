@@ -40,6 +40,7 @@ public class SiteChatInboundLogInPacketOperator implements SiteChatInboundPacket
     if(!loginResult) {
       
       MiscUtil.log("Login authentication failed for user #" + siteChatUser.getId() + ". Session ID: " + siteChatInboundLogInPacket.getSessionId());
+      siteChatWebSocket.getConnection().close();
       return;
     }
     
