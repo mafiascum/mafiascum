@@ -31,10 +31,6 @@ function ChatWindow()
 	this.expanded = false;
 	this.userIdSet = [];
 	this.blinking = false;
-	this.userIsInChat = function(userId)
-	{
-		return $.inArray(userId, this.userIdSet) != -1;
-	}
 }
 
 function Client()
@@ -130,6 +126,8 @@ function Client()
 			$window.addClass("collapsed");
 			if(siteChatConversation)
 				siteChatConversation.expanded = false;
+			else
+				sessionStorage[client.namespace + "utilityExpanded"] = false;
 		}
 		else
 		{
@@ -141,6 +139,8 @@ function Client()
 				var outputbuffer = $("#chat" + siteChatConversation.siteChatConversationId + " .outputBuffer");
 				outputbuffer.scrollTop(outputbuffer[0].scrollHeight);
 			}
+			else
+				sessionStorage[client.namespace + "utilityExpanded"] = true;
 		}
 		if(siteChatConversation)
 			client.saveChatWindow(siteChatConversation);
@@ -209,14 +209,13 @@ function Client()
 
 	this.submitChatMessage = function(messageContent, chatWindowId)
 	{
-		$window = $("#" + chatWindowId);
-
-		var siteChatPacket = new Object();
-		siteChatPacket.command = "SendMessage";
-		siteChatPacket.userId = client.userId;
-		siteChatPacket.message = messageContent;
-		siteChatPacket.siteChatConversationId = parseInt(chatWindowId.replace("chat", ""));
-
+		var siteChatPacket =
+		{
+			command:"SendMessage",
+			userId:client.userId,
+			message:messageContent,
+			siteChatConversationId:parseInt(chatWindowId.replace("chat", ""))
+		};
 		this.sendSiteChatPacket(siteChatPacket);
 	}
 	
@@ -229,12 +228,14 @@ function Client()
 			client.attemptReconnectIntervalId = null;
 		}
 		$("#utilitywindow .exclamation").addClass("hidden");
-		var siteChatPacket = new Object();
-		siteChatPacket.command = "LogIn";
-		siteChatPacket.userId = client.userId;
-		siteChatPacket.sessionId = client.sessionId;
-		siteChatPacket.conversationIdSet = client.getConversationIdSet();
-		siteChatPacket.conversationIdToMostRecentMessageIdMap = new Object();
+		var siteChatPacket =
+		{
+			command:"LogIn",
+			userId:client.userId,
+			sessionId:client.sessionId,
+			conversationIdSet:client.getConversationIdSet(),
+			conversationIdToMostRecentMessageIdMap:new Object()
+		};
 		
 		for(var siteChatConversationId in client.chatWindows)
 		{
@@ -273,14 +274,13 @@ function Client()
 			+	'</div>'
 			);
 
+		//Window defaults to an expanded state so autogrow can see the proper CSS values.
 		$("#chat" + conversationId + " .inputBuffer").autoGrow();
-		
+		//We now collapse it.
 		$("#chat" + conversationId + " .inputBuffer").removeClass("expanded");
 		$("#chat" + conversationId + " .inputBuffer").addClass("collapsed");
 		
-		$("#chat" + conversationId + " .title").bind("click", client.handleWindowTitleClick);
 		$("#chat" + conversationId + " .inputBuffer").bind("keypress", client.handleWindowInputSubmission);
-		$("#chat" + conversationId + " .title .close").bind("click", client.handleWindowCloseButtonClick);
 		
 		var chatWindow = new ChatWindow();
 		chatWindow.siteChatConversationId = conversationId;
@@ -335,7 +335,7 @@ function Client()
 	{
 		var chatWindow = client.chatWindows[ siteChatConversationMessage.siteChatConversationId ];
 		var siteChatUser = client.userMap[ siteChatConversationMessage.userId ];
-		var messageDate = new Date(siteChatConversationMessage.createdDatetime);//TODO: Time zone differences
+		var messageDate = new Date(siteChatConversationMessage.createdDatetime);
 		
 		var messageDateString = zeroFill(messageDate.getHours(), 2) + ":" + zeroFill(messageDate.getMinutes(), 2);
 		
@@ -560,9 +560,10 @@ function Client()
 	}
 	this.createUtilityWindow = function()
 	{
+		var windowStateClass = sessionStorage[client.namespace + "utilityExpanded"] == "true" ? "expanded" : "collapsed";
 		$("#chatPanel").prepend
 				(
-					'<div class="chatWindow collapsed" id="utilitywindow">'
+					'<div class="chatWindow ' + windowStateClass + '" id="utilitywindow">'
 				+	'	<div class="chatWindowInner">'
 				+	'		<div class="title">Site Chat<div class="exclamation hidden">!</div></div>'
 				+	'		<p id="onlinelisttitle">Online Users</p>'
@@ -571,7 +572,6 @@ function Client()
 				+	'	</div>'
 				+	'</div>'
 				);
-		$("#utilitywindow .title").bind("click", client.handleWindowTitleClick);
 		$("#utilitywindow .inputBuffer").bind("keypress", client.handleWindowInputSubmission);
 	}
 	this.heartbeat = function(){
@@ -600,6 +600,7 @@ function Client()
 		client.sessionId = sessionId;
 		client.userId = userId;
 		client.autoJoinLobby = autoJoinLobby && !sessionStorage[client.namespace + "lobbyForcefullyClosed"];
+		
 		if(!supportsHtml5Storage() || typeof(WebSocket) != "function")
 		{
 			return;
@@ -629,6 +630,10 @@ function Client()
 		$(document).on("blur", "#joinConversationForm > input", function(event) {
 			$(this).val("");
 		});
+		
+		
+		$(document).on("click", "#chatPanel .chatWindow .title", client.handleWindowTitleClick);
+		$(document).on("click", "#chatPanel .chatWindow .title .close", client.handleWindowCloseButtonClick);
 		
 		client.setupWebSocket();
 
