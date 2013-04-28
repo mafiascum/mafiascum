@@ -154,6 +154,13 @@
 
 
 /*** Input Buffer ***/
+.chatWindow .inputBuffer
+{
+	font-size: 11px !important; /* Important: This must be here for autogrow! */
+	line-height: 20px;
+	width: 100%;
+}
+
 .chatWindow.collapsed .inputBuffer
 {
 	display: none;
@@ -169,12 +176,8 @@
 	padding: 0 3px 0 3px;
 	border-left: 0px;
 	border-right:0px;
-	width: 100%;
 	cursor: text;
-	font-size: 11px !important;
-	line-height: 20px;
 	resize: none;
-	height: 30px;
 }
 
 /*** Display user name ***/

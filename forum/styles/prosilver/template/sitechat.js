@@ -264,15 +264,20 @@ function Client()
 	{
 		$("#chatPanel").append
 			(
-				'<div class="chatWindow collapsed" id="chat' + conversationId + '">'
+				'<div class="chatWindow expanded" id="chat' + conversationId + '">'
 			+	'	<div class="chatWindowInner">'
 			+	'		<div class="title">' + title + '<div class="close">X</div></div>'
 			+	'		<div class="outputBuffer"></div>'
-			+	'		<input class="inputBuffer" type="text" name="input"></input>'
+			+	'		<textarea class="inputBuffer" name="input" style="height:20px;"></textarea>'
 			+	'	</div>'
 			+	'</div>'
 			);
 
+		$("#chat" + conversationId + " .inputBuffer").autoGrow();
+		
+		$("#chat" + conversationId + " .inputBuffer").removeClass("expanded");
+		$("#chat" + conversationId + " .inputBuffer").addClass("collapsed");
+		
 		$("#chat" + conversationId + " .title").bind("click", client.handleWindowTitleClick);
 		$("#chat" + conversationId + " .inputBuffer").bind("keypress", client.handleWindowInputSubmission);
 		$("#chat" + conversationId + " .title .close").bind("click", client.handleWindowCloseButtonClick);
