@@ -116,13 +116,18 @@ function Client()
 		event.stopPropagation();
 		var $window = $(this).closest(".chatWindow");
 		var siteChatConversation = client.chatWindows[ parseInt($window.attr("id").replace("chat", "")) ];
-		var $title = $(window).find(".title");
+		var $title = $window.find(".title");
+		
+		if (siteChatConversation != null && siteChatConversation.blinking == true)
+			siteChatConversation.blinking = false;
+			
+		$title.stop(true);
+		$title.css('backgroundColor', '');
+
 		if($window.hasClass("expanded"))
 		{
 			$window.removeClass("expanded");
 			$window.addClass("collapsed");
-			$title.stop(true);
-			$title.css('backgroundColor', '');
 			if(siteChatConversation)
 				siteChatConversation.expanded = false;
 		}
@@ -130,17 +135,12 @@ function Client()
 		{
 			$window.removeClass("collapsed");
 			$window.addClass("expanded");
-			$title.stop(true);
-			$title.css('backgroundColor', '');
 			$window.show();
 			if(siteChatConversation){
 				siteChatConversation.expanded = true;
 				var outputbuffer = $("#chat" + siteChatConversation.siteChatConversationId + " .outputBuffer");
 				outputbuffer.scrollTop(outputbuffer[0].scrollHeight);
 			}
-		}
-		if (siteChatConversation != null && siteChatConversation.blinking == true){
-			siteChatConversation.blinking = false;
 		}
 		if(siteChatConversation)
 			client.saveChatWindow(siteChatConversation);
@@ -354,9 +354,9 @@ function Client()
 			+	'	<div class="messagecontent">' + siteChatConversationMessage.message + '</div>'
 			+	'</div>'
 		);
-		if (chatWindow.expanded == false && isNew){
+		if(chatWindow.expanded == false && isNew && siteChatConversationMessage.userId != client.userId)
 			chatWindow.blinking = true;
-		}
+		
 		var outputBuffer = $("#chat" + siteChatConversationMessage.siteChatConversationId + " .outputBuffer").get(0);
 		outputBuffer.scrollTop = outputBuffer.scrollHeight;
 		if(save)
@@ -559,10 +559,10 @@ function Client()
 				(
 					'<div class="chatWindow collapsed" id="utilitywindow">'
 				+	'	<div class="chatWindowInner">'
-				+	'		<div class="title">' + 'Join Chat' + '<div class="exclamation hidden">!</div></div>'
+				+	'		<div class="title">Site Chat<div class="exclamation hidden">!</div></div>'
 				+	'		<p id="onlinelisttitle">Online Users</p>'
 				+	'		<ul id="onlinelist"></ul>'
-				+	'		<div id="joindiv"><label>Chatroom:</label><form id="joinConversationForm"><input type="text" name="input"></input></div>'
+				+	'		<div id="joindiv"><form id="joinConversationForm"><input autocomplete="off" placeholder="Enter Chat Room Name" type="text" name="input"></input></div>'
 				+	'	</div>'
 				+	'</div>'
 				);
@@ -619,6 +619,10 @@ function Client()
 			var $input = $(this).children("input");
 			client.sendConnectMessage($input.val());
 			$input.val("");
+		});
+		
+		$(document).on("blur", "#joinConversationForm > input", function(event) {
+			$(this).val("");
 		});
 		
 		client.setupWebSocket();
