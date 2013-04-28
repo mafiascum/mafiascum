@@ -163,8 +163,13 @@ function Client()
 		//Remove window from DOM
 		$window.remove();
 
-		if(client.chatWindows[ conversationId ])
+		var conversation = client.chatWindows[ conversationId ];
+		if(conversation)
+		{
+			if(conversation.title == "Lobby")
+				sessionStorage[client.namespace + "lobbyForcefullyClosed"] = true;
 			delete client.chatWindows[ conversationId ];
+		}
 
 		if(localStorage[client.namespace + "conversation" + conversationId])
 			localStorage.removeItem(client.namespace + "conversation" + conversationId);
@@ -217,6 +222,7 @@ function Client()
 	
 	this.handleSocketOpen = function()
 	{
+		client.socket.connected = true;
 		if(client.attemptReconnectIntervalId != null)
 		{
 			window.clearInterval(client.attemptReconnectIntervalId);
@@ -244,6 +250,7 @@ function Client()
 	
 	this.handleSocketClose = function()
 	{
+		client.socket.connected = false;
 		if(!client.unloading)
 		{
 			if(client.attemptReconnectIntervalId != null)
@@ -587,7 +594,7 @@ function Client()
 	{
 		client.sessionId = sessionId;
 		client.userId = userId;
-		client.autoJoinLobby = autoJoinLobby;
+		client.autoJoinLobby = autoJoinLobby && !sessionStorage[client.namespace + "lobbyForcefullyClosed"];
 		if(!supportsHtml5Storage() || typeof(WebSocket) != "function")
 		{
 			return;
@@ -603,7 +610,8 @@ function Client()
 		$(window).bind("beforeunload", function() {
 		
 			client.unloading = true;
-			client.socket.close();
+			if(client.socket.connected)
+				client.socket.close();
 		});
 		
 		$(document).on("submit", "#joinConversationForm", function(event) {
@@ -630,6 +638,7 @@ function Client()
 	this.setupWebSocket = function()
 	{
 		client.socket = new WebSocket("ws://apollo.corbe.net:4241", "site-chat");
+		client.socket.connected = false;
 		client.socket.onopen = client.handleSocketOpen;
 		client.socket.onclose = client.handleSocketClose;
 		client.socket.onmessage = client.handleSocketMessage;
