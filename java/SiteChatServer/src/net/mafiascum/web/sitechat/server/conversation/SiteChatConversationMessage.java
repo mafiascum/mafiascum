@@ -16,6 +16,19 @@ public class SiteChatConversationMessage extends DataObjectWithIntId {
     id = NEW;
   }
 
+  public SiteChatConversationMessage clone() {
+    
+    SiteChatConversationMessage siteChatConversationMessage = new SiteChatConversationMessage();
+    
+    siteChatConversationMessage.setId(id);
+    siteChatConversationMessage.setUserId(userId);
+    siteChatConversationMessage.setCreatedDatetime(createdDatetime);
+    siteChatConversationMessage.setSiteChatConversationId(siteChatConversationId);
+    siteChatConversationMessage.setMessage(message);
+    
+    return siteChatConversationMessage;
+  }
+  
   public int getUserId() {
     return userId;
   }

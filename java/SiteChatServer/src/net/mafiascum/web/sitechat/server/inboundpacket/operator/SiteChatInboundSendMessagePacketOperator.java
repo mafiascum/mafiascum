@@ -1,5 +1,6 @@
 package net.mafiascum.web.sitechat.server.inboundpacket.operator;
 
+import net.mafiascum.util.StringUtil;
 import net.mafiascum.web.sitechat.server.SiteChatServer;
 import net.mafiascum.web.sitechat.server.SiteChatServer.SiteChatWebSocket;
 import net.mafiascum.web.sitechat.server.SiteChatUser;
@@ -45,6 +46,8 @@ public class SiteChatInboundSendMessagePacketOperator implements SiteChatInbound
     }
     
     SiteChatConversationMessage siteChatConversationMessage = siteChatServer.recordSiteChatConversationMessage(siteChatInboundSendMessagePacket.getUserId(), siteChatInboundSendMessagePacket.getSiteChatConversationId(), siteChatInboundSendMessagePacket.getMessage());
+    siteChatConversationMessage = siteChatConversationMessage.clone();
+    siteChatConversationMessage.setMessage(StringUtil.escapeHTMLCharacters(siteChatConversationMessage.getMessage()));
     
     //Send the message to all users in the conversation(including the user who sent it).
     SiteChatOutboundNewMessagePacket siteChatOutboundNewMessagePacket = new SiteChatOutboundNewMessagePacket();
