@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.ListIterator;
 
 import net.mafiascum.util.MiscUtil;
+import net.mafiascum.util.StringUtil;
 import net.mafiascum.web.sitechat.server.SiteChatServer;
 import net.mafiascum.web.sitechat.server.SiteChatServer.SiteChatWebSocket;
 import net.mafiascum.web.sitechat.server.SiteChatUser;
@@ -84,6 +85,8 @@ public class SiteChatInboundLogInPacketOperator implements SiteChatInboundPacket
             SiteChatConversationMessage siteChatConversationMessage = listIterator.previous();
             if(siteChatConversationMessage.getId() > siteChatConversationMessageId) {
               
+              siteChatConversationMessage = siteChatConversationMessage.clone();
+              siteChatConversationMessage.setMessage(StringUtil.escapeHTMLCharacters(siteChatConversationMessage.getMessage()));
               MiscUtil.log("Adding missed message: " + siteChatConversationMessage.getId());
               missedSiteChatConversationMessages.add(siteChatConversationMessage);
             }
