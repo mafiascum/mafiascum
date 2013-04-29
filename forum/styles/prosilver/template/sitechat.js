@@ -351,7 +351,11 @@ function Client()
 		else {
 			avatarUrl = defaultAvatar;
 		}
-		$("#chat" + siteChatConversationMessage.siteChatConversationId + " .outputBuffer").append
+		 
+		var $outputBuffer = $("#chat" + siteChatConversationMessage.siteChatConversationId + " .outputBuffer")
+		var isScrolledToBottom = $outputBuffer.get(0).scrollTop == ($outputBuffer.get(0).scrollHeight - $outputBuffer.get(0).offsetHeight);
+		
+		$outputBuffer.append
 		(
 				'<div class="message">'
 			+	'	<img src="' + avatarUrl + '" class="profile"></img>'
@@ -362,8 +366,9 @@ function Client()
 		if(chatWindow.expanded == false && isNew && siteChatConversationMessage.userId != client.userId)
 			chatWindow.blinking = true;
 		
-		var outputBuffer = $("#chat" + siteChatConversationMessage.siteChatConversationId + " .outputBuffer").get(0);
-		outputBuffer.scrollTop = outputBuffer.scrollHeight;
+		if(isScrolledToBottom)
+			$outputBuffer.get(0).scrollTop = $outputBuffer.get(0).scrollHeight;
+		
 		if(save)
 			client.saveChatWindow(chatWindow);
 	}
