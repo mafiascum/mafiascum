@@ -281,7 +281,7 @@ function Client()
 			(
 				'<div class="chatWindow expanded" id="chat' + conversationId + '">'
 			+	'	<div class="chatWindowInner">'
-			+	'		<div class="title">' + title + '<div class="close">X</div></div>'
+			+	'		<div class="title"><div class="name">' + title + '</div><div class="close">X</div></div>'
 			+	'		<div class="outputBuffer"></div>'
 			+	'		<textarea class="inputBuffer" name="input" style="height:20px;"></textarea>'
 			+	'	</div>'
@@ -376,8 +376,8 @@ function Client()
 		$outputBuffer.append
 		(
 				'<div class="message">'
-			+	'	<img src="' + avatarUrl + '" class="profile"></img>'
-			+	'	<div class="messageUserName">' + siteChatUser.name + '</div> <span class="messageTimestamp">(' + messageDateString + ')</span>'
+			+	'	<a href="http://forum.mafiascum.net/memberlist.php?mode=viewprofile&u=' + siteChatUser.id + '"><img src="' + avatarUrl + '" class="profile"></img></a>'
+			+	'	<div class="messageUserName"><a href="http://forum.mafiascum.net/memberlist.php?mode=viewprofile&u=' + siteChatUser.id + '">' + siteChatUser.name + '</a></div> <span class="messageTimestamp">(' + messageDateString + ')</span>'
 			+	'	<div class="messagecontent">' + client.parseBBCode(siteChatConversationMessage.message) + '</div>'
 			+	'</div>'
 		);

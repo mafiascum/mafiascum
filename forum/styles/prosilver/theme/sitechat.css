@@ -73,6 +73,19 @@
 	background-color: #FFF;
 }
 
+.chatWindow .title .name
+{
+	width: 160px;
+	text-overflow:ellipsis;
+	display: inline-block;
+	overflow:hidden;
+}
+
+.chatWindow.expanded .title .name
+{
+	width: 290px;
+}
+
 .chatWindow .title .close
 {
 	display:none;

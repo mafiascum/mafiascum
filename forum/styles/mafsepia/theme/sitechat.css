@@ -5,6 +5,7 @@
 	bottom: 0%;
 	right: 2%;
 	font-size: 16px !important;
+	height: 25px;
 }
 
 .chatWindow
@@ -70,6 +71,19 @@
 .chatWindow.collapsed .title:hover
 {
 	background-color: #FFF;
+}
+
+.chatWindow .title .name
+{
+	width: 160px;
+	text-overflow:ellipsis;
+	display: inline-block;
+	overflow:hidden;
+}
+
+.chatWindow.expanded .title .name
+{
+	width: 290px;
 }
 
 .chatWindow .title .close
@@ -153,6 +167,13 @@
 
 
 /*** Input Buffer ***/
+.chatWindow .inputBuffer
+{
+	font-size: 11px !important; /* Important: This must be here for autogrow! */
+	line-height: 20px;
+	width: 100%;
+}
+
 .chatWindow.collapsed .inputBuffer
 {
 	display: none;
@@ -162,39 +183,16 @@
 {
 	display: block;
 	box-sizing: border-box;
+	-moz-box-sizing:border-box;
+	-webkit-box-sizing:border-box;
 	margin: 0;
-	padding:0;
+	padding: 0 3px 0 3px;
 	border-left: 0px;
 	border-right:0px;
-	width: 100%;
 	cursor: text;
-	font-size: 11px !important;
-	line-height: 20px;
 	resize: none;
 }
 
-/*** Join a chat room ***/
-
-.chatWindow.collapsed #joindiv{
-	display: none;
-	box-sizing: border-box;
-}
-
-.chatWindow.expanded #joindiv{
-	box-sizing: border-box;
-	display: block;
-	margin: 0;
-	background-color:white;
-	padding: 5px;
-}
-.collapsed #joinconversationinput {
-	display: none;
-}
-.expanded #joinconversationinput {
-	cursor: text;
-	font-size: 11px !important;
-	line-height: 20px;
-}
 /*** Display user name ***/
 .chatWindow.collapsed .username{
 	display: none;
@@ -254,6 +252,50 @@
 }
 
 .exclamation.hidden
+{
+	display: none;
+}
+
+.chatWindow.expanded #joinConversationForm > input
+{
+	display: block;
+	-moz-box-sizing:border-box;
+	-webkit-box-sizing:border-box;
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0 0 0 5px;
+	width: 100%;
+	cursor: text;
+	font-size: 11px !important;
+	line-height: 20px;
+	height: 25px;
+	
+	background: #EEE;
+	border: none;
+	
+	-webkit-transition: all 0.1s linear;
+	-o-transition: all 0.1s linear;
+	-moz-transition: all 0.1s linear;
+	transition: all 0.1s linear;
+}
+
+.chatWindow.expanded #joinConversationForm > input:focus
+{
+	background: #FAFAFA;
+	outline: none;
+}
+
+.chatWindow.expanded #joinConversationForm > input::-webkit-input-placeholder		{	color: #888;	}
+.chatWindow.expanded #joinConversationForm > input:-moz-placeholder			{	color: #444;	}
+.chatWindow.expanded #joinConversationForm > input::-moz-placeholder			{	color: #444;	}
+.chatWindow.expanded #joinConversationForm > input:-ms-input-placeholder		{	color: #888;	}
+
+.chatWindow.expanded #joinConversationForm > input:focus::-webkit-input-placeholder	{	color: #666;	}
+.chatWindow.expanded #joinConversationForm > input:focus:-moz-placeholder		{	color: #000;	}
+.chatWindow.expanded #joinConversationForm > input:focus::-moz-placeholder		{	color: #000;	}
+.chatWindow.expanded #joinConversationForm > input:focus:-ms-input-placeholder		{	color: #666;	}
+
+.chatWindow.collapsed #joinConversationForm
 {
 	display: none;
 }
