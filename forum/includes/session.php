@@ -1536,11 +1536,11 @@ class user extends session
 	*/
 	function setup($lang_set = false, $style = false)
 	{
-		global $db, $template, $config, $auth, $phpEx, $phpbb_root_path, $cache;
+		global $db, $template, $config, $auth, $phpEx, $phpbb_root_path, $cache, $mobile;
 	//detect mobile device
 		$chrome_browser = 0; 
 		$mobile_browser = 0;
-		$mobile;
+		$mobile = false;
 		if (preg_match('/(up.browser|up.link|mmp|symbian|smartphone|midp|wap|phone|android)/i', strtolower($_SERVER['HTTP_USER_AGENT']))) {
 			$mobile_browser++;
 		}
@@ -1569,12 +1569,11 @@ class user extends session
 		 
 		if ($mobile_browser > 0) {
 		   $mobile = true;
-
 		}
 		else {
 		   //echo "non-mobile view";
-		   $mobile= false;;
-		} 
+		   $mobile= false;
+		}
 	//end detect mobile device.
 		if ($this->data['user_id'] != ANONYMOUS)
 		{

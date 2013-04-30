@@ -4329,7 +4329,7 @@ function jid_decode($username){
 */
 function page_header($page_title = '', $display_online_list = true, $item_id = 0, $item = 'forum')
 {
-	global $db, $config, $template, $SID, $_SID, $user, $auth, $phpEx, $phpbb_root_path;
+	global $db, $config, $template, $SID, $_SID, $user, $auth, $phpEx, $phpbb_root_path, $mobile;
 
 	if (defined('HEADER_INC'))
 	{
@@ -4530,7 +4530,7 @@ function page_header($page_title = '', $display_online_list = true, $item_id = 0
 	{
 		$s_search_hidden_fields['sid'] = $_SID;
 	}
-
+	
 	// The following assigns all _common_ variables that may be used at any point in a template.
 	$template->assign_vars(array(
 		'SITENAME'						=> $config['sitename'],
@@ -4549,7 +4549,7 @@ function page_header($page_title = '', $display_online_list = true, $item_id = 0
 		'S_USER_NEW_PRIVMSG'			=> $user->data['user_new_privmsg'],
 		'S_USER_UNREAD_PRIVMSG'			=> $user->data['user_unread_privmsg'],
 		'S_USER_NEW'					=> $user->data['user_new'],
-		'S_CHAT'						=> $user->optionget('chat_enabled') && $user->data['user_type'] != USER_INACTIVE,
+		'S_CHAT'						=> $user->optionget('chat_enabled') && $user->data['user_type'] != USER_INACTIVE && $mobile == false,
 		'S_LOBBY'						=> $user->optionget('enterlobby'),
 		'SID'				=> $SID,
 		'_SID'				=> $_SID,
