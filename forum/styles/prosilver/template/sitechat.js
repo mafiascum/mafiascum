@@ -52,6 +52,12 @@ function Client()
 		client.setupWebSocket();
 	}
 	
+	this.parseBBCode = function(message)
+	{
+		return message	.replace(/\[b\](.*?)\[\/b\]/g, "<b>$1</b>")
+				.replace(/\[i\](.*?)\[\/i\]/g, "<i>$1</i>")
+				.replace(/\[u\](.*?)\[\/u\]/g, "<u>$1</u>");
+	}
 	this.clearLocalStorage = function()
 	{
 		for(var key in localStorage)
@@ -64,10 +70,6 @@ function Client()
 	this.loadFromLocalStorage = function()
 	{
 		var userIdSet, converstionIdSet;
-		
-		//Load online user ID set.
-		if(localStorage[client.namespace + "onlineUserIdSet"])
-			client.onlineUserIdSet = JSON.parse(localStorage[client.namespace + "onlineUserIdSet"]);
 
 		//Load users.
 		if(localStorage[client.namespace + "userIdSet"])
@@ -81,14 +83,23 @@ function Client()
 				{
 					try {
 						var siteChatUser = JSON.parse(localStorage[client.namespace + "user" + userId]);
-						var addToOnlineUserList = _.contains(client.onlineUserIdSet, siteChatUser.id);
-						client.addUser(siteChatUser, false, !addToOnlineUserList);
+						//var addToOnlineUserList = _.contains(client.onlineUserIdSet, siteChatUser.id);
+						client.addUser(siteChatUser, false, true);
 					}
 					catch(err)
 					{
 						console.log("Could not load user from localStorage: " + err);
 					}
 				}
+			}
+		}
+		//Load online user ID set.
+		if(localStorage[client.namespace + "onlineUserIdSet"])
+		{
+			onlineUserIdSet = JSON.parse(localStorage[client.namespace + "onlineUserIdSet"]);
+			for(var index = 0;index < onlineUserIdSet.length;++index)
+			{
+				client.addUserToOnlineList(client.userMap[onlineUserIdSet[index]], true);
 			}
 		}
 
@@ -221,6 +232,7 @@ function Client()
 	
 	this.handleSocketOpen = function()
 	{
+		console.log("Socket Opened.");
 		client.socket.connected = true;
 		if(client.attemptReconnectIntervalId != null)
 		{
@@ -244,6 +256,7 @@ function Client()
 			{
 				siteChatPacket.conversationIdToMostRecentMessageIdMap[ siteChatConversationId ] = chatWindow.messages[ chatWindow.messages.length - 1 ].id;
 			}
+			
 		}
 	
 		client.sendSiteChatPacket(siteChatPacket);
@@ -251,6 +264,7 @@ function Client()
 	
 	this.handleSocketClose = function()
 	{
+		console.log("Web Socket Closed.");
 		client.socket.connected = false;
 		if(!client.unloading)
 		{
@@ -308,7 +322,11 @@ function Client()
 			var messageArrayLength = messages.length;
 			for(var messageIndex = 0;messageIndex < messageArrayLength;++messageIndex)
 			{
-				client.addSiteChatConversationMessage(messages[ messageIndex ], save, false);
+				var message = messages[messageIndex];
+				if(!client.userMap[message.userId])
+					console.log("User Not In Map(" + message.userId + ") when creating chat window. Conversation #" + conversationId);
+				else
+					client.addSiteChatConversationMessage(message, save, false);
 			}
 		}
 		
@@ -360,7 +378,7 @@ function Client()
 				'<div class="message">'
 			+	'	<img src="' + avatarUrl + '" class="profile"></img>'
 			+	'	<div class="messageUserName">' + siteChatUser.name + '</div> <span class="messageTimestamp">(' + messageDateString + ')</span>'
-			+	'	<div class="messagecontent">' + siteChatConversationMessage.message + '</div>'
+			+	'	<div class="messagecontent">' + client.parseBBCode(siteChatConversationMessage.message) + '</div>'
 			+	'</div>'
 		);
 		if(chatWindow.expanded == false && isNew && siteChatConversationMessage.userId != client.userId)
@@ -385,20 +403,33 @@ function Client()
 		}
 	}
 	
-	this.addUserToOnlineList = function(siteChatUser, onlyAddHTML)
+	this.addUserToOnlineList = function(siteChatUser, onlyAddToHTML)
 	{
-		$("#onlinelist").append
-		(
-			'<li class="username" id="username' + siteChatUser.id + '">'
-		+	'	<a href="#" onClick="return false;">' + siteChatUser.name + '</a>'
-		+	'</li>'
-		);
-		
-		if(!onlyAddHTML && !_.contains(client.onlineUserIdSet, siteChatUser.id))
+		var indexToInsert = _.sortedIndex(client.onlineUserIdSet, siteChatUser.id, function(userId) { return client.userMap[ userId ].name.toLowerCase() });
+		if(indexToInsert < client.onlineUserIdSet.length && client.onlineUserIdSet[ indexToInsert ] == siteChatUser.id)
 		{
-			client.onlineUserIdSet.push(siteChatUser.id);
-			localStorage[client.namespace + "onlineUserIdSet"] = JSON.stringify(client.onlineUserIdSet);
+			return;
 		}
+		
+		var html
+		= '<li class="username" id="username' + siteChatUser.id + '">'
+		+ '	<a href="#" onClick="return false;">' + siteChatUser.name + '</a>'
+		+ '</li>';
+		if(indexToInsert >= client.onlineUserIdSet.length)
+		{
+			$("#onlinelist").append(html);
+			if(!onlyAddToHTML)
+				client.onlineUserIdSet.push(siteChatUser.id);
+		}
+		else
+		{
+			$("#username" + client.onlineUserIdSet[indexToInsert]).before(html);
+			if(!onlyAddToHTML)
+				client.onlineUserIdSet.splice(indexToInsert, 0, siteChatUser.id);
+		}
+		
+		if(!onlyAddToHTML)
+			localStorage[client.namespace + "onlineUserIdSet"] = JSON.stringify(client.onlineUserIdSet);
 	}
 
 	this.saveUser = function(siteChatUser)
@@ -445,7 +476,11 @@ function Client()
 				var missedMessagesLength = siteChatPacket.missedSiteChatConversationMessages.length;
 				for(var messageIndex = 0;messageIndex < missedMessagesLength;++messageIndex)
 				{
-					client.addSiteChatConversationMessage(siteChatPacket.missedSiteChatConversationMessages[ messageIndex ], true, true);
+					var message = siteChatPacket.missedSiteChatConversationMessages[ messageIndex ];
+					if(!client.userMap[message.userId])
+						console.log("Missed Message. User ID: " + message.userId + ", In Map: " + client.userMap[message.userId]);
+					else
+						client.addSiteChatConversationMessage(message, true, true);
 				}
 			}
 			
@@ -537,26 +572,23 @@ function Client()
 		{
 			var siteChatUserListLength = siteChatPacket.siteChatUsers.length;
 			var newOnlineUserIdSet = [];
+			client.onlineUserIdSet = [];
 			
 			$("#onlinelist").html("");
 			for(var siteChatUserIndex = 0;siteChatUserIndex < siteChatUserListLength;++siteChatUserIndex)
 			{
 				var siteChatUser = siteChatPacket.siteChatUsers[ siteChatUserIndex ];
-				newOnlineUserIdSet.push(siteChatUser.id);
 				if(client.userMap[siteChatUser.id] == null)
 					client.addUser(siteChatUser, true, true);
-				client.addUserToOnlineList(siteChatUser, true);
+				client.addUserToOnlineList(siteChatUser, false);
 			}
-			
-			client.onlineUserIdSet = newOnlineUserIdSet;
-			localStorage[client.namespace + "onlineUserIdSet"] = JSON.stringify(newOnlineUserIdSet);
 		}
 	}
 
 	this.sendSiteChatPacket = function(packetObject)
 	{
-		var json = JSON.stringify(packetObject);
-		client.socket.send(json);
+		if(client.socket.connected)
+			client.socket.send(JSON.stringify(packetObject));
 	}
 
 	this.createChatPanel = function()
@@ -606,7 +638,7 @@ function Client()
 		client.userId = userId;
 		client.autoJoinLobby = autoJoinLobby && !sessionStorage[client.namespace + "lobbyForcefullyClosed"];
 		
-		if(!supportsHtml5Storage() || typeof(WebSocket) != "function")
+		if(!supportsHtml5Storage() || (typeof(WebSocket) != "function" && typeof(WebSocket) != "object"))
 		{
 			return;
 		}
@@ -624,14 +656,12 @@ function Client()
 			if(client.socket.connected)
 				client.socket.close();
 		});
-		
 		$(document).on("submit", "#joinConversationForm", function(event) {
 			event.preventDefault();
 			var $input = $(this).children("input");
 			client.sendConnectMessage($input.val());
 			$input.val("");
 		});
-		
 		$(document).on("blur", "#joinConversationForm > input", function(event) {
 			$(this).val("");
 		});
@@ -639,11 +669,12 @@ function Client()
 		
 		$(document).on("click", "#chatPanel .chatWindow .title", client.handleWindowTitleClick);
 		$(document).on("click", "#chatPanel .chatWindow .title .close", client.handleWindowCloseButtonClick);
-		
 		client.setupWebSocket();
 
 		client.createChatPanel();
+		
 		client.createUtilityWindow();
+		
 		client.loadFromLocalStorage();
 		setInterval('client.blink()', 700);
 		setInterval('client.heartbeat()', 150000);
