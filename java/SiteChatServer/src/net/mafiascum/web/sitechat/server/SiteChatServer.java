@@ -636,8 +636,10 @@ public class SiteChatServer extends Server implements SignalHandler {
     
     public void sendOutboundPacket(SiteChatOutboundPacket siteChatOutboundPacket) throws IOException {
       
-      String siteChatOutboundPacketJson = new GsonBuilder().registerTypeAdapter(Date.class, new DateUnixTimestampSerializer()).create().toJson(siteChatOutboundPacket);
-      this.getConnection().sendMessage(siteChatOutboundPacketJson);
+      if(this.getConnection().isOpen()) {
+        String siteChatOutboundPacketJson = new GsonBuilder().registerTypeAdapter(Date.class, new DateUnixTimestampSerializer()).create().toJson(siteChatOutboundPacket);
+        this.getConnection().sendMessage(siteChatOutboundPacketJson);
+      }
     }
   }
 

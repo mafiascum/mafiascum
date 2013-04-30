@@ -51,16 +51,18 @@ public class SiteChatInboundLogInPacketOperator implements SiteChatInboundPacket
     for(Integer siteChatConversationId : siteChatInboundLogInPacket.getConversationIdSet()) {
       
       SiteChatConversationWithUserList siteChatConversationWithUserList = siteChatServer.getSiteChatConversationWithUserList(siteChatConversationId);
-    
-      if(siteChatConversationWithUserList == null) {
-        
-        MiscUtil.log("User sent conversation ID that does not exist in system: " + siteChatConversationId);
-      }
-      else {
-        
-        if(!siteChatConversationWithUserList.getUserIdSet().contains(siteChatUser.getId())) {
+      
+      synchronized(siteChatConversationWithUserList) {
+        if(siteChatConversationWithUserList == null) {
           
-          siteChatServer.attemptJoinConversation(siteChatUser.getId(), siteChatConversationId, false, true);
+          MiscUtil.log("User sent conversation ID that does not exist in system: " + siteChatConversationId);
+        }
+        else {
+          
+          if(!siteChatConversationWithUserList.getUserIdSet().contains(siteChatUser.getId())) {
+            
+            siteChatServer.attemptJoinConversation(siteChatUser.getId(), siteChatConversationId, false, true);
+          }
         }
       }
     }
