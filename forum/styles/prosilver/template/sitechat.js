@@ -47,6 +47,7 @@ function Client()
 	this.MAX_MESSAGES_PER_WINDOW = 500;
 	this.unloading = false;
 	this.firstConnectionThisPageLoad = true;
+	this.onlineUsers = 0;
 	this.attemptReconnect = function()
 	{
 		client.setupWebSocket();
@@ -430,6 +431,8 @@ function Client()
 		
 		if(!onlyAddToHTML)
 			localStorage[client.namespace + "onlineUserIdSet"] = JSON.stringify(client.onlineUserIdSet);
+		client.onlineUsers += 1;
+		$('#onlinelisttitle .usercount').html('(' + client.onlineUsers + ')');
 	}
 
 	this.saveUser = function(siteChatUser)
@@ -571,6 +574,7 @@ function Client()
 		else if(siteChatPacket.command == "UserList")
 		{
 			var siteChatUserListLength = siteChatPacket.siteChatUsers.length;
+			client.onlineUsers = 0;
 			var newOnlineUserIdSet = [];
 			client.onlineUserIdSet = [];
 			
@@ -616,19 +620,33 @@ function Client()
 					'<div class="chatWindow ' + windowStateClass + '" id="utilitywindow">'
 				+	'	<div class="chatWindowInner">'
 				+	'		<div class="title">Site Chat<div class="exclamation hidden">!</div></div>'
-				+	'		<div id="onlinelistcontainer">'
-				+	'		<p id="onlinelisttitle"><span class="expand-icon">-</span>Online Users </p>'
-				+	'		<ul id="onlinelist"></ul>'
+				+	' 		<ul id="chattabs">'
+				+	' 			<li class="tab active"><a href="#utilitywindow-1">Users</a></li>'
+				+	' 			<li class="tab"><a href="#utilitywindow-2">Rooms</a></li>'
+				+	' 			<li class="tab"><a href="#utilitywindow-3">Settings</a></li>'
+				+ 	' 			<div class="clear"></div>'
+				+	' 		</ul> '
+				+	'		<div id="utilitywindow-1" class="tab_content">'
+				+	'			<div id="onlinelistcontainer">'
+				+	'				<p id="onlinelisttitle"><span class="expand-icon">-</span>Online Users <span class="usercount">(0)</span></p>'
+				+	'				<ul id="onlinelist"></ul>'
+				+	'			</div>'
+				+	'			<div id="joindiv"><form id="joinConversationForm"><input autocomplete="off" placeholder="Enter Chat Room Name" type="text" name="input"></input></div>'
 				+	'		</div>'
-				+	'		<div id="joindiv"><form id="joinConversationForm"><input autocomplete="off" placeholder="Enter Chat Room Name" type="text" name="input"></input></div>'
+				+	'		<div id="utilitywindow-2" class="tab_content">'
+				+	'		<div>rooms</div>'
+				+	'		</div>'
+				+	'		<div id="utilitywindow-3" class="tab_content">'
+				+	'		<div>settings</div>'
+				+	'		</div>'
 				+	'	</div>'
 				+	'</div>'
 				);
 		$("#utilitywindow .inputBuffer").bind("keypress", client.handleWindowInputSubmission);
 		$("#onlinelisttitle").bind('click', this.onlinelistexpand);
+		$("#utilitywindow").tabify();
 	}
 	this.onlinelistexpand = function(){
-	console.log ('hello world');
 		if (client.onlineGroup.expanded == false){
 			$('#onlinelist').css('display', 'block');
 			$('#onlinelisttitle .expand-icon').html('-');
