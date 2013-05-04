@@ -597,19 +597,47 @@ function Client()
 	}
 	this.createUtilityWindow = function()
 	{
+		if (localStorage[client.namespace +'chatGroups']){
+			client.chatGroups = JSON.parse(chatGroupsStr);
+		} else {
+			client.chatGroups = new Array();
+			// load chat groups for the first time
+		}
+		if (localStorage[client.namespace +'onlineGroup']){
+			client.onlineGroup = JSON.parse(onlineGroupsStr);
+		} else {
+			client.onlineGroup = new Object();
+			client.onlineGroup.expanded = false;
+			//load online list for the first time
+		}
 		var windowStateClass = sessionStorage[client.namespace + "utilityExpanded"] == "true" ? "expanded" : "collapsed";
 		$("#chatPanel").prepend
 				(
 					'<div class="chatWindow ' + windowStateClass + '" id="utilitywindow">'
 				+	'	<div class="chatWindowInner">'
 				+	'		<div class="title">Site Chat<div class="exclamation hidden">!</div></div>'
-				+	'		<p id="onlinelisttitle">Online Users</p>'
+				+	'		<div id="onlinelistcontainer">'
+				+	'		<p id="onlinelisttitle">Online Users <span class="expand-icon">-</span></p>'
 				+	'		<ul id="onlinelist"></ul>'
+				+	'		</div>'
 				+	'		<div id="joindiv"><form id="joinConversationForm"><input autocomplete="off" placeholder="Enter Chat Room Name" type="text" name="input"></input></div>'
 				+	'	</div>'
 				+	'</div>'
 				);
 		$("#utilitywindow .inputBuffer").bind("keypress", client.handleWindowInputSubmission);
+		$("#onlinelisttitle").bind('click', this.onlinelistexpand);
+	}
+	this.onlinelistexpand = function(){
+	console.log ('hello world');
+		if (client.onlineGroup.expanded == false){
+			$('#onlinelist').css('display', 'block');
+			$('#onlinelisttitle .expand-icon').html('+');
+			client.onlineGroup.expanded = true;
+		} else {
+			$('#onlinelist').css('display', 'none');
+			$('#onlinelisttitle .expand-icon').html('-');
+			client.onlineGroup.expanded = false;
+		}
 	}
 	this.heartbeat = function(){
 		var siteChatPacket = new Object();

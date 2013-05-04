@@ -263,7 +263,18 @@ if (!$auth->acl_get('f_read', $forum_id))
 
 	login_box('', $user->lang['LOGIN_EXPLAIN_POST']);
 }
+$sql = 'SELECT * FROM ' . TOPICS_TABLE . ' WHERE topic_id=' . $topic_id;
 
+
+$result= $db->sql_query($sql);
+$topic_data  = $db->sql_fetchrow($result);
+if($topic_data['is_private']){
+	$sql = 'SELECT * FROM phpbb_private_topic_users WHERE topic_id=' . $topic_data['topic_id'] . ' AND user_id=' . $user->data['user_id'] . ';';
+	$result = $db->sql_query($sql);
+	if ($result->num_rows < 1 && !($auth->acl_get('m_report', $forum_id))){
+		trigger_error('You are not authorized to post in this topic.');
+	}
+}
 // Permission to do the action asked?
 $is_authed = false;
 if(isset($post_data['topic_id']))
@@ -713,12 +724,14 @@ if ($load && ($mode == 'reply' || $mode == 'quote' || $mode == 'multi' || $mode 
 
 //PRIVATE TOPICS
 	$private_users_old = array();
-	$sql = 'SELECT user_id FROM phpbb_private_topic_users WHERE permission_type=1 AND topic_id=' . $topic_id;
-	$result = $db->sql_query($sql);
-	while ($row = $db->sql_fetchrow($result)){
-		$private_users_old[] = $row['user_id'];
+	if($topic_id > 0){
+		$sql = 'SELECT user_id FROM phpbb_private_topic_users WHERE permission_type=1 AND topic_id=' . $topic_id;
+		$result = $db->sql_query($sql);
+		while ($row = $db->sql_fetchrow($result)){
+			$private_users_old[] = $row['user_id'];
+		}
+		$db->sql_freeresult($result);
 	}
-	$db->sql_freeresult($result);
 	$post_data['private_users'] = $private_users_old;
 //
 
@@ -829,7 +842,8 @@ if ($submit || $preview || $refresh)
 	$post_data['topic_type']		= request_var('topic_type', (($mode != 'post') ? (int) $post_data['topic_type'] : POST_NORMAL));
 	
 	// PRIVATE TOPICS
-	if ($forum_id ==6){
+	$first_post_id = ((isset($post_data['topic_first_post_id'])) ? ((int) $post_data['topic_first_post_id']) : 0);
+	if ($forum_id ==6 && (($mode == 'edit' && $first_post_id == $post_id) || ($mode == 'post' && $first_post_id == 0))){
 		$post_data['is_private_old']	= $post_data['is_private'];
 		$post_data['is_private']	= request_var('topic_privacy', (($mode != 'post') ? $post_data['is_private'] : 0));
 		if ($post_data['is_private']){
