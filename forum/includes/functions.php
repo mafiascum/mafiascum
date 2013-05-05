@@ -4531,6 +4531,8 @@ function page_header($page_title = '', $display_online_list = true, $item_id = 0
 		$s_search_hidden_fields['sid'] = $_SID;
 	}
 	
+	global $siteChatUrl, $siteChatProtocol;
+	
 	// The following assigns all _common_ variables that may be used at any point in a template.
 	$template->assign_vars(array(
 		'SITENAME'						=> $config['sitename'],
@@ -4553,9 +4555,11 @@ function page_header($page_title = '', $display_online_list = true, $item_id = 0
 		'S_LOBBY'						=> $user->optionget('enterlobby'),
 		'SID'				=> $SID,
 		'_SID'				=> $_SID,
-		'SESSION_ID'		=> $user->session_id,
+		'SESSION_ID'			=> $user->session_id,
 		'ROOT_PATH'			=> $phpbb_root_path,
 		'BOARD_URL'			=> $board_url,
+		'SITE_CHAT_URL'			=> $siteChatUrl,
+		'SITE_CHAT_PROTOCOL'		=> $siteChatProtocol,
 
 		'L_LOGIN_LOGOUT'	=> $l_login_logout,
 		'L_INDEX'			=> $user->lang['FORUM_INDEX'],

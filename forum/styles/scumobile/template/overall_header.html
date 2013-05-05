@@ -76,6 +76,7 @@
 </script>
 <script src="./styles/prosilver/template/jquery-1.9.1.min.js"></script>
 <script src="./styles/prosilver/template/underscore-min.js"></script>
+<script src="./styles/prosilver/template/jquery.tabify.js"></script>
 <script type="text/javascript" src="{T_TEMPLATE_PATH}/styleswitcher.js"></script>
 <script type="text/javascript" src="{T_TEMPLATE_PATH}/forum_fn.js"></script>
 <!-- IF SCRIPT_NAME eq 'viewtopic' -->
@@ -104,7 +105,7 @@
 <script>
 $(document).ready(function(){
 	client = new Client();
-	client.setup("{SESSION_ID}", {S_USER_ID}, <!-- IF S_LOBBY -->true<!-- ELSE -->false<!-- ENDIF -->);
+	client.setup("{SESSION_ID}", {S_USER_ID}, <!-- IF S_LOBBY -->true<!-- ELSE -->false<!-- ENDIF -->, "{SITE_CHAT_URL}", "{SITE_CHAT_PROTOCOL}");
 });
 </script>
 <!-- ENDIF -->

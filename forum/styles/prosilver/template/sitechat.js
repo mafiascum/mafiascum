@@ -41,7 +41,7 @@ function Client()
 	this.userId = null;
 	this.sessionId = null;
 	this.pendingMessages = [];
-	this.namespace = "ms_sc_";//Prepended to all local storage variables.
+	this.namespace = "ms_sc2_";//Prepended to all local storage variables.
 	this.attemptReconnectIntervalId = null;
 	this.onlineUserIdSet = [];
 	this.MAX_MESSAGES_PER_WINDOW = 500;
@@ -110,32 +110,53 @@ function Client()
 			conversationIdSet = JSON.parse(localStorage[client.namespace + "conversationIdSet"]);
 			for(var index = 0;index < conversationIdSet.length;++index)
 			{
-				var siteChatConversationId = conversationIdSet[ index ];
+				var recipientUserId = null, conversationId = null, key = conversationIdSet[index];
+				if(typeof key == "string")
+				{
+					if(key[0] == "C")
+						conversationId = parseInt(key.substring(1));
+					else if(key[0] == "P")
+						recipientUserId = parseInt(key.substring(1));
+				}
+				else
+					conversationId = parseInt(key);//Support old format.
 
-				var siteChatConversation = JSON.parse(localStorage[client.namespace + "conversation" + siteChatConversationId]);
-				client.createChatWindow(siteChatConversationId, siteChatConversation.title, siteChatConversation.userIdSet, siteChatConversation.expanded, siteChatConversation.messages, false);
+				var siteChatConversation = JSON.parse(localStorage[client.namespace + "conversation" + key]);
+				client.createChatWindow(conversationId, recipientUserId, siteChatConversation.title, siteChatConversation.userIdSet, siteChatConversation.expanded, siteChatConversation.messages, false);
 			}
 		}
 	}
 
+	this.handleUserListUsernameClick = function(event)
+	{
+		event.preventDefault();
+		event.stopPropagation();
+		
+		var recipientUserId = parseInt($(this).data("user-id"));
+		if(client.chatWindows["P" + recipientUserId] == undefined)
+			client.createChatWindow(null, recipientUserId, $(this).data("username"), [], true, [], true);
+	}
+	
 	this.handleWindowTitleClick = function(event)
 	{
 		event.preventDefault();
 		event.stopPropagation();
 		var $window = $(this).closest(".chatWindow");
-		var siteChatConversation = client.chatWindows[ parseInt($window.attr("id").replace("chat", "")) ];
+		var siteChatConversationId = $window.data("conversation-id");
+		var recipientUserId = $window.data("recipient-user-id");
+		var windowKey = siteChatConversationId != null ? ("C" + siteChatConversationId) : ("P" + recipientUserId);
+		var siteChatConversation = client.chatWindows[ windowKey ];
 		var $title = $window.find(".title");
 		
 		if (siteChatConversation != null && siteChatConversation.blinking == true)
 			siteChatConversation.blinking = false;
-			
+		
 		$title.stop(true);
 		$title.css('backgroundColor', '');
 
 		if($window.hasClass("expanded"))
 		{
-			$window.removeClass("expanded");
-			$window.addClass("collapsed");
+			$window.removeClass("expanded").addClass("collapsed");
 			if(siteChatConversation)
 				siteChatConversation.expanded = false;
 			else
@@ -143,12 +164,10 @@ function Client()
 		}
 		else
 		{
-			$window.removeClass("collapsed");
-			$window.addClass("expanded");
-			$window.show();
+			$window.removeClass("collapsed").addClass("expanded").show();
 			if(siteChatConversation){
 				siteChatConversation.expanded = true;
-				var outputbuffer = $("#chat" + siteChatConversation.siteChatConversationId + " .outputBuffer");
+				var outputbuffer = $("#chat" + windowKey + " .outputBuffer");
 				outputbuffer.scrollTop(outputbuffer[0].scrollHeight);
 			}
 			else
@@ -164,29 +183,35 @@ function Client()
 		event.stopPropagation();
 
 		var $window = $(this).closest(".chatWindow");
-		var conversationId = parseInt($window.attr("id").replace("chat", ""));
+		var conversationId = $window.data("conversation-id");
+		var recipientUserId = $window.data("recipient-user-id");
+		var uniqueIdentifier = conversationId != null ? parseInt(conversationId) : parseInt(recipientUserId);
+		var windowKey = (conversationId != null ? "C" : "P") + uniqueIdentifier;
 
-		var siteChatPacket = new Object();
-		siteChatPacket.command = "LeaveConversation";
-		siteChatPacket.siteChatConversationId = conversationId;
-		
-		client.sendSiteChatPacket(siteChatPacket);
+		if(conversationId != null)
+		{
+			var siteChatPacket =
+			{
+				command:"LeaveConversation",
+				siteChatConversationId:conversationId
+			};
+			client.sendSiteChatPacket(siteChatPacket);
+		}
 
 		//Remove window from DOM
 		$window.remove();
 
-		var conversation = client.chatWindows[ conversationId ];
+		var conversation = client.chatWindows[ windowKey ];
 		if(conversation)
 		{
-			if(conversation.title == "Lobby")
+			if(conversationId != null && conversation.title == "Lobby")
 				sessionStorage[client.namespace + "lobbyForcefullyClosed"] = true;
-			delete client.chatWindows[ conversationId ];
+			delete client.chatWindows[ windowKey ];
 		}
+		if(localStorage[client.namespace + "conversation" + windowKey])
+			localStorage.removeItem(client.namespace + "conversation" + windowKey);
 
-		if(localStorage[client.namespace + "conversation" + conversationId])
-			localStorage.removeItem(client.namespace + "conversation" + conversationId);
-
-		localStorage[client.namespace + "conversationIdSet"] = JSON.stringify(client.getConversationIdSet());
+		localStorage[client.namespace + "conversationIdSet"] = JSON.stringify(client.getConversationKeySet());
 	}
 
 	this.handleWindowInputSubmission = function(event)
@@ -198,35 +223,38 @@ function Client()
 			var $window = $(this).closest(".chatWindow");
 			var content = $(this).val();
 			var chatWindowId = $window.attr("id");
+			var conversationId = $window.data("conversation-id");
+			var recipientUserId = $window.data("recipient-user-id");
 
 			if(content.length > 0)
 			{
-				client.submitChatMessage(content, chatWindowId);
+				client.submitChatMessage(content, chatWindowId, conversationId, recipientUserId);
 			}
 
 			$(this).val("");
 		}
 	}
 
-	this.getConversationIdSet = function()
+	this.getConversationKeySet = function()
 	{
-		var conversationIdSet = [];
-		for(var conversationId in client.chatWindows)
+		var conversationKeySet = [];
+		for(var conversationKey in client.chatWindows)
 		{
-			conversationIdSet.push(parseInt(conversationId));
+			conversationKeySet.push(conversationKey);
 		}
 
-		return conversationIdSet;
+		return conversationKeySet;
 	}
 
-	this.submitChatMessage = function(messageContent, chatWindowId)
+	this.submitChatMessage = function(messageContent, chatWindowId, conversationId, recipientUserId)
 	{
 		var siteChatPacket =
 		{
 			command:"SendMessage",
 			userId:client.userId,
 			message:messageContent,
-			siteChatConversationId:parseInt(chatWindowId.replace("chat", ""))
+			siteChatConversationId:conversationId == null ? null : parseInt(conversationId),
+			recipientUserId:recipientUserId == null ? null : parseInt(recipientUserId)
 		};
 		this.sendSiteChatPacket(siteChatPacket);
 	}
@@ -246,18 +274,17 @@ function Client()
 			command:"LogIn",
 			userId:client.userId,
 			sessionId:client.sessionId,
-			conversationIdSet:client.getConversationIdSet(),
-			conversationIdToMostRecentMessageIdMap:new Object()
+			conversationKeySet:client.getConversationKeySet(),
+			conversationKeyToMostRecentMessageIdMap:new Object()
 		};
 		
-		for(var siteChatConversationId in client.chatWindows)
+		for(var conversationKey in client.chatWindows)
 		{
-			var chatWindow = client.chatWindows[ siteChatConversationId ];
+			var chatWindow = client.chatWindows[ conversationKey ];
 			if(chatWindow.messages && chatWindow.messages.length > 0)
 			{
-				siteChatPacket.conversationIdToMostRecentMessageIdMap[ siteChatConversationId ] = chatWindow.messages[ chatWindow.messages.length - 1 ].id;
+				siteChatPacket.conversationKeyToMostRecentMessageIdMap[ conversationKey ] = chatWindow.messages[ chatWindow.messages.length - 1 ].id;
 			}
-			
 		}
 	
 		client.sendSiteChatPacket(siteChatPacket);
@@ -276,11 +303,13 @@ function Client()
 		}
 	}
 
-	this.createChatWindow = function(conversationId, title, userIdSet, expanded, messages, save)
+	this.createChatWindow = function(conversationId, recipientUserId, title, userIdSet, expanded, messages, save)
 	{
+		var chatWindowIdPrefix = (conversationId != null ? "C" : "P");
+		var chatWindowUniqueIdentifier = (conversationId != null ? conversationId : recipientUserId);
 		$("#chatPanel").append
 			(
-				'<div class="chatWindow expanded" id="chat' + conversationId + '">'
+				'<div class="chatWindow expanded" id="chat' + chatWindowIdPrefix + chatWindowUniqueIdentifier + '">'
 			+	'	<div class="chatWindowInner">'
 			+	'		<div class="title"><div class="name">' + title + '</div><div class="close">X</div></div>'
 			+	'		<div class="outputBuffer"></div>'
@@ -289,16 +318,23 @@ function Client()
 			+	'</div>'
 			);
 
-		//Window defaults to an expanded state so autogrow can see the proper CSS values.
-		$("#chat" + conversationId + " .inputBuffer").autoGrow();
-		//We now collapse it.
-		$("#chat" + conversationId + " .inputBuffer").removeClass("expanded");
-		$("#chat" + conversationId + " .inputBuffer").addClass("collapsed");
+		var $chatWindow = $("#chat" + chatWindowIdPrefix + chatWindowUniqueIdentifier);
+		var $inputBuffer = $chatWindow.find(".inputBuffer");
+		var $outputBuffer = $chatWindow.find(".outputBuffer");
 		
-		$("#chat" + conversationId + " .inputBuffer").bind("keypress", client.handleWindowInputSubmission);
+		if(conversationId != null)
+			$chatWindow.data("conversation-id", conversationId);
+		if(recipientUserId != null)
+			$chatWindow.data("recipient-user-id", recipientUserId);
+		
+		//Window defaults to an expanded state so autogrow can see the proper CSS values.
+		$inputBuffer.autoGrow();
+		//We now collapse it.
+		$inputBuffer.removeClass("expanded").addClass("collapsed");
 		
 		var chatWindow = new ChatWindow();
 		chatWindow.siteChatConversationId = conversationId;
+		chatWindow.recipientUserId = recipientUserId;
 		chatWindow.userIdSet = [];
 		chatWindow.title = title;
 		chatWindow.messages = [];
@@ -308,16 +344,14 @@ function Client()
 			
 		if(chatWindow.expanded)
 		{
-			$("#chat" + conversationId).addClass("expanded");
-			$("#chat" + conversationId).removeClass("collapsed");
+			$chatWindow.addClass("expanded").removeClass("collapsed");
 		}
 		else
 		{
-			$("#chat" + conversationId).addClass("collapsed");
-			$("#chat" + conversationId).removeClass("expanded");
+			$chatWindow.addClass("collapsed").removeClass("expanded");
 		}
 
-		client.chatWindows[conversationId] = chatWindow;
+		client.chatWindows[chatWindowIdPrefix + chatWindowUniqueIdentifier] = chatWindow;
 		if(messages && messages.length > 0)
 		{
 			var messageArrayLength = messages.length;
@@ -325,16 +359,16 @@ function Client()
 			{
 				var message = messages[messageIndex];
 				if(!client.userMap[message.userId])
-					console.log("User Not In Map(" + message.userId + ") when creating chat window. Conversation #" + conversationId);
+					console.log("User Not In Map(" + message.userId + ") when creating chat window. Conversation #" + chatWindowIdPrefix + chatWindowUniqueIdentifier);
 				else
 					client.addSiteChatConversationMessage(message, save, false);
 			}
 		}
 		
 		if(save){
-			$("#chat" + conversationId + " .inputBuffer").focus();
+			$inputBuffer.focus();
 		} else {
-			$("#chat" + conversationId + " .outputBuffer").scrollTop($("#chat" + conversationId + " .outputBuffer").scrollHeight);
+			$outputBuffer.scrollTop($outputBuffer.scrollHeight);
 		}
 		
 		if(save)
@@ -346,15 +380,35 @@ function Client()
 
 	this.saveChatWindow = function(chatWindow)
 	{
-		localStorage[client.namespace + "conversationIdSet"] = JSON.stringify(client.getConversationIdSet());
-		localStorage[client.namespace + "conversation" + chatWindow.siteChatConversationId] = JSON.stringify(chatWindow);
+		localStorage[client.namespace + "conversationIdSet"] = JSON.stringify(client.getConversationKeySet());
+		localStorage[client.namespace + "conversation" + client.getWindowMapKey(chatWindow)] = JSON.stringify(chatWindow);
+	}
+	
+	this.getMessageMapKeyUserId = function(siteChatConversationMessage)
+	{
+		return (siteChatConversationMessage.recipientUserId == client.userId ? siteChatConversationMessage.userId : siteChatConversationMessage.recipientUserId);
+	}
+	this.getMessageMapKey = function(siteChatConversationMessage)
+	{
+		return siteChatConversationMessage.recipientUserId != null ? ("P" + client.getMessageMapKeyUserId(siteChatConversationMessage)) : ("C" + siteChatConversationMessage.siteChatConversationId);
+	}
+	
+	this.getWindowMapKey = function(chatWindow)
+	{
+		return chatWindow.recipientUserId != null ? ("P" + chatWindow.recipientUserId) : ("C" + chatWindow.siteChatConversationId);
 	}
 	
 	this.addSiteChatConversationMessage = function(siteChatConversationMessage, save, isNew)
 	{
-		var chatWindow = client.chatWindows[ siteChatConversationMessage.siteChatConversationId ];
+		var messageKey = client.getMessageMapKey(siteChatConversationMessage);
 		var siteChatUser = client.userMap[ siteChatConversationMessage.userId ];
 		var messageDate = new Date(siteChatConversationMessage.createdDatetime);
+		
+		if(!client.chatWindows[messageKey] && siteChatConversationMessage.recipientUserId != null)
+		{//If this is a private conversation & the window has not yet been created, we should have enough information to make it ourselves.
+			client.createChatWindow(null, siteChatUser.id, siteChatUser.name, [siteChatUser.id], true, [], true);
+		}
+		var chatWindow = client.chatWindows[ messageKey ];
 		
 		var messageDateString = zeroFill(messageDate.getHours(), 2) + ":" + zeroFill(messageDate.getMinutes(), 2);
 		
@@ -371,7 +425,7 @@ function Client()
 			avatarUrl = defaultAvatar;
 		}
 		 
-		var $outputBuffer = $("#chat" + siteChatConversationMessage.siteChatConversationId + " .outputBuffer")
+		var $outputBuffer = $("#chat" + messageKey + " .outputBuffer")
 		var isScrolledToBottom = $outputBuffer.get(0).scrollTop == ($outputBuffer.get(0).scrollHeight - $outputBuffer.get(0).offsetHeight);
 		
 		$outputBuffer.append
@@ -428,6 +482,8 @@ function Client()
 			if(!onlyAddToHTML)
 				client.onlineUserIdSet.splice(indexToInsert, 0, siteChatUser.id);
 		}
+		
+		$("#username" + siteChatUser.id).data("username", siteChatUser.name).data("user-id", siteChatUser.id);
 		
 		if(!onlyAddToHTML)
 			localStorage[client.namespace + "onlineUserIdSet"] = JSON.stringify(client.onlineUserIdSet);
@@ -496,7 +552,7 @@ function Client()
 		}
 		else if(siteChatPacket.command == "Connect")
 		{
-			if(client.chatWindows[siteChatPacket.siteChatConversationId] == undefined)
+			if(client.chatWindows["C" + siteChatPacket.siteChatConversationId] == undefined)
 			{//Create chat window
 				var siteChatUserIdSet = [];
 				for(var siteChatUserIndex = 0;siteChatUserIndex < siteChatPacket.users.length;++siteChatUserIndex)
@@ -507,32 +563,38 @@ function Client()
 					client.addUser(siteChatUser, true);
 				}
 
-				client.createChatWindow(siteChatPacket.siteChatConversationId, siteChatPacket.titleText, siteChatUserIdSet, true, [], true);
+				//Setting recipientUserId to null because I do not believe we will be "connecting" to private conversations.
+				client.createChatWindow(siteChatPacket.siteChatConversationId, null, siteChatPacket.titleText, siteChatUserIdSet, true, [], true);
 			}
 		}
 		else if(siteChatPacket.command == "NewMessage")
 		{
-			if(client.chatWindows[ siteChatPacket.siteChatConversationMessage.siteChatConversationId ] != undefined)
+			var message = siteChatPacket.siteChatConversationMessage;
+			var uniqueIdentifier = message.recipientUserId != null ? (client.getMessageMapKeyUserId(message)) : message.siteChatConversationId;
+			var prefix = message.recipientUserId != null ? "P" : "C";
+			var key = prefix + uniqueIdentifier;
+			
+			if(prefix == "P" || client.chatWindows[ key ] != undefined)
 			{
-				var siteChatUser = client.userMap[ siteChatPacket.siteChatConversationMessage.userId ];
+				var siteChatUser = client.userMap[ message.userId ];
 
 				if(!siteChatUser || client.pendingMessages.length > 0)
 				{//If for some reason we have no data on a user(or if there are other pending messages), queue the message to process later and kick off a user lookup request.
 					console.log("Adding pending message. Site Chat User: " + siteChatUser + ", Previous Pending Messages: " + client.pendingMessages.length);
-					client.pendingMessages.push(siteChatPacket.siteChatConversationMessage);
+					client.pendingMessages.push(message);
 
 					if(!siteChatUser)
 					{
 						var lookupUserPacket = new Object();
 						lookupUserPacket.command = "LookupUser";
-						lookupUserPacket.userId = siteChatPacket.siteChatConversationMessage.userId;
+						lookupUserPacket.userId = message.userId;
 
 						client.sendSiteChatPacket(lookupUserPacket);
 					}
 				}
 				else
 				{
-					client.addSiteChatConversationMessage(siteChatPacket.siteChatConversationMessage, true, true);
+					client.addSiteChatConversationMessage(message, true, true);
 				}
 			}
 		}
@@ -541,8 +603,8 @@ function Client()
 			if(client.userMap[ siteChatPacket.siteChatUser.id ] == undefined)
 				client.addUser(siteChatPacket.siteChatUser, true);
 			
-			if(client.chatWindows[ siteChatPacket.siteChatConversationId ] != undefined)
-				client.chatWindows[ siteChatPacket.siteChatConversationId ].userIdSet.push( siteChatPacket.siteChatUser.id );
+			if(client.chatWindows[ "C" + siteChatPacket.siteChatConversationId ] != undefined)
+				client.chatWindows[ "C" + siteChatPacket.siteChatConversationId ].userIdSet.push( siteChatPacket.siteChatUser.id );
 		}
 		else if(siteChatPacket.command == "LookupUser")
 		{
@@ -567,7 +629,7 @@ function Client()
 		}
 		else if(siteChatPacket.command == "LeaveConversation")
 		{
-			var chatWindow = client.chatWindows[ siteChatPacket.siteChatConversationId ];
+			var chatWindow = client.chatWindows[ "C" + siteChatPacket.siteChatConversationId ];
 			if(chatWindow)
 				chatWindow.userIdSet.splice($.inArray(siteChatPacket.userId, chatWindow.userIdSet), 1);
 		}
@@ -642,7 +704,6 @@ function Client()
 				+	'	</div>'
 				+	'</div>'
 				);
-		$("#utilitywindow .inputBuffer").bind("keypress", client.handleWindowInputSubmission);
 		$("#onlinelisttitle").bind('click', this.onlinelistexpand);
 		$("#utilitywindow").tabify();
 	}
@@ -666,25 +727,27 @@ function Client()
 		client.sendSiteChatPacket(siteChatPacket);
 	}
 	this.blink = function(){
-		for(var siteChatConversationId in client.chatWindows) {
+		for(var converstionKey in client.chatWindows) {
 			if(client.blinkstate == 0){
-				if (client.chatWindows[siteChatConversationId].blinking == true){
-					$('#chat' + siteChatConversationId + ' .title').animate({backgroundColor: '#F09B3C'}, 699);
+				if (client.chatWindows[converstionKey].blinking == true){
+					$('#chat' + converstionKey + ' .title').animate({backgroundColor: '#F09B3C'}, 699);
 					client.blinkstate = 1;
 				}
 			} else {
-				if (client.chatWindows[siteChatConversationId].blinking == true){
-					$('#chat' + siteChatConversationId + ' .title').animate({backgroundColor: '#E1DFE6'}, 699);
+				if (client.chatWindows[converstionKey].blinking == true){
+					$('#chat' + converstionKey + ' .title').animate({backgroundColor: '#E1DFE6'}, 699);
 					client.blinkstate = 0;
 				}
 			}
 		}
 	}
-	this.setup = function(sessionId, userId, autoJoinLobby)
+	this.setup = function(sessionId, userId, autoJoinLobby, siteChatUrl, siteChatProtocol)
 	{
 		client.sessionId = sessionId;
 		client.userId = userId;
 		client.autoJoinLobby = autoJoinLobby && !sessionStorage[client.namespace + "lobbyForcefullyClosed"];
+		client.siteChatUrl = siteChatUrl;
+		client.siteChatProtocol = siteChatProtocol;
 		
 		if(!supportsHtml5Storage() || (typeof(WebSocket) != "function" && typeof(WebSocket) != "object"))
 		{
@@ -717,6 +780,9 @@ function Client()
 		
 		$(document).on("click", "#chatPanel .chatWindow .title", client.handleWindowTitleClick);
 		$(document).on("click", "#chatPanel .chatWindow .title .close", client.handleWindowCloseButtonClick);
+		$(document).on("keypress", "#chatPanel .chatWindow .inputBuffer", client.handleWindowInputSubmission);
+		$(document).on("click", "#utilitywindow .username", client.handleUserListUsernameClick);
+		
 		client.setupWebSocket();
 
 		client.createChatPanel();
@@ -735,7 +801,7 @@ function Client()
 	
 	this.setupWebSocket = function()
 	{
-		client.socket = new WebSocket("ws://apollo.corbe.net:4241", "site-chat");
+		client.socket = new WebSocket(client.siteChatUrl, client.siteChatProtocol);
 		client.socket.connected = false;
 		client.socket.onopen = client.handleSocketOpen;
 		client.socket.onclose = client.handleSocketClose;

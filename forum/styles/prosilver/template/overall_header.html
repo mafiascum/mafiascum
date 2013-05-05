@@ -118,7 +118,7 @@
 <script>
 $(document).ready(function(){
 	client = new Client();
-	client.setup("{SESSION_ID}", {S_USER_ID}, <!-- IF S_LOBBY -->true<!-- ELSE -->false<!-- ENDIF -->);
+	client.setup("{SESSION_ID}", {S_USER_ID}, <!-- IF S_LOBBY -->true<!-- ELSE -->false<!-- ENDIF -->, "{SITE_CHAT_URL}", "{SITE_CHAT_PROTOCOL}");
 });
 </script>
 <!-- ENDIF -->
