@@ -20,7 +20,7 @@ public class SiteChatInboundSendMessagePacketOperator implements SiteChatInbound
 
   public void process(SiteChatServer siteChatServer, SiteChatWebSocket siteChatWebSocket, String siteChatInboundPacketJson) throws Exception {
 
-    System.out.println("Processing SendChat Message...");
+    MiscUtil.log("Processing SendChat Message...");
     SiteChatInboundSendMessagePacket siteChatInboundSendMessagePacket = new Gson().fromJson(siteChatInboundPacketJson, SiteChatInboundSendMessagePacket.class);
     SiteChatUser siteChatUser = siteChatWebSocket.getSiteChatUser();
     Set<Integer> sendToUserIdSet;

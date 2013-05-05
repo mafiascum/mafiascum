@@ -666,20 +666,20 @@ public class SiteChatServer extends Server implements SignalHandler {
     public void onOpen(Connection connection)
     {
       if (_verbose)
-        System.out.printf("%s#onOpen %s\n",this.getClass().getSimpleName(),connection);
+        MiscUtil.log(this.getClass().getSimpleName() + "#onOpen " + connection);
     }
     
     public void onHandshake(FrameConnection connection)
     {
       if (_verbose)
-        System.out.printf("%s#onHandshake %s %s\n",this.getClass().getSimpleName(),connection,connection.getClass().getSimpleName());
+        MiscUtil.log(this.getClass().getSimpleName() + "#onHandshake " + connection + " " + connection.getClass().getSimpleName());
       this.connection = connection;
     }
 
     public void onClose(int code,String message)
     {
       if (_verbose)
-        System.out.printf("%s#onDisonnect %d %s\n",this.getClass().getSimpleName(),code,message);
+        MiscUtil.log(this.getClass().getSimpleName() + "#onDisonnect " + code + " " + message);
       
       descriptors.remove(this);
     }
@@ -687,21 +687,21 @@ public class SiteChatServer extends Server implements SignalHandler {
     public boolean onFrame(byte flags, byte opcode, byte[] data, int offset, int length)
     {      
       if (_verbose)
-        System.out.printf("%s#onFrame %s|%s %s\n",this.getClass().getSimpleName(),TypeUtil.toHexString(flags),TypeUtil.toHexString(opcode),TypeUtil.toHexString(data,offset,length));
+        MiscUtil.log(this.getClass().getSimpleName() + "#onFrame " + TypeUtil.toHexString(flags) + "|" + TypeUtil.toHexString(data,offset,length));
       return false;
     }
 
     public boolean onControl(byte controlCode, byte[] data, int offset, int length)
     {
       if (_verbose)
-        System.out.printf("%s#onControl  %s %s\n",this.getClass().getSimpleName(),TypeUtil.toHexString(controlCode),TypeUtil.toHexString(data,offset,length));      
+        MiscUtil.log(this.getClass().getSimpleName() + "#onControl  " + TypeUtil.toHexString(controlCode) + " " + TypeUtil.toHexString(data,offset,length));
       return false;
     }
 
     public void onMessage(String data)
     {
       if (_verbose)
-        System.out.printf("%s#onMessage   %s\n",this.getClass().getSimpleName(),data);
+        MiscUtil.log(this.getClass().getSimpleName() + "#onMessage   " + data);
       
       try {
         
@@ -717,7 +717,7 @@ public class SiteChatServer extends Server implements SignalHandler {
     public void onMessage(byte[] data, int offset, int length)
     {
       if (_verbose)
-        System.out.printf("%s#onMessage   %s\n",this.getClass().getSimpleName(),TypeUtil.toHexString(data,offset,length));
+        System.out.printf(this.getClass().getSimpleName() + "#onMessage   " + TypeUtil.toHexString(data,offset,length));
     }
     
     public void sendOutboundPacket(SiteChatOutboundPacket siteChatOutboundPacket) throws IOException {
