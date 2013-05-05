@@ -6,6 +6,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +16,7 @@ import net.mafiascum.util.QueryUtil;
 import net.mafiascum.util.SQLUtil;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversation;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationMessage;
+import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationType;
 
 public class SiteChatUtil {
 
@@ -237,6 +239,7 @@ public class SiteChatUtil {
     batchInsertStatement.addField("id");
     batchInsertStatement.addField("site_chat_conversation_id");
     batchInsertStatement.addField("user_id");
+    batchInsertStatement.addField("recipient_user_id");
     batchInsertStatement.addField("created_datetime");
     batchInsertStatement.addField("message");
     
@@ -244,15 +247,18 @@ public class SiteChatUtil {
     
     for(SiteChatConversationMessage siteChatConversationMessage : siteChatConversationMessages) {
       
-      batchInsertStatement.beginEntry();
-      
-      batchInsertStatement.putInt(siteChatConversationMessage.getId());
-      batchInsertStatement.putInt(siteChatConversationMessage.getSiteChatConversationId());
-      batchInsertStatement.putInt(siteChatConversationMessage.getUserId());
-      batchInsertStatement.putDate(siteChatConversationMessage.getCreatedDatetime());
-      batchInsertStatement.putString(siteChatConversationMessage.getMessage());
-      
-      batchInsertStatement.endEntry();
+      synchronized(siteChatConversationMessage) {
+        batchInsertStatement.beginEntry();
+        
+        batchInsertStatement.putInt(siteChatConversationMessage.getId());
+        batchInsertStatement.putInteger(siteChatConversationMessage.getSiteChatConversationId());
+        batchInsertStatement.putInt(siteChatConversationMessage.getUserId());
+        batchInsertStatement.putInteger(siteChatConversationMessage.getRecipientUserId());
+        batchInsertStatement.putDate(siteChatConversationMessage.getCreatedDatetime());
+        batchInsertStatement.putString(siteChatConversationMessage.getMessage());
+        
+        batchInsertStatement.endEntry();
+      }
     }
     
     batchInsertStatement.finish();
@@ -276,5 +282,38 @@ public class SiteChatUtil {
     statement.close();
     
     return topId;
+  }
+  
+  public static int getConversationUniqueIdentifier(String conversationUniqueKey) {
+    
+    return Integer.valueOf(conversationUniqueKey.substring(1));
+  }
+  
+  public static char getConversationSymbol(String conversationUniqueKey) {
+    
+    return conversationUniqueKey.charAt(0);
+  }
+  
+  public static SiteChatConversationType getSiteChatConversationTypeBySymbol(char symbol) {
+    
+    Iterator<SiteChatConversationType> iter = SiteChatConversationType.getSetIterator();
+    while(iter.hasNext()) {
+      
+      SiteChatConversationType siteChatConversationType = iter.next();
+      if(siteChatConversationType.getSymbol() == symbol) {
+        
+        return siteChatConversationType;
+      }
+    }
+    
+    return null;
+  }
+  
+  public static String getPrivateMessageHistoryKey(int userId1, int userId2) {
+    
+    if(userId1 < userId2)
+      return userId1 + "_" + userId2;
+    else
+      return userId2 + "_" + userId1;
   }
 }

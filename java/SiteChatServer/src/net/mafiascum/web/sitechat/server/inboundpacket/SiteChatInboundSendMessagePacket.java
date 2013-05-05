@@ -3,7 +3,8 @@ package net.mafiascum.web.sitechat.server.inboundpacket;
 public class SiteChatInboundSendMessagePacket extends SiteChatInboundPacket {
 
   protected int userId;
-  protected int siteChatConversationId;
+  protected Integer siteChatConversationId;
+  protected Integer recipientUserId;
   protected String message;
   
   public int getUserId() {
@@ -14,12 +15,20 @@ public class SiteChatInboundSendMessagePacket extends SiteChatInboundPacket {
     this.userId = userId;
   }
 
-  public int getSiteChatConversationId() {
+  public Integer getSiteChatConversationId() {
     return siteChatConversationId;
   }
 
-  public void setSiteChatConversationId(int siteChatConversationId) {
+  public void setSiteChatConversationId(Integer siteChatConversationId) {
     this.siteChatConversationId = siteChatConversationId;
+  }
+  
+  public Integer getRecipientUserId() {
+    return recipientUserId;
+  }
+  
+  public void setRecipientUserId(Integer recipientUserId) {
+    this.recipientUserId = recipientUserId;
   }
 
   public String getMessage() {

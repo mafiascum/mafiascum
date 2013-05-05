@@ -7,8 +7,8 @@ public class SiteChatInboundLogInPacket extends SiteChatInboundPacket {
 
   protected int userId;
   protected String sessionId;
-  protected Set<Integer> conversationIdSet;
-  protected Map<Integer, Integer> conversationIdToMostRecentMessageIdMap;
+  protected Set<String> conversationKeySet;
+  protected Map<String, Integer> conversationKeyToMostRecentMessageIdMap;
 
   public int getUserId() {
     return userId;
@@ -26,24 +26,23 @@ public class SiteChatInboundLogInPacket extends SiteChatInboundPacket {
     this.sessionId = sessionId;
   }
 
-  public Set<Integer> getConversationIdSet() {
-    return conversationIdSet;
+  public Set<String> getConversationKeySet() {
+    return conversationKeySet;
   }
 
-  public void setConversationIdSet(Set<Integer> conversationIdSet) {
-    this.conversationIdSet = conversationIdSet;
+  public void setConversationKeySet(Set<String> conversationKeySet) {
+    this.conversationKeySet = conversationKeySet;
   }
   
   public SiteChatInboundPacketType getType() {
     return SiteChatInboundPacketType.login;
   }
 
-  public Map<Integer, Integer> getConversationIdToMostRecentMessageIdMap() {
-    return conversationIdToMostRecentMessageIdMap;
+  public Map<String, Integer> getConversationKeyToMostRecentMessageIdMap() {
+    return conversationKeyToMostRecentMessageIdMap;
   }
 
-  public void setConversationIdToMostRecentMessageIdMap(
-      Map<Integer, Integer> conversationIdToMostRecentMessageIdMap) {
-    this.conversationIdToMostRecentMessageIdMap = conversationIdToMostRecentMessageIdMap;
+  public void setConversationKeyToMostRecentMessageIdMap(Map<String, Integer> conversationKeyToMostRecentMessageIdMap) {
+    this.conversationKeyToMostRecentMessageIdMap = conversationKeyToMostRecentMessageIdMap;
   }
 }

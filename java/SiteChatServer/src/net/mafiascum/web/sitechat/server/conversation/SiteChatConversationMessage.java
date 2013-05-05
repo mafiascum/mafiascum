@@ -8,7 +8,8 @@ public class SiteChatConversationMessage extends DataObjectWithIntId {
   
   protected int userId;
   protected Date createdDatetime;
-  protected int siteChatConversationId;
+  protected Integer siteChatConversationId;
+  protected Integer recipientUserId;
   protected String message;
   
   public SiteChatConversationMessage() {
@@ -24,6 +25,7 @@ public class SiteChatConversationMessage extends DataObjectWithIntId {
     siteChatConversationMessage.setUserId(userId);
     siteChatConversationMessage.setCreatedDatetime(createdDatetime);
     siteChatConversationMessage.setSiteChatConversationId(siteChatConversationId);
+    siteChatConversationMessage.setRecipientUserId(recipientUserId);
     siteChatConversationMessage.setMessage(message);
     
     return siteChatConversationMessage;
@@ -45,12 +47,20 @@ public class SiteChatConversationMessage extends DataObjectWithIntId {
     this.createdDatetime = createdDatetime;
   }
 
-  public int getSiteChatConversationId() {
+  public Integer getSiteChatConversationId() {
     return siteChatConversationId;
   }
 
-  public void setSiteChatConversationId(int siteChatConversationId) {
+  public void setSiteChatConversationId(Integer siteChatConversationId) {
     this.siteChatConversationId = siteChatConversationId;
+  }
+  
+  public Integer getRecipientUserId() {
+    return recipientUserId;
+  }
+  
+  public void setRecipientUserId(Integer recipientUserId) {
+    this.recipientUserId = recipientUserId;
   }
 
   public String getMessage() {

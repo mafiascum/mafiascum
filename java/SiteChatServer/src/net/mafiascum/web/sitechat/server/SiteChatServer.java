@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -22,6 +23,7 @@ import net.mafiascum.util.MiscUtil;
 import net.mafiascum.util.StringUtil;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversation;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationMessage;
+import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationType;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationWithUserList;
 import net.mafiascum.web.sitechat.server.inboundpacket.SiteChatInboundPacketType;
 import net.mafiascum.web.sitechat.server.inboundpacket.operator.SiteChatInboundConnectPacketOperator;
@@ -62,13 +64,15 @@ public class SiteChatServer extends Server implements SignalHandler {
   
   protected ConcurrentLinkedQueue<SiteChatWebSocket> descriptors = new ConcurrentLinkedQueue<SiteChatWebSocket>();
   protected Map<Integer, SiteChatConversationWithUserList> siteChatConversationWithMemberListMap = new HashMap<Integer, SiteChatConversationWithUserList>();
+  protected Map<String, List<SiteChatConversationMessage>> siteChatPrivateConversationMessageHistoryMap = new HashMap<String, List<SiteChatConversationMessage>>();
+  
   protected Map<Integer, Date> userIdToLastActivityDatetime = new HashMap<Integer, Date>();
   protected Map<Integer, SiteChatUser> siteChatUserMap = new HashMap<Integer, SiteChatUser>();
   protected List<SiteChatConversationMessage> siteChatConversationMessagesToSave = new LinkedList<SiteChatConversationMessage>();
   protected SiteChatServerServiceThread serviceThread;
   
   protected final long MILLISECONDS_UNTIL_USER_IS_INACTIVE = (1000) * (60) * (5);
-  protected final int MESSAGE_BATCH_SIZE = 100;
+  protected final int MESSAGE_BATCH_SIZE = 25;
   protected int topSiteChatConversationMessageId;
   
   protected static final Map<SiteChatInboundPacketType, SiteChatInboundPacketOperator> siteChatInboundPacketTypeToSiteChatInboundPacketOperatorMap = new HashMap<SiteChatInboundPacketType, SiteChatInboundPacketOperator>();
@@ -223,31 +227,111 @@ public class SiteChatServer extends Server implements SignalHandler {
     }
   }
   
-  public SiteChatConversationMessage recordSiteChatConversationMessage(int userId, int siteChatConversationId, String message) throws Exception {
+  public SiteChatConversationMessage recordSiteChatConversationMessage(int userId, Integer siteChatConversationId, Integer recipientUserId, String message) throws Exception {
     
     SiteChatConversationMessage siteChatConversationMessage = new SiteChatConversationMessage();
     siteChatConversationMessage.setMessage(message);
     siteChatConversationMessage.setCreatedDatetime(new Date());
     siteChatConversationMessage.setSiteChatConversationId(siteChatConversationId);
+    siteChatConversationMessage.setRecipientUserId(recipientUserId);
     siteChatConversationMessage.setUserId(userId);
     siteChatConversationMessage.setId(++topSiteChatConversationMessageId);
     
-    siteChatConversationMessagesToSave.add(siteChatConversationMessage);
+    synchronized(siteChatConversationMessagesToSave) {
+      siteChatConversationMessagesToSave.add(siteChatConversationMessage);
     
-    if(siteChatConversationMessagesToSave.size() >= MESSAGE_BATCH_SIZE) {
+      if(siteChatConversationMessagesToSave.size() >= MESSAGE_BATCH_SIZE) {
       
-      saveSiteChatConversationMessages();
+        saveSiteChatConversationMessages();
+      }
     }
     
-    //Save to local conversation cache.
-    SiteChatConversationWithUserList siteChatConversationWithUserList = siteChatConversationWithMemberListMap.get(siteChatConversationId);
-    if(siteChatConversationWithUserList.getSiteChatConversationMessages().size() > SiteChatUtil.MAX_MESSAGES_PER_CONVERSATION_CACHE) {
-      siteChatConversationWithUserList.getSiteChatConversationMessages().remove(0);
+    //Save to local conversation cache. Currently only being done for conversations.
+    if(siteChatConversationMessage.getSiteChatConversationId() != null) {
+      
+      SiteChatConversationWithUserList siteChatConversationWithUserList = siteChatConversationWithMemberListMap.get(siteChatConversationId);
+      
+      synchronized(siteChatConversationWithUserList) {
+        if(siteChatConversationWithUserList.getSiteChatConversationMessages().size() >= SiteChatUtil.MAX_MESSAGES_PER_CONVERSATION_CACHE) {
+          siteChatConversationWithUserList.getSiteChatConversationMessages().remove(0);
+        }
+        siteChatConversationWithUserList.getSiteChatConversationMessages().add(siteChatConversationMessage);
+      }
     }
-    siteChatConversationWithUserList.getSiteChatConversationMessages().add(siteChatConversationMessage);
-    
+    else {
+      
+      String privateConversationMapKey = SiteChatUtil.getPrivateMessageHistoryKey(userId, recipientUserId);
+      List<SiteChatConversationMessage> siteChatConversationMessages = null;
+      
+      synchronized(siteChatPrivateConversationMessageHistoryMap) {
+        siteChatPrivateConversationMessageHistoryMap.get(privateConversationMapKey);
+      }
+      
+      if(siteChatConversationMessages == null) {
+
+        siteChatConversationMessages = new LinkedList<SiteChatConversationMessage>();
+        synchronized(siteChatPrivateConversationMessageHistoryMap) {
+          siteChatPrivateConversationMessageHistoryMap.put(privateConversationMapKey, siteChatConversationMessages);
+        }
+      }
+      
+      synchronized(siteChatConversationMessages) {
+        
+        if(siteChatConversationMessages.size() >= SiteChatUtil.MAX_MESSAGES_PER_CONVERSATION_CACHE) {
+          siteChatConversationMessages.remove(0);
+        }
+        siteChatConversationMessages.add(siteChatConversationMessage);
+      }
+    }
     
     return siteChatConversationMessage;
+  }
+  
+  public List<SiteChatConversationMessage> getMessageHistory(SiteChatConversationType siteChatConversationType, int lastReceivedSiteChatConversationId, int userId, int uniqueIdentifier) {
+    
+    List<SiteChatConversationMessage> messageHistoryToSendToUser = new LinkedList<SiteChatConversationMessage>();
+    List<SiteChatConversationMessage> siteChatConversationMessages = null;
+    synchronized(siteChatConversationWithMemberListMap) {
+      
+      synchronized(siteChatPrivateConversationMessageHistoryMap) {
+        if(siteChatConversationType.equals(SiteChatConversationType.Conversation)) {
+          
+          SiteChatConversationWithUserList siteChatConversationWithUserList = siteChatConversationWithMemberListMap.get(uniqueIdentifier);
+          if(siteChatConversationWithUserList == null) {
+            
+            return messageHistoryToSendToUser;
+          }
+          
+          siteChatConversationMessages = siteChatConversationWithUserList.getSiteChatConversationMessages();
+        }
+        else {
+          
+          String messageHistoryKey = SiteChatUtil.getPrivateMessageHistoryKey(userId, uniqueIdentifier);
+          siteChatConversationMessages = siteChatPrivateConversationMessageHistoryMap.get(messageHistoryKey);
+          if(siteChatConversationMessages == null || siteChatConversationMessages.size() == 0) {
+            
+            return messageHistoryToSendToUser;
+          }
+        }
+        
+        //Go through and get the message history.
+        ListIterator<SiteChatConversationMessage> listIterator = siteChatConversationMessages.listIterator(siteChatConversationMessages.size());
+        
+        while(listIterator.hasPrevious()) {
+          
+          SiteChatConversationMessage siteChatConversationMessage = listIterator.previous();
+          if(siteChatConversationMessage.getId() > lastReceivedSiteChatConversationId) {
+              
+            siteChatConversationMessage = siteChatConversationMessage.clone();
+            siteChatConversationMessage.setMessage(StringUtil.escapeHTMLCharacters(siteChatConversationMessage.getMessage()));
+            MiscUtil.log("Adding missed message: " + siteChatConversationMessage.getId());
+            messageHistoryToSendToUser.add(siteChatConversationMessage);
+          }
+        }
+      }
+    }
+    
+    return messageHistoryToSendToUser;
   }
   
   public void refreshUserCache() throws Exception {
@@ -354,12 +438,14 @@ public class SiteChatServer extends Server implements SignalHandler {
   
   public void saveSiteChatConversationMessages() throws Exception {
 
-    if(siteChatConversationMessagesToSave.size() > 0) {
-      Connection connection = provider.getConnection();
-      SiteChatUtil.putNewSiteChatConversationMessages(connection, siteChatConversationMessagesToSave);
-      connection.close();
+    synchronized(siteChatConversationMessagesToSave) {
+      if(siteChatConversationMessagesToSave.size() > 0) {
+        Connection connection = provider.getConnection();
+        SiteChatUtil.putNewSiteChatConversationMessages(connection, siteChatConversationMessagesToSave);
+        connection.close();
     
-      siteChatConversationMessagesToSave.clear();
+        siteChatConversationMessagesToSave.clear();
+      }
     }
   }
 

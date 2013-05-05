@@ -11,7 +11,9 @@ import net.mafiascum.util.StringUtil;
 import net.mafiascum.web.sitechat.server.SiteChatServer;
 import net.mafiascum.web.sitechat.server.SiteChatServer.SiteChatWebSocket;
 import net.mafiascum.web.sitechat.server.SiteChatUser;
+import net.mafiascum.web.sitechat.server.SiteChatUtil;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationMessage;
+import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationType;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationWithUserList;
 import net.mafiascum.web.sitechat.server.inboundpacket.SiteChatInboundLogInPacket;
 import net.mafiascum.web.sitechat.server.outboundpacket.SiteChatOutboundLogInPacket;
@@ -26,8 +28,6 @@ public class SiteChatInboundLogInPacketOperator implements SiteChatInboundPacket
     
     MiscUtil.log("User ID: " + siteChatInboundLogInPacket.getUserId());
     MiscUtil.log("Session ID: " + siteChatInboundLogInPacket.getSessionId());
-    MiscUtil.log("Conversation ID Set: " + siteChatInboundLogInPacket.getConversationIdSet());
-    MiscUtil.log("Conversation To Message Map: " + siteChatInboundLogInPacket.getConversationIdToMostRecentMessageIdMap());
     
     SiteChatUser siteChatUser = siteChatServer.getSiteChatUser(siteChatInboundLogInPacket.getUserId());
     if(siteChatUser == null) {
@@ -48,7 +48,17 @@ public class SiteChatInboundLogInPacketOperator implements SiteChatInboundPacket
     siteChatWebSocket.setSiteChatUser(siteChatUser);
     
     //Reconnect to conversations the user has been removed from.
-    for(Integer siteChatConversationId : siteChatInboundLogInPacket.getConversationIdSet()) {
+    for(String siteChatConversationKey : siteChatInboundLogInPacket.getConversationKeySet()) {
+
+      char symbol = SiteChatUtil.getConversationSymbol(siteChatConversationKey);
+      SiteChatConversationType siteChatConversationType = SiteChatUtil.getSiteChatConversationTypeBySymbol(symbol);
+      
+      if(!siteChatConversationType.equals(SiteChatConversationType.Conversation)) {
+        
+        continue;
+      }
+
+      int siteChatConversationId = SiteChatUtil.getConversationUniqueIdentifier(siteChatConversationKey);
       
       SiteChatConversationWithUserList siteChatConversationWithUserList = siteChatServer.getSiteChatConversationWithUserList(siteChatConversationId);
       
@@ -69,47 +79,48 @@ public class SiteChatInboundLogInPacketOperator implements SiteChatInboundPacket
     
     //Determine which messages the user has missed(if any, most of the time this should result in nothing).
     List<SiteChatConversationMessage> missedSiteChatConversationMessages = new LinkedList<SiteChatConversationMessage>();
-    if(siteChatInboundLogInPacket.getConversationIdToMostRecentMessageIdMap() != null) {
-      for(Integer siteChatConversationId : siteChatInboundLogInPacket.getConversationIdToMostRecentMessageIdMap().keySet()) {
+    
+    if(siteChatInboundLogInPacket.getConversationKeyToMostRecentMessageIdMap() != null) {
+      for(String siteChatConversationKey : siteChatInboundLogInPacket.getConversationKeyToMostRecentMessageIdMap().keySet()) {
         
-        int siteChatConversationMessageId = siteChatInboundLogInPacket.getConversationIdToMostRecentMessageIdMap().get(siteChatConversationId);
-        SiteChatConversationWithUserList siteChatConversationWithUserList = siteChatServer.getSiteChatConversationWithUserList(siteChatConversationId);
-        List<SiteChatConversationMessage> siteChatConversationMessages = siteChatConversationWithUserList.getSiteChatConversationMessages();
+        char symbol = SiteChatUtil.getConversationSymbol(siteChatConversationKey);
+        int uniqueIdentifier = SiteChatUtil.getConversationUniqueIdentifier(siteChatConversationKey);
+        int mostRecentSiteChatConversationMessageId = siteChatInboundLogInPacket.getConversationKeyToMostRecentMessageIdMap().get(siteChatConversationKey);
+        SiteChatConversationType siteChatConversationType = SiteChatUtil.getSiteChatConversationTypeBySymbol(symbol);
         
+        MiscUtil.log("Conversation " + siteChatConversationKey + ", Last Message ID: " + mostRecentSiteChatConversationMessageId);
         
-        MiscUtil.log("Conversation " + siteChatConversationId + ", Last Message ID: " + siteChatConversationMessageId);
-        
-        if(siteChatConversationMessages.isEmpty() == false) {
-          ListIterator<SiteChatConversationMessage> listIterator = siteChatConversationMessages.listIterator(siteChatConversationMessages.size());
+        if(siteChatConversationType == null) {
           
-          while(listIterator.hasPrevious()) {
-            
-            SiteChatConversationMessage siteChatConversationMessage = listIterator.previous();
-            if(siteChatConversationMessage.getId() > siteChatConversationMessageId) {
-              
-              siteChatConversationMessage = siteChatConversationMessage.clone();
-              siteChatConversationMessage.setMessage(StringUtil.escapeHTMLCharacters(siteChatConversationMessage.getMessage()));
-              MiscUtil.log("Adding missed message: " + siteChatConversationMessage.getId());
-              missedSiteChatConversationMessages.add(siteChatConversationMessage);
-            }
-          }
+          MiscUtil.log("Unknown site chat conversation type. Symbol: " + symbol);
+          continue;
         }
-  
-        MiscUtil.log("Total Missed Messages: " + missedSiteChatConversationMessages.size());
+        
+        List<SiteChatConversationMessage> siteChatConversationMessages = siteChatServer.getMessageHistory(siteChatConversationType, mostRecentSiteChatConversationMessageId, siteChatUser.getId(), uniqueIdentifier);
+        
+        if(siteChatConversationMessages == null || siteChatConversationMessages.isEmpty() == true) {
+          
+          MiscUtil.log("No messages found.");
+          continue;
+        }
+        else {
+          
+          missedSiteChatConversationMessages.addAll(siteChatConversationMessages);
+        }
       }
-      
-      Collections.sort(missedSiteChatConversationMessages, new Comparator<SiteChatConversationMessage>() {
-        
-        public int compare(SiteChatConversationMessage arg0, SiteChatConversationMessage arg1) {
-          
-          if(arg0.getId() < arg1.getId())
-            return -1;
-          else if(arg0.getId() > arg1.getId())
-            return 1;
-          return 0;
-        }
-      });
     }
+    
+    Collections.sort(missedSiteChatConversationMessages, new Comparator<SiteChatConversationMessage>() {
+      
+      public int compare(SiteChatConversationMessage arg0, SiteChatConversationMessage arg1) {
+        
+        if(arg0.getId() < arg1.getId())
+          return -1;
+        else if(arg0.getId() > arg1.getId())
+          return 1;
+        return 0;
+      }
+    });
     
     //Create the response
     SiteChatOutboundLogInPacket siteChatOutboundLogInPacket = new SiteChatOutboundLogInPacket();
