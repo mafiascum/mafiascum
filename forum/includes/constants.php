@@ -345,6 +345,7 @@ define('MAFIA_FACTIONS_TABLE', $table_prefix . 'mafia_factions');
 define('BACKUP_TABLE', $table_prefix . 'backup');
 define('BACKUP_REMOTE_FILE_TABLE', $table_prefix . 'backup_remote_file');
 define('POSTS_ARCHIVE_TABLE', $table_prefix . 'posts_archive');
+define('USER_POST_MASK_TABLE', $table_prefix . 'user_post_mask');
 
 define('MOBILE_STYLE', '17');
 ?>

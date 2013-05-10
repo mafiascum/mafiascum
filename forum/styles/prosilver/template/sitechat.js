@@ -48,6 +48,7 @@ function Client()
 	this.unloading = false;
 	this.firstConnectionThisPageLoad = true;
 	this.onlineUsers = 0;
+	this.attemptingLogin = false;
 	this.attemptReconnect = function()
 	{
 		client.setupWebSocket();
@@ -245,6 +246,17 @@ function Client()
 
 		return conversationKeySet;
 	}
+	
+	this.getUserIdSet = function()
+	{
+	
+		var userIdSet = [];
+		for(var userId in client.userMap)
+		{
+			userIdSet.push(parseInt(userId));
+		}
+		return userIdSet;
+	}
 
 	this.submitChatMessage = function(messageContent, chatWindowId, conversationId, recipientUserId)
 	{
@@ -261,7 +273,7 @@ function Client()
 	
 	this.handleSocketOpen = function()
 	{
-		console.log("Socket Opened.");
+		console.log("[" + new Date() + "] Socket Opened.");
 		client.socket.connected = true;
 		if(client.attemptReconnectIntervalId != null)
 		{
@@ -286,21 +298,25 @@ function Client()
 				siteChatPacket.conversationKeyToMostRecentMessageIdMap[ conversationKey ] = chatWindow.messages[ chatWindow.messages.length - 1 ].id;
 			}
 		}
-	
+		
+		client.attemptingLogin = true;
 		client.sendSiteChatPacket(siteChatPacket);
 	}
 	
 	this.handleSocketClose = function()
 	{
-		console.log("Web Socket Closed.");
+		console.log("[" + new Date() + "] Web Socket Closed.");
 		client.socket.connected = false;
 		if(!client.unloading)
 		{
 			if(client.attemptReconnectIntervalId != null)
 				window.clearInterval(client.attemptReconnectIntervalId);
-			client.attemptReconnectIntervalId = setInterval(client.attemptReconnect, 15000);
+			
+			if( !client.attemptingLogin )
+				client.attemptReconnectIntervalId = setInterval(client.attemptReconnect, 20000);
 			$("#utilitywindow .exclamation").removeClass("hidden");
 		}
+		client.attemptingLogin = false;
 	}
 
 	this.createChatWindow = function(conversationId, recipientUserId, title, userIdSet, expanded, messages, save)
@@ -454,7 +470,7 @@ function Client()
 			if(!doNotAddToOnlineList)
 				client.addUserToOnlineList(siteChatUser, false);
 			if(save)
-				client.saveUser(siteChatUser);
+				client.saveUser(siteChatUser, true);
 		}
 	}
 	
@@ -466,8 +482,9 @@ function Client()
 			return;
 		}
 		
+		var active = siteChatUser.lastActivityDatetime ? ((new Date().getTime() - siteChatUser.lastActivityDatetime) / 1000) < (60) * (5) : false;
 		var html
-		= '<li class="username" id="username' + siteChatUser.id + '"><span class="onlineindicator"></span>'
+		= '<li class="username" id="username' + siteChatUser.id + '"><span class="onlineindicator ' + (active ? "active" : "idle") + '"></span>'
 		+ siteChatUser.name
 		+ '</li>';
 		if(indexToInsert >= client.onlineUserIdSet.length)
@@ -491,15 +508,10 @@ function Client()
 		$('#onlinelisttitle .usercount').html('(' + client.onlineUsers + ')');
 	}
 
-	this.saveUser = function(siteChatUser)
+	this.saveUser = function(siteChatUser, saveUserIdSet)
 	{
-		var userIdSet = [];
-		for(var userId in client.userMap)
-		{
-			userIdSet.push(parseInt(userId));
-		}
-
-		localStorage[client.namespace + "userIdSet"] = JSON.stringify(userIdSet);
+		if(saveUserIdSet)
+			localStorage[client.namespace + "userIdSet"] = JSON.stringify(client.getUserIdSet());
 		localStorage[client.namespace + "user" + siteChatUser.id] = JSON.stringify(siteChatUser);
 	}
 
@@ -530,6 +542,7 @@ function Client()
 
 		if(siteChatPacket.command == "LogIn")
 		{
+			client.attemptingLogin = false;
 			if(siteChatPacket.missedSiteChatConversationMessages && siteChatPacket.missedSiteChatConversationMessages.length > 0)
 			{
 				var missedMessagesLength = siteChatPacket.missedSiteChatConversationMessages.length;
@@ -640,6 +653,7 @@ function Client()
 			var newOnlineUserIdSet = [];
 			client.onlineUserIdSet = [];
 			
+			console.log(siteChatPacket);
 			$("#onlinelist").html("");
 			for(var siteChatUserIndex = 0;siteChatUserIndex < siteChatUserListLength;++siteChatUserIndex)
 			{
@@ -647,7 +661,10 @@ function Client()
 				if(client.userMap[siteChatUser.id] == null)
 					client.addUser(siteChatUser, true, true);
 				client.addUserToOnlineList(siteChatUser, false);
+				client.saveUser(siteChatUser, false);
 			}
+			
+			localStorage[client.namespace + "userIdSet"] = JSON.stringify(client.getUserIdSet());
 		}
 	}
 
@@ -724,7 +741,9 @@ function Client()
 		var siteChatPacket = new Object();
 		siteChatPacket.command = "Heartbeat";
 		siteChatPacket.isAlive = "true";
-		client.sendSiteChatPacket(siteChatPacket);
+		
+		if(client.socket.connected)
+			client.sendSiteChatPacket(siteChatPacket);
 	}
 	this.blink = function(){
 		for(var converstionKey in client.chatWindows) {
@@ -801,10 +820,13 @@ function Client()
 	
 	this.setupWebSocket = function()
 	{
+		console.log("[" + new Date() + "] CONNECTING");
 		client.socket = new WebSocket(client.siteChatUrl, client.siteChatProtocol);
 		client.socket.connected = false;
 		client.socket.onopen = client.handleSocketOpen;
 		client.socket.onclose = client.handleSocketClose;
 		client.socket.onmessage = client.handleSocketMessage;
+		
+		client.attemptingLogin = false;
 	}
 }
