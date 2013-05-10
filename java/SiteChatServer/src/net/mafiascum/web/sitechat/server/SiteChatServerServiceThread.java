@@ -43,7 +43,6 @@ public class SiteChatServerServiceThread extends Thread {
             throwable.printStackTrace();
           }
           
-          
           lastUserListDatetime = nowDatetime;
         }
         //Refresh conversation list members.

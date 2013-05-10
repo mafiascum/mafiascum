@@ -1,5 +1,6 @@
 package net.mafiascum.web.sitechat.server.inboundpacket.operator;
 
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -33,6 +34,11 @@ public class SiteChatInboundSendMessagePacketOperator implements SiteChatInbound
       return;//User is not logged in.
     }
     siteChatServer.updateUserActivity(siteChatUser.getId());
+    
+    synchronized(siteChatUser) {
+      
+      siteChatUser.setLastActivityDatetime(new Date());
+    }
     
     if(siteChatInboundSendMessagePacket.getSiteChatConversationId() != null) {
       MiscUtil.log("Site Chat Conversatin ID: " + siteChatInboundSendMessagePacket.getSiteChatConversationId());

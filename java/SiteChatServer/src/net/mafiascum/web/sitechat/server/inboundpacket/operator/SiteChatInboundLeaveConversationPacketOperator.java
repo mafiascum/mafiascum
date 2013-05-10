@@ -1,5 +1,7 @@
 package net.mafiascum.web.sitechat.server.inboundpacket.operator;
 
+import java.util.Date;
+
 import net.mafiascum.util.MiscUtil;
 import net.mafiascum.web.sitechat.server.SiteChatServer;
 import net.mafiascum.web.sitechat.server.SiteChatServer.SiteChatWebSocket;
@@ -25,6 +27,12 @@ public class SiteChatInboundLeaveConversationPacketOperator implements SiteChatI
       return;
     }
     siteChatServer.updateUserActivity(siteChatUser.getId());
+    
+    synchronized(siteChatUser) {
+      
+      siteChatUser.setLastActivityDatetime(new Date());
+    }
+    
     siteChatConversationWithUserList = siteChatServer.getSiteChatConversationWithUserList(siteChatInboundLeaveConversationPacket.getSiteChatConversationId());
     
     if(siteChatConversationWithUserList == null) {

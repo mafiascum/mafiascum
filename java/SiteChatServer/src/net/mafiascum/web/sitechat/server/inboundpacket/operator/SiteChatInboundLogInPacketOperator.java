@@ -2,12 +2,11 @@ package net.mafiascum.web.sitechat.server.inboundpacket.operator;
 
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.ListIterator;
 
 import net.mafiascum.util.MiscUtil;
-import net.mafiascum.util.StringUtil;
 import net.mafiascum.web.sitechat.server.SiteChatServer;
 import net.mafiascum.web.sitechat.server.SiteChatServer.SiteChatWebSocket;
 import net.mafiascum.web.sitechat.server.SiteChatUser;
@@ -26,9 +25,6 @@ public class SiteChatInboundLogInPacketOperator implements SiteChatInboundPacket
     
     SiteChatInboundLogInPacket siteChatInboundLogInPacket = new Gson().fromJson(siteChatInboundPacketJson, SiteChatInboundLogInPacket.class);
     
-    MiscUtil.log("User ID: " + siteChatInboundLogInPacket.getUserId());
-    MiscUtil.log("Session ID: " + siteChatInboundLogInPacket.getSessionId());
-    
     SiteChatUser siteChatUser = siteChatServer.getSiteChatUser(siteChatInboundLogInPacket.getUserId());
     if(siteChatUser == null) {
       
@@ -36,6 +32,12 @@ public class SiteChatInboundLogInPacketOperator implements SiteChatInboundPacket
       return;
     }
     siteChatServer.updateUserActivity(siteChatUser.getId());
+    
+    synchronized(siteChatUser) {
+      
+      siteChatUser.setLastActivityDatetime(new Date());
+    }
+    
     boolean loginResult = siteChatServer.authenticateUserLogin(siteChatInboundLogInPacket.getUserId(), siteChatInboundLogInPacket.getSessionId());
     
     if(!loginResult) {
@@ -45,6 +47,7 @@ public class SiteChatInboundLogInPacketOperator implements SiteChatInboundPacket
       return;
     }
     
+    System.out.println("Logged In. Last Activity: " + siteChatUser.getLastActivityDatetime());
     siteChatWebSocket.setSiteChatUser(siteChatUser);
     
     //Reconnect to conversations the user has been removed from.
@@ -100,7 +103,6 @@ public class SiteChatInboundLogInPacketOperator implements SiteChatInboundPacket
         
         if(siteChatConversationMessages == null || siteChatConversationMessages.isEmpty() == true) {
           
-          MiscUtil.log("No messages found.");
           continue;
         }
         else {

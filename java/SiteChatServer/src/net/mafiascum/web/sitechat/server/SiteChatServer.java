@@ -66,7 +66,7 @@ public class SiteChatServer extends Server implements SignalHandler {
   protected Map<Integer, SiteChatConversationWithUserList> siteChatConversationWithMemberListMap = new HashMap<Integer, SiteChatConversationWithUserList>();
   protected Map<String, List<SiteChatConversationMessage>> siteChatPrivateConversationMessageHistoryMap = new HashMap<String, List<SiteChatConversationMessage>>();
   
-  protected Map<Integer, Date> userIdToLastActivityDatetime = new HashMap<Integer, Date>();
+  protected Map<Integer, Date> userIdToLastNetworkActivityDatetime = new HashMap<Integer, Date>();
   protected Map<Integer, SiteChatUser> siteChatUserMap = new HashMap<Integer, SiteChatUser>();
   protected List<SiteChatConversationMessage> siteChatConversationMessagesToSave = new LinkedList<SiteChatConversationMessage>();
   protected SiteChatServerServiceThread serviceThread;
@@ -341,6 +341,13 @@ public class SiteChatServer extends Server implements SignalHandler {
     connection.close();
     
     synchronized(this.siteChatUserMap) {
+      
+      for(int userId : this.siteChatUserMap.keySet()) {
+        
+        if(siteChatUserMap.containsKey(userId)) {
+          siteChatUserMap.get(userId).setLastActivityDatetime(this.siteChatUserMap.get(userId).getLastActivityDatetime());
+        }
+      }
       this.siteChatUserMap = siteChatUserMap;
     }
   }
@@ -352,15 +359,16 @@ public class SiteChatServer extends Server implements SignalHandler {
       
       synchronized(descriptors) {
         
-        synchronized(userIdToLastActivityDatetime) {
+        synchronized(userIdToLastNetworkActivityDatetime) {
       
-          for(int userId : userIdToLastActivityDatetime.keySet()) {
+          for(int userId : userIdToLastNetworkActivityDatetime.keySet()) {
             
             siteChatUserList.add(siteChatUserMap.get(userId));
           }
           
           SiteChatOutboundUserListPacket siteChatOutboundUserListPacket = new SiteChatOutboundUserListPacket();
           siteChatOutboundUserListPacket.setSiteChatUsers(siteChatUserList);
+          siteChatOutboundUserListPacket.setPacketSentDatetime(new Date());
           
           for(SiteChatWebSocket siteChatWebSocket : descriptors) {
             
@@ -379,11 +387,11 @@ public class SiteChatServer extends Server implements SignalHandler {
     long contextDatetimeMilliseconds = contextDatetime.getTime();
     
     //Quickly grab a set of users that we will remove.
-    synchronized(userIdToLastActivityDatetime) {
+    synchronized(userIdToLastNetworkActivityDatetime) {
       
-      for(Integer userId : userIdToLastActivityDatetime.keySet()) {
+      for(Integer userId : userIdToLastNetworkActivityDatetime.keySet()) {
         
-        if(contextDatetimeMilliseconds - userIdToLastActivityDatetime.get(userId).getTime() >= MILLISECONDS_UNTIL_USER_IS_INACTIVE) {
+        if(contextDatetimeMilliseconds - userIdToLastNetworkActivityDatetime.get(userId).getTime() >= MILLISECONDS_UNTIL_USER_IS_INACTIVE) {
           
           inactiveUserIdSet.add(userId);
         }
@@ -399,9 +407,9 @@ public class SiteChatServer extends Server implements SignalHandler {
   
   public void removeUser(int userId) {
     
-    synchronized(userIdToLastActivityDatetime) {
+    synchronized(userIdToLastNetworkActivityDatetime) {
       
-      userIdToLastActivityDatetime.remove(userId);
+      userIdToLastNetworkActivityDatetime.remove(userId);
     }
     
     synchronized(descriptors) {
@@ -671,6 +679,7 @@ public class SiteChatServer extends Server implements SignalHandler {
     
     public void onHandshake(FrameConnection connection)
     {
+      
       if (_verbose)
         MiscUtil.log(this.getClass().getSimpleName() + "#onHandshake " + connection + " " + connection.getClass().getSimpleName());
       this.connection = connection;
@@ -744,6 +753,6 @@ public class SiteChatServer extends Server implements SignalHandler {
     
   }
   public void updateUserActivity(int userId) {
-    userIdToLastActivityDatetime.put(userId, new Date());
+    userIdToLastNetworkActivityDatetime.put(userId, new Date());
   }
 }
