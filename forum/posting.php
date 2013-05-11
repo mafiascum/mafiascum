@@ -843,7 +843,7 @@ if ($submit || $preview || $refresh)
 	
 	// PRIVATE TOPICS
 	$first_post_id = ((isset($post_data['topic_first_post_id'])) ? ((int) $post_data['topic_first_post_id']) : 0);
-	if ($forum_id ==6 && (($mode == 'edit' && $first_post_id == $post_id) || ($mode == 'post' && $first_post_id == 0))){
+	if ($forum_id ==PRIVATE_FORUM && (($mode == 'edit' && $first_post_id == $post_id) || ($mode == 'post' && $first_post_id == 0))){
 		$post_data['is_private_old']	= $post_data['is_private'];
 		$post_data['is_private']	= request_var('topic_privacy', (($mode != 'post') ? $post_data['is_private'] : 0));
 		if ($post_data['is_private']){
@@ -1690,7 +1690,7 @@ $forum_allow_private = false;
 if ($mode == 'post' || ($mode == 'edit' && $post_id == $post_data['topic_first_post_id']))
 {
 	$topic_type_toggle = posting_gen_topic_types($forum_id, $post_data['topic_type']);
-	if ($forum_id==6){
+	if ($forum_id==PRIVATE_FORUM){
 		$forum_allow_private = true;
 	}
 }
@@ -1774,7 +1774,7 @@ $form_enctype = (@ini_get('file_uploads') == '0' || strtolower(@ini_get('file_up
 add_form_key('posting');
 
 //PRIVATE USERS
-if (sizeof($post_data['private_users']) && $forum_id==6){
+if (sizeof($post_data['private_users']) && $forum_id==PRIVATE_FORUM){
 $count = 0;
 	$user_name_ary = array();
 	$user_ids = $post_data['private_users'];

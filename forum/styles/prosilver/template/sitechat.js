@@ -123,7 +123,8 @@ function Client()
 					conversationId = parseInt(key);//Support old format.
 
 				var siteChatConversation = JSON.parse(localStorage[client.namespace + "conversation" + key]);
-				client.createChatWindow(conversationId, recipientUserId, siteChatConversation.title, siteChatConversation.userIdSet, siteChatConversation.expanded, siteChatConversation.messages, false);
+				client.createChatWindow(conversationId, recipientUserId, siteChatConversation.title, siteChatConversation.userIdSet, siteChatConversation.expanded, siteChatConversation.messages, false,siteChatConversation.blinking);
+
 			}
 		}
 	}
@@ -319,7 +320,8 @@ function Client()
 		client.attemptingLogin = false;
 	}
 
-	this.createChatWindow = function(conversationId, recipientUserId, title, userIdSet, expanded, messages, save)
+	this.createChatWindow = function(conversationId, recipientUserId, title, userIdSet, expanded, messages, save,blinking)
+
 	{
 		var chatWindowIdPrefix = (conversationId != null ? "C" : "P");
 		var chatWindowUniqueIdentifier = (conversationId != null ? conversationId : recipientUserId);
@@ -357,7 +359,8 @@ function Client()
 		
 		if(expanded != undefined)
 			chatWindow.expanded = expanded;
-			
+		if(blinking != undefined)
+			chatWindow.blinking = blinking;
 		if(chatWindow.expanded)
 		{
 			$chatWindow.addClass("expanded").removeClass("collapsed");
@@ -575,9 +578,8 @@ function Client()
 
 					client.addUser(siteChatUser, true);
 				}
-
 				//Setting recipientUserId to null because I do not believe we will be "connecting" to private conversations.
-				client.createChatWindow(siteChatPacket.siteChatConversationId, null, siteChatPacket.titleText, siteChatUserIdSet, true, [], true);
+				client.createChatWindow(siteChatPacket.siteChatConversationId, null, siteChatPacket.titleText, siteChatUserIdSet, true, [], true,false);
 			}
 		}
 		else if(siteChatPacket.command == "NewMessage")
@@ -693,6 +695,11 @@ function Client()
 			client.onlineGroup.expanded = true;
 			//load online list for the first time
 		}
+		if(localStorage[client.namespace +'tabs']){
+			client.tabs = localStorage[client.namespace +'tabs'];
+		} else {
+			client.tabs = 0;
+		}
 		var windowStateClass = sessionStorage[client.namespace + "utilityExpanded"] == "true" ? "expanded" : "collapsed";
 		$("#chatPanel").prepend
 				(
@@ -700,9 +707,9 @@ function Client()
 				+	'	<div class="chatWindowInner">'
 				+	'		<div class="title">Site Chat<div class="exclamation hidden">!</div></div>'
 				+	' 		<ul id="chattabs">'
-				+	' 			<li class="tab active"><a href="#utilitywindow-1">Users</a></li>'
-				+	' 			<li class="tab"><a href="#utilitywindow-2">Rooms</a></li>'
-				+	' 			<li class="tab"><a href="#utilitywindow-3">Settings</a></li>'
+				+	' 			<li id="tab0" class="tab"><a href="#utilitywindow-1">Users</a></li>'
+				+	' 			<li id="tab1" class="tab"><a href="#utilitywindow-2">Rooms</a></li>'
+				+	' 			<li id="tab2" class="tab"><a href="#utilitywindow-3">Settings</a></li>'
 				+ 	' 			<div class="clear"></div>'
 				+	' 		</ul> '
 				+	'		<div id="utilitywindow-1" class="tab_content">'
@@ -721,8 +728,31 @@ function Client()
 				+	'	</div>'
 				+	'</div>'
 				);
+		if (client.onlineGroup.expanded == false){
+			$('#onlinelist').css('display','none');
+			$('#onlinelisttitle .expand-icon').html('+');
+		}
+		if (client.tabs ==0){
+			$('#tab0').addClass('active');
+		} else if (client.tabs ==1){
+			$('#tab1').addClass('active');
+		} else if (client.tabs ==2){
+			$('#tab2').addClass('active');
+		} else {
+			$('#tab0').addClass('active');
+		}
+		$("#utilitywindow .inputBuffer").bind("keypress", client.handleWindowInputSubmission);
 		$("#onlinelisttitle").bind('click', this.onlinelistexpand);
 		$("#utilitywindow").tabify();
+		$('#tab0').bind('click', function(){
+			localStorage[client.namespace +'tabs'] = 0;
+		});
+		$('#tab1').bind('click', function(){
+			localStorage[client.namespace +'tabs'] = 1;
+		});
+		$('#tab2').bind('click', function(){
+			localStorage[client.namespace +'tabs'] = 2;
+		});
 	}
 	this.onlinelistexpand = function(){
 		if (client.onlineGroup.expanded == false){

@@ -348,4 +348,5 @@ define('POSTS_ARCHIVE_TABLE', $table_prefix . 'posts_archive');
 define('USER_POST_MASK_TABLE', $table_prefix . 'user_post_mask');
 
 define('MOBILE_STYLE', '17');
+define('PRIVATE_FORUM', '90');
 ?>
