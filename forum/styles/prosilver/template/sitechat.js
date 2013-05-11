@@ -831,6 +831,13 @@ function Client()
 		$(document).on("click", "#chatPanel .chatWindow .title .close", client.handleWindowCloseButtonClick);
 		$(document).on("keypress", "#chatPanel .chatWindow .inputBuffer", client.handleWindowInputSubmission);
 		$(document).on("click", "#utilitywindow .username", client.handleUserListUsernameClick);
+		$(document).on("mousewheel", "#onlinelistcontainer, #chatPanel .outputBuffer", function(e) {
+
+			if( e.originalEvent ) e = e.originalEvent;
+			var delta = e.wheelDelta || e.detail;
+			this.scrollTop += ( delta < 0 ? 1 : -1 ) * 30;
+			e.preventDefault();
+		});
 		
 		client.setupWebSocket();
 
