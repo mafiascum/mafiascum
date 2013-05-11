@@ -4,10 +4,12 @@ import java.util.Date;
 import java.util.List;
 
 import net.mafiascum.web.sitechat.server.SiteChatUser;
+import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationWithUserList;
 
 public class SiteChatOutboundUserListPacket extends SiteChatOutboundPacket {
 
   protected List<SiteChatUser> siteChatUsers;
+  protected List<SiteChatConversationWithUserList> siteChatConversations;
   protected Date packetSentDatetime;
 
   public List<SiteChatUser> getSitechatUsers() {
@@ -32,5 +34,13 @@ public class SiteChatOutboundUserListPacket extends SiteChatOutboundPacket {
   public void setPacketSentDatetime(Date packetSentDatetime) {
     
     this.packetSentDatetime = packetSentDatetime;
+  }
+
+  public List<SiteChatConversationWithUserList> getSiteChatConversations() {
+    return siteChatConversations;
+  }
+
+  public void setSiteChatConversations(List<SiteChatConversationWithUserList> siteChatConversations) {
+    this.siteChatConversations = siteChatConversations;
   }
 }
