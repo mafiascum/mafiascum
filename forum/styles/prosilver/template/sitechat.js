@@ -41,6 +41,7 @@ function Client()
 	this.userId = null;
 	this.sessionId = null;
 	this.pendingMessages = [];
+	this.rooms = [];
 	this.namespace = "ms_sc2_";//Prepended to all local storage variables.
 	this.attemptReconnectIntervalId = null;
 	this.onlineUserIdSet = [];
@@ -126,6 +127,27 @@ function Client()
 				client.createChatWindow(conversationId, recipientUserId, siteChatConversation.title, siteChatConversation.userIdSet, siteChatConversation.expanded, siteChatConversation.messages, false,siteChatConversation.blinking);
 
 			}
+		}
+		if (localStorage[client.namespace +'chatGroups']){
+			client.chatGroups = JSON.parse(localStorage[client.namespace +'chatGroups']);
+		} else {
+			client.chatGroups = new Array();
+			// load chat groups for the first time
+		}
+		if (localStorage[client.namespace +'onlineGroup']){
+			client.onlineGroup = JSON.parse(localStorage[client.namespace +'onlineGroup']);
+		} else {
+			client.onlineGroup = new Object();
+			client.onlineGroup.expanded = true;
+			//load online list for the first time
+		}
+		if(localStorage[client.namespace +'tabs']){
+			client.tabs = localStorage[client.namespace +'tabs'];
+		} else {
+			client.tabs = 0;
+		}
+		if(localStorage[client.namespace + 'rooms']){
+			client.rooms = JSON.parse(localStorage[client.namespace + 'rooms']);
 		}
 	}
 
@@ -665,7 +687,42 @@ function Client()
 				client.addUserToOnlineList(siteChatUser, false);
 				client.saveUser(siteChatUser, false);
 			}
-			
+			$("#roomstab").html("");
+			var oldrooms = client.rooms;
+			client.rooms = [];
+			for(var i = 0;i < siteChatPacket.siteChatConversations.length;i++)
+			{
+				if(client.rooms[siteChatPacket.siteChatConversations[i].siteChatConversation.id] != null){
+					var room = new Object();
+					room.expanded = oldrooms[siteChatPacket.siteChatConversations[i].siteChatConversation.id].expanded;
+					room.userIdSet = siteChatPacket.siteChatConversations[i].userIdSet;
+					room.name = siteChatPacket.siteChatConversations[i].siteChatConversation.name;
+					room.id = siteChatPacket.siteChatConversations[i].siteChatConversation.id;
+					client.rooms[siteChatPacket.siteChatConversations[i].siteChatConversation.id] = room;
+				} else {
+					var room = new Object();
+					room.expanded = true;
+					room.userIdSet = siteChatPacket.siteChatConversations[i].userIdSet;
+					room.name = siteChatPacket.siteChatConversations[i].siteChatConversation.name;
+					room.id = siteChatPacket.siteChatConversations[i].siteChatConversation.id;
+					client.rooms[siteChatPacket.siteChatConversations[i].siteChatConversation.id] = room;
+					
+				}
+				$("#roomstab").append('<div id="chatroom' + siteChatPacket.siteChatConversations[i].siteChatConversation.id + '"><div class="roomtitle"><span class="expand-icon">' + (client.rooms[siteChatPacket.siteChatConversations[i].siteChatConversation.id].expanded ? '-' : "+") + '</span>' + siteChatPacket.siteChatConversations[i].siteChatConversation.name + '<span class="usercount">(' + siteChatPacket.siteChatConversations[i].userIdSet.length + ')</span></div><div class="userlist"' + (client.rooms[siteChatPacket.siteChatConversations[i].siteChatConversation.id].expanded ? '' : "style='display:none;'") + '></div></div>');
+				var identifier = '#chatroom' + siteChatPacket.siteChatConversations[i].siteChatConversation.id + ' .userlist';
+				$(identifier).append('<ul>');
+				for (var k = 0; k < siteChatPacket.siteChatConversations[i].userIdSet.length; k++){
+					var siteChatUser = client.userMap[siteChatPacket.siteChatConversations[i].userIdSet[k]];
+					var active = siteChatUser.lastActivityDatetime ? ((new Date().getTime() - siteChatUser.lastActivityDatetime) / 1000) < (60) * (5) : false;
+					var html = '<li class="username" id="username' + siteChatUser.id + '"><span class="onlineindicator ' + (active ? "active" : "idle") + '"></span>'
+								+ siteChatUser.name
+								+ '</li>';
+					$(identifier).append(html);
+				}
+				$(identifier).append('</ul>');
+			}
+			$(".roomtitle").bind('click', client.roomlistexpand);
+			localStorage[client.namespace + "rooms"] = JSON.stringify(client.rooms);
 			localStorage[client.namespace + "userIdSet"] = JSON.stringify(client.getUserIdSet());
 		}
 	}
@@ -682,24 +739,6 @@ function Client()
 	}
 	this.createUtilityWindow = function()
 	{
-		if (localStorage[client.namespace +'chatGroups']){
-			client.chatGroups = JSON.parse(localStorage[client.namespace +'chatGroups']);
-		} else {
-			client.chatGroups = new Array();
-			// load chat groups for the first time
-		}
-		if (localStorage[client.namespace +'onlineGroup']){
-			client.onlineGroup = JSON.parse(localStorage[client.namespace +'onlineGroup']);
-		} else {
-			client.onlineGroup = new Object();
-			client.onlineGroup.expanded = true;
-			//load online list for the first time
-		}
-		if(localStorage[client.namespace +'tabs']){
-			client.tabs = localStorage[client.namespace +'tabs'];
-		} else {
-			client.tabs = 0;
-		}
 		var windowStateClass = sessionStorage[client.namespace + "utilityExpanded"] == "true" ? "expanded" : "collapsed";
 		$("#chatPanel").prepend
 				(
@@ -717,21 +756,43 @@ function Client()
 				+	'				<p id="onlinelisttitle"><span class="expand-icon">-</span>Online Users <span class="usercount">(0)</span></p>'
 				+	'				<ul id="onlinelist"></ul>'
 				+	'			</div>'
-				+	'			<div id="joindiv"><form id="joinConversationForm"><input autocomplete="off" placeholder="Enter Chat Room Name" type="text" name="input"></input></div>'
 				+	'		</div>'
 				+	'		<div id="utilitywindow-2" class="tab_content">'
-				+	'		<div>rooms</div>'
+				+	'		<div id="roomstab"></div>'
 				+	'		</div>'
 				+	'		<div id="utilitywindow-3" class="tab_content">'
 				+	'		<div>settings</div>'
 				+	'		</div>'
+				+	'			<div id="joindiv"><form id="joinConversationForm"><input autocomplete="off" placeholder="Enter Chat Room Name" type="text" name="input"></input></div>'
 				+	'	</div>'
 				+	'</div>'
 				);
+	}
+	this.populateUtilityWindow = function (){
+				if (client.rooms){
+					for (var room =0; room < client.rooms.length; room++){
+						if (client.rooms[room] !== null){
+							$("#roomstab").append('<div id="chatroom' + client.rooms[room].id + '"><div class="roomtitle"><span class="expand-icon">' + (client.rooms[room].expanded ? '-' : "+") + '</span>' + client.rooms[room].name + '<span class="usercount">(' + client.rooms[room].userIdSet.length + ')</span></div><div class="userlist"' + (client.rooms[room].expanded ? '' : "style='display:none;'") + '></div></div>');
+							var identifier = '#chatroom' + client.rooms[room].id + ' .userlist';
+							$(identifier).append('<ul>');
+							for (var k = 0; k < client.rooms[room].userIdSet.length; k++){
+								var siteChatUser = client.userMap[client.rooms[room].userIdSet[k]];
+								var active = siteChatUser.lastActivityDatetime ? ((new Date().getTime() - siteChatUser.lastActivityDatetime) / 1000) < (60) * (5) : false;
+								var html = '<li class="username" id="username' + siteChatUser.id + '"><span class="onlineindicator ' + (active ? "active" : "idle") + '"></span>'
+											+ siteChatUser.name
+											+ '</li>';
+								$(identifier).append(html);
+							}
+							$(identifier).append('</ul>');
+						}
+					}
+				}
+			$(".roomtitle").bind('click', client.roomlistexpand);
 		if (client.onlineGroup.expanded == false){
 			$('#onlinelist').css('display','none');
 			$('#onlinelisttitle .expand-icon').html('+');
 		}
+		
 		if (client.tabs ==0){
 			$('#tab0').addClass('active');
 		} else if (client.tabs ==1){
@@ -765,6 +826,21 @@ function Client()
 			$('#onlinelisttitle .expand-icon').html('+');
 			client.onlineGroup.expanded = false;
 			localStorage[client.namespace +'onlineGroup'] = JSON.stringify(client.onlineGroup);
+		}
+	}
+	this.roomlistexpand = function(){
+		if ($(this).next().css('display') == 'none'){
+			$(this).next().css('display', 'block');
+			$('.expand-icon',this).html('-');
+			var id = $(this).parent().attr('id').match(/\d+/)
+			client.rooms[id].expanded = true;
+			localStorage[client.namespace +'rooms'] = JSON.stringify(client.rooms);
+		} else {
+			$(this).next().css('display', 'none');
+			$('.expand-icon',this).html('+');
+			var id = $(this).parent().attr('id').match(/\d+/);
+			client.rooms[id].expanded = false;
+			localStorage[client.namespace +'rooms'] = JSON.stringify(client.rooms);
 		}
 	}
 	this.heartbeat = function(){
@@ -842,10 +918,9 @@ function Client()
 		client.setupWebSocket();
 
 		client.createChatPanel();
-		
 		client.createUtilityWindow();
-		
 		client.loadFromLocalStorage();
+		client.populateUtilityWindow();
 		setInterval('client.blink()', 700);
 		setInterval('client.heartbeat()', 150000);
 	}
