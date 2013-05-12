@@ -793,14 +793,10 @@ function Client()
 				client.tabs[index].id = 2;
 	}
 	this.setActiveTab = function(id){
-		console.log ('id:' + id);
 		$('#tab' + id).addClass('active');
 		$($('#tab' + id).children('a').attr('href')).css('display','block');
-		console.log(client.tabs);
 		for (var i= 0; i < client.tabs.length; i++){
-			console.log('looped ids:' + client.tabs[i].id);
 			if(id != client.tabs[i].id){
-				console.log('changed ids:');
 				$($('#tab' + client.tabs[i].id).children('a').attr('href')).css('display','none');
 				$('#tab' + client.tabs[i].id).removeClass('active');
 			}
