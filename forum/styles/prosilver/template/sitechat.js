@@ -721,17 +721,17 @@ function Client()
 		if (client.rooms){
 					for (var room =0; room < client.rooms.length; room++){
 						if (client.rooms[room] !== undefined && client.rooms[room] !== null){
-							$("#roomstab").append('<div id="chatroom' + client.rooms[room].id + '"><div class="roomtitle"><span class="expand-icon">' + (client.rooms[room].expanded ? '-' : "+") + '</span>' + client.rooms[room].name + '<span class="usercount">(' + client.rooms[room].userIdSet.length + ')</span></div><div class="userlist"' + (client.rooms[room].expanded ? '' : "style='display:none;'") + '></div></div>');
+							$("#roomstab").append('<div id="chatroom' + client.rooms[room].id + '"><div class="roomtitle"><span class="expand-icon">' + (client.rooms[room].expanded ? '-' : "+") + '</span>' + client.rooms[room].name + '<span class="usercount">(' + client.rooms[room].userIdSet.length + ')</span><span class="joinbutton">JOIN</span></div><div class="userlist"' + (client.rooms[room].expanded ? '' : "style='display:none;'") + '></div></div>');
 							var identifier = '#chatroom' + client.rooms[room].id + ' .userlist';
 							$(identifier).append('<ul>');
 							for (var k = 0; k < client.rooms[room].userIdSet.length; k++){
 								var siteChatUser = client.userMap[client.rooms[room].userIdSet[k]];
 								var active = siteChatUser.lastActivityDatetime ? ((new Date().getTime() - siteChatUser.lastActivityDatetime) / 1000) < (60) * (5) : false;
-								var html = '<li class="username" id="username' + client.rooms[room].name + siteChatUser.id + '"><span class="onlineindicator ' + (active ? "active" : "idle") + '"></span>'
+								var html = '<li class="username" id="username' + client.rooms[room].name.replace(/[^A-Za-z0-9]/g, '') + siteChatUser.id + '"><span class="onlineindicator ' + (active ? "active" : "idle") + '"></span>'
 											+ siteChatUser.name
 											+ '</li>';
 								$(identifier).append(html);
-								$("#username"+ client.rooms[room].name + siteChatUser.id).data("username", siteChatUser.name).data("user-id", siteChatUser.id);
+								$("#username"+ client.rooms[room].name.replace(/[^A-Za-z0-9]/g, '') + siteChatUser.id).data("username", siteChatUser.name).data("user-id", siteChatUser.id);
 							}
 							$(identifier).append('</ul>');
 						}

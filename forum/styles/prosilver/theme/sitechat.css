@@ -460,3 +460,11 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#fafafa', end
 .chatWindow.collapsed .roomtitle{
 	display:none;
 }
+.chatWindow.expanded .joinbutton{
+	font-size: 10px;
+	background-color: #6E94C9;
+	border-radius: 4px;
+	padding: 0px 1px 1px 1px;
+	margin-left: 10px;
+	color: white;
+}
