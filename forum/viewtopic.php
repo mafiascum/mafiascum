@@ -35,7 +35,7 @@ $start		= request_var('start', 0);
 $view		= request_var('view', '');
 
 //set multiquote array from cookie
-if (isset($_COOKIE["ugEvYSDJEOAz2bHadHvOMULTITOPIC_$topic_id"])){
+if (isset($_COOKIE["ugEvYSDJEOAz2bHadHvOMULTITOPIC_$topic_id"])) {
 	$multiquote_ids = explode ( " ", $_COOKIE["ugEvYSDJEOAz2bHadHvOMULTITOPIC_$topic_id"]);
 }
 
@@ -49,17 +49,9 @@ $sort_key	= request_var('sk', $default_sort_key);
 $sort_dir	= request_var('sd', $default_sort_dir);
 $posts_per_page_param = request_var('ppp', 0);
 //----[ User Post Isolation ]----\\
-$s_sort_user_id = request_var('user_select', 0);
-$s_sort_user_id2= request_var('user_select2', 0);
-$s_sort_user_id3= request_var('user_select3', 0);
-
-$isolationUserArray = array();
-if($s_sort_user_id !== 0)
-	$isolationUserArray[] = $s_sort_user_id;
-if($s_sort_user_id2 !== 0)
-	$isolationUserArray[] = $s_sort_user_id2;
-if($s_sort_user_id3 !== 0)
-	$isolationUserArray[] = $s_sort_user_id3;
+$isolationUserArray = request_var('user_select', array('' => 0));
+while( ($key = array_search(0, $isolationUserArray)) !== false)
+	unset($isolationUserArray[$key]);
 //----[ End User Post Isolation ]----\\
 
 $update		= request_var('update', false);
@@ -496,24 +488,54 @@ if ($sort_days)
 }
 
 //----[ User Post Isolation ]----\\
-elseif(count($isolationUserArray) > 0)
+else if(count($isolationUserArray) > 0)
 {
-	$sql = 'SELECT COUNT(post_id) AS num_posts
-		FROM ' . POSTS_TABLE . "
-		WHERE topic_id = $topic_id
-		AND " . $db->sql_in_set('poster_id', $isolationUserArray, false, false). ' '
-		. (($auth->acl_get('m_approve', $forum_id)) ? '' : 'AND post_approved = 1');
-
-	$result = $db->sql_query($sql);
-	$total_posts = (int) $db->sql_fetchfield('num_posts');
-	$db->sql_freeresult($result);
-
 	$limit_posts_time = '';
+	
+	//Let's get the real post numbers. Kison, 2011-06-19
+	$db->sql_query('SET @post_count := -1;');
 
-	if(isset($_POST['user_select']))
-	{
-		$start = 0;
+	$sql = 'SELECT tmp.post_id, tmp.post_number FROM
+		(
+		  SELECT
+		    post_id,
+		    poster_id,
+		    @post_count := @post_count + 1 AS post_number
+		  FROM phpbb_posts
+		  WHERE topic_id=' . $topic_id
+		. (($auth->acl_get('m_approve', $forum_id)) ? '' : ' AND post_approved = 1') . '
+		  ORDER BY post_time ASC
+		) AS tmp
+		WHERE ' . $db->sql_in_set("tmp.poster_id", $isolationUserArray, false, false);
+	
+	$result = $db->sql_query($sql);
+
+	$postIdToPostNumberMap = array();
+	$isoPostNumberOfPostId = 0;
+	$postIdFoundInResultSet = false;
+	$total_posts = 0;
+
+	while($row = $db->sql_fetchrow()) {
+
+		$postIdToPostNumberMap[(int)$row['post_id']] = $row['post_number'];
+		++$total_posts;
+		if($post_id && !$postIdFoundInResultSet)
+		{
+			++$isoPostNumberOfPostId;
+			
+			if($post_id == $row['post_id'])
+				$postIdFoundInResultSet = true;
+		}
 	}
+
+	$db->sql_freeresult($result); 
+
+	//Determine which page to start on if a post ID is given.
+	if($postIdFoundInResultSet)
+	{
+		$start = $isoPostNumberOfPostId - ($isoPostNumberOfPostId % $posts_per_page);
+	}
+
 }
 //----[ End User Post Isolation ]----\\    
     
@@ -753,7 +775,7 @@ $topic_mod .= ($allow_change_type && $auth->acl_get('f_announce', $forum_id) && 
 $topic_mod .= ($auth->acl_get('m_', $forum_id)) ? '<option value="topic_logs">' . $user->lang['VIEW_TOPIC_LOGS'] . '</option>' : '';
 
 // If we've got a hightlight set pass it on to pagination.
-$pagination = generate_pagination(append_sid("{$phpbb_root_path}viewtopic.$phpEx", "f=$forum_id&amp;t=$topic_id" . ((isset($s_sort_user_id) && $s_sort_user_id !== 0) ? "&amp;user_select={$s_sort_user_id}" : '') . (($s_sort_user_id2 !== 0) ? "&amp;user_select2={$s_sort_user_id2}" : '') . (($s_sort_user_id3 !== 0) ? "&amp;user_select3={$s_sort_user_id3}" : '') . ((strlen($u_sort_param)) ? "&amp;$u_sort_param" : '') . ($posts_per_page_param !== 0 ? ('&amp;ppp=' . $posts_per_page) : '') . (($highlight_match) ? "&amp;hilit=$highlight" : '')), $total_posts, $posts_per_page, $start);
+$pagination = generate_pagination(append_sid("{$phpbb_root_path}viewtopic.$phpEx", "f=$forum_id&amp;t=$topic_id" . ((count($isolationUserArray) >= 1) ? "&amp;user_select[]=" . $isolationUserArray[0] : '') . ((count($isolationUserArray) >= 2) ? "&amp;user_select[]=" . $isolationUserArray[1] : '') . ((count($isolationUserArray) >= 3) ? "&amp;user_select[]=" . $isolationUserArray[2] : '') . ((strlen($u_sort_param)) ? "&amp;$u_sort_param" : '') . ($posts_per_page_param !== 0 ? ('&amp;ppp=' . $posts_per_page) : '') . (($highlight_match) ? "&amp;hilit=$highlight" : '')), $total_posts, $posts_per_page, $start);
 
 // Navigation links 
 generate_forum_nav($topic_data);
@@ -867,37 +889,39 @@ $template->assign_vars(array(
 	'U_BUMP_TOPIC'			=> (bump_topic_allowed($forum_id, $topic_data['topic_bumped'], $topic_data['topic_last_post_time'], $topic_data['topic_poster'], $topic_data['topic_last_poster_id'])) ? append_sid("{$phpbb_root_path}posting.$phpEx", "mode=bump&amp;f=$forum_id&amp;t=$topic_id&amp;hash=" . generate_link_hash("topic_$topic_id")) : '')
 );
 
-    //----[ User Post Isolation ]----\\
-        $sql = 'SELECT DISTINCT p.poster_id AS poster_id, u.username AS username
-            FROM ' . POSTS_TABLE . ' p, ' . USERS_TABLE . ' u
-            WHERE p.topic_id = ' . $topic_data['topic_id'] . '
-                AND p.poster_id = u.user_id' . 
-                (($auth->acl_get('m_approve', $forum_id)) ? '' : ' AND p.post_approved = 1') .
-            ' ORDER BY u.username_clean';
-        $result = $db->sql_query($sql);
-        $user_ary = array();
-        
-        while($urow = $db->sql_fetchrow($result))
-        {
-            $selected = (isset($s_sort_user_id) && $s_sort_user_id == $urow['poster_id']) ? ' selected="selected"' : '';
-            $selected2 = (isset($s_sort_user_id2)&& $s_sort_user_id2 == $urow['poster_id']) ? ' selected="selected"' : '';
-			$selected3 = (isset($s_sort_user_id3)&& $s_sort_user_id3 == $urow['poster_id']) ? ' selected="selected"' : '';
-            $user_ary[] = '<option value="' . $urow['poster_id'] . '"' . $selected . '>' . $urow['username'] . '</option>';
-            $user_ary2[]= '<option value="' . $urow['poster_id'] . '"' . $selected2. '>' . $urow['username'] . '</option>';
-			$user_ary3[]= '<option value="' . $urow['poster_id'] . '"' . $selected3. '>' . $urow['username'] . '</option>'; 
-        }
-        
-        $s_topic_users = implode(' ', $user_ary);
-        $s_topic_users2 = implode(' ', $user_ary2);
-		$s_topic_users3 = implode(' ', $user_ary3);
-        $db->sql_freeresult($result);
-        
-        $template->assign_vars(array(
-            'S_SELECT_SORT_USERS'      => ($s_topic_users) ? '<select name="user_select"  class="iso_select"><option value="0">' . $user->lang['VIEW_ALL_POSTERS'] . '</option>' . $s_topic_users . '</select>' : '',
-            'S_SELECT_SORT_USERS2'     => ($s_topic_users2) ? '<select name="user_select2" id="user_select2" class="iso_select" style="' . ($s_sort_user_id2 !== 0 ? '' : 'display:none;') . '"><option value="0">&#60;Second User&#62;</option>' . $s_topic_users2 . '</select>' : '',
-			'S_SELECT_SORT_USERS3'     => ($s_topic_users3) ? '<select name="user_select3" id="user_select3"  class="iso_select" style="' . ($s_sort_user_id3 !== 0 ? '' : 'display:none;') . '"><option value="0">&#60;Third User&#62;</option>' . $s_topic_users3 . '</select>' : '',
-			'NUMBER_OF_ISOLATED_USERS' => count($isolationUserArray)
-        ));
+//----[ User Post Isolation ]----\\
+$sql = 'SELECT DISTINCT p.poster_id AS poster_id, u.username AS username
+	FROM ' . POSTS_TABLE . ' p, ' . USERS_TABLE . ' u
+	WHERE p.topic_id = ' . $topic_data['topic_id'] . '
+	AND p.poster_id = u.user_id' . 
+	(($auth->acl_get('m_approve', $forum_id)) ? '' : ' AND p.post_approved = 1') .
+	' ORDER BY u.username_clean';
+$result = $db->sql_query($sql);
+$user_ary = array();
+
+$isolationUserArrayLength = count($isolationUserArray);
+while($urow = $db->sql_fetchrow($result))
+{
+	$posterId = (int)$urow['poster_id'];
+	$selected = ($isolationUserArrayLength >= 1 && $isolationUserArray[0] == $posterId) ? ' selected="selected"' : '';
+	$selected2 = ($isolationUserArrayLength >= 2 && $isolationUserArray[1] == $posterId) ? ' selected="selected"' : '';
+	$selected3 = ($isolationUserArrayLength >= 3 && $isolationUserArray[2] == $posterId) ? ' selected="selected"' : '';
+	$user_ary[] = '<option value="' . $posterId . '"' . $selected . '>' . $urow['username'] . '</option>';
+	$user_ary2[]= '<option value="' . $posterId . '"' . $selected2. '>' . $urow['username'] . '</option>';
+	$user_ary3[]= '<option value="' . $posterId . '"' . $selected3. '>' . $urow['username'] . '</option>'; 
+}
+
+$s_topic_users = implode(' ', $user_ary);
+$s_topic_users2 = implode(' ', $user_ary2);
+$s_topic_users3 = implode(' ', $user_ary3);
+$db->sql_freeresult($result);
+
+$template->assign_vars(array(
+	'S_SELECT_SORT_USERS'      => $s_topic_users ? '<select name="user_select[]"  class="iso_select"><option value="0">' . $user->lang['VIEW_ALL_POSTERS'] . '</option>' . $s_topic_users . '</select>' : '',
+	'S_SELECT_SORT_USERS2'     => $s_topic_users2 ? '<select name="user_select[]" id="user_select2" class="iso_select" style="' . ($isolationUserArrayLength >= 2 ? '' : 'display:none;') . '"><option value="0">&#60;Second User&#62;</option>' . $s_topic_users2 . '</select>' : '',
+	'S_SELECT_SORT_USERS3'     => $s_topic_users3 ? '<select name="user_select[]" id="user_select3"  class="iso_select" style="' . ($isolationUserArrayLength >= 3 ? '' : 'display:none;') . '"><option value="0">&#60;Third User&#62;</option>' . $s_topic_users3 . '</select>' : '',
+	'NUMBER_OF_ISOLATED_USERS' => $isolationUserArrayLength
+));
     //----[ End User Post Isolation ]----\\     
 
 // Does this topic contain a poll?
@@ -1171,35 +1195,6 @@ $i = $i_total = 0;
 $iso_where = "";
 if(count($isolationUserArray) > 0) {
 	$iso_where .= $db->sql_in_set("p.poster_id", $isolationUserArray, false, false);
-	}
-	
-if(count($isolationUserArray) > 0) {
-
-	//Let's get the real post numbers. Kison, 2011-06-19
-	$db->sql_query('SET @post_count := -1;');
-
-	$sql = 'SELECT tmp.post_id, tmp.post_number FROM
-		(
-		  SELECT
-		    post_id,
-		    poster_id,
-		    @post_count := @post_count + 1 AS post_number
-		  FROM phpbb_posts
-		  WHERE topic_id=' . $topic_id . '
-		  ORDER BY post_time ASC
-		) AS tmp
-		WHERE ' . $db->sql_in_set("tmp.poster_id", $isolationUserArray, false, false);
-
-	$result = $db->sql_query($sql);
-
-	$postIdToPostNumberMap = array();
-
-	while($row = $db->sql_fetchrow()) {
-
-		$postIdToPostNumberMap[(int)$row['post_id']] = $row['post_number'];
-	}
-
-	$db->sql_freeresult($result); 
 }
 //----[ End User Post Isolation ]----\\
 
@@ -1212,7 +1207,7 @@ $sql = 'SELECT p.post_id
 		" . (count($isolationUserArray) > 0 ? ("AND " . $iso_where) : "") . "
 		$limit_posts_time
 	ORDER BY $sql_sort_order";
-	
+
 $result = $db->sql_query_limit($sql, $sql_limit, $sql_start);
 
 $i = ($store_reverse) ? $sql_limit - 1 : 0;
@@ -1894,7 +1889,7 @@ for ($i = 0, $end = sizeof($post_list); $i < $end; ++$i)
 		'U_MCP_REPORT'		=> ($auth->acl_get('m_report', $forum_id)) ? append_sid("{$phpbb_root_path}mcp.$phpEx", 'i=reports&amp;mode=report_details&amp;f=' . $forum_id . '&amp;p=' . $row['post_id'], true, $user->session_id) : '',
 		'U_MCP_APPROVE'		=> ($auth->acl_get('m_approve', $forum_id)) ? append_sid("{$phpbb_root_path}mcp.$phpEx", 'i=queue&amp;mode=approve_details&amp;f=' . $forum_id . '&amp;p=' . $row['post_id'], true, $user->session_id) : '',
 		'U_MINI_POST'		=> append_sid("{$phpbb_root_path}viewtopic.$phpEx", 'p=' . $row['post_id']) . (($topic_data['topic_type'] == POST_GLOBAL) ? '&amp;f=' . $forum_id : '') . '#p' . $row['post_id'],
-		'U_ISO_URL'		=> append_sid("{$phpbb_root_path}viewtopic.$phpEx", 'p=' . $row['post_id']) . (($topic_data['topic_type'] == POST_GLOBAL) ? '&amp;f=' . $forum_id : '' . "&amp;user_select=" . $row['user_id']),
+		'U_ISO_URL'		=> append_sid("{$phpbb_root_path}viewtopic.$phpEx", 'p=' . $row['post_id']) . (($topic_data['topic_type'] == POST_GLOBAL) ? '&amp;f=' . $forum_id : '' . "&amp;user_select[]=" . $row['user_id'] . "#p" . $row['post_id']),
 		'U_NEXT_POST_ID'	=> ($i < $i_total && isset($rowset[$post_list[$i + 1]])) ? $rowset[$post_list[$i + 1]]['post_id'] : '',
 		'U_PREV_POST_ID'	=> $prev_post_id,
 		'U_NOTES'			=> ($auth->acl_getf_global('m_')) ? append_sid("{$phpbb_root_path}mcp.$phpEx", 'i=notes&amp;mode=user_notes&amp;u=' . $poster_id, true, $user->session_id) : '',
