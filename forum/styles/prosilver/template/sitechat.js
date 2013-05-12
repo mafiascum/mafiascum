@@ -695,7 +695,7 @@ function Client()
 			client.rooms = [];
 			for(var i = 0;i < siteChatPacket.siteChatConversations.length;i++)
 			{
-				if(client.rooms[siteChatPacket.siteChatConversations[i].siteChatConversation.id] != null){
+				if(oldrooms[siteChatPacket.siteChatConversations[i].siteChatConversation.id] != null){
 					var room = new Object();
 					room.expanded = oldrooms[siteChatPacket.siteChatConversations[i].siteChatConversation.id].expanded;
 					room.userIdSet = siteChatPacket.siteChatConversations[i].userIdSet;
