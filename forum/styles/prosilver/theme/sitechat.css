@@ -16,7 +16,7 @@
 
 .chatWindow.collapsed
 {
-	width: 200px;
+	width: 200px !important;
 	height: 30px;
 }
 
@@ -26,13 +26,18 @@
 	height: 300px;
 }
 
-.chatWindowInner
+.chatWindowOuter
 {
-	border: 1px solid #999;
 	position:absolute;
 	bottom: 0;
 	width: inherit;
 	border-radius: 3px 3px 0 0;
+	padding: 5px 5px 0 5px;
+}
+
+.chatWindowInner
+{
+	border: 1px solid #999;
 }
 
 /*** Title Bar ***/
@@ -89,7 +94,7 @@
 .chatWindow .title .close
 {
 	display:none;
-	padding: 0 5px 0 5px;
+	padding: 0 5px 0 4px;
 	margin-right: 5px;
 	float: right;
 	font-weight: bold;

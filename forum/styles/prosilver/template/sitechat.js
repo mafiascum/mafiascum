@@ -50,6 +50,7 @@ function Client()
 	this.firstConnectionThisPageLoad = true;
 	this.onlineUsers = 0;
 	this.attemptingLogin = false;
+	this.dragWindow = null;
 	this.attemptReconnect = function()
 	{
 		client.setupWebSocket();
@@ -123,8 +124,8 @@ function Client()
 				else
 					conversationId = parseInt(key);//Support old format.
 
-				var siteChatConversation = JSON.parse(localStorage[client.namespace + "conversation" + key]);
-				client.createChatWindow(conversationId, recipientUserId, siteChatConversation.title, siteChatConversation.userIdSet, siteChatConversation.expanded, siteChatConversation.messages, false,siteChatConversation.blinking);
+				var conversation = JSON.parse(localStorage[client.namespace + "conversation" + key]);
+				client.createChatWindow(conversationId, recipientUserId, conversation.title, conversation.userIdSet, conversation.expanded, conversation.messages, false, conversation.blinking, conversation.width, conversation.height);
 
 			}
 		}
@@ -158,7 +159,7 @@ function Client()
 		
 		var recipientUserId = parseInt($(this).data("user-id"));
 		if(client.chatWindows["P" + recipientUserId] == undefined)
-			client.createChatWindow(null, recipientUserId, $(this).data("username"), [], true, [], true);
+			client.createChatWindow(null, recipientUserId, $(this).data("username"), [], true, [], true, null, null);
 	}
 	
 	this.handleWindowTitleClick = function(event)
@@ -342,7 +343,7 @@ function Client()
 		client.attemptingLogin = false;
 	}
 
-	this.createChatWindow = function(conversationId, recipientUserId, title, userIdSet, expanded, messages, save,blinking)
+	this.createChatWindow = function(conversationId, recipientUserId, title, userIdSet, expanded, messages, save, blinking, width, height)
 
 	{
 		var chatWindowIdPrefix = (conversationId != null ? "C" : "P");
@@ -350,10 +351,12 @@ function Client()
 		$("#chatPanel").append
 			(
 				'<div class="chatWindow expanded" id="chat' + chatWindowIdPrefix + chatWindowUniqueIdentifier + '">'
+			+	'	<div class="chatWindowOuter">'
 			+	'	<div class="chatWindowInner">'
 			+	'		<div class="title"><div class="name">' + title + '</div><div class="close">X</div></div>'
 			+	'		<div class="outputBuffer"></div>'
 			+	'		<textarea class="inputBuffer" name="input" style="height:20px;"></textarea>'
+			+	'	</div>'
 			+	'	</div>'
 			+	'</div>'
 			);
@@ -366,6 +369,7 @@ function Client()
 			$chatWindow.data("conversation-id", conversationId);
 		if(recipientUserId != null)
 			$chatWindow.data("recipient-user-id", recipientUserId);
+		$chatWindow.data("key", chatWindowIdPrefix + chatWindowUniqueIdentifier);
 		
 		//Window defaults to an expanded state so autogrow can see the proper CSS values.
 		$inputBuffer.autoGrow();
@@ -378,19 +382,20 @@ function Client()
 		chatWindow.userIdSet = [];
 		chatWindow.title = title;
 		chatWindow.messages = [];
+		chatWindow.width = (width ? width : $chatWindow.width());
+		chatWindow.height = (height ? height : $outputBuffer.height());
+		
+		$chatWindow.width(chatWindow.width);
+		$outputBuffer.height(chatWindow.height);
 		
 		if(expanded != undefined)
 			chatWindow.expanded = expanded;
 		if(blinking != undefined)
 			chatWindow.blinking = blinking;
 		if(chatWindow.expanded)
-		{
 			$chatWindow.addClass("expanded").removeClass("collapsed");
-		}
 		else
-		{
 			$chatWindow.addClass("collapsed").removeClass("expanded");
-		}
 
 		client.chatWindows[chatWindowIdPrefix + chatWindowUniqueIdentifier] = chatWindow;
 		if(messages && messages.length > 0)
@@ -416,7 +421,6 @@ function Client()
 		{
 			client.saveChatWindow(chatWindow);
 		}
-		
 	}
 
 	this.saveChatWindow = function(chatWindow)
@@ -447,7 +451,7 @@ function Client()
 		
 		if(!client.chatWindows[messageKey] && siteChatConversationMessage.recipientUserId != null)
 		{//If this is a private conversation & the window has not yet been created, we should have enough information to make it ourselves.
-			client.createChatWindow(null, siteChatUser.id, siteChatUser.name, [siteChatUser.id], true, [], true);
+			client.createChatWindow(null, siteChatUser.id, siteChatUser.name, [siteChatUser.id], true, [], true, null, null);
 		}
 		var chatWindow = client.chatWindows[ messageKey ];
 		
@@ -601,7 +605,7 @@ function Client()
 					client.addUser(siteChatUser, true);
 				}
 				//Setting recipientUserId to null because I do not believe we will be "connecting" to private conversations.
-				client.createChatWindow(siteChatPacket.siteChatConversationId, null, siteChatPacket.titleText, siteChatUserIdSet, true, [], true,false);
+				client.createChatWindow(siteChatPacket.siteChatConversationId, null, siteChatPacket.titleText, siteChatUserIdSet, true, [], true, false, null, null);
 			}
 		}
 		else if(siteChatPacket.command == "NewMessage")
@@ -677,7 +681,6 @@ function Client()
 			var newOnlineUserIdSet = [];
 			client.onlineUserIdSet = [];
 			
-			console.log(siteChatPacket);
 			$("#onlinelist").html("");
 			for(var siteChatUserIndex = 0;siteChatUserIndex < siteChatUserListLength;++siteChatUserIndex)
 			{
@@ -743,6 +746,7 @@ function Client()
 		$("#chatPanel").prepend
 				(
 					'<div class="chatWindow ' + windowStateClass + '" id="utilitywindow">'
+				+	'	<div class="chatWindowOuter">'
 				+	'	<div class="chatWindowInner">'
 				+	'		<div class="title">Site Chat<div class="exclamation hidden">!</div></div>'
 				+	' 		<ul id="chattabs">'
@@ -764,6 +768,7 @@ function Client()
 				+	'		<div>settings</div>'
 				+	'		</div>'
 				+	'			<div id="joindiv"><form id="joinConversationForm"><input autocomplete="off" placeholder="Enter Chat Room Name" type="text" name="input"></input></div>'
+				+	'	</div>'
 				+	'	</div>'
 				+	'</div>'
 				);
@@ -913,6 +918,98 @@ function Client()
 			var delta = e.wheelDelta || e.detail;
 			this.scrollTop += ( delta < 0 ? 1 : -1 ) * 30;
 			e.preventDefault();
+		});
+		
+		$(document).on("mousemove", ".chatWindowOuter", function(e) {
+		
+			var $elem = $(this);
+			
+			var left  = (e.pageX - $elem.offset().left ) / $elem.width() * 100;
+			var top = (e.pageY - $elem.offset().top ) / $elem.height() * 100;
+
+			if(left < 3 && top < 3)
+				$elem.css("cursor", "nw-resize");
+			else if(top < 3)
+				$elem.css("cursor", "n-resize");
+			else if(left < 3)
+				$elem.css("cursor", "w-resize");
+			else
+				$elem.css("cursor", "");
+		});
+		$(document).on("mousemove", "#chatPanel > .chatWindow > .chatWindowOuter > .chatWindowInner", function(e) {
+		
+			if(client.dragWindow)
+				return;
+			e.stopPropagation();
+		});
+		
+		$(document).on("mouseenter", "#chatPanel > .chatWindow > .chatWindowOuter > .chatWindowInner", function(e) {
+		
+			if(!client.dragWindow)
+				$(this).parent().css("cursor", "");
+		});
+		
+		$(document).on("mousedown", "#chatPanel > .chatWindow > .chatWindowOuter", function(e) {
+		
+			e.preventDefault();
+			e.stopPropagation();
+			var $elem = $(this);
+			var $window = $elem.closest(".chatWindow");
+			var $outputBuffer = $elem.find(".outputBuffer");
+			
+			client.dragWindow = {
+				windowId: $window.attr("id"),
+				window: $window,
+				outputBuffer: $outputBuffer,
+				startPageX: e.pageX,
+				startPageY: e.pageY,
+				startWindowWidth: $window.width(),
+				startWindowHeight: $outputBuffer.height()
+			};
+			
+			
+			var left  = (e.pageX - $elem.offset().left ) / $elem.width() * 100;
+			var top = (e.pageY - $elem.offset().top ) / $elem.height() * 100;
+			if(top < 3 && left < 3)
+				client.dragWindow.edge = "topleft";
+			else if(top < 3)
+				client.dragWindow.edge = "top";
+			else if(left < 3)
+				client.dragWindow.edge = "left";
+		});
+		
+		$(document).on("mousedown", "#chatPanel > .chatWindow > .chatWindowOuter > .chatWindowInner", function(e) {
+			
+			e.stopPropagation();
+		});
+		
+		$(document).on("mouseup", "body", function(e) {
+		
+			if(client.dragWindow)
+			{
+				var $window = client.dragWindow.window;
+				var $outputBuffer = client.dragWindow.outputBuffer;
+				var chatWindow = client.chatWindows[$window.data("key")];
+				
+				chatWindow.height = $outputBuffer.height();
+				chatWindow.width = $window.width();
+				client.saveChatWindow(chatWindow);
+				
+				client.dragWindow = null;
+			}
+		});
+		
+		$(document).on("mousemove", "body", function(e) {
+		
+			if(client.dragWindow)
+			{
+				var $window = client.dragWindow.window;
+				var $outputBuffer = client.dragWindow.outputBuffer;
+				if(client.dragWindow.edge == "left" || client.dragWindow.edge == "topleft")
+					$window.css("width", client.dragWindow.startWindowWidth + (client.dragWindow.startPageX - e.pageX) );
+				if(client.dragWindow.edge == "top" || client.dragWindow.edge == "topleft")
+					$outputBuffer.css("height", client.dragWindow.startWindowHeight + (client.dragWindow.startPageY - e.pageY) );
+			}
 		});
 		
 		client.setupWebSocket();
