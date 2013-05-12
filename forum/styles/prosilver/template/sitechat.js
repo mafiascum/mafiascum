@@ -809,15 +809,36 @@ function Client()
 		}
 		$("#utilitywindow .inputBuffer").bind("keypress", client.handleWindowInputSubmission);
 		$("#onlinelisttitle").bind('click', this.onlinelistexpand);
-		$("#utilitywindow").tabify();
+		//$("#utilitywindow").tabify();
 		$('#tab0').bind('click', function(){
+			$($('#tab0').children('a').attr('href')).css('display','block');
+			$('#tab0').addClass('active');
+			$($('#tab1').children('a').attr('href')).css('display','none');
+			$('#tab1').removeClass('active');
+			$($('#tab2').children('a').attr('href')).css('display','none');
+			$('#tab2').removeClass('active');
 			localStorage[client.namespace +'tabs'] = 0;
+			return false;
 		});
 		$('#tab1').bind('click', function(){
+			$($('#tab1').children('a').attr('href')).css('display','block');
+			$('#tab1').addClass('active');
+			$($('#tab2').children('a').attr('href')).css('display','none');
+			$('#tab2').removeClass('active');
+			$($('#tab0').children('a').attr('href')).css('display','none');
+			$('#tab0').removeClass('active');
 			localStorage[client.namespace +'tabs'] = 1;
+			return false;
 		});
 		$('#tab2').bind('click', function(){
+			$($('#tab2').children('a').attr('href')).css('display','block');
+			$('#tab2').addClass('active');
+			$($('#tab0').children('a').attr('href')).css('display','none');
+			$('#tab0').removeClass('active');
+			$($('#tab1').children('a').attr('href')).css('display','none');
+			$('#tab1').removeClass('active');
 			localStorage[client.namespace +'tabs'] = 2;
+			return false;
 		});
 	}
 	this.onlinelistexpand = function(){
