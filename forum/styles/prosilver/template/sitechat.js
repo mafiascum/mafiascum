@@ -42,6 +42,8 @@ function Client()
 	this.sessionId = null;
 	this.pendingMessages = [];
 	this.rooms = [];
+	this.selectedTab = 0;
+	this.tabs = [];
 	this.namespace = "ms_sc2_";//Prepended to all local storage variables.
 	this.attemptReconnectIntervalId = null;
 	this.onlineUserIdSet = [];
@@ -142,10 +144,10 @@ function Client()
 			client.onlineGroup.expanded = true;
 			//load online list for the first time
 		}
-		if(localStorage[client.namespace +'tabs']){
-			client.tabs = localStorage[client.namespace +'tabs'];
+		if(localStorage[client.namespace +'selectedTab']){
+			client.selectedTab = localStorage[client.namespace +'selectedTab'];
 		} else {
-			client.tabs = 0;
+			client.selectedTab = 0;
 		}
 		if(localStorage[client.namespace + 'rooms']){
 			client.rooms = JSON.parse(localStorage[client.namespace + 'rooms']);
@@ -711,25 +713,36 @@ function Client()
 					client.rooms[siteChatPacket.siteChatConversations[i].siteChatConversation.id] = room;
 					
 				}
-				$("#roomstab").append('<div id="chatroom' + siteChatPacket.siteChatConversations[i].siteChatConversation.id + '"><div class="roomtitle"><span class="expand-icon">' + (client.rooms[siteChatPacket.siteChatConversations[i].siteChatConversation.id].expanded ? '-' : "+") + '</span>' + siteChatPacket.siteChatConversations[i].siteChatConversation.name + '<span class="usercount">(' + siteChatPacket.siteChatConversations[i].userIdSet.length + ')</span></div><div class="userlist"' + (client.rooms[siteChatPacket.siteChatConversations[i].siteChatConversation.id].expanded ? '' : "style='display:none;'") + '></div></div>');
-				var identifier = '#chatroom' + siteChatPacket.siteChatConversations[i].siteChatConversation.id + ' .userlist';
-				$(identifier).append('<ul>');
-				for (var k = 0; k < siteChatPacket.siteChatConversations[i].userIdSet.length; k++){
-					var siteChatUser = client.userMap[siteChatPacket.siteChatConversations[i].userIdSet[k]];
-					var active = siteChatUser.lastActivityDatetime ? ((new Date().getTime() - siteChatUser.lastActivityDatetime) / 1000) < (60) * (5) : false;
-					var html = '<li class="username" id="username' + siteChatUser.id + '"><span class="onlineindicator ' + (active ? "active" : "idle") + '"></span>'
-								+ siteChatUser.name
-								+ '</li>';
-					$(identifier).append(html);
+		}
+		client.generateRooms(true);
+	}
+	}
+	this.generateRooms = function (save){
+		if (client.rooms){
+					for (var room =0; room < client.rooms.length; room++){
+						if (client.rooms[room] !== undefined && client.rooms[room] !== null){
+							$("#roomstab").append('<div id="chatroom' + client.rooms[room].id + '"><div class="roomtitle"><span class="expand-icon">' + (client.rooms[room].expanded ? '-' : "+") + '</span>' + client.rooms[room].name + '<span class="usercount">(' + client.rooms[room].userIdSet.length + ')</span></div><div class="userlist"' + (client.rooms[room].expanded ? '' : "style='display:none;'") + '></div></div>');
+							var identifier = '#chatroom' + client.rooms[room].id + ' .userlist';
+							$(identifier).append('<ul>');
+							for (var k = 0; k < client.rooms[room].userIdSet.length; k++){
+								var siteChatUser = client.userMap[client.rooms[room].userIdSet[k]];
+								var active = siteChatUser.lastActivityDatetime ? ((new Date().getTime() - siteChatUser.lastActivityDatetime) / 1000) < (60) * (5) : false;
+								var html = '<li class="username" id="username' + client.rooms[room].name + siteChatUser.id + '"><span class="onlineindicator ' + (active ? "active" : "idle") + '"></span>'
+											+ siteChatUser.name
+											+ '</li>';
+								$(identifier).append(html);
+								$("#username"+ client.rooms[room].name + siteChatUser.id).data("username", siteChatUser.name).data("user-id", siteChatUser.id);
+							}
+							$(identifier).append('</ul>');
+						}
+					}
 				}
-				$(identifier).append('</ul>');
-			}
-			$(".roomtitle").bind('click', client.roomlistexpand);
+		$(".roomtitle").bind('click', client.roomlistexpand);
+		if (save){
 			localStorage[client.namespace + "rooms"] = JSON.stringify(client.rooms);
 			localStorage[client.namespace + "userIdSet"] = JSON.stringify(client.getUserIdSet());
 		}
 	}
-
 	this.sendSiteChatPacket = function(packetObject)
 	{
 		if(client.socket.connected)
@@ -772,72 +785,60 @@ function Client()
 				+	'	</div>'
 				+	'</div>'
 				);
+				var index = client.tabs.push(new Object()) -1;
+				client.tabs[index].id = 0;
+				index =	client.tabs.push(new Object()) -1;
+				client.tabs[index].id = 1;
+				index = client.tabs.push(new Object()) -1;
+				client.tabs[index].id = 2;
+	}
+	this.setActiveTab = function(id){
+		console.log ('id:' + id);
+		$('#tab' + id).addClass('active');
+		$($('#tab' + id).children('a').attr('href')).css('display','block');
+		console.log(client.tabs);
+		for (var i= 0; i < client.tabs.length; i++){
+			console.log('looped ids:' + client.tabs[i].id);
+			if(id != client.tabs[i].id){
+				console.log('changed ids:');
+				$($('#tab' + client.tabs[i].id).children('a').attr('href')).css('display','none');
+				$('#tab' + client.tabs[i].id).removeClass('active');
+			}
+		}
 	}
 	this.populateUtilityWindow = function (){
-				if (client.rooms){
-					for (var room =0; room < client.rooms.length; room++){
-						if (client.rooms[room] !== null){
-							$("#roomstab").append('<div id="chatroom' + client.rooms[room].id + '"><div class="roomtitle"><span class="expand-icon">' + (client.rooms[room].expanded ? '-' : "+") + '</span>' + client.rooms[room].name + '<span class="usercount">(' + client.rooms[room].userIdSet.length + ')</span></div><div class="userlist"' + (client.rooms[room].expanded ? '' : "style='display:none;'") + '></div></div>');
-							var identifier = '#chatroom' + client.rooms[room].id + ' .userlist';
-							$(identifier).append('<ul>');
-							for (var k = 0; k < client.rooms[room].userIdSet.length; k++){
-								var siteChatUser = client.userMap[client.rooms[room].userIdSet[k]];
-								var active = siteChatUser.lastActivityDatetime ? ((new Date().getTime() - siteChatUser.lastActivityDatetime) / 1000) < (60) * (5) : false;
-								var html = '<li class="username" id="username' + siteChatUser.id + '"><span class="onlineindicator ' + (active ? "active" : "idle") + '"></span>'
-											+ siteChatUser.name
-											+ '</li>';
-								$(identifier).append(html);
-							}
-							$(identifier).append('</ul>');
-						}
-					}
-				}
-			$(".roomtitle").bind('click', client.roomlistexpand);
+		client.generateRooms(false);
 		if (client.onlineGroup.expanded == false){
 			$('#onlinelist').css('display','none');
 			$('#onlinelisttitle .expand-icon').html('+');
 		}
-		
-		if (client.tabs ==0){
-			$('#tab0').addClass('active');
-		} else if (client.tabs ==1){
-			$('#tab1').addClass('active');
-		} else if (client.tabs ==2){
-			$('#tab2').addClass('active');
-		} else {
-			$('#tab0').addClass('active');
+		var tabfound = false;
+		for (var i= 0; i < client.tabs.length; i++){
+			if(client.selectedTab == client.tabs[i].id){
+				client.setActiveTab(client.tabs[i].id);
+				tabfound = true;
+				break;
+			}
+		}
+		if (!tabfound){
+			client.setActiveTab(0);
 		}
 		$("#utilitywindow .inputBuffer").bind("keypress", client.handleWindowInputSubmission);
 		$("#onlinelisttitle").bind('click', this.onlinelistexpand);
 		//$("#utilitywindow").tabify();
 		$('#tab0').bind('click', function(){
-			$($('#tab0').children('a').attr('href')).css('display','block');
-			$('#tab0').addClass('active');
-			$($('#tab1').children('a').attr('href')).css('display','none');
-			$('#tab1').removeClass('active');
-			$($('#tab2').children('a').attr('href')).css('display','none');
-			$('#tab2').removeClass('active');
-			localStorage[client.namespace +'tabs'] = 0;
+			client.setActiveTab(0);
+			localStorage[client.namespace +'selectedTab'] = 0;
 			return false;
 		});
 		$('#tab1').bind('click', function(){
-			$($('#tab1').children('a').attr('href')).css('display','block');
-			$('#tab1').addClass('active');
-			$($('#tab2').children('a').attr('href')).css('display','none');
-			$('#tab2').removeClass('active');
-			$($('#tab0').children('a').attr('href')).css('display','none');
-			$('#tab0').removeClass('active');
-			localStorage[client.namespace +'tabs'] = 1;
+			client.setActiveTab(1);
+			localStorage[client.namespace +'selectedTab'] = 1;
 			return false;
 		});
 		$('#tab2').bind('click', function(){
-			$($('#tab2').children('a').attr('href')).css('display','block');
-			$('#tab2').addClass('active');
-			$($('#tab0').children('a').attr('href')).css('display','none');
-			$('#tab0').removeClass('active');
-			$($('#tab1').children('a').attr('href')).css('display','none');
-			$('#tab1').removeClass('active');
-			localStorage[client.namespace +'tabs'] = 2;
+			client.setActiveTab(2);
+			localStorage[client.namespace +'selectedTab'] = 2;
 			return false;
 		});
 	}
