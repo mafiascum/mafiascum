@@ -64,7 +64,7 @@
 		<delete dir="${checkout-classes}" failonerror="false"/>
 		<mkdir dir="${checkout-classes}"/>
 
-		<javac srcdir="${checkout-src}" destdir="${checkout-classes}" classpathref="classpath">
+		<javac srcdir="${checkout-src}" destdir="${checkout-classes}" debug="true" classpathref="classpath">
 			<include name="**/*.java"/>
 		</javac>
 
