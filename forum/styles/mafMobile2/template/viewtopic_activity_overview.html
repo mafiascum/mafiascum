@@ -68,7 +68,7 @@
                                                             {activity_row.IDLE_TIME}
                                                         </span>
                                                         <span style="display:inline-block;text-align:center;width:126px;">
-                                                            <a href="{U_VIEW_TOPIC}&user_select={activity_row.USER_ID}">{activity_row.POST_COUNT}</a>
+                                                            <a href="{U_VIEW_TOPIC}&user_select[]={activity_row.USER_ID}">{activity_row.POST_COUNT}</a>
                                                         </span>
                                                     </div>
                                                 <!-- END activity_row -->
@@ -90,7 +90,7 @@
     <!-- INCLUDE quickreply_editor.html -->
     <!-- ENDIF -->
 
-<!-- IF S_DISPLAY_ONLINE_LIST -->
+<!-- IF 0 -->
 	<h3><!-- IF U_VIEWONLINE --><a href="{U_VIEWONLINE}">{L_WHO_IS_ONLINE}</a><!-- ELSE -->{L_WHO_IS_ONLINE}<!-- ENDIF --></h3>
 	<p>{LOGGED_IN_USER_LIST}</p>
 <!-- ENDIF -->
