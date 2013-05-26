@@ -31,13 +31,14 @@
 	position:absolute;
 	bottom: 0;
 	width: inherit;
-	border-radius: 3px 3px 0 0;
 	padding: 5px 0px 0 5px;
 }
 
 .chatWindowInner
 {
 	border: 1px solid #999;
+	border-radius: 9px 9px 0 0;
+	overflow: hidden;
 }
 
 /*** Title Bar ***/
@@ -53,6 +54,14 @@
 .chatWindow .title:hover
 {
 	cursor: pointer;
+}
+
+.chatWindow .title.backgroundColorTransition
+{
+	transition: background 0.2s linear;
+	-webkit-transition: background 0.2s linear;
+	-moz-transition: background 0.2s linear;
+	-o-transition: background 0.2s linear;
 }
 
 .chatWindow.expanded .title

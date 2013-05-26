@@ -48,6 +48,7 @@ function Client()
 	this.attemptReconnectIntervalId = null;
 	this.onlineUserIdSet = [];
 	this.MAX_MESSAGES_PER_WINDOW = 500;
+	this.MAX_MESSAGE_LENGTH = 255;
 	this.unloading = false;
 	this.firstConnectionThisPageLoad = true;
 	this.onlineUsers = 0;
@@ -62,7 +63,19 @@ function Client()
 	{
 		return message	.replace(/\[b\](.*?)\[\/b\]/g, "<b>$1</b>")
 				.replace(/\[i\](.*?)\[\/i\]/g, "<i>$1</i>")
-				.replace(/\[u\](.*?)\[\/u\]/g, "<u>$1</u>");
+				.replace(/\[u\](.*?)\[\/u\]/g, "<u>$1</u>")
+				.replace(/\[room\](.*?)\[\/room\]/g, "<a href='#' class='chatroomlink' data-room='$1'>$1</a>")
+				.replace(/\b(([\w-]+:\/\/?|www[.])[^\s()<>]+(?:\([\w\d]+\)|([^[:punct:]\s]|)))/g, function(str) {
+					if(!startsWith(str, "http://") && !startsWith(str, "https://"))
+						var url = "http://" + str;
+					else
+						url = str;
+					return "<a href='" + url + "' target='_blank'>" + str + "</a>";
+				});
+	}
+	this.unescapeHTMLEntities = function(str)
+	{
+		return str.replace("&quot;", '"').replace("&amp;", "&").replace("&apos;", "'").replace("&lt;", "<").replace("&gt;", ">");
 	}
 	this.clearLocalStorage = function()
 	{
@@ -178,9 +191,8 @@ function Client()
 		if (siteChatConversation != null && siteChatConversation.blinking == true)
 			siteChatConversation.blinking = false;
 		
-		$title.stop(true);
-		$title.css('backgroundColor', '');
-
+		$title.stop(true).css('backgroundColor', '').removeClass("backgroundColorTransition");
+		
 		if($window.hasClass("expanded"))
 		{
 			$window.removeClass("expanded").addClass("collapsed");
@@ -200,6 +212,9 @@ function Client()
 			else
 				sessionStorage[client.namespace + "utilityExpanded"] = true;
 		}
+		
+		setTimeout(function() {$title.addClass("backgroundColorTransition");}, 50);
+		
 		if(siteChatConversation)
 			client.saveChatWindow(siteChatConversation);
 	}
@@ -286,15 +301,20 @@ function Client()
 
 	this.submitChatMessage = function(messageContent, chatWindowId, conversationId, recipientUserId)
 	{
-		var siteChatPacket =
+		var offset = 0, messageLength = messageContent.length;
+		while(offset < messageLength)
 		{
-			command:"SendMessage",
-			userId:client.userId,
-			message:messageContent,
-			siteChatConversationId:conversationId == null ? null : parseInt(conversationId),
-			recipientUserId:recipientUserId == null ? null : parseInt(recipientUserId)
-		};
-		this.sendSiteChatPacket(siteChatPacket);
+			var siteChatPacket =
+			{
+				command:"SendMessage",
+				userId:client.userId,
+				message:messageContent.substr(offset, client.MAX_MESSAGE_LENGTH),
+				siteChatConversationId:conversationId == null ? null : parseInt(conversationId),
+				recipientUserId:recipientUserId == null ? null : parseInt(recipientUserId)
+			};
+			this.sendSiteChatPacket(siteChatPacket);
+			offset += client.MAX_MESSAGE_LENGTH;
+		}
 	}
 	
 	this.handleSocketOpen = function()
@@ -352,7 +372,7 @@ function Client()
 		var chatWindowUniqueIdentifier = (conversationId != null ? conversationId : recipientUserId);
 		$("#chatPanel").append
 			(
-				'<div class="chatWindow expanded" id="chat' + chatWindowIdPrefix + chatWindowUniqueIdentifier + '">'
+				'<div class="chatWindow conversation expanded" id="chat' + chatWindowIdPrefix + chatWindowUniqueIdentifier + '">'
 			+	'	<div class="chatWindowOuter">'
 			+	'	<div class="chatWindowInner">'
 			+	'		<div class="title"><div class="name">' + title + '</div><div class="close">X</div></div>'
@@ -366,6 +386,7 @@ function Client()
 		var $chatWindow = $("#chat" + chatWindowIdPrefix + chatWindowUniqueIdentifier);
 		var $inputBuffer = $chatWindow.find(".inputBuffer");
 		var $outputBuffer = $chatWindow.find(".outputBuffer");
+		var $title = $chatWindow.find(".title");
 		
 		if(conversationId != null)
 			$chatWindow.data("conversation-id", conversationId);
@@ -377,6 +398,8 @@ function Client()
 		$inputBuffer.autoGrow();
 		//We now collapse it.
 		$inputBuffer.removeClass("expanded").addClass("collapsed");
+		
+		setTimeout(function(){$title.addClass("backgroundColorTransition");}, 50);
 		
 		var chatWindow = new ChatWindow();
 		chatWindow.siteChatConversationId = conversationId;
@@ -413,11 +436,10 @@ function Client()
 			}
 		}
 		
-		if(save){
+		if(save)
 			$inputBuffer.focus();
-		} else {
+		else
 			$outputBuffer.scrollTop($outputBuffer.scrollHeight);
-		}
 		
 		if(save)
 		{
@@ -564,7 +586,12 @@ function Client()
 			client.pendingMessages.splice(index, 1);
 			--index;
 		}
-	}	
+	}
+	
+	this.isInChatRoom = function(roomName)
+	{
+		return _.find(client.chatWindows, function(chatWindow) {return client.unescapeHTMLEntities(chatWindow.title).toLowerCase() == roomName.toLowerCase();});
+	}
 
 	this.handleSocketMessage = function(message)
 	{
@@ -587,7 +614,7 @@ function Client()
 				}
 			}
 			
-			if(client.firstConnectionThisPageLoad && client.autoJoinLobby && !_.find(client.chatWindows, function(chatWindow) {return chatWindow.title == "Lobby";}))
+			if(client.firstConnectionThisPageLoad && client.autoJoinLobby && !client.isInChatRoom("Lobby"))
 			{
 				client.sendConnectMessage("Lobby");
 			}
@@ -713,9 +740,9 @@ function Client()
 					client.rooms[siteChatPacket.siteChatConversations[i].siteChatConversation.id] = room;
 					
 				}
+			}
+			client.generateRooms(true);
 		}
-		client.generateRooms(true);
-	}
 	}
 	this.generateRooms = function (save){
 		if (client.rooms){
@@ -785,12 +812,15 @@ function Client()
 				+	'	</div>'
 				+	'</div>'
 				);
-				var index = client.tabs.push(new Object()) -1;
-				client.tabs[index].id = 0;
-				index =	client.tabs.push(new Object()) -1;
-				client.tabs[index].id = 1;
-				index = client.tabs.push(new Object()) -1;
-				client.tabs[index].id = 2;
+		var index = client.tabs.push(new Object()) -1;
+		client.tabs[index].id = 0;
+		index =	client.tabs.push(new Object()) -1;
+		client.tabs[index].id = 1;
+		index = client.tabs.push(new Object()) -1;
+		client.tabs[index].id = 2;
+		
+		$("#utilitywindow .title").addClass("backgroundColorTransition");
+		
 	}
 	this.setActiveTab = function(id){
 		$('#tab' + id).addClass('active');
@@ -930,6 +960,7 @@ function Client()
 		$(document).on("click", "#chatPanel .chatWindow .title .close", client.handleWindowCloseButtonClick);
 		$(document).on("keypress", "#chatPanel .chatWindow .inputBuffer", client.handleWindowInputSubmission);
 		$(document).on("click", "#utilitywindow .username", client.handleUserListUsernameClick);
+		
 		$(document).on("mousewheel", "#onlinelistcontainer, #chatPanel .outputBuffer", function(e) {
 
 			if( e.originalEvent ) e = e.originalEvent;
@@ -938,9 +969,11 @@ function Client()
 			e.preventDefault();
 		});
 		
-		$(document).on("mousemove", ".chatWindowOuter", function(e) {
+		$(document).on("mousemove", "#chatPanel > .chatWindow.conversation > .chatWindowOuter", function(e) {
 		
 			var $elem = $(this);
+			if($elem.parent().hasClass("collapsed"))
+				return;
 			
 			var left  = (e.pageX - $elem.offset().left ) / $elem.width() * 100;
 			var top = (e.pageY - $elem.offset().top ) / $elem.height() * 100;
@@ -954,24 +987,26 @@ function Client()
 			else
 				$elem.css("cursor", "");
 		});
-		$(document).on("mousemove", "#chatPanel > .chatWindow > .chatWindowOuter > .chatWindowInner", function(e) {
+		$(document).on("mousemove", "#chatPanel > .chatWindow.conversation > .chatWindowOuter > .chatWindowInner", function(e) {
 		
 			if(client.dragWindow)
 				return;
 			e.stopPropagation();
 		});
 		
-		$(document).on("mouseenter", "#chatPanel > .chatWindow > .chatWindowOuter > .chatWindowInner", function(e) {
+		$(document).on("mouseenter", "#chatPanel > .chatWindow.conversation > .chatWindowOuter > .chatWindowInner", function(e) {
 		
 			if(!client.dragWindow)
 				$(this).parent().css("cursor", "");
 		});
 		
-		$(document).on("mousedown", "#chatPanel > .chatWindow > .chatWindowOuter", function(e) {
+		$(document).on("mousedown", "#chatPanel > .chatWindow.conversation > .chatWindowOuter", function(e) {
 		
+			var $elem = $(this);
+			if($elem.parent().hasClass("collapsed"))
+				return;
 			e.preventDefault();
 			e.stopPropagation();
-			var $elem = $(this);
 			var $window = $elem.closest(".chatWindow");
 			var $outputBuffer = $elem.find(".outputBuffer");
 			
@@ -996,7 +1031,7 @@ function Client()
 				client.dragWindow.edge = "left";
 		});
 		
-		$(document).on("mousedown", "#chatPanel > .chatWindow > .chatWindowOuter > .chatWindowInner", function(e) {
+		$(document).on("mousedown", "#chatPanel > .chatWindow.conversation > .chatWindowOuter > .chatWindowInner", function(e) {
 			
 			e.stopPropagation();
 		});
@@ -1028,6 +1063,14 @@ function Client()
 				if(client.dragWindow.edge == "top" || client.dragWindow.edge == "topleft")
 					$outputBuffer.css("height", client.dragWindow.startWindowHeight + (client.dragWindow.startPageY - e.pageY) );
 			}
+		});
+		
+		$(document).on("click", "#chatPanel a.chatroomlink", function(e) {
+		
+			e.preventDefault();
+			var roomName = $(this).data("room");
+			if(!client.isInChatRoom(roomName))
+				client.sendConnectMessage(roomName);
 		});
 		
 		client.setupWebSocket();
