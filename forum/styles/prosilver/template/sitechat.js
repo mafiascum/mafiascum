@@ -64,6 +64,8 @@ function Client()
 		return message	.replace(/\[b\](.*?)\[\/b\]/g, "<b>$1</b>")
 				.replace(/\[i\](.*?)\[\/i\]/g, "<i>$1</i>")
 				.replace(/\[u\](.*?)\[\/u\]/g, "<u>$1</u>")
+				.replace(/\[s\](.*?)\[\/s\]/g, "<s>$1</s>")
+				.replace(/\[v\](.*?)\[\/v\]/g, "<b>Vote: $1</b>")
 				.replace(/\[room\](.*?)\[\/room\]/g, "<a href='#' class='chatroomlink' data-room='$1'>$1</a>")
 				.replace(/\b(([\w-]+:\/\/?|www[.])[^\s()<>]+(?:\([\w\d]+\)|([^[:punct:]\s]|)))/g, function(str) {
 					if(!startsWith(str, "http://") && !startsWith(str, "https://"))
