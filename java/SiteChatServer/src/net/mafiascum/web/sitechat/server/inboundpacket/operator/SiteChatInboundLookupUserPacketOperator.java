@@ -15,7 +15,7 @@ public class SiteChatInboundLookupUserPacketOperator implements SiteChatInboundP
     
     SiteChatInboundLookupUserPacket siteChatInboundLookupUserPacket = new Gson().fromJson(siteChatInboundPacketJson, SiteChatInboundLookupUserPacket.class);
     SiteChatUser siteChatUser = siteChatWebSocket.getSiteChatUser();
-    MiscUtil.log("User ID: " + siteChatInboundLookupUserPacket.getUserId());
+    //MiscUtil.log("LookupUser Packet. User ID: " + siteChatInboundLookupUserPacket.getUserId());
     
     if(siteChatUser == null) {
       //Not Logged In.

@@ -45,11 +45,8 @@ public class SiteChatInboundConnectPacketOperator implements SiteChatInboundPack
     
     siteChatConversationWithUserList = siteChatServer.getSiteChatConversationWithUserList(siteChatConversationName);
     
-    MiscUtil.log("Connecting to conversation. Name: `" + siteChatInboundConnectPacket.getSiteChatConversationName() + "`");
-    
     if(siteChatConversationWithUserList == null) {
       
-      MiscUtil.log("Creating conversation...");
       siteChatConversationWithUserList = siteChatServer.createSiteChatConversation(siteChatInboundConnectPacket.getSiteChatConversationName(), siteChatUser.getId());
     }
     

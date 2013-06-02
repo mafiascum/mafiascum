@@ -40,7 +40,7 @@ public class SiteChatServerServiceThread extends Thread {
           catch(Throwable throwable) {
               
             MiscUtil.log("Could not send user list:\n");
-            throwable.printStackTrace();
+            MiscUtil.log(MiscUtil.getPrintableStackTrace(throwable));
           }
           
           lastUserListDatetime = nowDatetime;
@@ -54,7 +54,7 @@ public class SiteChatServerServiceThread extends Thread {
           catch(Throwable throwable) {
               
             MiscUtil.log("Could not remove idle users:\n");
-            throwable.printStackTrace();
+            MiscUtil.log(MiscUtil.getPrintableStackTrace(throwable));
           }
           
           
@@ -70,7 +70,7 @@ public class SiteChatServerServiceThread extends Thread {
           catch(Throwable throwable) {
               
             MiscUtil.log("Could not refresh user cache:\n");
-            throwable.printStackTrace();
+            MiscUtil.log(MiscUtil.getPrintableStackTrace(throwable));
           }
           
           lastRefreshUserCacheDatetime = nowDatetime;
@@ -81,7 +81,7 @@ public class SiteChatServerServiceThread extends Thread {
     }
     catch(Throwable throwable) {
       
-      throwable.printStackTrace();
+      MiscUtil.log(MiscUtil.getPrintableStackTrace(throwable));
     }
   }
   

@@ -47,7 +47,7 @@ public class SiteChatInboundLogInPacketOperator implements SiteChatInboundPacket
       return;
     }
     
-    System.out.println("Logged In. Last Activity: " + siteChatUser.getLastActivityDatetime());
+    //MiscUtil.log("Logged In. Last Activity: " + siteChatUser.getLastActivityDatetime());
     siteChatWebSocket.setSiteChatUser(siteChatUser);
     
     //Reconnect to conversations the user has been removed from.
@@ -91,7 +91,7 @@ public class SiteChatInboundLogInPacketOperator implements SiteChatInboundPacket
         int mostRecentSiteChatConversationMessageId = siteChatInboundLogInPacket.getConversationKeyToMostRecentMessageIdMap().get(siteChatConversationKey);
         SiteChatConversationType siteChatConversationType = SiteChatUtil.getSiteChatConversationTypeBySymbol(symbol);
         
-        MiscUtil.log("Conversation " + siteChatConversationKey + ", Last Message ID: " + mostRecentSiteChatConversationMessageId);
+        //MiscUtil.log("Conversation " + siteChatConversationKey + ", Last Message ID: " + mostRecentSiteChatConversationMessageId);
         
         if(siteChatConversationType == null) {
           

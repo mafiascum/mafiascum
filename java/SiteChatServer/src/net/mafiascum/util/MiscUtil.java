@@ -1508,7 +1508,7 @@ public abstract class MiscUtil {
     return table;
   }
   
-  public static void log(String message) {
+  public static synchronized void log(String message) {
     
     System.out.println("[" + new Date() + "] " + message);
   }

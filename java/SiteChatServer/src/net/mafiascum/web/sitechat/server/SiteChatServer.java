@@ -308,24 +308,30 @@ public class SiteChatServer extends Server implements SignalHandler {
           
           String messageHistoryKey = SiteChatUtil.getPrivateMessageHistoryKey(userId, uniqueIdentifier);
           siteChatConversationMessages = siteChatPrivateConversationMessageHistoryMap.get(messageHistoryKey);
-          if(siteChatConversationMessages == null || siteChatConversationMessages.size() == 0) {
+          
+          synchronized(siteChatConversationMessages) {
+            if(siteChatConversationMessages == null || siteChatConversationMessages.size() == 0) {
             
-            return messageHistoryToSendToUser;
+              return messageHistoryToSendToUser;
+            }
           }
         }
         
-        //Go through and get the message history.
-        ListIterator<SiteChatConversationMessage> listIterator = siteChatConversationMessages.listIterator(siteChatConversationMessages.size());
         
-        while(listIterator.hasPrevious()) {
+        synchronized(siteChatConversationMessages) {
+          //Go through and get the message history.
+          ListIterator<SiteChatConversationMessage> listIterator = siteChatConversationMessages.listIterator(siteChatConversationMessages.size());
+        
+          while(listIterator.hasPrevious()) {
           
-          SiteChatConversationMessage siteChatConversationMessage = listIterator.previous();
-          if(siteChatConversationMessage.getId() > lastReceivedSiteChatConversationId) {
+            SiteChatConversationMessage siteChatConversationMessage = listIterator.previous();
+            if(siteChatConversationMessage.getId() > lastReceivedSiteChatConversationId) {
               
-            siteChatConversationMessage = siteChatConversationMessage.clone();
-            siteChatConversationMessage.setMessage(StringUtil.escapeHTMLCharacters(siteChatConversationMessage.getMessage()));
-            MiscUtil.log("Adding missed message: " + siteChatConversationMessage.getId());
-            messageHistoryToSendToUser.add(siteChatConversationMessage);
+              siteChatConversationMessage = siteChatConversationMessage.clone();
+              siteChatConversationMessage.setMessage(StringUtil.escapeHTMLCharacters(siteChatConversationMessage.getMessage()));
+              //MiscUtil.log("Adding missed message: " + siteChatConversationMessage.getId());
+              messageHistoryToSendToUser.add(siteChatConversationMessage);
+            }
           }
         }
       }
@@ -506,8 +512,8 @@ public class SiteChatServer extends Server implements SignalHandler {
       siteChatInboundPacketOperator.process(this, webSocket, data);
     }
     catch(Throwable throwable) {
-      
-      throwable.printStackTrace();
+
+      MiscUtil.log(MiscUtil.getPrintableStackTrace(throwable));
     }
   }
   
@@ -575,7 +581,7 @@ public class SiteChatServer extends Server implements SignalHandler {
               siteChatWebSocket.sendOutboundPacket(siteChatOutboundConnectPacket);
             }
             catch(IOException ioException) {
-              ioException.printStackTrace();
+              MiscUtil.log(MiscUtil.getPrintableStackTrace(ioException));
             }
           }
         }
@@ -674,9 +680,9 @@ public class SiteChatServer extends Server implements SignalHandler {
       
       System.exit(1);
     }
-    catch (Exception e)
-    {
-      e.printStackTrace();
+    catch (Exception e) {
+
+      MiscUtil.log(MiscUtil.getPrintableStackTrace(e));
     }
   }
   
@@ -746,8 +752,8 @@ public class SiteChatServer extends Server implements SignalHandler {
         processInboundDataPacket(this, data);
       }
       catch(Throwable throwable) {
-        
-        throwable.printStackTrace();
+
+        MiscUtil.log(MiscUtil.getPrintableStackTrace(throwable));
         return;
       }
     }
@@ -755,14 +761,16 @@ public class SiteChatServer extends Server implements SignalHandler {
     public void onMessage(byte[] data, int offset, int length)
     {
       if (_verbose)
-        System.out.printf(this.getClass().getSimpleName() + "#onMessage   " + TypeUtil.toHexString(data,offset,length));
+        MiscUtil.log(this.getClass().getSimpleName() + "#onMessage   " + TypeUtil.toHexString(data,offset,length));
     }
     
     public void sendOutboundPacket(SiteChatOutboundPacket siteChatOutboundPacket) throws IOException {
       
-      if(this.getConnection().isOpen()) {
-        String siteChatOutboundPacketJson = new GsonBuilder().registerTypeAdapter(Date.class, new DateUnixTimestampSerializer()).create().toJson(siteChatOutboundPacket);
-        this.getConnection().sendMessage(siteChatOutboundPacketJson);
+      synchronized(this.getConnection()) {
+        if(this.getConnection().isOpen()) {
+          String siteChatOutboundPacketJson = new GsonBuilder().registerTypeAdapter(Date.class, new DateUnixTimestampSerializer()).create().toJson(siteChatOutboundPacket);
+          this.getConnection().sendMessage(siteChatOutboundPacketJson);
+        }
       }
     }
   }
@@ -777,7 +785,7 @@ public class SiteChatServer extends Server implements SignalHandler {
     catch(Exception exception) {
       
       MiscUtil.log("Could not shut down Web Socket Server:\n");
-      exception.printStackTrace();
+      MiscUtil.log(MiscUtil.getPrintableStackTrace(exception));
     }
     
   }
