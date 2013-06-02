@@ -309,8 +309,13 @@ public class SiteChatServer extends Server implements SignalHandler {
           String messageHistoryKey = SiteChatUtil.getPrivateMessageHistoryKey(userId, uniqueIdentifier);
           siteChatConversationMessages = siteChatPrivateConversationMessageHistoryMap.get(messageHistoryKey);
           
+          if(siteChatConversationMessages == null) {
+            
+            return messageHistoryToSendToUser;
+          }
+          
           synchronized(siteChatConversationMessages) {
-            if(siteChatConversationMessages == null || siteChatConversationMessages.size() == 0) {
+            if(siteChatConversationMessages.size() == 0) {
             
               return messageHistoryToSendToUser;
             }
