@@ -1,6 +1,9 @@
 #!/usr/local/bin/bash
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd $DIR
 
-BASEDIR=~/prod/sitechat
+source ProdConfig
+BASEDIR="$WORKSPACE_ROOT/sitechat"
 CLASSPATH=$BASEDIR/classes:`find $BASEDIR/lib -type f -name '*.jar' | sed 's/^/*/' | xargs | sed 's/ \*/:/g' | sed 's/^*//'`
 CLASSNAME=`echo $1 | sed 's/^.*\.\(.*\)$/\1/'`
 java -Xms128m -Xmx256m -cp $CLASSPATH net.mafiascum.web.sitechat.server.SiteChatServer -p 4241 -d file:$BASEDIR &>> $BASEDIR/server.out &

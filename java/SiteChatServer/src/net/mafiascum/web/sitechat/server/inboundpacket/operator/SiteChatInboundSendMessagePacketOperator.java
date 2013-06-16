@@ -4,7 +4,6 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
-import net.mafiascum.util.MiscUtil;
 import net.mafiascum.util.StringUtil;
 import net.mafiascum.web.sitechat.server.SiteChatServer;
 import net.mafiascum.web.sitechat.server.SiteChatServer.SiteChatWebSocket;
@@ -15,13 +14,16 @@ import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationWithUs
 import net.mafiascum.web.sitechat.server.inboundpacket.SiteChatInboundSendMessagePacket;
 import net.mafiascum.web.sitechat.server.outboundpacket.SiteChatOutboundNewMessagePacket;
 
+import org.apache.log4j.Logger;
+
 import com.google.gson.Gson;
 
 public class SiteChatInboundSendMessagePacketOperator implements SiteChatInboundPacketOperator {
-
+  
+  protected Logger logger = Logger.getLogger(SiteChatInboundSendMessagePacketOperator.class.getName());
   public void process(SiteChatServer siteChatServer, SiteChatWebSocket siteChatWebSocket, String siteChatInboundPacketJson) throws Exception {
 
-    MiscUtil.log("Processing SendChat Message...");
+    logger.trace("Processing SendChat Message...");
     SiteChatInboundSendMessagePacket siteChatInboundSendMessagePacket = new Gson().fromJson(siteChatInboundPacketJson, SiteChatInboundSendMessagePacket.class);
     SiteChatUser siteChatUser = siteChatWebSocket.getSiteChatUser();
     Set<Integer> sendToUserIdSet;
@@ -30,7 +32,7 @@ public class SiteChatInboundSendMessagePacketOperator implements SiteChatInbound
     
     if(siteChatUser == null) {
       
-      MiscUtil.log("User not logged in.");
+      logger.error("User not logged in.");
       return;//User is not logged in.
     }
     siteChatServer.updateUserActivity(siteChatUser.getId());
@@ -41,28 +43,28 @@ public class SiteChatInboundSendMessagePacketOperator implements SiteChatInbound
     }
     
     if(siteChatInboundSendMessagePacket.getSiteChatConversationId() != null) {
-      MiscUtil.log("Site Chat Conversatin ID: " + siteChatInboundSendMessagePacket.getSiteChatConversationId());
+      logger.debug("Site Chat Conversatin ID: " + siteChatInboundSendMessagePacket.getSiteChatConversationId());
       siteChatConversationWithUserList = siteChatServer.getSiteChatConversationWithUserList(siteChatInboundSendMessagePacket.getSiteChatConversationId());
     
       if(siteChatConversationWithUserList == null) {
       
-        MiscUtil.log("No Site Chat Conversation could be found.");
+        logger.error("No Site Chat Conversation could be found.");
         return;//Conversation does not exist.
       }
     
       if(!siteChatConversationWithUserList.getUserIdSet().contains(siteChatWebSocket.getSiteChatUser().getId())) {
       
-        MiscUtil.log("User not in chat.");
+        logger.error("User not in chat.");
         return;//User is not in the conversation.
       }
     }
     else if(siteChatInboundSendMessagePacket.getRecipientUserId() != null) {
       
-      MiscUtil.log("Recipient User ID: " + siteChatInboundSendMessagePacket.getRecipientUserId());
+      logger.debug("Recipient User ID: " + siteChatInboundSendMessagePacket.getRecipientUserId());
       siteChatRecipientUser = siteChatServer.getSiteChatUser(siteChatInboundSendMessagePacket.getRecipientUserId());
       if(siteChatRecipientUser == null) {
         
-        MiscUtil.log("Target user `" + siteChatInboundSendMessagePacket.getRecipientUserId() + "` does not exist.");
+        logger.debug("Target user `" + siteChatInboundSendMessagePacket.getRecipientUserId() + "` does not exist.");
         return;
       }
     }

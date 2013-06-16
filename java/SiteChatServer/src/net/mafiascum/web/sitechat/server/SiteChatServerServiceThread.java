@@ -4,6 +4,8 @@ import java.util.Date;
 
 import net.mafiascum.util.MiscUtil;
 
+import org.apache.log4j.Logger;
+
 public class SiteChatServerServiceThread extends Thread {
 
   protected SiteChatServer siteChatServer;
@@ -15,6 +17,8 @@ public class SiteChatServerServiceThread extends Thread {
   protected final long MILLISECONDS_PER_USER_TABLE_UPDATE = (1L * 60L * 1000L); //Every minute.
   protected final long MILLISECONDS_PER_INACTIVE_USER_REMOVAL = (1L * 60L * 1000L); //Every minute.
   protected final long MILLISECONDS_PER_USER_LIST = (30L * 1000L); //Every 30 seconds.
+  
+  protected Logger logger = Logger.getLogger(SiteChatServerServiceThread.class.getName());
   
   public SiteChatServerServiceThread(SiteChatServer siteChatServer) {
     
@@ -39,8 +43,8 @@ public class SiteChatServerServiceThread extends Thread {
           }
           catch(Throwable throwable) {
               
-            MiscUtil.log("Could not send user list:\n");
-            MiscUtil.log(MiscUtil.getPrintableStackTrace(throwable));
+            logger.error("Could not send user list:");
+            logger.error(MiscUtil.getPrintableStackTrace(throwable));
           }
           
           lastUserListDatetime = nowDatetime;
@@ -53,8 +57,8 @@ public class SiteChatServerServiceThread extends Thread {
           }
           catch(Throwable throwable) {
               
-            MiscUtil.log("Could not remove idle users:\n");
-            MiscUtil.log(MiscUtil.getPrintableStackTrace(throwable));
+            logger.error("Could not remove idle users:");
+            logger.error(MiscUtil.getPrintableStackTrace(throwable));
           }
           
           
@@ -69,8 +73,8 @@ public class SiteChatServerServiceThread extends Thread {
           }
           catch(Throwable throwable) {
               
-            MiscUtil.log("Could not refresh user cache:\n");
-            MiscUtil.log(MiscUtil.getPrintableStackTrace(throwable));
+            logger.error("Could not refresh user cache:\n");
+            logger.error(MiscUtil.getPrintableStackTrace(throwable));
           }
           
           lastRefreshUserCacheDatetime = nowDatetime;
@@ -81,7 +85,7 @@ public class SiteChatServerServiceThread extends Thread {
     }
     catch(Throwable throwable) {
       
-      MiscUtil.log(MiscUtil.getPrintableStackTrace(throwable));
+      logger.error(MiscUtil.getPrintableStackTrace(throwable));
     }
   }
   

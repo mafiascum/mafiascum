@@ -20,6 +20,7 @@ import javax.servlet.http.HttpServletRequest;
 import net.mafiascum.json.DateUnixTimestampSerializer;
 import net.mafiascum.provider.Provider;
 import net.mafiascum.util.MiscUtil;
+import net.mafiascum.util.QueryUtil;
 import net.mafiascum.util.StringUtil;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversation;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationMessage;
@@ -38,6 +39,7 @@ import net.mafiascum.web.sitechat.server.outboundpacket.SiteChatOutboundPacket;
 import net.mafiascum.web.sitechat.server.outboundpacket.SiteChatOutboundUserJoinPacket;
 import net.mafiascum.web.sitechat.server.outboundpacket.SiteChatOutboundUserListPacket;
 
+import org.apache.log4j.Logger;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.server.nio.SelectChannelConnector;
@@ -75,6 +77,8 @@ public class SiteChatServer extends Server implements SignalHandler {
   protected final int MESSAGE_BATCH_SIZE = 25;
   protected int topSiteChatConversationMessageId;
   
+  protected static Logger logger = Logger.getLogger(SiteChatServer.class.getName());
+  
   protected static final Map<SiteChatInboundPacketType, SiteChatInboundPacketOperator> siteChatInboundPacketTypeToSiteChatInboundPacketOperatorMap = new HashMap<SiteChatInboundPacketType, SiteChatInboundPacketOperator>();
   static {
     siteChatInboundPacketTypeToSiteChatInboundPacketOperatorMap.put(SiteChatInboundPacketType.connect, new SiteChatInboundConnectPacketOperator());
@@ -90,62 +94,72 @@ public class SiteChatServer extends Server implements SignalHandler {
     public String command;
   }
   
-  public SiteChatServer(int port, Provider provider) throws Exception
-  {
+  public SiteChatServer(int port, Provider provider) throws Exception {
+
     this.provider = provider;
-    Connection connection = provider.getConnection();
+    Connection connection = null;
     
-    //Add handler for interruption signal.
-    Signal.handle(new Signal("INT"), this);
-    Signal.handle(new Signal("TERM"), this);
-    
-    //Service thread.
-    serviceThread = new SiteChatServerServiceThread(this);
-    serviceThread.start();
-    
-    selectChannelConnector = new SelectChannelConnector();
-    selectChannelConnector.setPort(port);
-
-    addConnector(selectChannelConnector);
-    webSocketHandler = new WebSocketHandler()
-    {
-      public WebSocket doWebSocketConnect(HttpServletRequest request, String protocol)
+    try {
+      
+      connection = provider.getConnection();
+      
+      //Add handler for interruption signal.
+      Signal.handle(new Signal("INT"), this);
+      Signal.handle(new Signal("TERM"), this);
+      
+      //Service thread.
+      serviceThread = new SiteChatServerServiceThread(this);
+      serviceThread.start();
+      
+      selectChannelConnector = new SelectChannelConnector();
+      selectChannelConnector.setPort(port);
+  
+      addConnector(selectChannelConnector);
+      webSocketHandler = new WebSocketHandler()
       {
-        if(protocol != null && protocol.equals("site-chat"))
+        public WebSocket doWebSocketConnect(HttpServletRequest request, String protocol)
         {
-          webSocket = new SiteChatWebSocket();
-          descriptors.add((SiteChatWebSocket)webSocket);
+          if(protocol != null && protocol.equals("site-chat"))
+          {
+            webSocket = new SiteChatWebSocket();
+            descriptors.add((SiteChatWebSocket)webSocket);
+          }
+          
+          return webSocket;
         }
+      };
+  
+      setHandler(webSocketHandler);
+  
+      logger.info("Loading Site Chat Users...");
+      this.siteChatUserMap = SiteChatUtil.loadSiteChatUserMap(connection);
+      
+      logger.info("Loading Site Chat Conversations...");
+      List<SiteChatConversation> siteChatConversationList = SiteChatUtil.getSiteChatConversations(connection);
+      for(SiteChatConversation siteChatConversation : siteChatConversationList) {
         
-        return webSocket;
+        SiteChatConversationWithUserList siteChatConversationWithUserList = new SiteChatConversationWithUserList();
+        siteChatConversationWithUserList.setSiteChatConversation(siteChatConversation);
+        
+        siteChatConversationWithMemberListMap.put(siteChatConversation.getId(), siteChatConversationWithUserList);
       }
-    };
-
-    setHandler(webSocketHandler);
-    
-    MiscUtil.log("Loading Site Chat Users...");
-    this.siteChatUserMap = SiteChatUtil.loadSiteChatUserMap(connection);
-    
-    MiscUtil.log("Loading Site Chat Conversations...");
-    List<SiteChatConversation> siteChatConversationList = SiteChatUtil.getSiteChatConversations(connection);
-    for(SiteChatConversation siteChatConversation : siteChatConversationList) {
       
-      SiteChatConversationWithUserList siteChatConversationWithUserList = new SiteChatConversationWithUserList();
-      siteChatConversationWithUserList.setSiteChatConversation(siteChatConversation);
+      logger.info("Loading Top Site Chat Conversation Message ID...");
+      topSiteChatConversationMessageId = SiteChatUtil.getTopSiteChatConversationMessageId(connection);
       
-      siteChatConversationWithMemberListMap.put(siteChatConversation.getId(), siteChatConversationWithUserList);
+      resourceHandler=new ResourceHandler();
+      resourceHandler.setDirectoriesListed(true);
+      resourceHandler.setResourceBase("src/test/webapp");
+      webSocketHandler.setHandler(resourceHandler);
+      
+      connection.commit();
+      connection.close();
+      connection = null;
     }
-    
-    MiscUtil.log("Loading Top Site Chat Conversation Message ID...");
-    topSiteChatConversationMessageId = SiteChatUtil.getTopSiteChatConversationMessageId(connection);
-    
-    resourceHandler=new ResourceHandler();
-    resourceHandler.setDirectoriesListed(true);
-    resourceHandler.setResourceBase("src/test/webapp");
-    webSocketHandler.setHandler(resourceHandler);
-    
-    connection.commit();
-    connection.close();
+    finally {
+      
+      QueryUtil.closeNoThrow(connection);
+    }
   }
   
   public SiteChatConversationWithUserList getSiteChatConversationWithUserList(String siteChatConversationName) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
@@ -192,7 +206,7 @@ public class SiteChatServer extends Server implements SignalHandler {
         }
         else{
           
-          MiscUtil.log("getSiteChatUserMap() : Could not find user #" + userId + ".");
+          logger.error("getSiteChatUserMap() : Could not find user #" + userId + ".");
         }
       }
     }
@@ -202,22 +216,34 @@ public class SiteChatServer extends Server implements SignalHandler {
   
   public SiteChatConversationWithUserList createSiteChatConversation(String siteChatConversationName, int userId) throws Exception {
     
-    SiteChatConversation siteChatConversation = new SiteChatConversation();
-    siteChatConversation.setCreatedByUserId(userId);
-    siteChatConversation.setCreatedDatetime(new Date());
-    siteChatConversation.setName(siteChatConversationName);
-    
-    Connection connection = provider.getConnection();
-    SiteChatUtil.putSiteChatConversation(connection, siteChatConversation);
-    connection.close();
-    
-    SiteChatConversationWithUserList siteChatConversationWithUserList = new SiteChatConversationWithUserList();
-    siteChatConversationWithUserList.setSiteChatConversation(siteChatConversation);
-    siteChatConversationWithUserList.getUserIdSet().add(userId);
-    
-    siteChatConversationWithMemberListMap.put(siteChatConversation.getId(), siteChatConversationWithUserList);
-    
-    return siteChatConversationWithUserList;
+    Connection connection = null;
+    try {
+      
+      SiteChatConversation siteChatConversation = new SiteChatConversation();
+      siteChatConversation.setCreatedByUserId(userId);
+      siteChatConversation.setCreatedDatetime(new Date());
+      siteChatConversation.setName(siteChatConversationName);
+      
+      connection = provider.getConnection();
+      
+      SiteChatUtil.putSiteChatConversation(connection, siteChatConversation);
+      
+      connection.commit();
+      connection.close();
+      connection = null;
+      
+      SiteChatConversationWithUserList siteChatConversationWithUserList = new SiteChatConversationWithUserList();
+      siteChatConversationWithUserList.setSiteChatConversation(siteChatConversation);
+      siteChatConversationWithUserList.getUserIdSet().add(userId);
+      
+      siteChatConversationWithMemberListMap.put(siteChatConversation.getId(), siteChatConversationWithUserList);
+      
+      return siteChatConversationWithUserList;
+    }
+    finally {
+      
+      QueryUtil.closeNoThrow(connection);
+    }
   }
   
   public SiteChatUser getSiteChatUser(int userId) {
@@ -334,7 +360,7 @@ public class SiteChatServer extends Server implements SignalHandler {
               
               siteChatConversationMessage = siteChatConversationMessage.clone();
               siteChatConversationMessage.setMessage(StringUtil.escapeHTMLCharacters(siteChatConversationMessage.getMessage()));
-              //MiscUtil.log("Adding missed message: " + siteChatConversationMessage.getId());
+              logger.debug("Adding missed message: " + siteChatConversationMessage.getId());
               messageHistoryToSendToUser.add(siteChatConversationMessage);
             }
           }
@@ -347,19 +373,30 @@ public class SiteChatServer extends Server implements SignalHandler {
   
   public void refreshUserCache() throws Exception {
     
-    Connection connection = provider.getConnection();
-    Map<Integer, SiteChatUser> siteChatUserMap = SiteChatUtil.loadSiteChatUserMap(connection);
-    connection.close();
-    
-    synchronized(this.siteChatUserMap) {
+    Connection connection = null;
+    try {
+      connection = provider.getConnection();
       
-      for(int userId : this.siteChatUserMap.keySet()) {
+      Map<Integer, SiteChatUser> siteChatUserMap = SiteChatUtil.loadSiteChatUserMap(connection);
+      
+      connection.commit();
+      connection.close();
+      connection = null;
+      
+      synchronized(this.siteChatUserMap) {
         
-        if(siteChatUserMap.containsKey(userId)) {
-          siteChatUserMap.get(userId).setLastActivityDatetime(this.siteChatUserMap.get(userId).getLastActivityDatetime());
+        for(int userId : this.siteChatUserMap.keySet()) {
+          
+          if(siteChatUserMap.containsKey(userId)) {
+            siteChatUserMap.get(userId).setLastActivityDatetime(this.siteChatUserMap.get(userId).getLastActivityDatetime());
+          }
         }
+        this.siteChatUserMap = siteChatUserMap;
       }
-      this.siteChatUserMap = siteChatUserMap;
+    }
+    finally {
+      
+      QueryUtil.closeNoThrow(connection);
     }
   }
   
@@ -427,7 +464,7 @@ public class SiteChatServer extends Server implements SignalHandler {
       }
     }
     
-    MiscUtil.log("Removing Inactive Users: " + inactiveUserIdSet);
+    logger.debug("Removing Inactive Users: " + inactiveUserIdSet);
     for(Integer userId : inactiveUserIdSet) {
       
       removeUser(userId);
@@ -468,7 +505,7 @@ public class SiteChatServer extends Server implements SignalHandler {
           }
           catch(Throwable throwable) {
             
-            MiscUtil.log("Exception thrown while trying to disconnect web socket in removeUser() : " + throwable);
+            logger.error("Exception thrown while trying to disconnect web socket in removeUser() : " + throwable);
           }
         }
       }
@@ -485,15 +522,29 @@ public class SiteChatServer extends Server implements SignalHandler {
   }
   
   public void saveSiteChatConversationMessages() throws Exception {
-
-    synchronized(siteChatConversationMessagesToSave) {
-      if(siteChatConversationMessagesToSave.size() > 0) {
-        Connection connection = provider.getConnection();
-        SiteChatUtil.putNewSiteChatConversationMessages(connection, siteChatConversationMessagesToSave);
-        connection.close();
     
-        siteChatConversationMessagesToSave.clear();
+    Connection connection = null;
+    
+    try {
+      synchronized(siteChatConversationMessagesToSave) {
+      
+        if(siteChatConversationMessagesToSave.size() > 0) {
+          
+          connection = provider.getConnection();
+          
+          SiteChatUtil.putNewSiteChatConversationMessages(connection, siteChatConversationMessagesToSave);
+          
+          connection.commit();
+          connection.close();
+          connection = null;
+    
+          siteChatConversationMessagesToSave.clear();
+        }
       }
+    }
+    finally {
+      
+      QueryUtil.closeNoThrow(connection);
     }
   }
 
@@ -518,7 +569,7 @@ public class SiteChatServer extends Server implements SignalHandler {
     }
     catch(Throwable throwable) {
 
-      MiscUtil.log(MiscUtil.getPrintableStackTrace(throwable));
+      logger.error(MiscUtil.getPrintableStackTrace(throwable));
     }
   }
   
@@ -542,7 +593,7 @@ public class SiteChatServer extends Server implements SignalHandler {
             }
             catch(IOException ioException) {
               
-              MiscUtil.log("Could not send outbound packet: " + ioException.getMessage());
+              logger.error("Could not send outbound packet: " + ioException.getMessage());
             }
           }
         }
@@ -559,7 +610,7 @@ public class SiteChatServer extends Server implements SignalHandler {
       Map<Integer, SiteChatUser> siteChatUserMap = getSiteChatUserMap(siteChatConversationWithUserList.getUserIdSet());
       
       //Add user to user list.
-      MiscUtil.log("Adding user #" + siteChatUser.getId() + " to chat #" + siteChatConversationWithUserList.getSiteChatConversation().getId() + ".");
+      logger.debug("Adding user #" + siteChatUser.getId() + " to chat #" + siteChatConversationWithUserList.getSiteChatConversation().getId() + ".");
       siteChatConversationWithUserList.getUserIdSet().add(siteChatUser.getId());
       
       //Generate response packet to user.
@@ -586,7 +637,7 @@ public class SiteChatServer extends Server implements SignalHandler {
               siteChatWebSocket.sendOutboundPacket(siteChatOutboundConnectPacket);
             }
             catch(IOException ioException) {
-              MiscUtil.log(MiscUtil.getPrintableStackTrace(ioException));
+              logger.error(MiscUtil.getPrintableStackTrace(ioException));
             }
           }
         }
@@ -605,18 +656,30 @@ public class SiteChatServer extends Server implements SignalHandler {
   
   public void cleanup() throws Exception {
     
-    MiscUtil.log("Saving queued conversation messages. Number in buffer: " + siteChatConversationMessagesToSave.size());
+    logger.info("Saving queued conversation messages. Number in buffer: " + siteChatConversationMessagesToSave.size());
     
     saveSiteChatConversationMessages();
   }
   
   public boolean authenticateUserLogin(int userId, String sessionId) throws Exception {
     
-    Connection connection = provider.getConnection();
-    boolean result = SiteChatUtil.authenticateUserLogin(connection, userId, sessionId);
-    connection.close();
+    Connection connection = null;
     
-    return result;
+    try {
+      connection = provider.getConnection();
+      
+      boolean result = SiteChatUtil.authenticateUserLogin(connection, userId, sessionId);
+      
+      connection.commit();
+      connection.close();
+      connection = null;
+    
+      return result;
+    }
+    finally {
+      
+      QueryUtil.closeNoThrow(connection);
+    }
   }
   
   public boolean isVerbose()
@@ -641,10 +704,10 @@ public class SiteChatServer extends Server implements SignalHandler {
 
   private static void usage()
   {
-    MiscUtil.log("java -cp CLASSPATH "+SiteChatServer.class+" [ OPTIONS ]");
-    MiscUtil.log("  -p|--port PORT  (default 8080)");
-    MiscUtil.log("  -v|--verbose ");
-    MiscUtil.log("  -d|--docroot file (default '.')");
+    logger.info("java -cp CLASSPATH " + SiteChatServer.class + " [ OPTIONS ]");
+    logger.info("  -p|--port PORT  (default 8080)");
+    logger.info("  -v|--verbose ");
+    logger.info("  -d|--docroot file (default '.')");
     System.exit(1);
   }
   
@@ -652,6 +715,7 @@ public class SiteChatServer extends Server implements SignalHandler {
   {
     try
     {
+      
       int port=8080;
       boolean verbose=false;
       String docRoot=".";
@@ -671,15 +735,20 @@ public class SiteChatServer extends Server implements SignalHandler {
       
       Provider provider = new Provider();
       provider.setDocRoot(docRoot);
+      logger.info("Loading Configuration.");
       provider.loadConfiguration(docRoot + "/" + "config.txt");
+      logger.info("Setting Up Connection Pool.");
+      provider.setupConnectionPool();
       
+      logger.info("Setting Up Site Chat Server.");
       SiteChatServer server = new SiteChatServer(port, provider);
       server.setVerbose(verbose);
       server.setResourceBase(docRoot);
+      logger.info("Starting Site Chat Server.");
       server.start();
       server.join();
       
-      MiscUtil.log("Server has been stopped.\n");
+      logger.info("Server has been stopped.\n");
       
       server.cleanup();
       
@@ -687,7 +756,8 @@ public class SiteChatServer extends Server implements SignalHandler {
     }
     catch (Exception e) {
 
-      MiscUtil.log(MiscUtil.getPrintableStackTrace(e));
+      logger.error("Severe Exception: " + e);
+      logger.error(MiscUtil.getPrintableStackTrace(e));
     }
   }
   
@@ -714,21 +784,21 @@ public class SiteChatServer extends Server implements SignalHandler {
     public void onOpen(Connection connection)
     {
       if (_verbose)
-        MiscUtil.log(this.getClass().getSimpleName() + "#onOpen " + connection);
+        logger.trace(this.getClass().getSimpleName() + "#onOpen " + connection);
     }
     
     public void onHandshake(FrameConnection connection)
     {
       
       if (_verbose)
-        MiscUtil.log(this.getClass().getSimpleName() + "#onHandshake " + connection + " " + connection.getClass().getSimpleName());
+        logger.trace(this.getClass().getSimpleName() + "#onHandshake " + connection + " " + connection.getClass().getSimpleName());
       this.connection = connection;
     }
 
     public void onClose(int code,String message)
     {
       if (_verbose)
-        MiscUtil.log(this.getClass().getSimpleName() + "#onDisonnect " + code + " " + message);
+        logger.trace(this.getClass().getSimpleName() + "#onDisonnect " + code + " " + message);
       
       descriptors.remove(this);
     }
@@ -736,21 +806,21 @@ public class SiteChatServer extends Server implements SignalHandler {
     public boolean onFrame(byte flags, byte opcode, byte[] data, int offset, int length)
     {      
       if (_verbose)
-        MiscUtil.log(this.getClass().getSimpleName() + "#onFrame " + TypeUtil.toHexString(flags) + "|" + TypeUtil.toHexString(data,offset,length));
+        logger.trace(this.getClass().getSimpleName() + "#onFrame " + TypeUtil.toHexString(flags) + "|" + TypeUtil.toHexString(data,offset,length));
       return false;
     }
 
     public boolean onControl(byte controlCode, byte[] data, int offset, int length)
     {
       if (_verbose)
-        MiscUtil.log(this.getClass().getSimpleName() + "#onControl  " + TypeUtil.toHexString(controlCode) + " " + TypeUtil.toHexString(data,offset,length));
+        logger.trace(this.getClass().getSimpleName() + "#onControl  " + TypeUtil.toHexString(controlCode) + " " + TypeUtil.toHexString(data,offset,length));
       return false;
     }
 
     public void onMessage(String data)
     {
       if (_verbose)
-        MiscUtil.log(this.getClass().getSimpleName() + "#onMessage   " + data);
+        logger.trace(this.getClass().getSimpleName() + "#onMessage   " + data);
       
       try {
         
@@ -758,7 +828,7 @@ public class SiteChatServer extends Server implements SignalHandler {
       }
       catch(Throwable throwable) {
 
-        MiscUtil.log(MiscUtil.getPrintableStackTrace(throwable));
+        logger.error(MiscUtil.getPrintableStackTrace(throwable));
         return;
       }
     }
@@ -766,7 +836,7 @@ public class SiteChatServer extends Server implements SignalHandler {
     public void onMessage(byte[] data, int offset, int length)
     {
       if (_verbose)
-        MiscUtil.log(this.getClass().getSimpleName() + "#onMessage   " + TypeUtil.toHexString(data,offset,length));
+        logger.trace(this.getClass().getSimpleName() + "#onMessage   " + TypeUtil.toHexString(data,offset,length));
     }
     
     public void sendOutboundPacket(SiteChatOutboundPacket siteChatOutboundPacket) throws IOException {
@@ -785,12 +855,12 @@ public class SiteChatServer extends Server implements SignalHandler {
     try {
       
       stop();
-      MiscUtil.log("Attempting to shut down Web Socket Server...");
+      logger.info("Attempting to shut down Web Socket Server...");
     }
     catch(Exception exception) {
       
-      MiscUtil.log("Could not shut down Web Socket Server:\n");
-      MiscUtil.log(MiscUtil.getPrintableStackTrace(exception));
+      logger.error("Could not shut down Web Socket Server:");
+      logger.error(MiscUtil.getPrintableStackTrace(exception));
     }
     
   }

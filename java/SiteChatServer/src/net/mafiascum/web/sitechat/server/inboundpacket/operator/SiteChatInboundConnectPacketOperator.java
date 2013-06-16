@@ -2,7 +2,6 @@ package net.mafiascum.web.sitechat.server.inboundpacket.operator;
 
 import java.util.Date;
 
-import net.mafiascum.util.MiscUtil;
 import net.mafiascum.web.sitechat.server.SiteChatServer;
 import net.mafiascum.web.sitechat.server.SiteChatServer.SiteChatWebSocket;
 import net.mafiascum.web.sitechat.server.SiteChatUser;
@@ -11,21 +10,23 @@ import net.mafiascum.web.sitechat.server.conversation.SiteChatConversation;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationWithUserList;
 import net.mafiascum.web.sitechat.server.inboundpacket.SiteChatInboundConnectPacket;
 
+import org.apache.log4j.Logger;
+
 import com.google.gson.Gson;
 
 public class SiteChatInboundConnectPacketOperator implements SiteChatInboundPacketOperator {
 
+  protected Logger logger = Logger.getLogger(SiteChatInboundConnectPacketOperator.class.getName());
   public void process(SiteChatServer siteChatServer, SiteChatWebSocket siteChatWebSocket, String siteChatInboundPacketJson) throws Exception {
     
     SiteChatInboundConnectPacket siteChatInboundConnectPacket = new Gson().fromJson(siteChatInboundPacketJson, SiteChatInboundConnectPacket.class);
-    SiteChatConversation siteChatConversation;
     SiteChatConversationWithUserList siteChatConversationWithUserList;
     SiteChatUser siteChatUser = siteChatWebSocket.getSiteChatUser();
     
     if(siteChatUser == null) {
       //Not logged in.
       
-      MiscUtil.log("User trying to connect to chat without first logging in.");
+      logger.error("User trying to connect to chat without first logging in.");
       return;
     }
     siteChatServer.updateUserActivity(siteChatUser.getId());

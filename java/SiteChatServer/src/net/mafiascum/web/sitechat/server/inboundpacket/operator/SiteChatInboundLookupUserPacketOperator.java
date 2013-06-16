@@ -1,26 +1,28 @@
 package net.mafiascum.web.sitechat.server.inboundpacket.operator;
 
-import net.mafiascum.util.MiscUtil;
 import net.mafiascum.web.sitechat.server.SiteChatServer;
 import net.mafiascum.web.sitechat.server.SiteChatServer.SiteChatWebSocket;
 import net.mafiascum.web.sitechat.server.SiteChatUser;
 import net.mafiascum.web.sitechat.server.inboundpacket.SiteChatInboundLookupUserPacket;
 import net.mafiascum.web.sitechat.server.outboundpacket.SiteChatOutboundLookupUserPacket;
 
+import org.apache.log4j.Logger;
+
 import com.google.gson.Gson;
 
 public class SiteChatInboundLookupUserPacketOperator implements SiteChatInboundPacketOperator {
 
+  protected Logger logger = Logger.getLogger(SiteChatInboundLookupUserPacketOperator.class.getName());
   public void process(SiteChatServer siteChatServer, SiteChatWebSocket siteChatWebSocket, String siteChatInboundPacketJson) throws Exception {
     
     SiteChatInboundLookupUserPacket siteChatInboundLookupUserPacket = new Gson().fromJson(siteChatInboundPacketJson, SiteChatInboundLookupUserPacket.class);
     SiteChatUser siteChatUser = siteChatWebSocket.getSiteChatUser();
-    //MiscUtil.log("LookupUser Packet. User ID: " + siteChatInboundLookupUserPacket.getUserId());
+    logger.debug("LookupUser Packet. User ID: " + siteChatInboundLookupUserPacket.getUserId());
     
     if(siteChatUser == null) {
       //Not Logged In.
       
-      MiscUtil.log("User not logged in, looking up user. Target User ID: " + siteChatInboundLookupUserPacket.getUserId());
+      logger.error("User not logged in, looking up user. Target User ID: " + siteChatInboundLookupUserPacket.getUserId());
       return;
     }
     siteChatServer.updateUserActivity(siteChatUser.getId());

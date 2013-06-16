@@ -2,53 +2,94 @@ package net.mafiascum.jdbc;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
 import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
+import java.util.Date;
 
-import net.mafiascum.util.MiscUtil;
+import org.apache.log4j.Logger;
 
 class ConnectionInvocationHandler implements InvocationHandler {
 
-  protected Connection connection;
+  protected Connection connectionSource;
+  protected Connection connectionProxy;
+  protected ConnectionPool connectionPool;
+  protected Date createdDatetime;
+  protected Date lastOpenedDatetime;
+  protected Date lastAccessedDatetime;
+  protected Date lastClosedDatetime;
   
-  public ConnectionInvocationHandler(Connection connection) {
+  protected Logger logger = Logger.getLogger(ConnectionInvocationHandler.class.getName());
+  
+  public ConnectionInvocationHandler(Connection connectionSource) {
     
-    this.connection = connection;
+    this.connectionSource = connectionSource;
   }
   
-  @Override
-  public Object invoke(Object arg0, Method arg1, Object[] arg2) throws Throwable {
-    
-    MiscUtil.log("INVOKE!");
-    
-    return null;
+  public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+  
+    setLastAccessedDatetime(new Date());
+    if(method.getName().equals("close")) {
+      
+      connectionPool.releaseConnection(this);
+      return null;
+    }
+    else {
+      return method.invoke(connectionSource, args);
+    }
   }
   
-  public static void main(String[] args) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
-    
-    Connection connection;
-    Class.forName("com.mysql.jdbc.Driver").newInstance();
-    connection = DriverManager.getConnection
-    (
-      "jdbc:mysql://localhost/dev?useUnicode=yes&characterEncoding=UTF-8&jdbcCompliantTruncation=false&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&rewriteBatchedStatements=true",
-      "root",
-      ""
-    );
-    
-    connection.setAutoCommit(false);
-    
-    ConnectionInvocationHandler connectionInvocationHandler = new ConnectionInvocationHandler(connection);
-    
-    Connection connectionProxy = (Connection) Proxy.newProxyInstance(
-        Thread.currentThread().getContextClassLoader(),
-        connection.getClass().getInterfaces(),
-        connectionInvocationHandler
-      );
-    
-    connectionProxy.clearWarnings();
-    
-    MiscUtil.log("Closing Main");
+  public Connection getConnectionSource() {
+    return connectionSource;
+  }
+
+  public void setConnectionSource(Connection connectionSource) {
+    this.connectionSource = connectionSource;
+  }
+
+  public Date getCreatedDatetime() {
+    return createdDatetime;
+  }
+
+  public void setCreatedDatetime(Date createdDatetime) {
+    this.createdDatetime = createdDatetime;
+  }
+
+  public Date getLastOpenedDatetime() {
+    return lastOpenedDatetime;
+  }
+
+  public void setLastOpenedDatetime(Date lastOpenedDatetime) {
+    this.lastOpenedDatetime = lastOpenedDatetime;
+  }
+
+  public Date getLastAccessedDatetime() {
+    return lastAccessedDatetime;
+  }
+
+  public void setLastAccessedDatetime(Date lastAccessedDatetime) {
+    this.lastAccessedDatetime = lastAccessedDatetime;
+  }
+
+  public Date getLastClosedDatetime() {
+    return lastClosedDatetime;
+  }
+
+  public void setLastClosedDatetime(Date lastClosedDatetime) {
+    this.lastClosedDatetime = lastClosedDatetime;
+  }
+
+  public Connection getConnectionProxy() {
+    return connectionProxy;
+  }
+  
+  public void setConnectionProxy(Connection connectionProxy) {
+    this.connectionProxy = connectionProxy;
+  }
+  
+  public ConnectionPool getConnectionPool() {
+    return connectionPool;
+  }
+  
+  public void setConnectionPool(ConnectionPool connectionPool) {
+    this.connectionPool = connectionPool;
   }
 }

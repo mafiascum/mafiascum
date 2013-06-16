@@ -18,49 +18,60 @@ import net.mafiascum.web.sitechat.server.conversation.SiteChatConversation;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationMessage;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationType;
 
+import org.apache.log4j.Logger;
+
 public class SiteChatUtil {
 
   public static final int MAX_SITE_CHAT_CONVERSATION_MESSAGE_LENGTH = 255;
   public static final int MAX_SITE_CHAT_CONVERSATION_NAME_LENGTH = 40;
   public static final int MAX_MESSAGES_PER_CONVERSATION_CACHE = 100;
   
+  protected static Logger logger = Logger.getLogger(SiteChatUtil.class.getName());
+  
   public static Map<Integer, SiteChatUser> loadSiteChatUserMap(Connection connection) throws SQLException {
     
-    Statement statement = connection.createStatement();
-    Map<Integer, SiteChatUser> siteChatUserMap = new HashMap<Integer, SiteChatUser>();
-    String sql;
-    ResultSet resultSet;
-    int topUserId, offset = 0, fetchSize = 1000;
+    Statement statement = null;
     
-    sql = " SELECT MAX(user_id)"
-        + " FROM phpbb_users";
-    
-    topUserId = QueryUtil.getSingleIntValueResult(statement, sql);
-    
-    while(offset <= topUserId) {
-
-      sql = " SELECT"
-          + "   user_id,"
-          + "   username,"
-          + "   user_avatar"
-          + " FROM phpbb_users"
-          + " WHERE user_id >= " + offset
-          + " AND user_id < " + (offset + fetchSize);
+    try {
+      statement = connection.createStatement();
+      Map<Integer, SiteChatUser> siteChatUserMap = new HashMap<Integer, SiteChatUser>();
+      String sql;
+      ResultSet resultSet;
+      int topUserId, offset = 0, fetchSize = 1000;
       
-      resultSet = statement.executeQuery(sql);
+      sql = " SELECT MAX(user_id)"
+          + " FROM phpbb_users";
+      topUserId = QueryUtil.getSingleIntValueResult(statement, sql);
       
-      while(resultSet.next()) {
+      while(offset <= topUserId) {
+  
+        sql = " SELECT"
+            + "   user_id,"
+            + "   username,"
+            + "   user_avatar"
+            + " FROM phpbb_users"
+            + " WHERE user_id >= " + offset
+            + " AND user_id < " + (offset + fetchSize);
         
-        SiteChatUser siteChatUser = getSiteChatUser(resultSet);
-        siteChatUserMap.put(siteChatUser.getId(), siteChatUser);
+        resultSet = statement.executeQuery(sql);
+        
+        while(resultSet.next()) {
+          
+          SiteChatUser siteChatUser = getSiteChatUser(resultSet);
+          siteChatUserMap.put(siteChatUser.getId(), siteChatUser);
+        }
+        
+        offset += fetchSize;
       }
       
-      offset += fetchSize;
+      statement.close();
+      statement = null;
+      return siteChatUserMap;
     }
-    
-    statement.close();
-    
-    return siteChatUserMap;
+    finally {
+      
+      QueryUtil.closeNoThrow(statement);
+    }
   }
   
   public static SiteChatUser getSiteChatUser(ResultSet resultSet) throws SQLException {

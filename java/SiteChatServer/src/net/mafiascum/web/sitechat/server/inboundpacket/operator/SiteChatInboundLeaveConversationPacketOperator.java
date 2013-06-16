@@ -2,7 +2,6 @@ package net.mafiascum.web.sitechat.server.inboundpacket.operator;
 
 import java.util.Date;
 
-import net.mafiascum.util.MiscUtil;
 import net.mafiascum.web.sitechat.server.SiteChatServer;
 import net.mafiascum.web.sitechat.server.SiteChatServer.SiteChatWebSocket;
 import net.mafiascum.web.sitechat.server.SiteChatUser;
@@ -10,10 +9,13 @@ import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationWithUs
 import net.mafiascum.web.sitechat.server.inboundpacket.SiteChatInboundLeaveConversationPacket;
 import net.mafiascum.web.sitechat.server.outboundpacket.SiteChatOutboundLeaveConversationPacket;
 
+import org.apache.log4j.Logger;
+
 import com.google.gson.Gson;
 
 public class SiteChatInboundLeaveConversationPacketOperator implements SiteChatInboundPacketOperator {
 
+  protected Logger logger = Logger.getLogger(SiteChatInboundLeaveConversationPacketOperator.class.getName());
   public void process(SiteChatServer siteChatServer, SiteChatWebSocket siteChatWebSocket, String siteChatInboundPacketJson) throws Exception {
     
     SiteChatInboundLeaveConversationPacket siteChatInboundLeaveConversationPacket = new Gson().fromJson(siteChatInboundPacketJson, SiteChatInboundLeaveConversationPacket.class);
@@ -23,7 +25,7 @@ public class SiteChatInboundLeaveConversationPacketOperator implements SiteChatI
     if(siteChatUser == null) {
       //Not logged in.
       
-      MiscUtil.log("User trying to leave conversation without first logging in.");
+      logger.error("User trying to leave conversation without first logging in.");
       return;
     }
     siteChatServer.updateUserActivity(siteChatUser.getId());

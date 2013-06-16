@@ -6,7 +6,6 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
-import net.mafiascum.util.MiscUtil;
 import net.mafiascum.web.sitechat.server.SiteChatServer;
 import net.mafiascum.web.sitechat.server.SiteChatServer.SiteChatWebSocket;
 import net.mafiascum.web.sitechat.server.SiteChatUser;
@@ -17,10 +16,13 @@ import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationWithUs
 import net.mafiascum.web.sitechat.server.inboundpacket.SiteChatInboundLogInPacket;
 import net.mafiascum.web.sitechat.server.outboundpacket.SiteChatOutboundLogInPacket;
 
+import org.apache.log4j.Logger;
+
 import com.google.gson.Gson;
 
 public class SiteChatInboundLogInPacketOperator implements SiteChatInboundPacketOperator {
 
+  protected Logger logger = Logger.getLogger(SiteChatInboundLogInPacketOperator.class.getName());
   public void process(SiteChatServer siteChatServer, SiteChatWebSocket siteChatWebSocket, String siteChatInboundPacketJson) throws Exception {
     
     SiteChatInboundLogInPacket siteChatInboundLogInPacket = new Gson().fromJson(siteChatInboundPacketJson, SiteChatInboundLogInPacket.class);
@@ -28,7 +30,7 @@ public class SiteChatInboundLogInPacketOperator implements SiteChatInboundPacket
     SiteChatUser siteChatUser = siteChatServer.getSiteChatUser(siteChatInboundLogInPacket.getUserId());
     if(siteChatUser == null) {
       
-      MiscUtil.log("Non Existant User Attempted To Log In. User ID: " + siteChatInboundLogInPacket.getUserId());
+      logger.error("Non Existant User Attempted To Log In. User ID: " + siteChatInboundLogInPacket.getUserId());
       return;
     }
     siteChatServer.updateUserActivity(siteChatUser.getId());
@@ -42,12 +44,12 @@ public class SiteChatInboundLogInPacketOperator implements SiteChatInboundPacket
     
     if(!loginResult) {
       
-      MiscUtil.log("Login authentication failed for user #" + siteChatUser.getId() + ". Session ID: " + siteChatInboundLogInPacket.getSessionId());
+      logger.debug("Login authentication failed for user #" + siteChatUser.getId() + ". Session ID: " + siteChatInboundLogInPacket.getSessionId());
       siteChatWebSocket.getConnection().close();
       return;
     }
     
-    //MiscUtil.log("Logged In. Last Activity: " + siteChatUser.getLastActivityDatetime());
+    logger.debug("Logged In. Last Activity: " + siteChatUser.getLastActivityDatetime());
     siteChatWebSocket.setSiteChatUser(siteChatUser);
     
     //Reconnect to conversations the user has been removed from.
@@ -68,7 +70,7 @@ public class SiteChatInboundLogInPacketOperator implements SiteChatInboundPacket
       synchronized(siteChatConversationWithUserList) {
         if(siteChatConversationWithUserList == null) {
           
-          MiscUtil.log("User sent conversation ID that does not exist in system: " + siteChatConversationId);
+          logger.error("User sent conversation ID that does not exist in system: " + siteChatConversationId);
         }
         else {
           
@@ -91,11 +93,11 @@ public class SiteChatInboundLogInPacketOperator implements SiteChatInboundPacket
         int mostRecentSiteChatConversationMessageId = siteChatInboundLogInPacket.getConversationKeyToMostRecentMessageIdMap().get(siteChatConversationKey);
         SiteChatConversationType siteChatConversationType = SiteChatUtil.getSiteChatConversationTypeBySymbol(symbol);
         
-        //MiscUtil.log("Conversation " + siteChatConversationKey + ", Last Message ID: " + mostRecentSiteChatConversationMessageId);
+        logger.info("Conversation " + siteChatConversationKey + ", Last Message ID: " + mostRecentSiteChatConversationMessageId);
         
         if(siteChatConversationType == null) {
           
-          MiscUtil.log("Unknown site chat conversation type. Symbol: " + symbol);
+          logger.error("Unknown site chat conversation type. Symbol: " + symbol);
           continue;
         }
         
