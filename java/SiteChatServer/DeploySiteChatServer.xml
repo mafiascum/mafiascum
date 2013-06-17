@@ -4,6 +4,7 @@
 	<property name="checkout-lib" value="${checkout-root}/lib"/>
 	<property name="checkout-src" value="${checkout-root}/src"/>
 	<property name="checkout-classes" value="${checkout-root}/classes"/>
+	<property name="checkout-resources" value="${checkout-root}/resources"/>
 	<property name="sitechat-root" value=""/>
 	<property name="branch" value="trunk" />
 	<property name="revision" value="" />
@@ -68,7 +69,10 @@
 			<include name="**/*.java"/>
 		</javac>
 
-		<jar basedir="${checkout-classes}" destfile="${checkout-lib}/site-chat-server.jar"/>
+		<jar destfile="${checkout-lib}/site-chat-server.jar">
+			<fileset dir="${checkout-classes}" />
+			<fileset dir="${checkout-resources}" />
+		</jar>
 
 	</target>
 </project>
