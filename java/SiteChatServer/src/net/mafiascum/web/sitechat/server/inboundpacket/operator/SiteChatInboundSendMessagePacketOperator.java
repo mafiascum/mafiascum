@@ -92,6 +92,10 @@ public class SiteChatInboundSendMessagePacketOperator implements SiteChatInbound
       sendToUserIdSet.add(siteChatUser.getId());
     }
     
+    long timeBefore = System.currentTimeMillis();
+    SiteChatServer.lagLogger.debug("Sending NewMessage Packets To Users.");
     siteChatServer.sendOutboundPacketToUsers(sendToUserIdSet, siteChatOutboundNewMessagePacket, null);
+    long timeBetween = System.currentTimeMillis() - timeBefore;
+    SiteChatServer.lagLogger.debug("NewMessage Packet Sent. Duration: " + timeBetween + " ms.");
   }
 }

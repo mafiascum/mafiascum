@@ -78,6 +78,7 @@ public class SiteChatServer extends Server implements SignalHandler {
   protected int topSiteChatConversationMessageId;
   
   protected static Logger logger = Logger.getLogger(SiteChatServer.class.getName());
+  public static final Logger lagLogger = Logger.getLogger("LagMonitor");
   
   protected static final Map<SiteChatInboundPacketType, SiteChatInboundPacketOperator> siteChatInboundPacketTypeToSiteChatInboundPacketOperatorMap = new HashMap<SiteChatInboundPacketType, SiteChatInboundPacketOperator>();
   static {
@@ -377,7 +378,9 @@ public class SiteChatServer extends Server implements SignalHandler {
     try {
       connection = provider.getConnection();
       
+      lagLogger.debug("Refreshing User Cache.");
       Map<Integer, SiteChatUser> siteChatUserMap = SiteChatUtil.loadSiteChatUserMap(connection);
+      lagLogger.debug("User Cache Refreshed.");
       
       connection.commit();
       connection.close();
@@ -402,6 +405,7 @@ public class SiteChatServer extends Server implements SignalHandler {
   
   public void sendUserListToAllWebSockets() throws Exception {
     
+    lagLogger.debug("Sending User List To All Web Sockets. START.");
     List<SiteChatUser> siteChatUserList = new LinkedList<SiteChatUser>();
     List<SiteChatConversationWithUserList> siteChatConversationsWithUserList = new LinkedList<SiteChatConversationWithUserList>();
     synchronized(siteChatUserMap) {
@@ -446,10 +450,12 @@ public class SiteChatServer extends Server implements SignalHandler {
         }
       }
     }
+    lagLogger.debug("Sending User List To All Web Sockets. FINISHED.");
   }
   
   public void removeIdleUsers(Date contextDatetime) throws Exception {
-    
+
+    lagLogger.debug("Remove Idle Users. START.");
     Set<Integer> inactiveUserIdSet = new HashSet<Integer>();
     long contextDatetimeMilliseconds = contextDatetime.getTime();
     
@@ -469,6 +475,7 @@ public class SiteChatServer extends Server implements SignalHandler {
       
       removeUser(userId);
     }
+    lagLogger.debug("Remove Idle Users. FINISHED.");
   }
   
   public boolean isUserActive(int userId, long contextDatetimeMilliseconds) {
@@ -714,8 +721,7 @@ public class SiteChatServer extends Server implements SignalHandler {
   public static void main(String... args)
   {
     try
-    {
-      
+    { 
       int port=8080;
       boolean verbose=false;
       String docRoot=".";

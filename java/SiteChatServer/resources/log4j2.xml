@@ -4,10 +4,21 @@
     <Console name="Console" target="SYSTEM_OUT">
       <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
     </Console>
+    
+    <File name="LagMonitorFile" fileName="lag.out" append="true">
+      <PatternLayout>
+        <pattern>%d %p %c{1.} [%t] %m%n</pattern>
+      </PatternLayout>
+    </File>
   </appenders>
   <loggers>
     <root level="trace">
       <appender-ref ref="Console"/>
     </root>
+    
+    <logger name="LagMonitor" level="info" additivity="false">
+      <appender-ref ref="LagMonitorFile"/>
+    </logger>
+    
   </loggers>
 </configuration>

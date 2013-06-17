@@ -60,7 +60,7 @@ public class ConnectionPool {
       }
     
       //Keep trying to find a connection that is still in a valid state, or if we run out, we will
-      //break out continue waiting for new ones to be allocated.
+      //break out and continue waiting for new ones to be allocated.
       while(availableConnections.size() > 0) {
         Iterator<ConnectionInvocationHandler> iterator = availableConnections.iterator();
         connectionInvocationHandler = iterator.next();
