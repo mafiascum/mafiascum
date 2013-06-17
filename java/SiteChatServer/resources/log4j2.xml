@@ -16,7 +16,7 @@
       <appender-ref ref="Console"/>
     </root>
     
-    <logger name="LagMonitor" level="info" additivity="false">
+    <logger name="LagMonitor" level="debug" additivity="false">
       <appender-ref ref="LagMonitorFile"/>
     </logger>
     
