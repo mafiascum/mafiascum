@@ -1031,6 +1031,17 @@ public abstract class MiscUtil {
     pw.flush();
     return sw.toString();
   }
+  
+  public static String getPrintableStackTrace(StackTraceElement[] stackTraceElements) {
+    
+    StringBuilder stringBuilder = new StringBuilder(128);
+    for(StackTraceElement stackTraceElement : stackTraceElements) {
+      
+      stringBuilder.append("\t").append(stackTraceElement.toString()).append("\n");
+    }
+    
+    return stringBuilder.toString();
+  }
 
   /**
    * Builds a string from the template resource (@see fillInTemplate).  If the

@@ -40,6 +40,7 @@ public class SiteChatInboundLogInPacketOperator implements SiteChatInboundPacket
       siteChatUser.setLastActivityDatetime(new Date());
     }
     
+    logger.debug("Log In Packet. User ID: " + siteChatInboundLogInPacket.getUserId() + ", Session: " + siteChatInboundLogInPacket.getSessionId());
     boolean loginResult = siteChatServer.authenticateUserLogin(siteChatInboundLogInPacket.getUserId(), siteChatInboundLogInPacket.getSessionId());
     
     if(!loginResult) {
