@@ -825,6 +825,8 @@ public class SiteChatServer extends Server implements SignalHandler {
 
       if (_verbose)
         logger.trace(this.getClass().getSimpleName() + "#onWebSocketClose   arg0: " + arg0 + ", Data: " + data);
+      
+      descriptors.remove(this);
     }
 
     public void onWebSocketConnect(Session session) {
