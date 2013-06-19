@@ -1,0 +1,52 @@
+2013-06-18 20:32:14,186 DEBUG LagMonitor [Thread-7] Sending User List To All Web Sockets. START.
+2013-06-18 20:32:14,188 DEBUG LagMonitor [Thread-7] Sending User List To All Web Sockets. FINISHED.
+2013-06-18 20:32:44,188 DEBUG LagMonitor [Thread-7] Sending User List To All Web Sockets. START.
+2013-06-18 20:32:44,189 DEBUG LagMonitor [Thread-7] Sending User List To All Web Sockets. FINISHED.
+2013-06-18 20:32:44,189 DEBUG LagMonitor [Thread-7] Remove Idle Users. START.
+2013-06-18 20:32:44,189 DEBUG LagMonitor [Thread-7] Remove Idle Users. FINISHED.
+2013-06-18 20:32:44,189 DEBUG LagMonitor [Thread-7] Refreshing User Cache.
+2013-06-18 20:32:44,274 DEBUG LagMonitor [Thread-7] User Cache Refreshed.
+2013-06-18 20:33:14,290 DEBUG LagMonitor [Thread-7] Sending User List To All Web Sockets. START.
+2013-06-18 20:33:14,291 DEBUG LagMonitor [Thread-7] Sending User List To All Web Sockets. FINISHED.
+2013-06-18 20:33:44,292 DEBUG LagMonitor [Thread-7] Sending User List To All Web Sockets. START.
+2013-06-18 20:33:44,292 DEBUG LagMonitor [Thread-7] Sending User List To All Web Sockets. FINISHED.
+2013-06-18 20:33:44,293 DEBUG LagMonitor [Thread-7] Remove Idle Users. START.
+2013-06-18 20:33:44,293 DEBUG LagMonitor [Thread-7] Remove Idle Users. FINISHED.
+2013-06-18 20:33:44,294 DEBUG LagMonitor [Thread-7] Refreshing User Cache.
+2013-06-18 20:33:44,316 DEBUG LagMonitor [Thread-7] User Cache Refreshed.
+2013-06-18 20:34:14,319 DEBUG LagMonitor [Thread-7] Sending User List To All Web Sockets. START.
+2013-06-18 20:34:14,320 DEBUG LagMonitor [Thread-7] Sending User List To All Web Sockets. FINISHED.
+2013-06-18 20:42:01,803 DEBUG LagMonitor [Thread-7] Sending User List To All Web Sockets. START.
+2013-06-18 20:42:01,806 DEBUG LagMonitor [Thread-7] Sending User List To All Web Sockets. FINISHED.
+2013-06-18 20:42:31,807 DEBUG LagMonitor [Thread-7] Sending User List To All Web Sockets. START.
+2013-06-18 20:42:31,808 DEBUG LagMonitor [Thread-7] Sending User List To All Web Sockets. FINISHED.
+2013-06-18 20:42:31,809 DEBUG LagMonitor [Thread-7] Remove Idle Users. START.
+2013-06-18 20:42:31,809 DEBUG LagMonitor [Thread-7] Remove Idle Users. FINISHED.
+2013-06-18 20:42:31,810 DEBUG LagMonitor [Thread-7] Refreshing User Cache.
+2013-06-18 20:42:31,855 DEBUG LagMonitor [Thread-7] User Cache Refreshed.
+2013-06-18 20:43:01,874 DEBUG LagMonitor [Thread-7] Sending User List To All Web Sockets. START.
+2013-06-18 20:43:01,875 DEBUG LagMonitor [Thread-7] Sending User List To All Web Sockets. FINISHED.
+2013-06-18 20:43:31,876 DEBUG LagMonitor [Thread-7] Sending User List To All Web Sockets. START.
+2013-06-18 20:43:31,877 DEBUG LagMonitor [Thread-7] Sending User List To All Web Sockets. FINISHED.
+2013-06-18 20:43:31,877 DEBUG LagMonitor [Thread-7] Remove Idle Users. START.
+2013-06-18 20:43:31,877 DEBUG LagMonitor [Thread-7] Remove Idle Users. FINISHED.
+2013-06-18 20:43:31,878 DEBUG LagMonitor [Thread-7] Refreshing User Cache.
+2013-06-18 20:43:31,900 DEBUG LagMonitor [Thread-7] User Cache Refreshed.
+2013-06-18 20:45:09,838 DEBUG LagMonitor [Thread-7] Sending User List To All Web Sockets. START.
+2013-06-18 20:45:09,839 DEBUG LagMonitor [Thread-7] Sending User List To All Web Sockets. FINISHED.
+2013-06-18 20:45:39,840 DEBUG LagMonitor [Thread-7] Sending User List To All Web Sockets. START.
+2013-06-18 20:45:39,840 DEBUG LagMonitor [Thread-7] Sending User List To All Web Sockets. FINISHED.
+2013-06-18 20:45:39,840 DEBUG LagMonitor [Thread-7] Remove Idle Users. START.
+2013-06-18 20:45:39,840 DEBUG LagMonitor [Thread-7] Remove Idle Users. FINISHED.
+2013-06-18 20:45:39,841 DEBUG LagMonitor [Thread-7] Refreshing User Cache.
+2013-06-18 20:45:39,888 DEBUG LagMonitor [Thread-7] User Cache Refreshed.
+2013-06-18 20:51:05,889 DEBUG LagMonitor [Thread-7] Sending User List To All Web Sockets. START.
+2013-06-18 20:51:35,893 DEBUG LagMonitor [Thread-7] Sending User List To All Web Sockets. START.
+2013-06-18 20:51:35,894 DEBUG LagMonitor [Thread-7] Remove Idle Users. START.
+2013-06-18 20:51:35,894 DEBUG LagMonitor [Thread-7] Remove Idle Users. FINISHED.
+2013-06-18 20:51:35,894 DEBUG LagMonitor [Thread-7] Refreshing User Cache.
+2013-06-18 20:51:35,954 DEBUG LagMonitor [Thread-7] User Cache Refreshed.
+2013-06-18 20:52:00,315 DEBUG LagMonitor [qtp1807970113-27] Sending NewMessage Packets To Users.
+2013-06-18 20:52:00,318 DEBUG LagMonitor [qtp1807970113-27] NewMessage Packet Sent. Duration: 3 ms.
+2013-06-18 20:52:15,646 DEBUG LagMonitor [qtp1807970113-24] Sending NewMessage Packets To Users.
+2013-06-18 20:52:15,648 DEBUG LagMonitor [qtp1807970113-24] NewMessage Packet Sent. Duration: 2 ms.

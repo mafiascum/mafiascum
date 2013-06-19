@@ -15,8 +15,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import javax.servlet.http.HttpServletRequest;
-
 import net.mafiascum.json.DateUnixTimestampSerializer;
 import net.mafiascum.provider.Provider;
 import net.mafiascum.util.MiscUtil;
@@ -40,12 +38,18 @@ import net.mafiascum.web.sitechat.server.outboundpacket.SiteChatOutboundUserJoin
 import net.mafiascum.web.sitechat.server.outboundpacket.SiteChatOutboundUserListPacket;
 
 import org.apache.log4j.Logger;
+import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.handler.ResourceHandler;
-import org.eclipse.jetty.server.nio.SelectChannelConnector;
-import org.eclipse.jetty.util.TypeUtil;
-import org.eclipse.jetty.websocket.WebSocket;
-import org.eclipse.jetty.websocket.WebSocketHandler;
+import org.eclipse.jetty.websocket.api.Session;
+import org.eclipse.jetty.websocket.api.UpgradeRequest;
+import org.eclipse.jetty.websocket.api.UpgradeResponse;
+import org.eclipse.jetty.websocket.api.WebSocketListener;
+import org.eclipse.jetty.websocket.common.WebSocketSession;
+import org.eclipse.jetty.websocket.server.WebSocketHandler;
+import org.eclipse.jetty.websocket.servlet.WebSocketCreator;
+import org.eclipse.jetty.websocket.servlet.WebSocketServletFactory;
 
 import sun.misc.Signal;
 import sun.misc.SignalHandler;
@@ -57,8 +61,7 @@ public class SiteChatServer extends Server implements SignalHandler {
   
   protected boolean _verbose;
 
-  protected WebSocket webSocket;
-  protected SelectChannelConnector selectChannelConnector;
+  protected ServerConnector connector;
   protected WebSocketHandler webSocketHandler;
   protected ResourceHandler resourceHandler;
 
@@ -101,7 +104,6 @@ public class SiteChatServer extends Server implements SignalHandler {
     Connection connection = null;
     
     try {
-      
       connection = provider.getConnection();
       
       //Add handler for interruption signal.
@@ -112,14 +114,16 @@ public class SiteChatServer extends Server implements SignalHandler {
       serviceThread = new SiteChatServerServiceThread(this);
       serviceThread.start();
       
-      selectChannelConnector = new SelectChannelConnector();
-      selectChannelConnector.setPort(port);
-  
-      addConnector(selectChannelConnector);
+      connector = new ServerConnector(this);
+      connector.setPort(port);
+      
+      addConnector(connector);
       webSocketHandler = new WebSocketHandler()
       {
+        /***
         public WebSocket doWebSocketConnect(HttpServletRequest request, String protocol)
         {
+          WebSocket webSocket = null;
           if(protocol != null && protocol.equals("site-chat"))
           {
             webSocket = new SiteChatWebSocket();
@@ -127,6 +131,21 @@ public class SiteChatServer extends Server implements SignalHandler {
           }
           
           return webSocket;
+        }
+        ***/
+
+        public void configure(WebSocketServletFactory webSocketServletFactory) {
+          
+          webSocketServletFactory.setCreator(new WebSocketCreator() {
+
+            public Object createWebSocket(UpgradeRequest upgradeRequest, UpgradeResponse upgradeResponse) {
+              
+              SiteChatWebSocket siteChatWebSocket = new SiteChatWebSocket();
+              descriptors.add(siteChatWebSocket);
+              
+              return siteChatWebSocket;
+            }
+          });
         }
       };
   
@@ -444,8 +463,8 @@ public class SiteChatServer extends Server implements SignalHandler {
           for(SiteChatWebSocket siteChatWebSocket : descriptors) {
             
             if(siteChatWebSocket.getSiteChatUser() != null) {//Only send to users who have logged in.
-            siteChatWebSocket.sendOutboundPacket(siteChatOutboundUserListPacket);
-          }
+              siteChatWebSocket.sendOutboundPacket(siteChatOutboundUserListPacket);
+            }
           }
         }
       }
@@ -767,9 +786,9 @@ public class SiteChatServer extends Server implements SignalHandler {
     }
   }
   
-  public class SiteChatWebSocket implements WebSocket, WebSocket.OnFrame, WebSocket.OnBinaryMessage, WebSocket.OnTextMessage, WebSocket.OnControl
+  public class SiteChatWebSocket implements WebSocketListener
   {
-    protected FrameConnection connection;
+    protected WebSocketSession connection;
     protected SiteChatUser siteChatUser;
     
     public SiteChatUser getSiteChatUser() {
@@ -782,67 +801,8 @@ public class SiteChatServer extends Server implements SignalHandler {
       this.siteChatUser = siteChatUser;
     }
     
-    public FrameConnection getConnection()
-    {
+    public WebSocketSession getConnection() {
       return connection;
-    }
-    
-    public void onOpen(Connection connection)
-    {
-      if (_verbose)
-        logger.trace(this.getClass().getSimpleName() + "#onOpen " + connection);
-    }
-    
-    public void onHandshake(FrameConnection connection)
-    {
-      
-      if (_verbose)
-        logger.trace(this.getClass().getSimpleName() + "#onHandshake " + connection + " " + connection.getClass().getSimpleName());
-      this.connection = connection;
-    }
-
-    public void onClose(int code,String message)
-    {
-      if (_verbose)
-        logger.trace(this.getClass().getSimpleName() + "#onDisonnect " + code + " " + message);
-      
-      descriptors.remove(this);
-    }
-    
-    public boolean onFrame(byte flags, byte opcode, byte[] data, int offset, int length)
-    {      
-      if (_verbose)
-        logger.trace(this.getClass().getSimpleName() + "#onFrame " + TypeUtil.toHexString(flags) + "|" + TypeUtil.toHexString(data,offset,length));
-      return false;
-    }
-
-    public boolean onControl(byte controlCode, byte[] data, int offset, int length)
-    {
-      if (_verbose)
-        logger.trace(this.getClass().getSimpleName() + "#onControl  " + TypeUtil.toHexString(controlCode) + " " + TypeUtil.toHexString(data,offset,length));
-      return false;
-    }
-
-    public void onMessage(String data)
-    {
-      if (_verbose)
-        logger.trace(this.getClass().getSimpleName() + "#onMessage   " + data);
-      
-      try {
-        
-        processInboundDataPacket(this, data);
-      }
-      catch(Throwable throwable) {
-
-        logger.error(MiscUtil.getPrintableStackTrace(throwable));
-        return;
-      }
-    }
-
-    public void onMessage(byte[] data, int offset, int length)
-    {
-      if (_verbose)
-        logger.trace(this.getClass().getSimpleName() + "#onMessage   " + TypeUtil.toHexString(data,offset,length));
     }
     
     public void sendOutboundPacket(SiteChatOutboundPacket siteChatOutboundPacket) throws IOException {
@@ -850,7 +810,50 @@ public class SiteChatServer extends Server implements SignalHandler {
       synchronized(this.getConnection()) {
         if(this.getConnection().isOpen()) {
           String siteChatOutboundPacketJson = new GsonBuilder().registerTypeAdapter(Date.class, new DateUnixTimestampSerializer()).create().toJson(siteChatOutboundPacket);
-          this.getConnection().sendMessage(siteChatOutboundPacketJson);
+          this.getConnection().getRemote().sendStringByFuture(siteChatOutboundPacketJson);
+        }
+      }
+    }
+
+    public void onWebSocketBinary(byte[] data, int arg1, int arg2) {
+      
+      if (_verbose)
+        logger.trace(this.getClass().getSimpleName() + "#onWebSocketBinary   arg1: " + arg1 + ", arg2: " + arg2 + ", Data: " + (data == null ? "<NULL>" : String.valueOf(data.length)) );
+    }
+
+    public void onWebSocketClose(int arg0, String data) {
+
+      if (_verbose)
+        logger.trace(this.getClass().getSimpleName() + "#onWebSocketClose   arg0: " + arg0 + ", Data: " + data);
+    }
+
+    public void onWebSocketConnect(Session session) {
+
+      if (_verbose)
+        logger.trace(this.getClass().getSimpleName() + "#onWebSocketConnect   " + session);
+      
+      this.connection = (WebSocketSession)session;
+    }
+    public void onWebSocketError(Throwable throwable) {
+
+      if (_verbose)
+        logger.trace(this.getClass().getSimpleName() + "#onWebSocketError   " + throwable);
+    }
+
+    public void onWebSocketText(String data) {
+      
+      {
+        if (_verbose)
+          logger.trace(this.getClass().getSimpleName() + "#onWebSocketText   " + data);
+        
+        try {
+          
+          processInboundDataPacket(this, data);
+        }
+        catch(Throwable throwable) {
+
+          logger.error(MiscUtil.getPrintableStackTrace(throwable));
+          return;
         }
       }
     }

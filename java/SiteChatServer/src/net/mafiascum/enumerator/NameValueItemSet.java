@@ -3,7 +3,7 @@ package net.mafiascum.enumerator;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
+/** 
  * Utility class that helps associate name value pairs as singular /
  * unique items.  Useful for things like selections in combo-boxes or
  * basic mapping between names, values, and items.  This class manages
