@@ -195,9 +195,9 @@ $lang = array_merge($lang, array(
 	'FORM_INVALID'			=> 'The submitted form was invalid. Try submitting again.',
 	'FORUM'				=> 'Forum',
 	'FORUMS'			=> 'Forums',
-	'FORUMS_MARKED'			=> 'The selected forums have been marked read.',
+	'FORUMS_MARKED'			=> 'The selected forums have been marked as read.',
 	'FORUM_CAT'			=> 'Forum category',
-	'FORUM_INDEX'			=> 'Board index',
+	'FORUM_INDEX'			=> 'Board Index',
 	'FORUM_LINK'			=> 'Forum link',
 	'FORUM_LOCATION'		=> 'Forum location',
 	'FORUM_LOCKED'			=> 'Forum locked',
@@ -583,7 +583,7 @@ $lang = array_merge($lang, array(
 
 	'TERMS_USE'			=> 'Terms of use',
 	'TEST_CONNECTION'		=> 'Test connection',
-	'THE_TEAM'			=> 'The team',
+	'THE_TEAM'			=> 'Administrative team',
 	'TIME'				=> 'Time',
 	
 	'TOO_LARGE'			=> 'The value you entered is too large.',
