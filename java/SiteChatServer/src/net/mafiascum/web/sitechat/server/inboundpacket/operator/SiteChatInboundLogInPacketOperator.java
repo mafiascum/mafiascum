@@ -40,7 +40,7 @@ public class SiteChatInboundLogInPacketOperator implements SiteChatInboundPacket
       siteChatUser.setLastActivityDatetime(new Date());
     }
     
-    logger.debug("Log In Packet. User ID: " + siteChatInboundLogInPacket.getUserId() + ", Session: " + siteChatInboundLogInPacket.getSessionId());
+    logger.trace("Log In Packet. User ID: " + siteChatInboundLogInPacket.getUserId() + ", Session: " + siteChatInboundLogInPacket.getSessionId());
     boolean loginResult = siteChatServer.authenticateUserLogin(siteChatInboundLogInPacket.getUserId(), siteChatInboundLogInPacket.getSessionId());
     
     if(!loginResult) {
@@ -50,7 +50,7 @@ public class SiteChatInboundLogInPacketOperator implements SiteChatInboundPacket
       return;
     }
     
-    logger.debug("Logged In. Last Activity: " + siteChatUser.getLastActivityDatetime());
+    logger.trace("Logged In. Last Activity: " + siteChatUser.getLastActivityDatetime());
     siteChatWebSocket.setSiteChatUser(siteChatUser);
     
     //Reconnect to conversations the user has been removed from.
@@ -94,7 +94,7 @@ public class SiteChatInboundLogInPacketOperator implements SiteChatInboundPacket
         int mostRecentSiteChatConversationMessageId = siteChatInboundLogInPacket.getConversationKeyToMostRecentMessageIdMap().get(siteChatConversationKey);
         SiteChatConversationType siteChatConversationType = SiteChatUtil.getSiteChatConversationTypeBySymbol(symbol);
         
-        logger.info("Conversation " + siteChatConversationKey + ", Last Message ID: " + mostRecentSiteChatConversationMessageId);
+        logger.trace("Conversation " + siteChatConversationKey + ", Last Message ID: " + mostRecentSiteChatConversationMessageId);
         
         if(siteChatConversationType == null) {
           
@@ -104,13 +104,15 @@ public class SiteChatInboundLogInPacketOperator implements SiteChatInboundPacket
         
         List<SiteChatConversationMessage> siteChatConversationMessages = siteChatServer.getMessageHistory(siteChatConversationType, mostRecentSiteChatConversationMessageId, siteChatUser.getId(), uniqueIdentifier);
         
-        if(siteChatConversationMessages == null || siteChatConversationMessages.isEmpty() == true) {
+        synchronized(siteChatConversationMessages) {
+          if(siteChatConversationMessages == null || siteChatConversationMessages.isEmpty() == true) {
           
-          continue;
-        }
-        else {
+            continue;
+          }
+          else {
           
-          missedSiteChatConversationMessages.addAll(siteChatConversationMessages);
+            missedSiteChatConversationMessages.addAll(siteChatConversationMessages);
+          }
         }
       }
     }

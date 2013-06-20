@@ -112,6 +112,7 @@ public class SiteChatServer extends Server implements SignalHandler {
       
       //Service thread.
       serviceThread = new SiteChatServerServiceThread(this);
+      serviceThread.setName("SERVICE-THREAD");
       serviceThread.start();
       
       connector = new ServerConnector(this);
@@ -310,7 +311,7 @@ public class SiteChatServer extends Server implements SignalHandler {
       List<SiteChatConversationMessage> siteChatConversationMessages = null;
       
       synchronized(siteChatPrivateConversationMessageHistoryMap) {
-        siteChatPrivateConversationMessageHistoryMap.get(privateConversationMapKey);
+        siteChatConversationMessages = siteChatPrivateConversationMessageHistoryMap.get(privateConversationMapKey);
       }
       
       if(siteChatConversationMessages == null) {
@@ -380,7 +381,7 @@ public class SiteChatServer extends Server implements SignalHandler {
               
               siteChatConversationMessage = siteChatConversationMessage.clone();
               siteChatConversationMessage.setMessage(StringUtil.escapeHTMLCharacters(siteChatConversationMessage.getMessage()));
-              logger.debug("Adding missed message: " + siteChatConversationMessage.getId());
+              logger.trace("Adding missed message: " + siteChatConversationMessage.getId());
               messageHistoryToSendToUser.add(siteChatConversationMessage);
             }
           }
@@ -731,7 +732,7 @@ public class SiteChatServer extends Server implements SignalHandler {
   private static void usage()
   {
     logger.info("java -cp CLASSPATH " + SiteChatServer.class + " [ OPTIONS ]");
-    logger.info("  -p|--port PORT  (default 8080)");
+    logger.info("  -p|--port PORT  (default 4241)");
     logger.info("  -v|--verbose ");
     logger.info("  -d|--docroot file (default '.')");
     System.exit(1);
@@ -739,14 +740,14 @@ public class SiteChatServer extends Server implements SignalHandler {
   
   public static void main(String... args)
   {
-    try
-    { 
-      int port=8080;
+    try {
+      
+      int port=4241;
       boolean verbose=false;
       String docRoot=".";
       
-      for (int i=0;i<args.length;i++)
-      {
+      for (int i=0;i<args.length;i++) {
+        
         String a=args[i];
         if ("-p".equals(a)||"--port".equals(a))
           port=Integer.parseInt(args[++i]);
