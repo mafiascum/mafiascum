@@ -7,6 +7,8 @@ import java.sql.SQLException;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 
 import net.mafiascum.util.MiscUtil;
@@ -16,7 +18,7 @@ import org.apache.log4j.Logger;
 
 public class ConnectionPool {
 
-  protected Set<ConnectionInvocationHandler> availableConnections;
+  protected List<ConnectionInvocationHandler> availableConnections;
   protected Set<ConnectionInvocationHandler> openConnections;
   protected int totalConnections;
   protected final int maxConnections;
@@ -40,7 +42,7 @@ public class ConnectionPool {
   
   public void setup() {
     
-    availableConnections = new HashSet<ConnectionInvocationHandler>();
+    availableConnections = new LinkedList<ConnectionInvocationHandler>();
     openConnections = new HashSet<ConnectionInvocationHandler>();
     running = true;
     
