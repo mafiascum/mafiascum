@@ -38,7 +38,6 @@ import net.mafiascum.web.sitechat.server.outboundpacket.SiteChatOutboundUserJoin
 import net.mafiascum.web.sitechat.server.outboundpacket.SiteChatOutboundUserListPacket;
 
 import org.apache.log4j.Logger;
-import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.handler.ResourceHandler;
@@ -168,10 +167,10 @@ public class SiteChatServer extends Server implements SignalHandler {
       logger.info("Loading Top Site Chat Conversation Message ID...");
       topSiteChatConversationMessageId = SiteChatUtil.getTopSiteChatConversationMessageId(connection);
       
-      resourceHandler=new ResourceHandler();
-      resourceHandler.setDirectoriesListed(true);
-      resourceHandler.setResourceBase("src/test/webapp");
-      webSocketHandler.setHandler(resourceHandler);
+      //resourceHandler=new ResourceHandler();
+      //resourceHandler.setDirectoriesListed(false);
+      //resourceHandler.setResourceBase("-");
+      //webSocketHandler.setHandler(resourceHandler);
       
       connection.commit();
       connection.close();
@@ -769,7 +768,7 @@ public class SiteChatServer extends Server implements SignalHandler {
       logger.info("Setting Up Site Chat Server.");
       SiteChatServer server = new SiteChatServer(port, provider);
       server.setVerbose(verbose);
-      server.setResourceBase(docRoot);
+      //server.setResourceBase("-");
       logger.info("Starting Site Chat Server.");
       server.start();
       server.join();
