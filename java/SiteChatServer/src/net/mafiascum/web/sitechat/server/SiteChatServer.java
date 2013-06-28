@@ -761,7 +761,7 @@ public class SiteChatServer extends Server implements SignalHandler {
       Provider provider = new Provider();
       provider.setDocRoot(docRoot);
       logger.info("Loading Configuration.");
-      provider.loadConfiguration(docRoot + "/" + "config.txt");
+      provider.loadConfiguration(docRoot + "/" + "ServerConfig.txt");
       logger.info("Setting Up Connection Pool.");
       provider.setupConnectionPool();
       
