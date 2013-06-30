@@ -1260,6 +1260,19 @@ function mcp_fork_topic($topic_ids)
 				FROM ' . TOPICS_WATCH_TABLE . '
 				WHERE topic_id = ' . $topic_id;
 			$result = $db->sql_query($sql);
+			
+			$sql_topic_posters_array = array(
+				'topic_id'			=>	$new_topic_id,
+				'poster_id'			=>	'poster_id',
+				'number_of_posts'	=>	'number_of_posts'
+			);
+			
+			$sql = ' INSERT INTO ' . TOPIC_POSTERS_TABLE . '
+				     SELECT ' . $new_topic_id . ', poster_id, number_of_posts
+				     FROM ' . TOPIC_POSTERS_TABLE . '
+				     WHERE ' . $db->sql_in_set('topic_id', $topic_ids, false, false);
+			
+			$db->sql_query($sql);
 
 			$sql_ary = array();
 			while ($row = $db->sql_fetchrow($result))

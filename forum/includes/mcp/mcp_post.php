@@ -504,7 +504,22 @@ function change_poster(&$post_info, $userdata)
 		sync('topic', 'topic_id', $post_info['topic_id'], false, false);
 		sync('forum', 'forum_id', $post_info['forum_id'], false, false);
 	}
+	
+	include($phpbb_root_path . 'includes/functions_user.' . $phpEx);
 
+	$old_poster_topic_poster_row = get_topic_poster_row($post_info['topic_id'], $post_info['user_id']);
+	$new_poster_topic_poster_row = get_topic_poster_row($post_info['topic_id'], $userdata['user_id']);
+	
+	if($old_poster_topic_poster_row['number_of_posts'] - 1 <= 0)
+		delete_topic_poster_row($old_poster_topic_poster_row['topic_id'], $old_poster_topic_poster_row['poster_id']);
+	else
+		update_topic_poster_row($old_poster_topic_poster_row['topic_id'], $old_poster_topic_poster_row['poster_id'], $old_poster_topic_poster_row['number_of_posts'] - 1);
+		
+	if(!$new_poster_topic_poster_row)
+		create_topic_poster_row($post_info['topic_id'], $userdata['user_id'], 1);
+	else
+		update_topic_poster_row($post_info['topic_id'], $userdata['user_id'], $new_poster_topic_poster_row['number_of_posts'] + 1);
+	
 	// Adjust post counts... only if the post is approved (else, it was not added the users post count anyway)
 	if ($post_info['post_postcount'] && $post_info['post_approved'])
 	{

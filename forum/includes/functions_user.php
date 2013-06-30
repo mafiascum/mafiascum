@@ -3785,4 +3785,56 @@ function remove_newly_registered($user_id, $user_data = false)
 	return $user_data['group_id'];
 }
 
+function get_topic_poster_row($topic_id, $user_id)
+{	 
+	global $db;
+	$sql = " SELECT *
+			 FROM " . TOPIC_POSTERS_TABLE . "
+			 WHERE topic_id = " . (int)$topic_id . "
+			 AND poster_id = " . (int)$user_id;
+	
+	$result = $db->sql_query($sql);
+	$row = $db->sql_fetchrow($result);
+	$db->sql_freeresult();
+	
+	return $row;
+}
+
+function delete_topic_poster_row($topic_id, $user_id)
+{
+	global $db;
+	$sql = " DELETE FROM " . TOPIC_POSTERS_TABLE . "
+			 WHERE poster_id = " . (int)$user_id . "
+			 AND topic_id = " . (int)$topic_id;
+	
+	$db->sql_query($sql);
+}
+
+function update_topic_poster_row($topic_id, $user_id, $number_of_posts)
+{
+	global $db;
+	$sql = " UPDATE " . TOPIC_POSTERS_TABLE . " SET
+			   number_of_posts = " . (int)$number_of_posts . "
+			 WHERE poster_id = " . (int)$user_id . "
+			 AND topic_id = " . (int)$topic_id;
+	
+	$db->sql_query($sql);
+}
+
+function create_topic_poster_row($topic_id, $user_id, $number_of_posts)
+{
+	global $db;
+	
+	$sql_ary = array(
+		"topic_id"			=>	(int)$topic_id,
+		"poster_id"			=>	(int)$user_id,
+		"number_of_posts"	=>	(int)$number_of_posts
+	);
+	
+	$sql = " INSERT INTO " . TOPIC_POSTERS_TABLE . " " . $db->sql_build_array('INSERT', $sql_ary);
+	
+	$db->sql_query($sql);
+}
+
+
 ?>

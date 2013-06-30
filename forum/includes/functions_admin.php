@@ -556,7 +556,8 @@ function move_topics($topic_ids, $forum_id, $auto_sync = true)
 */
 function move_posts($post_ids, $topic_id, $auto_sync = true)
 {
-	global $db;
+	global $db, $phpEx;
+	include($phpbb_root_path . 'includes/functions_user.' . $phpEx);
 
 	if (!is_array($post_ids))
 	{
@@ -565,7 +566,7 @@ function move_posts($post_ids, $topic_id, $auto_sync = true)
 
 	$forum_ids = array();
 	$topic_ids = array($topic_id);
-
+	
 	$sql = 'SELECT DISTINCT topic_id, forum_id
 		FROM ' . POSTS_TABLE . '
 		WHERE ' . $db->sql_in_set('post_id', $post_ids);
@@ -577,7 +578,35 @@ function move_posts($post_ids, $topic_id, $auto_sync = true)
 		$topic_ids[] = (int) $row['topic_id'];
 	}
 	$db->sql_freeresult($result);
-
+	
+	$sql = " SELECT topic_id, poster_id, COUNT(*) AS number_of_posts
+			 FROM " . POSTS_TABLE . "
+			 WHERE " . $db->sql_in_set("post_id", $post_ids) . "
+			 GROUP BY topic_id, poster_id";
+	
+	$result = $db->sql_query($sql);
+	while( $row = $db->sql_fetchrow($result) )
+	{
+		$old_topic_poster_row = get_topic_poster_row($row['topic_id'], $row['poster_id']);
+		
+		if($old_topic_poster_row)
+		{
+			if($old_topic_poster_row['number_of_posts'] - $row['number_of_posts'] <= 0)
+				delete_topic_poster_row($row['topic_id'], $row['poster_id']);
+			else
+				update_topic_poster_row($row['topic_id'], $row['poster_id'], $old_topic_poster_row['number_of_posts'] - $row['number_of_posts']);
+		}
+			
+		$new_topic_poster_row = get_topic_poster_row($topic_id, $row['poster_id']);
+		
+		if(!$new_topic_poster_row)
+			create_topic_poster_row($topic_id, $row['poster_id'], $row['number_of_posts']);
+		else
+			update_topic_poster_row($topic_id, $row['poster_id'], $new_topic_poster_row['number_of_posts'] + $row['number_of_posts']);
+	}
+	
+	$db->sql_freeresult($result);
+	
 	$sql = 'SELECT forum_id
 		FROM ' . TOPICS_TABLE . '
 		WHERE topic_id = ' . $topic_id;
@@ -609,7 +638,7 @@ function move_posts($post_ids, $topic_id, $auto_sync = true)
 		sync('topic', 'topic_id', $topic_ids, true);
 		sync('forum', 'forum_id', $forum_ids, true, true);
 	}
-
+	
 	// Update posted information
 	update_posted_info($topic_ids);
 }
@@ -766,7 +795,7 @@ function delete_posts($where_type, $where_ids, $auto_sync = true, $posted_sync =
 	}
 
 	$approved_posts = 0;
-	$post_ids = $topic_ids = $forum_ids = $post_counts = $remove_topics = array();
+	$post_ids = $topic_ids = $forum_ids = $post_counts = $remove_topics = $users_per_topic = array();
 
 	$sql = 'SELECT post_id, poster_id, post_approved, post_postcount, topic_id, forum_id
 		FROM ' . POSTS_TABLE . '
@@ -784,14 +813,34 @@ function delete_posts($where_type, $where_ids, $auto_sync = true, $posted_sync =
 		{
 			$post_counts[$row['poster_id']] = (!empty($post_counts[$row['poster_id']])) ? $post_counts[$row['poster_id']] + 1 : 1;
 		}
-
+		
+		if(!isset($users_per_topic[ $row['topic_id'] ]))
+			$users_per_topic[ $row['topic_id'] ] = array();
+		
+		if(!isset($users_per_topic[ $row['topic_id'] ][ $row['poster_id'] ]))
+			$users_per_topic[ $row['topic_id'] ][ $row['poster_id'] ] = 1;
+		else
+			$users_per_topic[ $row['topic_id'] ][ $row['poster_id'] ] += 1;
+		
 		if ($row['post_approved'])
 		{
 			$approved_posts++;
 		}
 	}
 	$db->sql_freeresult($result);
-
+	
+	foreach($users_per_topic as $topic_id => $posts_per_user_in_topic)
+	{
+		foreach($posts_per_user_in_topic as $user_id => $number_of_posts)
+		{
+			$sql = " UPDATE " . TOPIC_POSTERS_TABLE . " SET
+					   number_of_posts = number_of_posts - " . (int)$number_of_posts . "
+					 WHERE topic_id = " . (int)$topic_id . "
+					 AND poster_id = " . (int)$user_id;
+			$db->sql_query($sql);
+		}
+	}
+	
 	if (!sizeof($post_ids))
 	{
 		return false;

@@ -1863,6 +1863,7 @@ function submit_post($mode, $subject, $username, $topic_type, &$poll, &$data, $u
 				}
 				$sql_data[FORUMS_TABLE]['stat'][] = 'forum_topics_real = forum_topics_real + 1' . ((($post_approval) && ($topic_privacy)) ? ', forum_topics = forum_topics + 1' : '');
 			}
+			
 		break;
 
 		case 'reply':
@@ -1879,6 +1880,13 @@ function submit_post($mode, $subject, $username, $topic_type, &$poll, &$data, $u
 			{
 				$sql_data[FORUMS_TABLE]['stat'][] = 'forum_posts = forum_posts + 1';
 			}
+			
+			$topic_poster_row = get_topic_poster_row($data['topic_id'], $data['poster_id']);
+			
+			if(!$topic_poster_row)
+				create_topic_poster_row($data['topic_id'], $data['poster_id'], 1);
+			else
+				update_topic_poster_row($data['topic_id'], $data['poster_id'], $topic_poster_row['number_of_posts'] + 1);
 		break;
 
 		case 'edit_topic':
@@ -2000,6 +2008,9 @@ function submit_post($mode, $subject, $username, $topic_type, &$poll, &$data, $u
 			$db->sql_query($sql);
 		}
 		unset($sql_data[TOPICS_TABLE]['sql']);
+		
+		//Insert topic posters entry for nwe thread.
+		create_topic_poster_row($data['topic_id'], $data['poster_id'], 1);
 	}
 
 	// Submit new post
