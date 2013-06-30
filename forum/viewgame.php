@@ -18,11 +18,11 @@ include($phpbb_root_path . 'common.' . $phpEx);
 include($phpbb_root_path . 'includes/functions_display.' . $phpEx);
 include($phpbb_root_path . 'includes/functions_mafia_games.' . $phpEx);
 
-// Start session
+// Start session.
 $user->session_begin();
 $auth->acl($user->data);
 
-// Start initial var setup
+// Start initial var setup.
 $gameId = request_var('g', 0);
 $action = request_var('action', '');
 
