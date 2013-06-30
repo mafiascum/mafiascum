@@ -890,12 +890,12 @@ $template->assign_vars(array(
 );
 
 //----[ User Post Isolation ]----\\
-$sql = 'SELECT DISTINCT p.poster_id AS poster_id, u.username AS username
-	FROM ' . POSTS_TABLE . ' p, ' . USERS_TABLE . ' u
-	WHERE p.topic_id = ' . $topic_data['topic_id'] . '
-	AND p.poster_id = u.user_id' . 
-	(($auth->acl_get('m_approve', $forum_id)) ? '' : ' AND p.post_approved = 1') .
-	' ORDER BY u.username_clean';
+$sql = ' SELECT topic_posters.poster_id, phpbb_users.username
+		 FROM ' . TOPIC_POSTERS_TABLE . ' topic_posters, ' . USERS_TABLE . ' phpbb_users
+		 WHERE topic_posters.topic_id = ' . $topic_data['topic_id'] . '
+		 AND topic_posters.poster_id = phpbb_users.user_id
+		 AND topic_posters.number_of_posts > 0
+		 ORDER BY phpbb_users.username_clean';
 $result = $db->sql_query($sql);
 $user_ary = array();
 
