@@ -75,7 +75,7 @@ public class SiteChatInboundSendMessagePacketOperator implements SiteChatInbound
      siteChatInboundSendMessagePacket.setMessage(siteChatInboundSendMessagePacket.getMessage().substring(0, SiteChatUtil.MAX_SITE_CHAT_CONVERSATION_MESSAGE_LENGTH));
     }
     
-    SiteChatConversationMessage siteChatConversationMessage = siteChatServer.recordSiteChatConversationMessage(siteChatInboundSendMessagePacket.getUserId(), siteChatInboundSendMessagePacket.getSiteChatConversationId(), siteChatInboundSendMessagePacket.getRecipientUserId(), siteChatInboundSendMessagePacket.getMessage());
+    SiteChatConversationMessage siteChatConversationMessage = siteChatServer.recordSiteChatConversationMessage(siteChatUser.getId(), siteChatInboundSendMessagePacket.getSiteChatConversationId(), siteChatInboundSendMessagePacket.getRecipientUserId(), siteChatInboundSendMessagePacket.getMessage());
     siteChatConversationMessage = siteChatConversationMessage.clone();
     siteChatConversationMessage.setMessage(StringUtil.escapeHTMLCharacters(siteChatConversationMessage.getMessage()));
     
