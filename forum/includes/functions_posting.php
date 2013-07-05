@@ -1639,8 +1639,6 @@ function submit_post($mode, $subject, $username, $topic_type, &$poll, &$data, $u
 {
 	global $db, $auth, $user, $config, $phpEx, $template, $phpbb_root_path;
 
-
-
 	// We do not handle erasing posts here
 	if ($mode == 'delete')
 	{
@@ -1867,6 +1865,7 @@ function submit_post($mode, $subject, $username, $topic_type, &$poll, &$data, $u
 		break;
 
 		case 'reply':
+
 			$sql_data[TOPICS_TABLE]['stat'][] = 'topic_last_view_time = ' . $current_time . ',
 				topic_replies_real = topic_replies_real + 1,
 				topic_bumped = 0,
@@ -1881,12 +1880,14 @@ function submit_post($mode, $subject, $username, $topic_type, &$poll, &$data, $u
 				$sql_data[FORUMS_TABLE]['stat'][] = 'forum_posts = forum_posts + 1';
 			}
 			
-			$topic_poster_row = get_topic_poster_row($data['topic_id'], $data['poster_id']);
-			
+			$topic_poster_row = get_topic_poster_row($data['topic_id'], $poster_id);
+
+//echo("Poster ID: $poster_id, Topic ID: " . $data['topic_id'] . ", Number Of Posts: " . $topic_poster_row['number_of_posts']);
+
 			if(!$topic_poster_row)
-				create_topic_poster_row($data['topic_id'], $data['poster_id'], 1);
+				create_topic_poster_row($data['topic_id'], $poster_id, 1);
 			else
-				update_topic_poster_row($data['topic_id'], $data['poster_id'], $topic_poster_row['number_of_posts'] + 1);
+				update_topic_poster_row($data['topic_id'], $poster_id, $topic_poster_row['number_of_posts'] + 1);
 		break;
 
 		case 'edit_topic':
@@ -2010,7 +2011,7 @@ function submit_post($mode, $subject, $username, $topic_type, &$poll, &$data, $u
 		unset($sql_data[TOPICS_TABLE]['sql']);
 		
 		//Insert topic posters entry for nwe thread.
-		create_topic_poster_row($data['topic_id'], $data['poster_id'], 1);
+		create_topic_poster_row($data['topic_id'], $poster_id, 1);
 	}
 
 	// Submit new post
