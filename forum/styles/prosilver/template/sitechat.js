@@ -41,7 +41,7 @@ function Client()
 	this.userId = null;
 	this.sessionId = null;
 	this.pendingMessages = [];
-	this.rooms = [];
+	this.rooms = new Object();
 	this.selectedTab = 0;
 	this.tabs = [];
 	this.namespace = "ms_sc2_";//Prepended to all local storage variables.
@@ -142,7 +142,7 @@ function Client()
 					conversationId = parseInt(key);//Support old format.
 
 				var conversation = JSON.parse(localStorage[client.namespace + "conversation" + key]);
-				client.createChatWindow(conversationId, recipientUserId, conversation.title, conversation.userIdSet, conversation.expanded, conversation.messages, false, conversation.blinking, conversation.width, conversation.height);
+				client.createChatWindow(conversationId, recipientUserId, conversation.createdByUserId, conversation.title, conversation.userIdSet, conversation.expanded, conversation.messages, false, conversation.blinking, conversation.width, conversation.height);
 
 			}
 		}
@@ -176,19 +176,17 @@ function Client()
 		
 		var recipientUserId = parseInt($(this).data("user-id"));
 		if(client.chatWindows["P" + recipientUserId] == undefined)
-			client.createChatWindow(null, recipientUserId, $(this).data("username"), [], true, [], true, null, null);
+			client.createChatWindow(null, recipientUserId, null, $(this).data("username"), [], true, [], true, null, null);
 	}
+
 	
 	this.handleWindowTitleClick = function(event)
 	{
 		event.preventDefault();
 		event.stopPropagation();
 		var $window = $(this).closest(".chatWindow");
-		var siteChatConversationId = $window.data("conversation-id");
-		var recipientUserId = $window.data("recipient-user-id");
-		var windowKey = siteChatConversationId != null ? ("C" + siteChatConversationId) : ("P" + recipientUserId);
-		var siteChatConversation = client.chatWindows[ windowKey ];
 		var $title = $window.find(".title");
+		var siteChatConversation = client.chatWindows[ client.getWindowMapKeyFromDomObject($window) ];
 		
 		if (siteChatConversation != null && siteChatConversation.blinking == true)
 			siteChatConversation.blinking = false;
@@ -208,8 +206,8 @@ function Client()
 			$window.removeClass("collapsed").addClass("expanded").show();
 			if(siteChatConversation){
 				siteChatConversation.expanded = true;
-				var outputbuffer = $("#chat" + windowKey + " .outputBuffer");
-				outputbuffer.scrollTop(outputbuffer[0].scrollHeight);
+				var $outputBuffer = $window.find(".outputBuffer");
+				$outputBuffer.scrollTop($outputBuffer[0].scrollHeight);
 			}
 			else
 				sessionStorage[client.namespace + "utilityExpanded"] = true;
@@ -239,7 +237,7 @@ function Client()
 				command:"LeaveConversation",
 				siteChatConversationId:conversationId
 			};
-			client.sendSiteChatPacket(siteChatPacket);
+			client.sendPacket(siteChatPacket);
 		}
 
 		//Remove window from DOM
@@ -263,19 +261,16 @@ function Client()
 		if(event.which == 10 || event.which == 13)
 		{
 			event.preventDefault();
-
-			var $window = $(this).closest(".chatWindow");
-			var content = $(this).val();
-			var chatWindowId = $window.attr("id");
-			var conversationId = $window.data("conversation-id");
-			var recipientUserId = $window.data("recipient-user-id");
+			var $this = $(this);
+			var content = $this.val();
 
 			if(content.length > 0)
 			{
-				client.submitChatMessage(content, chatWindowId, conversationId, recipientUserId);
+				var $window = $this.closest(".chatWindow");
+				client.submitChatMessage(content, $window.attr("id"), $window.data("conversation-id"), $window.data("recipient-user-id"));
 			}
 
-			$(this).val("");
+			$this.val("");
 		}
 	}
 
@@ -309,12 +304,11 @@ function Client()
 			var siteChatPacket =
 			{
 				command:"SendMessage",
-				userId:client.userId,
 				message:messageContent.substr(offset, client.MAX_MESSAGE_LENGTH),
 				siteChatConversationId:conversationId == null ? null : parseInt(conversationId),
 				recipientUserId:recipientUserId == null ? null : parseInt(recipientUserId)
 			};
-			this.sendSiteChatPacket(siteChatPacket);
+			this.sendPacket(siteChatPacket);
 			offset += client.MAX_MESSAGE_LENGTH;
 		}
 	}
@@ -348,7 +342,7 @@ function Client()
 		}
 		
 		client.attemptingLogin = true;
-		client.sendSiteChatPacket(siteChatPacket);
+		client.sendPacket(siteChatPacket);
 	}
 	
 	this.handleSocketClose = function()
@@ -367,7 +361,7 @@ function Client()
 		client.attemptingLogin = false;
 	}
 
-	this.createChatWindow = function(conversationId, recipientUserId, title, userIdSet, expanded, messages, save, blinking, width, height)
+	this.createChatWindow = function(conversationId, recipientUserId, createdByUserId, title, userIdSet, expanded, messages, save, blinking, width, height)
 
 	{
 		var chatWindowIdPrefix = (conversationId != null ? "C" : "P");
@@ -376,11 +370,12 @@ function Client()
 			(
 				'<div class="chatWindow conversation expanded" id="chat' + chatWindowIdPrefix + chatWindowUniqueIdentifier + '">'
 			+	'	<div class="chatWindowOuter">'
-			+	'	<div class="chatWindowInner">'
-			+	'		<div class="title"><div class="name">' + title + '</div><div class="close">X</div></div>'
-			+	'		<div class="outputBuffer"></div>'
-			+	'		<textarea class="inputBuffer" name="input" style="height:20px;"></textarea>'
-			+	'	</div>'
+			+	'		<div class="chatWindowInner">'
+			+	'			<div class="title"><div class="name">' + title + '</div><div class="options"></div><div class="close">X</div></div>'
+			+	'			<div class="menu"><ul></ul></div>'
+			+	'			<div class="outputBuffer"></div>'
+			+	'			<textarea class="inputBuffer" name="input" style="height:20px;"></textarea>'
+			+	'		</div>'
 			+	'	</div>'
 			+	'</div>'
 			);
@@ -406,6 +401,7 @@ function Client()
 		var chatWindow = new ChatWindow();
 		chatWindow.siteChatConversationId = conversationId;
 		chatWindow.recipientUserId = recipientUserId;
+		chatWindow.createdByUserId = createdByUserId;
 		chatWindow.userIdSet = [];
 		chatWindow.title = title;
 		chatWindow.messages = [];
@@ -424,6 +420,9 @@ function Client()
 		else
 			$chatWindow.addClass("collapsed").removeClass("expanded");
 
+		if(client.userId != createdByUserId)
+			$title.find(".options").addClass("hidden");
+
 		client.chatWindows[chatWindowIdPrefix + chatWindowUniqueIdentifier] = chatWindow;
 		if(messages && messages.length > 0)
 		{
@@ -441,8 +440,8 @@ function Client()
 		if(save)
 			$inputBuffer.focus();
 		else
-			$outputBuffer.scrollTop($outputBuffer.scrollHeight);
-		
+			$outputBuffer.scrollTop($outputBuffer.scrollHeight);		
+
 		if(save)
 		{
 			client.saveChatWindow(chatWindow);
@@ -468,6 +467,13 @@ function Client()
 	{
 		return chatWindow.recipientUserId != null ? ("P" + chatWindow.recipientUserId) : ("C" + chatWindow.siteChatConversationId);
 	}
+
+	this.getWindowMapKeyFromDomObject = function($window)
+	{
+		var conversationId = $window.data("conversation-id");
+		var recipientUserId = $window.data("recipient-user-id");
+		return conversationId != null ? ("C" + conversationId) : ("P" + recipientUserId);
+	}
 	
 	this.addSiteChatConversationMessage = function(siteChatConversationMessage, save, isNew)
 	{
@@ -477,7 +483,7 @@ function Client()
 		
 		if(!client.chatWindows[messageKey] && siteChatConversationMessage.recipientUserId != null)
 		{//If this is a private conversation & the window has not yet been created, we should have enough information to make it ourselves.
-			client.createChatWindow(null, siteChatUser.id, siteChatUser.name, [siteChatUser.id], true, [], true, null, null);
+			client.createChatWindow(null, siteChatUser.id, null, siteChatUser.name, [siteChatUser.id], true, [], true, null, null);
 		}
 		var chatWindow = client.chatWindows[ messageKey ];
 		
@@ -636,8 +642,10 @@ function Client()
 					client.addUser(siteChatUser, true);
 				}
 				//Setting recipientUserId to null because I do not believe we will be "connecting" to private conversations.
-				client.createChatWindow(siteChatPacket.siteChatConversationId, null, siteChatPacket.titleText, siteChatUserIdSet, true, [], true, false, null, null);
+				client.createChatWindow(siteChatPacket.siteChatConversationId, null, siteChatPacket.createdByUserId, siteChatPacket.titleText, siteChatUserIdSet, true, [], true, false, null, null);
 			}
+
+			$.fancybox.close();
 		}
 		else if(siteChatPacket.command == "NewMessage")
 		{
@@ -661,7 +669,7 @@ function Client()
 						lookupUserPacket.command = "LookupUser";
 						lookupUserPacket.userId = message.userId;
 
-						client.sendSiteChatPacket(lookupUserPacket);
+						client.sendPacket(lookupUserPacket);
 					}
 				}
 				else
@@ -723,32 +731,68 @@ function Client()
 			}
 			$("#roomstab").html("");
 			var oldrooms = client.rooms;
-			client.rooms = [];
-			for(var i = 0;i < siteChatPacket.siteChatConversations.length;i++)
+			client.rooms = new Object();
+
+			var newRoomListLength = siteChatPacket.siteChatConversations.length;
+			for(var i = 0;i < newRoomListLength;++i)
 			{
-				if(oldrooms[siteChatPacket.siteChatConversations[i].siteChatConversation.id] != null){
-					var room = new Object();
-					room.expanded = oldrooms[siteChatPacket.siteChatConversations[i].siteChatConversation.id].expanded;
-					room.userIdSet = siteChatPacket.siteChatConversations[i].userIdSet;
-					room.name = siteChatPacket.siteChatConversations[i].siteChatConversation.name;
-					room.id = siteChatPacket.siteChatConversations[i].siteChatConversation.id;
-					client.rooms[siteChatPacket.siteChatConversations[i].siteChatConversation.id] = room;
-				} else {
-					var room = new Object();
-					room.expanded = true;
-					room.userIdSet = siteChatPacket.siteChatConversations[i].userIdSet;
-					room.name = siteChatPacket.siteChatConversations[i].siteChatConversation.name;
-					room.id = siteChatPacket.siteChatConversations[i].siteChatConversation.id;
-					client.rooms[siteChatPacket.siteChatConversations[i].siteChatConversation.id] = room;
-					
-				}
+				var conversationFromPacket = siteChatPacket.siteChatConversations[i];
+				var room = (oldrooms[conversationFromPacket.id] != null ? oldrooms[conversationFromPacket.id] : new Object());
+				if(room.expanded == null)
+					room.expanded = false;
+				
+				room.userIdSet = conversationFromPacket.userIdSet;
+				room.name = conversationFromPacket.name;
+				room.id = conversationFromPacket.id;
+				room.createdByUserId = conversationFromPacket.createdByUserId;
+				client.rooms[room.id] = room;
 			}
 			client.generateRooms(true);
+		}
+		else if(siteChatPacket.command == "PasswordRequired")
+		{
+			var conversationName = siteChatPacket.conversationName;
+			var $lightbox = $("#siteChatPasswordLightbox");
+			var $ul = $lightbox.find("ul");
+
+			$lightbox.find(".conversationName").text(conversationName);
+			$lightbox.find("input[name='ConversationName']").val(conversationName);
+
+			var $password = $lightbox.find("input[name='Password']");
+			$password.val("");
+			$ul.html("");
+
+			$.fancybox.open("#siteChatPasswordLightbox");
+			$password.focus();
+		}
+		else if(siteChatPacket.command == "IncorrectPassword")
+		{
+			var $ul = $("#siteChatPasswordLightbox ul");
+			var $li = $("<li></li>");
+
+			$li.text("The password you entered is incorrect.");
+
+			$ul.html("");
+			$ul.append($li);
+		}
+		else if(siteChatPacket.command == "SetPassword")
+		{
+			if(siteChatPacket.errorMessage)
+			{
+				var $li = $("<li></li>");
+				var $ul = $("#siteChatSetPasswordLightbox").find("ul");
+				
+				$li.text(siteChatPacket.errorMessage);
+				$ul.html("");
+				$ul.append($li);
+			}
+			else
+				$.fancybox.close();
 		}
 	}
 	this.generateRooms = function (save){
 		if (client.rooms){
-					for (var room =0; room < client.rooms.length; room++){
+					for (var room in client.rooms) {
 						if (client.rooms[room] !== undefined && client.rooms[room] !== null){
 							$("#roomstab").append('<div id="chatroom' + client.rooms[room].id + '"><div class="roomtitle"><span class="expand-icon">' + (client.rooms[room].expanded ? '-' : "+") + '</span>' + client.rooms[room].name + '<span class="usercount">(' + client.rooms[room].userIdSet.length + ')</span></div><div class="userlist"' + (client.rooms[room].expanded ? '' : "style='display:none;'") + '></div></div>');
 							var identifier = '#chatroom' + client.rooms[room].id + ' .userlist';
@@ -772,7 +816,7 @@ function Client()
 			localStorage[client.namespace + "userIdSet"] = JSON.stringify(client.getUserIdSet());
 		}
 	}
-	this.sendSiteChatPacket = function(packetObject)
+	this.sendPacket = function(packetObject)
 	{
 		if(client.socket.connected)
 			client.socket.send(JSON.stringify(packetObject));
@@ -904,7 +948,7 @@ function Client()
 		siteChatPacket.isAlive = "true";
 		
 		if(client.socket.connected)
-			client.sendSiteChatPacket(siteChatPacket);
+			client.sendPacket(siteChatPacket);
 	}
 	this.blink = function(){
 		for(var converstionKey in client.chatWindows) {
@@ -957,7 +1001,37 @@ function Client()
 			$(this).val("");
 		});
 		
-		
+		$(document).on("click", "#chatPanel .chatWindow .title .options", function(e) {
+
+			e.preventDefault();
+			e.stopPropagation();
+			var $menu = $(this).closest(".chatWindow").find("div.menu");
+			var $ul = $menu.find("ul");
+
+			$menu.toggleClass("expanded");
+			
+			$ul.html("").append("<li><a href='#' class='siteChatChangePasswordAnchor'>Change Password</a></li>");
+		});
+		$(document).on("click", "a.siteChatChangePasswordAnchor", function(e) {
+
+			e.preventDefault();
+			e.stopPropagation();
+			var $window = $(this).closest(".chatWindow");
+			var conversation = client.chatWindows[ client.getWindowMapKeyFromDomObject($window) ];
+
+			var $lightbox = $("#siteChatSetPasswordLightbox");
+			var $password = $lightbox.find("input[name='Password']");
+
+			$lightbox.find(".conversationName").text(client.unescapeHTMLEntities(conversation.title));
+			$password.val("");
+			$lightbox.find("input[name='ConversationID']").val(conversation.siteChatConversationId);
+
+			$window.find(".menu").removeClass("expanded");
+
+			$.fancybox.open("#siteChatSetPasswordLightbox");
+
+			$password.focus();
+		});
 		$(document).on("click", "#chatPanel .chatWindow .title", client.handleWindowTitleClick);
 		$(document).on("click", "#chatPanel .chatWindow .title .close", client.handleWindowCloseButtonClick);
 		$(document).on("keypress", "#chatPanel .chatWindow .inputBuffer", client.handleWindowInputSubmission);
@@ -1074,6 +1148,32 @@ function Client()
 			if(!client.isInChatRoom(roomName))
 				client.sendConnectMessage(roomName);
 		});
+
+		$(document).on("submit", "#siteChatPasswordForm", function(e) {
+
+			e.preventDefault();
+			var $form = $(this);
+
+			var password = $form.find("input[name='Password']").val();
+			var conversationName = $form.find("input[name='ConversationName']").val();
+
+			client.sendConnectMessage(conversationName, password);
+		});
+		$(document).on("submit", "#siteChatSetPasswordForm", function(e) {
+			e.preventDefault();
+			var $form = $(this);
+			var password = $form.find("input[name='Password']").val();
+			var conversationId = parseInt($form.find("input[name='ConversationID']").val());
+
+			var packet =
+			{
+				command:"SetPassword",
+				conversationId:conversationId,
+				password:password
+			};
+
+			client.sendPacket(packet);
+		});
 		
 		client.setupWebSocket();
 
@@ -1083,11 +1183,26 @@ function Client()
 		client.populateUtilityWindow();
 		setInterval('client.blink()', 700);
 		setInterval('client.heartbeat()', 150000);
+
+		client.createPasswordLightbox();
+	}
+
+	this.createPasswordLightbox = function() {
+
+		if($("#siteChatPasswordLightbox").length == 0) {
+
+			$("body").append("<div style='display:none;'><div id='siteChatPasswordLightbox' class='siteChatLightbox'><ul></ul>The room `<span class='conversationName'></span>` requires a password.<br/><br/><form id='siteChatPasswordForm'>Password: <input type='password' name='Password' /> <input type='hidden' name='ConversationName' /> <button type='submit' class='button1'>Join Room</button></form></div</div>");
+		}
+
+		if($("#siteChatSetPasswordLightbox").length == 0) {
+
+			$("body").append("<div style='display:none;'><div id='siteChatSetPasswordLightbox' class='siteChatLightbox'><ul></ul>Set password for the room `<span class='conversationName'></span>`.<br/><br/><form id='siteChatSetPasswordForm'>New Password: <input type='password' name='Password' /> <input type='hidden' name='ConversationID' /> <button type='submit' class='button1'>Set Password</button></form></div</div>");
+		}
 	}
 	
-	this.sendConnectMessage = function(conversationName)
+	this.sendConnectMessage = function(conversationName, password)
 	{
-		client.sendSiteChatPacket({command: "Connect", siteChatConversationName: conversationName});
+		client.sendPacket({command: "Connect", siteChatConversationName: conversationName, password: password});
 	}
 	
 	this.setupWebSocket = function()

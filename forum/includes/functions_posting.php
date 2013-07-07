@@ -1882,8 +1882,6 @@ function submit_post($mode, $subject, $username, $topic_type, &$poll, &$data, $u
 			
 			$topic_poster_row = get_topic_poster_row($data['topic_id'], $poster_id);
 
-//echo("Poster ID: $poster_id, Topic ID: " . $data['topic_id'] . ", Number Of Posts: " . $topic_poster_row['number_of_posts']);
-
 			if(!$topic_poster_row)
 				create_topic_poster_row($data['topic_id'], $poster_id, 1);
 			else

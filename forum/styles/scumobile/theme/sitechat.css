@@ -97,7 +97,7 @@
 
 .chatWindow.expanded .title .name
 {
-	width: 290px;
+	width: 260px;
 }
 
 .chatWindow .title .close
@@ -108,6 +108,92 @@
 	float: right;
 	font-weight: bold;
 	font-size: 18px;
+}
+
+.chatWindow .title .options
+{
+	display: inline-block;
+	float: right;
+	height: 0px;
+	width: 0px;
+	border: 10px solid transparent;
+	border-top: 10px solid #6AA7CC;
+	border-bottom: none;
+}
+
+.chatWindow .title .options:hover
+{
+	border-top-color: red;
+}
+
+.chatWindow .menu
+{
+	display: none;
+}
+
+.chatWindow.collapsed .menu
+{
+	display: none !important;
+}
+
+.chatWindow .menu.expanded
+{
+	position: absolute;
+	display: block;
+	right: 0;
+	top: 28px;
+	width: 175px;
+}
+.chatWindow .menu.expanded ul
+{
+	margin: 0;
+	padding: 0;
+	font-weight: bold;
+	font-size: 12px;
+}
+.chatWindow .menu.expanded ul li
+{
+	float: left;
+	width: 100%;
+	list-style: none;
+	border: 1px solid #333;
+	border-bottom: none;
+	background-color: #DDD;
+
+	-webkit-transition: all 0.15s linear;
+	-o-transition: all 0.15s linear;
+	-moz-transition: all 0.15s linear;
+	transition: all 0.15s linear;
+}
+
+.chatWindow .menu.expanded ul li:last-child
+{
+	border-bottom: 1px solid #333;
+}
+
+.chatWindow .menu.expanded ul li:hover
+{
+	background-color: #AAA;
+	border-color: #BA5292;
+}
+
+.chatWindow .menu.expanded ul li:hover + li
+{
+	border-top-color: #BA5292;
+}
+
+.chatWindow .menu.expanded ul li a
+{
+	padding: 5px;
+	float: left;
+	width: 100%;
+	color: #000;
+	text-decoration: none;
+}
+
+.chatWindow.collapsed .title .options
+{
+	display: none;
 }
 
 .chatWindow.collapsed .title:hover .close
@@ -477,3 +563,37 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#fafafa', end
 	margin-left: 10px;
 	color: white;
 }
+
+.siteChatLightbox
+{
+	width: 350px;
+	font-size: 14px;
+}
+
+.siteChatLightbox input
+{
+	width: 100px;
+	height: 16px;
+	cursor: text;
+}
+
+.siteChatLightbox button
+{
+	padding: 0px 5px 0px 5px;
+	font-weight: bold;
+	cursor: pointer;
+}
+
+.siteChatLightbox ul
+{
+	color: #E02424;
+	font-weight: 0;
+	margin: 0;
+	padding: 0;
+}
+
+.hidden
+{
+	display: none !important;
+}
+
