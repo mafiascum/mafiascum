@@ -10,6 +10,7 @@ public class SiteChatOutboundConnectPacket extends SiteChatOutboundPacket {
   protected int siteChatConversationId;
   protected String titleText;
   protected Set<SiteChatUser> users;
+  protected int createdByUserId;
   
   public SiteChatOutboundConnectPacket() {
     
@@ -53,5 +54,13 @@ public class SiteChatOutboundConnectPacket extends SiteChatOutboundPacket {
   
   public void setUsers(Set<SiteChatUser> users) {
     this.users = users;
+  }
+  
+  public int getCreatedByUserId() {
+    return createdByUserId;
+  }
+  
+  public void setCreatedByUserId(int createdByUserId) {
+    this.createdByUserId = createdByUserId;
   }
 }

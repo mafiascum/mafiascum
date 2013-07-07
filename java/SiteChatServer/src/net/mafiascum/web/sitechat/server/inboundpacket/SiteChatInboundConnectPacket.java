@@ -3,6 +3,7 @@ package net.mafiascum.web.sitechat.server.inboundpacket;
 public class SiteChatInboundConnectPacket extends SiteChatInboundPacket {
 
   protected String siteChatConversationName;
+  protected String password;
   
   public SiteChatInboundPacketType getType() {
     
@@ -15,5 +16,13 @@ public class SiteChatInboundConnectPacket extends SiteChatInboundPacket {
 
   public void setSiteChatConversationName(String siteChatConversationName) {
     this.siteChatConversationName = siteChatConversationName;
-  } 
+  }
+  
+  public String getPassword() {
+    return password;
+  }
+  
+  public void setPassword(String password) {
+    this.password = password;
+  }
 }

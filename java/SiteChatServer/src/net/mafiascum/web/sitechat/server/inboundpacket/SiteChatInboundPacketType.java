@@ -26,7 +26,8 @@ public enum SiteChatInboundPacketType implements VEnum {
   sendMessage(2, "SendMessage"),
   leaveConversation(3, "LeaveConversation"),
   lookupUser(4, "LookupUser"),
-  heartbeat(5, "Heartbeat");
+  heartbeat(5, "Heartbeat"),
+  setPassword(6, "SetPassword");
   
 
   private String standardName;

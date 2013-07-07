@@ -7,6 +7,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.codec.digest.DigestUtils;
+
 public abstract class StringUtil {
 
 
@@ -675,5 +677,10 @@ public abstract class StringUtil {
     }
     
     return values;
+  }
+  
+  public static String getSHA1(String str) {
+    
+    return DigestUtils.sha1Hex(str);
   }
 }

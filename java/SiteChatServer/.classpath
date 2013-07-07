@@ -34,5 +34,6 @@
 	<classpathentry kind="lib" path="lib/websocket-common-9.0.3.v20130506.jar"/>
 	<classpathentry kind="lib" path="lib/websocket-server-9.0.3.v20130506.jar"/>
 	<classpathentry kind="lib" path="lib/websocket-servlet-9.0.3.v20130506.jar"/>
+	<classpathentry kind="lib" path="lib/commons-codec-1.8.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

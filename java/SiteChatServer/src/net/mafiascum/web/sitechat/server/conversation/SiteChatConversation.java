@@ -9,6 +9,7 @@ public class SiteChatConversation extends DataObjectWithIntId {
   protected Date createdDatetime;
   protected int createdByUserId;
   protected String name;
+  protected String password;
   
   public SiteChatConversation() {
     
@@ -37,5 +38,13 @@ public class SiteChatConversation extends DataObjectWithIntId {
 
   public void setName(String name) {
     this.name = name;
+  }
+  
+  public String getPassword() {
+    return password;
+  }
+  
+  public void setPassword(String password) {
+    this.password = password;
   }
 }

@@ -26,6 +26,7 @@ public class SiteChatInboundLogInPacketOperator implements SiteChatInboundPacket
   public void process(SiteChatServer siteChatServer, SiteChatWebSocket siteChatWebSocket, String siteChatInboundPacketJson) throws Exception {
     
     SiteChatInboundLogInPacket siteChatInboundLogInPacket = new Gson().fromJson(siteChatInboundPacketJson, SiteChatInboundLogInPacket.class);
+    int userId;
     
     SiteChatUser siteChatUser = siteChatServer.getSiteChatUser(siteChatInboundLogInPacket.getUserId());
     if(siteChatUser == null) {
@@ -38,6 +39,7 @@ public class SiteChatInboundLogInPacketOperator implements SiteChatInboundPacket
     synchronized(siteChatUser) {
       
       siteChatUser.setLastActivityDatetime(new Date());
+      userId = siteChatUser.getId();
     }
     
     logger.trace("Log In Packet. User ID: " + siteChatInboundLogInPacket.getUserId() + ", Session: " + siteChatInboundLogInPacket.getSessionId());
@@ -52,6 +54,11 @@ public class SiteChatInboundLogInPacketOperator implements SiteChatInboundPacket
     
     logger.trace("Logged In. Last Activity: " + siteChatUser.getLastActivityDatetime());
     siteChatWebSocket.setSiteChatUser(siteChatUser);
+    
+    synchronized(siteChatWebSocket) {
+      
+      siteChatServer.associateWebSocketWithUser(userId, siteChatWebSocket);
+    }
     
     //Reconnect to conversations the user has been removed from.
     for(String siteChatConversationKey : siteChatInboundLogInPacket.getConversationKeySet()) {
@@ -77,7 +84,7 @@ public class SiteChatInboundLogInPacketOperator implements SiteChatInboundPacket
           
           if(!siteChatConversationWithUserList.getUserIdSet().contains(siteChatUser.getId())) {
             
-            siteChatServer.attemptJoinConversation(siteChatUser.getId(), siteChatConversationId, false, true);
+            siteChatServer.attemptJoinConversation(siteChatWebSocket, siteChatUser.getId(), siteChatConversationId, false, true, null);
           }
         }
       }

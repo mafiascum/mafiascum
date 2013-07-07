@@ -181,6 +181,7 @@ public class SiteChatUtil {
     siteChatConversation.setName(resultSet.getString("name"));
     siteChatConversation.setCreatedDatetime(resultSet.getTimestamp("created_datetime"));
     siteChatConversation.setCreatedByUserId(resultSet.getInt("created_by_user_id"));
+    siteChatConversation.setPassword(resultSet.getString("password"));
     
     return siteChatConversation;
   }
@@ -194,8 +195,10 @@ public class SiteChatUtil {
       sql = " INSERT INTO siteChatConversation("
           + "   `name`,"
           + "   `created_datetime`,"
-          + "   `created_by_user_id`"
+          + "   `created_by_user_id`,"
+          + "   `password`"
           + " ) VALUES("
+          + "   ?,"
           + "   ?,"
           + "   ?,"
           + "   ?"
@@ -206,6 +209,7 @@ public class SiteChatUtil {
       preparedStatement.setString(1, siteChatConversation.getName());
       preparedStatement.setTimestamp(2, SQLUtil.getTimestamp(siteChatConversation.getCreatedDatetime()));
       preparedStatement.setInt(3, siteChatConversation.getCreatedByUserId());
+      preparedStatement.setString(4, siteChatConversation.getPassword());
       
       preparedStatement.executeUpdate();
       
@@ -216,7 +220,8 @@ public class SiteChatUtil {
       sql = " UPDATE siteChatConversation SET"
           + "   name = ?,"
           + "   created_datetime = ?,"
-          + "   created_by_user_id = ?"
+          + "   created_by_user_id = ?,"
+          + "   password = ?"
           + " WHERE id = ?";
       
       PreparedStatement preparedStatement = connection.prepareStatement(sql);
@@ -224,7 +229,8 @@ public class SiteChatUtil {
       preparedStatement.setString(1, siteChatConversation.getName());
       preparedStatement.setTimestamp(2, SQLUtil.getTimestamp(siteChatConversation.getCreatedDatetime()));
       preparedStatement.setInt(3, siteChatConversation.getCreatedByUserId());
-      preparedStatement.setInt(4, siteChatConversation.getId());
+      preparedStatement.setString(4, siteChatConversation.getPassword());
+      preparedStatement.setInt(5, siteChatConversation.getId());
       
       preparedStatement.executeUpdate();
     }

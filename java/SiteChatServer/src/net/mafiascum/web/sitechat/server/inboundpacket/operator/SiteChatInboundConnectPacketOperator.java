@@ -6,7 +6,6 @@ import net.mafiascum.web.sitechat.server.SiteChatServer;
 import net.mafiascum.web.sitechat.server.SiteChatServer.SiteChatWebSocket;
 import net.mafiascum.web.sitechat.server.SiteChatUser;
 import net.mafiascum.web.sitechat.server.SiteChatUtil;
-import net.mafiascum.web.sitechat.server.conversation.SiteChatConversation;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationWithUserList;
 import net.mafiascum.web.sitechat.server.inboundpacket.SiteChatInboundConnectPacket;
 
@@ -51,6 +50,6 @@ public class SiteChatInboundConnectPacketOperator implements SiteChatInboundPack
       siteChatConversationWithUserList = siteChatServer.createSiteChatConversation(siteChatInboundConnectPacket.getSiteChatConversationName(), siteChatUser.getId());
     }
     
-    siteChatServer.attemptJoinConversation(siteChatUser.getId(), siteChatConversationWithUserList.getSiteChatConversation().getId(), true, true);
+    siteChatServer.attemptJoinConversation(siteChatWebSocket, siteChatUser.getId(), siteChatConversationWithUserList.getSiteChatConversation().getId(), true, true, siteChatInboundConnectPacket.getPassword());
   }
 }
