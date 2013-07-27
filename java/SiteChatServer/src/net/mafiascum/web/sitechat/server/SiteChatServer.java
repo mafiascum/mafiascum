@@ -188,6 +188,17 @@ public class SiteChatServer extends Server implements SignalHandler {
     }
   }
   
+  public void printContainerSizes() {
+    
+    logger.debug("Descriptors: " + descriptors.size());
+    logger.debug("Convos With Member list Map: " + siteChatPrivateConversationMessageHistoryMap.size());
+    logger.debug("Private Convo Map: " + siteChatPrivateConversationMessageHistoryMap.size());
+    logger.debug("User ID To Activity Map: " + userIdToLastNetworkActivityDatetime.size());
+    logger.debug("User Map: " + siteChatUserMap.size());
+    logger.debug("User ID To Web Socket Map: " + userIdToSiteChatWebSocketsMap.size());
+    logger.debug("Messages To Save: " + siteChatConversationMessagesToSave.size());  
+  }
+  
   public void associateWebSocketWithUser(int userId, SiteChatWebSocket siteChatWebSocket) {
     
     if(userIdToSiteChatWebSocketsMap.get(userId) == null) {
@@ -546,42 +557,6 @@ public class SiteChatServer extends Server implements SignalHandler {
         }
       }
     }
-    
-    
-    /***
-        synchronized(siteChatConversationWithMemberListMap) {
-          
-          for(int siteChatConversationId : siteChatConversationWithMemberListMap.keySet()) {
-            
-            SiteChatConversationWithUserList siteChatConversationWithUserList = siteChatConversationWithMemberListMap.get(siteChatConversationId);
-            
-            if(siteChatConversationWithUserList.getUserIdSet().isEmpty() == false) {
-              
-              //Copy all but the message array over. We do not need it for this.
-              SiteChatBarebonesConversation barebonesConversation = new SiteChatBarebonesConversation();
-              barebonesConversation.setId(siteChatConversationWithUserList.getSiteChatConversation().getId());
-              barebonesConversation.setName(siteChatConversationWithUserList.getSiteChatConversation().getName());
-              barebonesConversation.setUserIdSet(siteChatConversationWithUserList.getUserIdSet());
-              
-              siteChatBarebonesConversations.add(barebonesConversation);
-            }
-          }
-        
-          SiteChatOutboundUserListPacket siteChatOutboundUserListPacket = new SiteChatOutboundUserListPacket();
-          siteChatOutboundUserListPacket.setSiteChatUsers(siteChatUserList);
-          siteChatOutboundUserListPacket.setSiteChatConversations(siteChatBarebonesConversations);
-          siteChatOutboundUserListPacket.setPacketSentDatetime(new Date());
-          
-          for(SiteChatWebSocket siteChatWebSocket : descriptors) {
-            
-            if(siteChatWebSocket.getSiteChatUser() != null) {//Only send to users who have logged in.
-              siteChatWebSocket.sendOutboundPacket(siteChatOutboundUserListPacket);
-            }
-          }
-        }
-      }
-      }
-      ***/
     lagLogger.debug("Sending User List To All Web Sockets. FINISHED.");
   }
   
@@ -641,7 +616,7 @@ public class SiteChatServer extends Server implements SignalHandler {
             
             userIdToSiteChatWebSocketsMap.get(userId).remove(siteChatWebSocket);
             if(userIdToSiteChatWebSocketsMap.get(userId).size() == 0) {
-              userIdToSiteChatWebSocketsMap.get(userId).remove(siteChatWebSocket);
+              userIdToSiteChatWebSocketsMap.remove(userId);
             }
           }
           

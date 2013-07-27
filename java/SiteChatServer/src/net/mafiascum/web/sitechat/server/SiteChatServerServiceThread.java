@@ -40,6 +40,8 @@ public class SiteChatServerServiceThread extends Thread {
           
           try {
             siteChatServer.sendUserListToAllWebSockets();
+            
+            siteChatServer.printContainerSizes();
           }
           catch(Throwable throwable) {
               
