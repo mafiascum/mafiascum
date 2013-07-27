@@ -6,10 +6,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import net.mafiascum.jdbc.BatchInsertStatement;
 import net.mafiascum.util.QueryUtil;
@@ -25,6 +27,7 @@ public class SiteChatUtil {
   public static final int MAX_SITE_CHAT_CONVERSATION_MESSAGE_LENGTH = 255;
   public static final int MAX_SITE_CHAT_CONVERSATION_NAME_LENGTH = 40;
   public static final int MAX_MESSAGES_PER_CONVERSATION_CACHE = 100;
+  public static final int BANNED_USERS_GROUP_ID = 13662;
   
   protected static Logger logger = Logger.getLogger(SiteChatUtil.class.getName());
   
@@ -299,6 +302,33 @@ public class SiteChatUtil {
     statement.close();
     
     return topId;
+  }
+  
+  public static Set<Integer> getBannedUserIdSet(Connection connection) throws SQLException {
+    
+    Statement statement = null;
+    Set<Integer> bannedUserIdSet = new HashSet<Integer>();
+    
+    try {
+      String sql = " SELECT user_id"
+                 + " FROM phpbb_user_group"
+                 + " WHERE group_id = " + BANNED_USERS_GROUP_ID
+                 + " AND group_leader = " + SQLUtil.encodeBooleanInt(false);
+      
+      statement = connection.createStatement();
+      ResultSet resultSet = statement.executeQuery(sql);
+      
+      while(resultSet.next()) {
+        
+        bannedUserIdSet.add(resultSet.getInt("user_id"));
+      }
+      resultSet.close();
+    }
+    finally {
+      
+      QueryUtil.closeNoThrow(statement);
+    }
+    return bannedUserIdSet;
   }
   
   public static int getConversationUniqueIdentifier(String conversationUniqueKey) {

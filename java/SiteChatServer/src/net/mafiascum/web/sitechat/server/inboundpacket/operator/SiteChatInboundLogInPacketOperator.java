@@ -34,6 +34,7 @@ public class SiteChatInboundLogInPacketOperator implements SiteChatInboundPacket
       logger.error("Non Existant User Attempted To Log In. User ID: " + siteChatInboundLogInPacket.getUserId());
       return;
     }
+    
     siteChatServer.updateUserActivity(siteChatUser.getId());
     
     synchronized(siteChatUser) {
@@ -43,6 +44,15 @@ public class SiteChatInboundLogInPacketOperator implements SiteChatInboundPacket
     }
     
     logger.trace("Log In Packet. User ID: " + siteChatInboundLogInPacket.getUserId() + ", Session: " + siteChatInboundLogInPacket.getSessionId());
+    
+    //Before even authenticating, perform the cheaper check to see if the user is banned.
+    if(siteChatServer.isUseBanned(siteChatUser.getId())) {
+      
+      logger.debug("Banend user #" + siteChatUser.getId() + " attempting to log in. Denied.");
+      siteChatWebSocket.getConnection().close();
+      return;
+    }
+    
     boolean loginResult = siteChatServer.authenticateUserLogin(siteChatInboundLogInPacket.getUserId(), siteChatInboundLogInPacket.getSessionId());
     
     if(!loginResult) {

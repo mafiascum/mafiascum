@@ -1,6 +1,7 @@
 package net.mafiascum.web.sitechat.server;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Collection;
@@ -78,6 +79,7 @@ public class SiteChatServer extends Server implements SignalHandler {
   protected volatile Map<Integer, SiteChatUser> siteChatUserMap = new HashMap<Integer, SiteChatUser>();
   protected volatile Map<Integer, List<SiteChatWebSocket>> userIdToSiteChatWebSocketsMap = new HashMap<Integer, List<SiteChatWebSocket>>();
   protected volatile List<SiteChatConversationMessage> siteChatConversationMessagesToSave = new LinkedList<SiteChatConversationMessage>();
+  protected volatile Set<Integer> bannedUserIdSet = new HashSet<Integer>();
   protected SiteChatServerServiceThread serviceThread;
   
   protected final long MILLISECONDS_UNTIL_USER_IS_INACTIVE = (1000) * (60) * (5);
@@ -173,6 +175,9 @@ public class SiteChatServer extends Server implements SignalHandler {
       logger.info("Loading Top Site Chat Conversation Message ID...");
       topSiteChatConversationMessageId = SiteChatUtil.getTopSiteChatConversationMessageId(connection);
       
+      logger.info("Loading Banned User ID Set...");
+      refreshBanUserList();
+      
       //resourceHandler=new ResourceHandler();
       //resourceHandler.setDirectoriesListed(false);
       //resourceHandler.setResourceBase("-");
@@ -188,7 +193,49 @@ public class SiteChatServer extends Server implements SignalHandler {
     }
   }
   
+  public boolean isUseBanned(int userId) throws Exception {
+    
+    return bannedUserIdSet.contains(userId);
+  }
+  
+  public void refreshBanUserList() throws Exception {
+
+    Connection connection = null;
+    try {
+      
+      Set<Integer> newBannedUserIdSet;
+      connection = provider.getConnection();
+      
+      newBannedUserIdSet = SiteChatUtil.getBannedUserIdSet(connection);
+      
+      connection.commit();
+      connection.close();
+      connection = null;
+      
+      //Disconnect all newly banned users.
+      for(Integer userId : newBannedUserIdSet) {
+        
+        if(!bannedUserIdSet.contains(userId)) {
+          
+          removeUser(userId);
+        }
+      }
+      
+      bannedUserIdSet.clear();
+      bannedUserIdSet = newBannedUserIdSet;
+      logger.debug("Banned User ID Set: " + bannedUserIdSet.size());
+    }
+    finally {
+      
+      QueryUtil.closeNoThrow(connection);
+    }
+  }
+  
   public void printContainerSizes() {
+    
+    BigDecimal freeMemory = new BigDecimal(Runtime.getRuntime().freeMemory()).divide(new BigDecimal(1024*1024), BigDecimal.ROUND_HALF_DOWN);
+    BigDecimal totalMemory = new BigDecimal(Runtime.getRuntime().totalMemory()).divide(new BigDecimal(1024*1024), BigDecimal.ROUND_HALF_DOWN);
+    BigDecimal maxMemory = new BigDecimal(Runtime.getRuntime().maxMemory()).divide(new BigDecimal(1024*1024), BigDecimal.ROUND_HALF_DOWN);
     
     logger.debug("Descriptors: " + descriptors.size());
     logger.debug("Convos With Member list Map: " + siteChatPrivateConversationMessageHistoryMap.size());
@@ -196,7 +243,8 @@ public class SiteChatServer extends Server implements SignalHandler {
     logger.debug("User ID To Activity Map: " + userIdToLastNetworkActivityDatetime.size());
     logger.debug("User Map: " + siteChatUserMap.size());
     logger.debug("User ID To Web Socket Map: " + userIdToSiteChatWebSocketsMap.size());
-    logger.debug("Messages To Save: " + siteChatConversationMessagesToSave.size());  
+    logger.debug("Messages To Save: " + siteChatConversationMessagesToSave.size());
+    logger.debug("Total: " + totalMemory + "MB, Free: " + freeMemory + "MB, Max: " + maxMemory + "MB.");
   }
   
   public void associateWebSocketWithUser(int userId, SiteChatWebSocket siteChatWebSocket) {

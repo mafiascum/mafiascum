@@ -13,10 +13,12 @@ public class SiteChatServerServiceThread extends Thread {
   protected Date lastRefreshUserCacheDatetime;
   protected Date lastInactiveUserRemovalDatetime;
   protected Date lastUserListDatetime;
+  protected Date lastBannedUserListLoadedDatetime;
   
-  protected final long MILLISECONDS_PER_USER_TABLE_UPDATE = (1L * 60L * 1000L); //Every minute.
-  protected final long MILLISECONDS_PER_INACTIVE_USER_REMOVAL = (1L * 60L * 1000L); //Every minute.
-  protected final long MILLISECONDS_PER_USER_LIST = (30L * 1000L); //Every 30 seconds.
+  protected static final long MILLISECONDS_PER_USER_TABLE_UPDATE = (1L * 60L * 1000L); //Every minute.
+  protected static final long MILLISECONDS_PER_INACTIVE_USER_REMOVAL = (1L * 60L * 1000L); //Every minute.
+  protected static final long MILLISECONDS_PER_USER_LIST = (30L * 1000L); //Every 30 seconds.
+  protected static final long MILLISECONDS_PER_BAN_USER_GROUP_REFRESH = (5L * 60L * 1000); //Every 5 minutes.
   
   protected Logger logger = Logger.getLogger(SiteChatServerServiceThread.class.getName());
   
@@ -26,6 +28,7 @@ public class SiteChatServerServiceThread extends Thread {
     this.lastRefreshUserCacheDatetime = new Date();
     this.lastInactiveUserRemovalDatetime = new Date();
     this.lastUserListDatetime = new Date();
+    this.lastBannedUserListLoadedDatetime = new Date();
   }
   
   public void run() {
@@ -65,6 +68,22 @@ public class SiteChatServerServiceThread extends Thread {
           
           
           lastInactiveUserRemovalDatetime = nowDatetime;
+        }
+        
+        //Refresh banned user ID set.
+        if(nowDatetime.getTime() - lastBannedUserListLoadedDatetime.getTime() >= MILLISECONDS_PER_BAN_USER_GROUP_REFRESH) {
+          
+          try {
+            siteChatServer.refreshBanUserList();
+          }
+          catch(Throwable throwable) {
+            
+            logger.error("Could not load banned user ID set:");
+            logger.error(MiscUtil.getPrintableStackTrace(throwable));
+          }
+          
+          
+          lastBannedUserListLoadedDatetime = nowDatetime;
         }
         
         //Refresh User Cache
