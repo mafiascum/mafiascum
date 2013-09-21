@@ -726,6 +726,8 @@ public class SiteChatServer extends Server implements SignalHandler {
         throw new Exception("Could not find processor for command `" + siteChatInboundPacketSkeleton.command + "`");
       }
       
+      logger.debug("Packet Type `" + siteChatInboundPacketType.getStandardName());
+      
       siteChatInboundPacketOperator = siteChatInboundPacketTypeToSiteChatInboundPacketOperatorMap.get(siteChatInboundPacketType);
       
       siteChatInboundPacketOperator.process(this, webSocket, data);
