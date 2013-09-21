@@ -47,7 +47,7 @@ public class SiteChatServerServiceThread extends Thread {
             siteChatServer.printContainerSizes();
           }
           catch(Throwable throwable) {
-              
+            
             logger.error("Could not send user list:");
             logger.error(MiscUtil.getPrintableStackTrace(throwable));
           }

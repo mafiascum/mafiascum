@@ -726,7 +726,7 @@ public class SiteChatServer extends Server implements SignalHandler {
         throw new Exception("Could not find processor for command `" + siteChatInboundPacketSkeleton.command + "`");
       }
       
-      logger.debug("Packet Type `" + siteChatInboundPacketType.getStandardName());
+      logger.debug("Packet Type `" + siteChatInboundPacketType.getStandardName() + "`");
       
       siteChatInboundPacketOperator = siteChatInboundPacketTypeToSiteChatInboundPacketOperatorMap.get(siteChatInboundPacketType);
       
@@ -734,7 +734,7 @@ public class SiteChatServer extends Server implements SignalHandler {
     }
     catch(Throwable throwable) {
 
-      logger.error(MiscUtil.getPrintableStackTrace(throwable));
+      logger.error(throwable);
     }
   }
   
@@ -930,6 +930,9 @@ public class SiteChatServer extends Server implements SignalHandler {
       logger.info("Setting Up Site Chat Server.");
       SiteChatServer server = new SiteChatServer(port, provider);
       server.setVerbose(verbose);
+      
+      server.setVerbose(true);
+      
       //server.setResourceBase("-");
       logger.info("Starting Site Chat Server.");
       server.start();
@@ -1039,7 +1042,10 @@ public class SiteChatServer extends Server implements SignalHandler {
     
     try {
       
+      logger.info("Signal received. Shutting down.");
+      
       stop();
+      
       logger.info("Attempting to shut down Web Socket Server...");
     }
     catch(Exception exception) {
