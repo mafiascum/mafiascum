@@ -1009,7 +1009,7 @@ public class SiteChatServer extends Server implements SignalHandler {
     public void onWebSocketConnect(Session session) {
 
       if (_verbose)
-        logger.trace(this.getClass().getSimpleName() + "#onWebSocketConnect   " + session);
+        logger.trace(this.getClass().getSimpleName() + "#onWebSocketConnect   " + session.getRemoteAddress().getHostString());
       
       this.connection = (WebSocketSession)session;
     }
