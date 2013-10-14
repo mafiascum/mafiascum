@@ -10,12 +10,15 @@ if(!isset($_POST['UserID']))
 	exit;
 if(!isset($_POST['UserName']))
 	exit;
+if(!isset($_POST['ScriptName']))
+	exit;
 
 $error = $_POST['Error'];
 $url = $_POST['URL'];
 $userName = $_POST['UserName'];
 $userID = $_POST['UserID'];
 $lineNumber = $_POST['LineNumber'];
+$scriptName = $_POST['ScriptName'];
 $ipAddress = $_SERVER['REMOTE_ADDR'];
 $timestamp = strftime("%Y-%m-%d %H:%M:%S", time());
 
@@ -25,7 +28,7 @@ if(!$file)
 	echo("Could not open file.");
 	exit;
 }
-fwrite($file, "$timestamp :: $ipAddress :: $userID :: $userName :: $url:$lineNumber :: $error\n");
+fwrite($file, "$timestamp :: $ipAddress :: $userID :: $userName :: $scriptName :: $url:$lineNumber :: $error\n");
 fclose($file);
 
 ?>
