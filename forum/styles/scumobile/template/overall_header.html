@@ -103,6 +103,22 @@
 <script type="text/javascript" src="./styles/prosilver/template/jquery.color-2.1.0.js"></script>
 <script type="text/javascript" src="./styles/prosilver/template/autogrow.min.js"></script>
 
+<script type="text/javascript">
+window.onerror = function(msg, url, lineNo)  {
+
+	$.ajax({
+
+		type: "POST",
+		url: "js_error.php",
+		data: {Error: msg, LineNumber: lineNo, URL: url},
+		success: function(response) {
+		}
+	});
+
+	return true;
+}
+</script>
+
 <!-- IF not S_IS_BOT and S_USER_LOGGED_IN and S_CHAT -->
 
 <script>

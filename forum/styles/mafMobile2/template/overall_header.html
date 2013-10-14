@@ -28,6 +28,23 @@
 <script src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
 <script src="./styles/mafMobile2/template/custom.js"></script>
 <script src="http://code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.js"></script>
+
+<script type="text/javascript">
+window.onerror = function(msg, url, lineNo)  {
+
+	$.ajax({
+
+		type: "POST",
+		url: "js_error.php",
+		data: {Error: msg, LineNumber: lineNo, URL: url},
+		success: function(response) {
+		}
+	});
+
+	return true;
+}
+</script>
+
 <script type="text/javascript">
 // <![CDATA[
 	var jump_page = '{LA_JUMP_PAGE}:';
