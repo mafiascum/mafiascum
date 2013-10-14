@@ -123,7 +123,7 @@ window.onerror = function(msg, url, lineNo)  {
 
 		type: "POST",
 		url: "js_error.php",
-		data: {Error: msg, LineNumber: lineNo, URL: url},
+		data: {Error: msg, LineNumber: lineNo, URL: url, UserID: {S_USER_ID}, UserName: "{S_USERNAME}"},
 		success: function(response) {
 		}
 	});
@@ -141,10 +141,6 @@ $(document).ready(function(){
 });
 </script>
 <!-- ENDIF -->
-
-<script type="text/javascript">
-fff = asd / 3;
-</script>
 
 <script type="text/javascript">
 

@@ -36,7 +36,7 @@ window.onerror = function(msg, url, lineNo)  {
 
 		type: "POST",
 		url: "js_error.php",
-		data: {Error: msg, LineNumber: lineNo, URL: url},
+		data: {Error: msg, LineNumber: lineNo, URL: url, UserID: {S_USER_ID}, UserName: "{S_USERNAME}"},
 		success: function(response) {
 		}
 	});
