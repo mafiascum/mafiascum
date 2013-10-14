@@ -452,7 +452,7 @@ function apply_onkeypress_event()
 	// jQuery code in case jQuery is used
 	if (jquery_present)
 	{
-		jQuery('form input[type=text], form input[type=password]').live('keypress', function (e)
+		$(document).on('keypress', 'form input[type=text], form input[type=password]', function (e)
 		{
 			var default_button = jQuery(this).parents('form').find('input[type=submit].default-submit-action');
 			
