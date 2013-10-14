@@ -151,6 +151,8 @@ public class SiteChatServer extends Server implements SignalHandler {
               SiteChatWebSocket siteChatWebSocket = new SiteChatWebSocket();
               descriptors.add(siteChatWebSocket);
               
+              upgradeResponse.setAcceptedSubProtocol("site-chat");
+              
               return siteChatWebSocket;
             }
           });
