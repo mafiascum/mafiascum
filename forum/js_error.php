@@ -22,13 +22,17 @@ $scriptName = $_POST['ScriptName'];
 $ipAddress = $_SERVER['REMOTE_ADDR'];
 $timestamp = strftime("%Y-%m-%d %H:%M:%S", time());
 
-$file = fopen("js_errors.txt", "a");
+$filePath = "/u1/home/mafiascum/prod/forum/js_errors.txt";
+
+$file = fopen($filePath, "a");
 if(!$file)
 {
-	echo("Could not open file.");
+	echo("Error");
 	exit;
 }
 fwrite($file, "$timestamp :: $ipAddress :: $userID :: $userName :: $scriptName :: $url:$lineNumber :: $error\n");
 fclose($file);
+
+echo("Ok");
 
 ?>
