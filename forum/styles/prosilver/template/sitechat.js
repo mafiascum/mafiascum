@@ -838,7 +838,7 @@ function Client()
 				+	' 		<ul id="chattabs">'
 				+	' 			<li id="tab0" class="tab"><a href="#utilitywindow-1">Users</a></li>'
 				+	' 			<li id="tab1" class="tab"><a href="#utilitywindow-2">Rooms</a></li>'
-				+	' 			<li id="tab2" class="tab"><a href="#utilitywindow-3">Settings</a></li>'
+				+	' 			<li id="tab2" class="tab hidden"><a href="#utilitywindow-3">Settings</a></li>'
 				+ 	' 			<div class="clear"></div>'
 				+	' 		</ul> '
 				+	'		<div id="utilitywindow-1" class="tab_content">'
