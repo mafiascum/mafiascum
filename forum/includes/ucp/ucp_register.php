@@ -259,7 +259,7 @@ class ucp_register
 					{
 						$username_ary = array($data['main_name']);
 						$user_id_ary = array();
-						user_get_id_name($user_id_ary, &$username_ary);
+						user_get_id_name($user_id_ary, $username_ary);
 						if(isset($user_id_ary[0]))
 						{
 							$realMain = true;
