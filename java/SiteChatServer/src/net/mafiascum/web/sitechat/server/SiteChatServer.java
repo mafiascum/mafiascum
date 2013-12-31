@@ -240,7 +240,7 @@ public class SiteChatServer extends Server implements SignalHandler {
     BigDecimal maxMemory = new BigDecimal(Runtime.getRuntime().maxMemory()).divide(new BigDecimal(1024*1024), BigDecimal.ROUND_HALF_DOWN);
     
     logger.debug("Descriptors: " + descriptors.size());
-    logger.debug("Convos With Member list Map: " + siteChatPrivateConversationMessageHistoryMap.size());
+    logger.debug("Convos With Member list Map: " + siteChatConversationWithMemberListMap.size());
     logger.debug("Private Convo Map: " + siteChatPrivateConversationMessageHistoryMap.size());
     logger.debug("User ID To Activity Map: " + userIdToLastNetworkActivityDatetime.size());
     logger.debug("User Map: " + siteChatUserMap.size());
