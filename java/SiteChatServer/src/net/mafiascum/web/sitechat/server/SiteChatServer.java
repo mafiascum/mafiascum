@@ -760,7 +760,7 @@ public class SiteChatServer extends Server implements SignalHandler {
             }
             catch(IOException ioException) {
               
-              logger.error("Could not send outbound packet: " + ioException.getMessage());
+              logger.error("Could not send outbound packet: ", ioException);
             }
           }
         }

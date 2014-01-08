@@ -48,8 +48,7 @@ public class SiteChatServerServiceThread extends Thread {
           }
           catch(Throwable throwable) {
             
-            logger.error("Could not send user list:");
-            logger.error(MiscUtil.getPrintableStackTrace(throwable));
+            logger.error("Could not send user list:", throwable);
           }
           
           lastUserListDatetime = nowDatetime;
@@ -62,8 +61,7 @@ public class SiteChatServerServiceThread extends Thread {
           }
           catch(Throwable throwable) {
               
-            logger.error("Could not remove idle users:");
-            logger.error(MiscUtil.getPrintableStackTrace(throwable));
+            logger.error("Could not remove idle users:", throwable);
           }
           
           
@@ -78,8 +76,7 @@ public class SiteChatServerServiceThread extends Thread {
           }
           catch(Throwable throwable) {
             
-            logger.error("Could not load banned user ID set:");
-            logger.error(MiscUtil.getPrintableStackTrace(throwable));
+            logger.error("Could not load banned user ID set:", throwable);
           }
           
           
@@ -94,8 +91,7 @@ public class SiteChatServerServiceThread extends Thread {
           }
           catch(Throwable throwable) {
               
-            logger.error("Could not refresh user cache:\n");
-            logger.error(MiscUtil.getPrintableStackTrace(throwable));
+            logger.error("Could not refresh user cache:\n", throwable);
           }
           
           lastRefreshUserCacheDatetime = nowDatetime;
