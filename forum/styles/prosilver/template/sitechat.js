@@ -35,6 +35,7 @@ function ChatWindow()
 
 function Client()
 {
+	this.tryReconnect = true;
 	this.chatWindows = new Object();//Associative array
 	this.userMap = new Object();//Associative array
 	this.socket = null;
@@ -349,7 +350,7 @@ function Client()
 	{
 		console.log("[" + new Date() + "] Web Socket Closed.");
 		client.socket.connected = false;
-		if(!client.unloading)
+		if(!client.unloading && client.tryReconnect)
 		{
 			if(client.attemptReconnectIntervalId != null)
 				window.clearInterval(client.attemptReconnectIntervalId);
@@ -794,7 +795,7 @@ function Client()
 		if (client.rooms){
 					for (var room in client.rooms) {
 						if (client.rooms[room] !== undefined && client.rooms[room] !== null){
-							$("#roomstab").append('<div id="chatroom' + client.rooms[room].id + '"><div class="roomtitle"><span class="expand-icon">' + (client.rooms[room].expanded ? '-' : "+") + '</span>' + client.rooms[room].name + '<span class="usercount">(' + client.rooms[room].userIdSet.length + ')</span></div><div class="userlist"' + (client.rooms[room].expanded ? '' : "style='display:none;'") + '></div></div>');
+							$("#roomstab").append('<div id="chatroom' + client.rooms[room].id + '"><div class="roomtitle"><span class="expand-icon">' + (client.rooms[room].expanded ? '-' : "+") + '</span>' + client.rooms[room].name + '<span class="usercount">(' + client.rooms[room].userIdSet.length + ')</span><span class="joinbutton">JOIN</span></div><div class="userlist"' + (client.rooms[room].expanded ? '' : "style='display:none;'") + '></div></div>');
 							var identifier = '#chatroom' + client.rooms[room].id + ' .userlist';
 							$(identifier).append('<ul>');
 							for (var k = 0; k < client.rooms[room].userIdSet.length; k++){
@@ -838,7 +839,7 @@ function Client()
 				+	' 		<ul id="chattabs">'
 				+	' 			<li id="tab0" class="tab"><a href="#utilitywindow-1">Users</a></li>'
 				+	' 			<li id="tab1" class="tab"><a href="#utilitywindow-2">Rooms</a></li>'
-				+	' 			<li id="tab2" class="tab hidden"><a href="#utilitywindow-3">Settings</a></li>'
+				+	' 			<li id="tab2" class="tab"><a href="#utilitywindow-3">Settings</a></li>'
 				+ 	' 			<div class="clear"></div>'
 				+	' 		</ul> '
 				+	'		<div id="utilitywindow-1" class="tab_content">'
@@ -851,7 +852,7 @@ function Client()
 				+	'		<div id="roomstab"></div>'
 				+	'		</div>'
 				+	'		<div id="utilitywindow-3" class="tab_content">'
-				+	'		<div>settings</div>'
+				+	'		<div id="settingstab"><div id="disable_button">Disable Chat</div></div>'
 				+	'		</div>'
 				+	'			<div id="joindiv"><form id="joinConversationForm"><input autocomplete="off" placeholder="Enter Chat Room Name" type="text" name="input"></input></div>'
 				+	'	</div>'
@@ -866,7 +867,16 @@ function Client()
 		client.tabs[index].id = 2;
 		
 		$("#utilitywindow .title").addClass("backgroundColorTransition");
-		
+	}
+	this.disableChat = function(){
+		xmlhttp=new XMLHttpRequest();
+		xmlhttp.open("GET","remove_ms_chat.php", false);
+		xmlhttp.send();
+		response = xmlhttp.responseText;
+		if (response == 'confirm'){
+			client.close();
+			alert ('Chat disabled. It can be enable through the user control panel');
+		}
 	}
 	this.setActiveTab = function(id){
 		$('#tab' + id).addClass('active');
@@ -1000,7 +1010,6 @@ function Client()
 		$(document).on("blur", "#joinConversationForm > input", function(event) {
 			$(this).val("");
 		});
-		
 		$(document).on("click", "#chatPanel .chatWindow .title .options", function(e) {
 
 			e.preventDefault();
@@ -1183,7 +1192,7 @@ function Client()
 		client.populateUtilityWindow();
 		setInterval('client.blink()', 700);
 		setInterval('client.heartbeat()', 150000);
-
+		$("#disable_button").on("click", client.disableChat);
 		client.createPasswordLightbox();
 	}
 
@@ -1204,7 +1213,11 @@ function Client()
 	{
 		client.sendPacket({command: "Connect", siteChatConversationName: conversationName, password: password});
 	}
-	
+	this.close = function(){
+		$("#chatPanel").remove();
+		client.socket.close();
+		client.tryReconnect = false;
+	}
 	this.setupWebSocket = function()
 	{
 		console.log("[" + new Date() + "] CONNECTING");
