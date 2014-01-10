@@ -537,6 +537,10 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#fafafa', end
 	overflow: auto;
 	background-color: white;
 }
+
+.chatWindow.collapsed #settingstab {
+	display:none;
+}
 #disable_button {
 	margin-left: 48px;
 	margin-top: 10px;
