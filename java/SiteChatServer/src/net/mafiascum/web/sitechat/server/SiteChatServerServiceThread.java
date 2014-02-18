@@ -49,8 +49,6 @@ public class SiteChatServerServiceThread extends Thread {
           catch(Throwable throwable) {
             
             logger.error("Could not send user list:", throwable);
-            System.out.println(MiscUtil.getPrintableStackTrace(throwable));
-            throwable.printStackTrace();
           }
           
           lastUserListDatetime = nowDatetime;
@@ -104,7 +102,7 @@ public class SiteChatServerServiceThread extends Thread {
     }
     catch(Throwable throwable) {
       
-      logger.error(MiscUtil.getPrintableStackTrace(throwable));
+      logger.error("Critical error in service thread.", throwable);
     }
   }
   
