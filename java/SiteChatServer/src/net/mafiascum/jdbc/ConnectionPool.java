@@ -153,8 +153,7 @@ public class ConnectionPool {
           }
           catch(Exception exception) {
               
-            logger.error("Could not allocate connection.");
-            logger.error(MiscUtil.getPrintableStackTrace(exception));
+            logger.error("Could not allocate connection.", exception);
           }
           
           this.notifyAll();
@@ -163,8 +162,7 @@ public class ConnectionPool {
         Thread.sleep(5000);
       }
       catch (InterruptedException interruptedException) {
-        logger.error("AllocatorThreadMain:");
-        logger.error(MiscUtil.getPrintableStackTrace(interruptedException));
+        logger.error("AllocatorThreadMain:", interruptedException);
       }
     }
   }

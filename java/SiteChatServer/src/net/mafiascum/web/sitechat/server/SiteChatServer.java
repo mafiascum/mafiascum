@@ -736,7 +736,7 @@ public class SiteChatServer extends Server implements SignalHandler {
     }
     catch(Throwable throwable) {
 
-      logger.error(throwable);
+      logger.error("Error processing inbound packet. Full data: " + data, throwable);
     }
   }
   
@@ -827,7 +827,7 @@ public class SiteChatServer extends Server implements SignalHandler {
               tempSiteChatWebSocket.sendOutboundPacket(siteChatOutboundConnectPacket);
             }
             catch(IOException ioException) {
-              logger.error(MiscUtil.getPrintableStackTrace(ioException));
+              logger.error("Error attempting to send outbound packet. User ID: " + siteChatUserId, ioException);
             }
           }
         }
@@ -948,8 +948,7 @@ public class SiteChatServer extends Server implements SignalHandler {
     }
     catch (Exception e) {
 
-      logger.error("Severe Exception: " + e);
-      logger.error(MiscUtil.getPrintableStackTrace(e));
+      logger.error("Severe Exception: ", e);
     }
   }
   
@@ -1033,7 +1032,7 @@ public class SiteChatServer extends Server implements SignalHandler {
         }
         catch(Throwable throwable) {
 
-          logger.error(MiscUtil.getPrintableStackTrace(throwable));
+          logger.error("Error in onWebSocketText()", throwable);
           return;
         }
       }
@@ -1052,8 +1051,7 @@ public class SiteChatServer extends Server implements SignalHandler {
     }
     catch(Exception exception) {
       
-      logger.error("Could not shut down Web Socket Server:");
-      logger.error(MiscUtil.getPrintableStackTrace(exception));
+      logger.error("Could not shut down Web Socket Server:", exception);
     }
     
   }
