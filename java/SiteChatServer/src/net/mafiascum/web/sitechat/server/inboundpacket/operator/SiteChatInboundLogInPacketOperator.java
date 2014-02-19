@@ -48,7 +48,7 @@ public class SiteChatInboundLogInPacketOperator implements SiteChatInboundPacket
     //Before even authenticating, perform the cheaper check to see if the user is banned.
     if(siteChatServer.isUseBanned(siteChatUser.getId())) {
       
-      logger.debug("Banend user #" + siteChatUser.getId() + " attempting to log in. Denied.");
+      logger.debug("Banned user #" + siteChatUser.getId() + " attempting to log in. Denied.");
       siteChatWebSocket.getConnection().close();
       return;
     }

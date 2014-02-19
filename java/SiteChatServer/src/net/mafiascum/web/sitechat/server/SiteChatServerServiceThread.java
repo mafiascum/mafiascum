@@ -42,7 +42,9 @@ public class SiteChatServerServiceThread extends Thread {
         if(nowDatetime.getTime() - lastUserListDatetime.getTime() >= MILLISECONDS_PER_USER_LIST) {
           
           try {
+            logger.debug("Sending user list to all web sockets.");
             siteChatServer.sendUserListToAllWebSockets();
+            logger.debug("User list sent to all web sockets.");
             
             siteChatServer.printContainerSizes();
           }
@@ -57,7 +59,10 @@ public class SiteChatServerServiceThread extends Thread {
         if(nowDatetime.getTime() - lastInactiveUserRemovalDatetime.getTime() >= MILLISECONDS_PER_INACTIVE_USER_REMOVAL) {
           
           try {
+            
+            logger.debug("Removing idle users.");
             siteChatServer.removeIdleUsers(nowDatetime);
+            logger.debug("Idle users removed.");
           }
           catch(Throwable throwable) {
               
@@ -72,7 +77,10 @@ public class SiteChatServerServiceThread extends Thread {
         if(nowDatetime.getTime() - lastBannedUserListLoadedDatetime.getTime() >= MILLISECONDS_PER_BAN_USER_GROUP_REFRESH) {
           
           try {
+            
+            logger.debug("Refreshing ban user list.");
             siteChatServer.refreshBanUserList();
+            logger.debug("Ban user list refreshed.");
           }
           catch(Throwable throwable) {
             
@@ -87,7 +95,10 @@ public class SiteChatServerServiceThread extends Thread {
         if(nowDatetime.getTime() - lastRefreshUserCacheDatetime.getTime() >= MILLISECONDS_PER_USER_TABLE_UPDATE) {
           
           try {
+            
+            logger.debug("Refreshing user cache.");
             siteChatServer.refreshUserCache();
+            logger.debug("User cache refreshed.");
           }
           catch(Throwable throwable) {
               
@@ -96,7 +107,7 @@ public class SiteChatServerServiceThread extends Thread {
           
           lastRefreshUserCacheDatetime = nowDatetime;
         }
-                
+        
         Thread.sleep( 10 * 1000 );
       }
     }
@@ -104,6 +115,8 @@ public class SiteChatServerServiceThread extends Thread {
       
       logger.error("Critical error in service thread.", throwable);
     }
+    
+    logger.debug("Service thread terminating.");
   }
   
   public synchronized boolean getTerminated() {
