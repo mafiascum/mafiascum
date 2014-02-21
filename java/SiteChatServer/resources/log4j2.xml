@@ -2,7 +2,7 @@
 <configuration status="WARN">
   <appenders>
     <Console name="Console" target="SYSTEM_OUT">
-      <PatternLayout pattern="%d{YYYY-MM-DD HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+      <PatternLayout pattern="%d{YYYY-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
     </Console>
     
     <File name="LagMonitorFile" fileName="lag.out" append="true">
