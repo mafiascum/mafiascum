@@ -175,7 +175,6 @@ function subPanels(p)
 	{
 		show_panel = p;
 	}
-
 	for (i = 0; i < panels.length; i++)
 	{
 		e = document.getElementById(panels[i]);

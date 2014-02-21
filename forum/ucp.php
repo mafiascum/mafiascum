@@ -11,6 +11,7 @@
 /**
 * @ignore
 */
+
 define('IN_PHPBB', true);
 $phpbb_root_path = (defined('PHPBB_ROOT_PATH')) ? PHPBB_ROOT_PATH : './';
 $phpEx = substr(strrchr(__FILE__, '.'), 1);
@@ -66,11 +67,11 @@ switch ($mode)
 	break;
 
 	case 'register':
+		
 		if ($user->data['is_registered'] || isset($_REQUEST['not_agreed']))
 		{
 			redirect(append_sid("{$phpbb_root_path}index.$phpEx"));
 		}
-
 		$module->load('ucp', 'register');
 		$module->display($user->lang['REGISTER']);
 	break;

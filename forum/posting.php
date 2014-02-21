@@ -22,8 +22,8 @@ include($phpbb_root_path . 'includes/message_parser.' . $phpEx);
 
 // Start session management
 $user->session_begin();
-$auth->acl($user->data);
-include($phpbb_root_path . 'includes/functions_user.' . $phpEx);
+
+// MOVED FROM BELOW USER AUTHENTICATION TO ABOVE BECAUSE WE NEED TOPID_ID FOR POST MASKING
 // Grab only parameters needed here
 $post_id	= request_var('p', 0);
 $topic_id	= request_var('t', 0);
@@ -33,6 +33,38 @@ $multipost_ids = request_var('m',  array('' => 0));
 for ($i = 0; $i < count($multipost_ids); $i++){
 	$multipost_ids[$i] = (int)$db->sql_escape($multipost_ids[$i]);
 }
+// MOVED FROM BELOW USER AUTHENTICATION TO ABOVE BECAUSE WE NEED TOPID_ID FOR POST MASKING
+
+// Some code to set the proper masked to ID here
+if ($user->data['user_id']){
+	$sql = 'SELECT * FROM phpbb_post_masking WHERE topic_id=' . $topic_id . ' AND user_main_id=' . $user->data['user_id'];
+	$result = $db->sql_query($sql);
+	$row = $db->sql_fetchrow($result);
+	$user_id_mask = $row['user_mask_id'];
+}
+// End of some Code
+
+// Some code to set a dumby user object to auth against
+	if ($user_id_mask){
+		$sql = "SELECT u.* FROM " . USERS_TABLE . " u
+			WHERE u.user_id =" . $user_id_mask;
+		$result = $db->sql_query($sql);
+		$data = $db->sql_fetchrow($result);
+		$db->sql_freeresult($result);
+	}
+//
+// if masked use bumby user mask instead of real user object
+if (sizeOf($data)){
+	$data['is_registered'] = 1;
+	$data['is_bot'] = 0;
+	$data['session_id'] = $user->data['session_id'];
+	$data['user_form_salt'] = $user->data['user_form_salt'];
+	$user->data = $data;
+}
+
+$auth->acl($user->data);
+include($phpbb_root_path . 'includes/functions_user.' . $phpEx);
+
 $lastclick	= request_var('lastclick', 0);
 
 $QR			= (isset($_POST['postqr']) || isset($_POST['previewqr']));
@@ -1884,7 +1916,23 @@ if (($mode == 'post' || ($mode == 'edit' && $post_id == $post_data['topic_first_
 		'POLL_LENGTH'			=> $post_data['poll_length'])
 	);
 }
+// post masking
+$sql = 'SELECT * FROM phpbb_post_masking WHERE topic_id='.$topic_id;
+	$result = $db->sql_query($sql);
+	while ($row = $db->sql_fetchrow($result)){
+		$user_ids = array ($row['user_mask_id'], $row['user_entered_id']);
+		user_get_id_name($user_ids, $user_name_ary, array(USER_NORMAL, USER_FOUNDER));
+		
+		$template->assign_block_vars('masking', array(
+				'USERNAME'		=> $user_name_ary[$row['user_entered_id']],
+				'MASKEDNAME'	=> $user_name_ary[$row['user_mask_id']]
+			));
+		unset($user_ids);
+		unset($user_name_ary);
+	}
+			
 
+//
 // Show attachment box for adding attachments if true
 $allowed = ($auth->acl_get('f_attach', $forum_id) && $auth->acl_get('u_attach') && $config['allow_attachments'] && $form_enctype);
 

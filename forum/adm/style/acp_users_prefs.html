@@ -124,6 +124,42 @@
 		<dd><label><input type="radio" class="radio" name="view_wordcensor" value="1"<!-- IF VIEW_WORDCENSOR --> id="view_wordcensor" checked="checked"<!-- ENDIF --> /> {L_YES}</label>
 			<label><input type="radio" class="radio" name="view_wordcensor" value="0"<!-- IF not VIEW_WORDCENSOR --> id="view_wordcensor" checked="checked"<!-- ENDIF --> /> {L_NO}</label></dd>
 	</dl>
+	<dl>
+			<dt><label for="youtube1">{L_VIEW_YOUTUBE}:</label></dt>
+			<dd>
+				<label for="youtube1"><input type="radio" name="youtube" id="youtube1" value="1"<!-- IF VIEW_YOUTUBE --> checked="checked"<!-- ENDIF --> /> {L_YES}</label> 
+				<label for="youtube0"><input type="radio" name="youtube" id="youtube0" value="0"<!-- IF not VIEW_YOUTUBE --> checked="checked"<!-- ENDIF --> /> {L_NO}</label>
+			</dd>
+		</dl>
+
+		<dl>
+			<dt><label for="mobile1">Detect that you are using a mobile phone:</label></dt>
+			<dd>
+				<label for="mobile1"><input type="radio" name="mobile" id="mobile1" value="1"<!-- IF VIEW_MOBILE --> checked="checked"<!-- ENDIF --> /> {L_YES}</label> 
+				<label for="mobile0"><input type="radio" name="mobile" id="mobile0" value="0"<!-- IF not VIEW_MOBILE --> checked="checked"<!-- ENDIF --> /> {L_NO}</label>
+			</dd>
+		</dl>
+		<dl>
+			<dt><label for="chat1">Enable Chat:</label></dt>
+			<dd>
+				<label for="chat1"><input type="radio" name="chat" id="chat1" value="1"<!-- IF VIEW_CHAT --> checked="checked"<!-- ENDIF --> /> {L_YES}</label> 
+				<label for="chat0"><input type="radio" name="chat" id="chat0" value="0"<!-- IF not VIEW_CHAT --> checked="checked"<!-- ENDIF --> /> {L_NO}</label>
+			</dd>
+		</dl>
+		<dl>
+			<dt><label for="lobby1">Enter Chat Lobby Automatically:</label></dt>
+			<dd>
+				<label for="lobby1"><input type="radio" name="lobby" id="lobby1" value="1"<!-- IF VIEW_LOBBY --> checked="checked"<!-- ENDIF --> /> {L_YES}</label> 
+				<label for="lobby0"><input type="radio" name="lobby" id="lobby0" value="0"<!-- IF not VIEW_LOBBY --> checked="checked"<!-- ENDIF --> /> {L_NO}</label>
+			</dd>
+		</dl>
+		<dl>
+			<dt><label for="bbsigs1">Enable bold and color BBcode in sigs; Disable automatic sig-hiding:</label></dt>
+			<dd>
+				<label for="bbsigs1"><input type="radio" name="bbsigs" id="bbsigs1" value="1"<!-- IF VIEW_BBSIG --> checked="checked"<!-- ENDIF --> /> {L_YES}</label> 
+				<label for="bbsigs0"><input type="radio" name="bbsigs" id="bbsigs0" value="0"<!-- IF not VIEW_BBSIG --> checked="checked"<!-- ENDIF --> /> {L_NO}</label>
+			</dd>
+		</dl>
 	<dl> 
 		<dt><label>{L_VIEW_TOPICS_DAYS}:</label></dt>
 		<dd>{S_TOPIC_SORT_DAYS}</dd>

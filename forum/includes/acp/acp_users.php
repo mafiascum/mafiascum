@@ -1666,6 +1666,12 @@ class acp_users
 					'smilies'	=> request_var('smilies', $this->optionget($user_row, 'smilies')),
 					'sig'		=> request_var('sig', $this->optionget($user_row, 'attachsig')),
 					'notify'	=> request_var('notify', $user_row['user_notify']),
+					
+					'youtube'	=> request_var('youtube', $this->optionget($user_row, 'youtube')),
+					'mobile'	=> request_var('mobile', $this->optionget($user_row, 'mobile')),
+					'chat'	=> request_var('chat', $this->optionget($user_row, 'chat')),
+					'lobby'		=> request_var('lobby', $this->optionget($user_row, 'lobby')),
+					'bbsigs'	=> request_var('bbsigs', $this->optionget($user_row, 'bbsigs')),
 				);
 
 				if ($submit)
@@ -1698,6 +1704,12 @@ class acp_users
 						$this->optionset($user_row, 'bbcode', $data['bbcode']);
 						$this->optionset($user_row, 'smilies', $data['smilies']);
 						$this->optionset($user_row, 'attachsig', $data['sig']);
+						
+						$this->optionset($user_row, 'youtube', $data['youtube']);
+						$this->optionset($user_row, 'mobile', $data['mobile']);
+						$this->optionset($user_row, 'chat', $data['chat']);
+						$this->optionset($user_row, 'lobby', $data['lobby']);
+						$this->optionset($user_row, 'bbsigs', $data['bbsigs']);
 
 						$sql_ary = array(
 							'user_options'			=> $user_row['user_options'],
@@ -1843,6 +1855,12 @@ class acp_users
 					'VIEW_SIGS'			=> $data['view_sigs'],
 					'VIEW_AVATARS'		=> $data['view_avatars'],
 					'VIEW_WORDCENSOR'	=> $data['view_wordcensor'],
+					
+					'VIEW_YOUTUBE'		=> $data['youtube'],
+					'VIEW_MOBILE'		=> $data['mobile'],
+					'VIEW_CHAT'			=> $data['chat'],
+					'VIEW_LOBBY'		=> $data['lobby'],
+					'VIEW_BBSIGS'	=> $data['bbsigs'],
 
 					'S_TOPIC_SORT_DAYS'		=> $s_limit_topic_days,
 					'S_TOPIC_SORT_KEY'		=> $s_sort_topic_key,

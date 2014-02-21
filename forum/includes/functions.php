@@ -4331,6 +4331,7 @@ function page_header($page_title = '', $display_online_list = true, $item_id = 0
 {
 	global $db, $config, $template, $SID, $_SID, $user, $auth, $phpEx, $phpbb_root_path, $mobile;
 
+	
 	if (defined('HEADER_INC'))
 	{
 		return;
