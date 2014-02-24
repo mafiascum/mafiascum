@@ -982,7 +982,7 @@ public class SiteChatServer extends Server implements SignalHandler {
           
           if(siteChatOutboundPacket instanceof SiteChatOutboundUserListPacket) {
             
-            logger.debug("Sending User List Packet. Length: " + siteChatOutboundPacketJson);
+            logger.debug("Sending User List Packet. Length: " + siteChatOutboundPacketJson.length());
           }
           
           this.getConnection().getRemote().sendStringByFuture(siteChatOutboundPacketJson);
