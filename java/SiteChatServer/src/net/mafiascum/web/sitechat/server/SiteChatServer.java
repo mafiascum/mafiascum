@@ -557,16 +557,15 @@ public class SiteChatServer extends Server implements SignalHandler {
     //Generate message for each user.
     for(int userId : siteChatUserMap.keySet()) {
       
-      logger.debug("Preparing user list packet for user #" + userId);
       List<SiteChatWebSocket> siteChatWebSockets = userIdToSiteChatWebSocketsMap.get(userId);
       siteChatBarebonesConversations.clear();
       
       if(siteChatWebSockets == null) {
         
-        logger.debug("No web sockets. Skipping.");
         continue;
       }
-      
+
+      logger.debug("Preparing user list packet for user #" + userId);
       synchronized(siteChatWebSockets) {
        
         for(int siteChatConversationId : siteChatConversationWithMemberListMap.keySet()) {
