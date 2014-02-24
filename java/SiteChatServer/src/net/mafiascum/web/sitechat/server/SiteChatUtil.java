@@ -34,12 +34,12 @@ public class SiteChatUtil {
   public static Map<Integer, SiteChatUser> loadSiteChatUserMap(Connection connection) throws SQLException {
     
     Statement statement = null;
+    ResultSet resultSet = null;
     
     try {
       statement = connection.createStatement();
       Map<Integer, SiteChatUser> siteChatUserMap = new HashMap<Integer, SiteChatUser>();
       String sql;
-      ResultSet resultSet;
       int topUserId, offset = 0, fetchSize = 1000;
       
       sql = " SELECT MAX(user_id)"
@@ -63,6 +63,9 @@ public class SiteChatUtil {
           SiteChatUser siteChatUser = getSiteChatUser(resultSet);
           siteChatUserMap.put(siteChatUser.getId(), siteChatUser);
         }
+
+        resultSet.close();
+        resultSet = null;
         
         offset += fetchSize;
       }
@@ -73,6 +76,7 @@ public class SiteChatUtil {
     }
     finally {
       
+      QueryUtil.closeNoThrow(resultSet);
       QueryUtil.closeNoThrow(statement);
     }
   }
@@ -90,90 +94,129 @@ public class SiteChatUtil {
   
   public static List<SiteChatConversation> getSiteChatConversations(Connection connection) throws SQLException {
     
-    Statement statement = connection.createStatement();
-    List<SiteChatConversation> siteChatConversations = new LinkedList<SiteChatConversation>();
-    String sql;
-    ResultSet resultSet;
-    int topUserId, offset = 0, fetchSize = 1000;
+    Statement statement = null;
+    ResultSet resultSet = null;
     
-    sql = " SELECT MAX(id)"
-        + " FROM siteChatConversation";
-    
-    topUserId = QueryUtil.getSingleIntValueResult(statement, sql);
-    
-    while(offset <= topUserId) {
-
-      sql = " SELECT *"
-          + " FROM siteChatConversation"
-          + " WHERE id >= " + offset
-          + " AND id < " + (offset + fetchSize);
+    try {
+      statement = connection.createStatement();
+      List<SiteChatConversation> siteChatConversations = new LinkedList<SiteChatConversation>();
+      String sql;
+      int topUserId, offset = 0, fetchSize = 1000;
       
-      resultSet = statement.executeQuery(sql);
+      sql = " SELECT MAX(id)"
+          + " FROM siteChatConversation";
       
-      while(resultSet.next()) {
+      topUserId = QueryUtil.getSingleIntValueResult(statement, sql);
+      
+      while(offset <= topUserId) {
+  
+        sql = " SELECT *"
+            + " FROM siteChatConversation"
+            + " WHERE id >= " + offset
+            + " AND id < " + (offset + fetchSize);
         
-        SiteChatConversation siteChatConversation = getSiteChatConversation(resultSet);
-        siteChatConversations.add(siteChatConversation);
+        resultSet = statement.executeQuery(sql);
+        
+        while(resultSet.next()) {
+          
+          SiteChatConversation siteChatConversation = getSiteChatConversation(resultSet);
+          siteChatConversations.add(siteChatConversation);
+        }
+  
+        resultSet.close();
+        resultSet = null;
+        
+        offset += fetchSize;
       }
       
-      offset += fetchSize;
+      statement.close();
+      statement = null;
+      
+      return siteChatConversations;
     }
-    
-    statement.close();
-    
-    return siteChatConversations;
+    finally {
+      
+      QueryUtil.closeNoThrow(resultSet);
+      QueryUtil.closeNoThrow(statement);
+    }
   }
   
   public static SiteChatConversation getSiteChatConversation(Connection connection, int siteChatConversationId) throws SQLException {
     
-    ResultSet resultSet;
-    SiteChatConversation siteChatConversation = null;
-    String sql;
+    ResultSet resultSet = null;
+    PreparedStatement preparedStatement = null;
     
-    sql = " SELECT *"
-        + " FROM siteChatConversation"
-        + " WHERE id = ?";
-    
-    PreparedStatement preparedStatement = connection.prepareStatement(sql);
-    
-    preparedStatement.setInt(1, siteChatConversationId);
-    
-    resultSet = preparedStatement.executeQuery();
-    
-    if(resultSet.next()) {
+    try {
+      SiteChatConversation siteChatConversation = null;
+      String sql;
       
-      siteChatConversation = getSiteChatConversation(resultSet);
+      sql = " SELECT *"
+          + " FROM siteChatConversation"
+          + " WHERE id = ?";
+      
+      preparedStatement = connection.prepareStatement(sql);
+      
+      preparedStatement.setInt(1, siteChatConversationId);
+      
+      resultSet = preparedStatement.executeQuery();
+      
+      if(resultSet.next()) {
+        
+        siteChatConversation = getSiteChatConversation(resultSet);
+      }
+      
+      resultSet.close();
+      resultSet = null;
+      
+      preparedStatement.close();
+      preparedStatement = null;
+
+      return siteChatConversation;
     }
-    
-    preparedStatement.close();
-    
-    return siteChatConversation;
+    finally {
+      
+      QueryUtil.closeNoThrow(resultSet);
+      QueryUtil.closeNoThrow(preparedStatement);
+    }
   }
   
   public static SiteChatConversation getSiteChatConversation(Connection connection, String siteChatConversationName) throws SQLException {
     
-    ResultSet resultSet;
-    SiteChatConversation siteChatConversation = null;
-    String sql;
+    ResultSet resultSet = null;
+    PreparedStatement preparedStatement = null;
     
-    sql = " SELECT *"
-        + " FROM siteChatConversation"
-        + " WHERE name = ?";
-    
-    PreparedStatement preparedStatement = connection.prepareStatement(sql);
-    
-    preparedStatement.setString(1, siteChatConversationName);
-    
-    resultSet = preparedStatement.executeQuery();
-    
-    if(resultSet.next()) {
+    try {
+      SiteChatConversation siteChatConversation = null;
+      String sql;
       
-      siteChatConversation = getSiteChatConversation(resultSet);
+      sql = " SELECT *"
+          + " FROM siteChatConversation"
+          + " WHERE name = ?";
+      
+      preparedStatement = connection.prepareStatement(sql);
+      
+      preparedStatement.setString(1, siteChatConversationName);
+      
+      resultSet = preparedStatement.executeQuery();
+      
+      if(resultSet.next()) {
+        
+        siteChatConversation = getSiteChatConversation(resultSet);
+      }
+  
+      resultSet.close();
+      resultSet = null;
+      
+      preparedStatement.close();
+      preparedStatement = null;
+      
+      return siteChatConversation;
     }
-    
-    preparedStatement.close();
-    
-    return siteChatConversation;
+    finally {
+      
+      QueryUtil.closeNoThrow(resultSet);
+      QueryUtil.closeNoThrow(preparedStatement);
+    }
   }
   
   public static SiteChatConversation getSiteChatConversation(ResultSet resultSet) throws SQLException {
@@ -191,65 +234,88 @@ public class SiteChatUtil {
   
   public static void putSiteChatConversation(Connection connection, SiteChatConversation siteChatConversation) throws SQLException {
     
-    String sql;
+    PreparedStatement preparedStatement = null;
     
-    if(siteChatConversation.isNew()) {
+    try {
+      String sql;
+    
+      if(siteChatConversation.isNew()) {
+        
+        sql = " INSERT INTO siteChatConversation("
+            + "   `name`,"
+            + "   `created_datetime`,"
+            + "   `created_by_user_id`,"
+            + "   `password`"
+            + " ) VALUES("
+            + "   ?,"
+            + "   ?,"
+            + "   ?,"
+            + "   ?"
+            + " )";
+        
+        preparedStatement = connection.prepareStatement(sql);
+        
+        preparedStatement.setString(1, siteChatConversation.getName());
+        preparedStatement.setTimestamp(2, SQLUtil.getTimestamp(siteChatConversation.getCreatedDatetime()));
+        preparedStatement.setInt(3, siteChatConversation.getCreatedByUserId());
+        preparedStatement.setString(4, siteChatConversation.getPassword());
+        
+        preparedStatement.executeUpdate();
+        
+        siteChatConversation.setId(QueryUtil.getLastInsertedID(connection));
+      }
+      else {
+        
+        sql = " UPDATE siteChatConversation SET"
+            + "   name = ?,"
+            + "   created_datetime = ?,"
+            + "   created_by_user_id = ?,"
+            + "   password = ?"
+            + " WHERE id = ?";
+        
+        preparedStatement = connection.prepareStatement(sql);
+        
+        preparedStatement.setString(1, siteChatConversation.getName());
+        preparedStatement.setTimestamp(2, SQLUtil.getTimestamp(siteChatConversation.getCreatedDatetime()));
+        preparedStatement.setInt(3, siteChatConversation.getCreatedByUserId());
+        preparedStatement.setString(4, siteChatConversation.getPassword());
+        preparedStatement.setInt(5, siteChatConversation.getId());
+        
+        preparedStatement.executeUpdate();
+      }
       
-      sql = " INSERT INTO siteChatConversation("
-          + "   `name`,"
-          + "   `created_datetime`,"
-          + "   `created_by_user_id`,"
-          + "   `password`"
-          + " ) VALUES("
-          + "   ?,"
-          + "   ?,"
-          + "   ?,"
-          + "   ?"
-          + " )";
-      
-      PreparedStatement preparedStatement = connection.prepareStatement(sql);
-      
-      preparedStatement.setString(1, siteChatConversation.getName());
-      preparedStatement.setTimestamp(2, SQLUtil.getTimestamp(siteChatConversation.getCreatedDatetime()));
-      preparedStatement.setInt(3, siteChatConversation.getCreatedByUserId());
-      preparedStatement.setString(4, siteChatConversation.getPassword());
-      
-      preparedStatement.executeUpdate();
-      
-      siteChatConversation.setId(QueryUtil.getLastInsertedID(connection));
+      preparedStatement.close();
     }
-    else {
+    finally {
       
-      sql = " UPDATE siteChatConversation SET"
-          + "   name = ?,"
-          + "   created_datetime = ?,"
-          + "   created_by_user_id = ?,"
-          + "   password = ?"
-          + " WHERE id = ?";
-      
-      PreparedStatement preparedStatement = connection.prepareStatement(sql);
-      
-      preparedStatement.setString(1, siteChatConversation.getName());
-      preparedStatement.setTimestamp(2, SQLUtil.getTimestamp(siteChatConversation.getCreatedDatetime()));
-      preparedStatement.setInt(3, siteChatConversation.getCreatedByUserId());
-      preparedStatement.setString(4, siteChatConversation.getPassword());
-      preparedStatement.setInt(5, siteChatConversation.getId());
-      
-      preparedStatement.executeUpdate();
+      QueryUtil.closeNoThrow(preparedStatement);
     }
   }
   
   public static boolean authenticateUserLogin(Connection connection, int userId, String sessionId) throws SQLException {
     
-    Statement statement = connection.createStatement();
-    String sql;
+    Statement statement = null;
     
-    sql = " SELECT 1"
-        + " FROM phpbb_sessions"
-        + " WHERE session_id = " + SQLUtil.escapeQuoteString(sessionId)
-        + " AND session_user_id = " + userId;
+    try {
+      statement = connection.createStatement();
+      String sql;
     
-    return QueryUtil.hasAtLeastOneRow(statement, sql);
+      sql = " SELECT 1"
+          + " FROM phpbb_sessions"
+          + " WHERE session_id = " + SQLUtil.escapeQuoteString(sessionId)
+          + " AND session_user_id = " + userId;
+    
+      boolean hasAtLeastOneRow = QueryUtil.hasAtLeastOneRow(statement, sql);
+      
+      statement.close();
+      statement = null;
+      
+      return hasAtLeastOneRow;
+    }
+    finally {
+      
+      QueryUtil.closeNoThrow(statement);
+    }
   }
   
   public static void putNewSiteChatConversationMessages(Connection connection, List<SiteChatConversationMessage> siteChatConversationMessages) throws SQLException {
@@ -286,27 +352,41 @@ public class SiteChatUtil {
   
   public static int getTopSiteChatConversationMessageId(Connection connection) throws SQLException {
     
-    String sql = " SELECT MAX(id) AS id"
-               + " FROM siteChatConversationMessage";
+    Statement statement = null;
+    ResultSet resultSet = null;
     
-    Statement statement = connection.createStatement();
-    ResultSet resultSet = statement.executeQuery(sql);
-    int topId = 0;
+    try {
+      String sql = " SELECT MAX(id) AS id"
+                 + " FROM siteChatConversationMessage";
     
-    if(resultSet.next()) {
+      statement = connection.createStatement();
+      resultSet = statement.executeQuery(sql);
+      int topId = 0;
       
-      topId = resultSet.getInt("id");
+      if(resultSet.next()) {
+        
+        topId = resultSet.getInt("id");
+      }
+      
+      resultSet.close();
+      resultSet = null;
+      
+      statement.close();
+      statement = null;
+      
+      return topId;
     }
-    
-    resultSet.close();
-    statement.close();
-    
-    return topId;
+    finally {
+      
+      QueryUtil.closeNoThrow(resultSet);
+      QueryUtil.closeNoThrow(statement);
+    }
   }
   
   public static Set<Integer> getBannedUserIdSet(Connection connection) throws SQLException {
     
     Statement statement = null;
+    ResultSet resultSet = null;
     Set<Integer> bannedUserIdSet = new HashSet<Integer>();
     
     try {
@@ -316,16 +396,22 @@ public class SiteChatUtil {
                  + " AND group_leader = " + SQLUtil.encodeBooleanInt(false);
       
       statement = connection.createStatement();
-      ResultSet resultSet = statement.executeQuery(sql);
+      resultSet = statement.executeQuery(sql);
       
       while(resultSet.next()) {
         
         bannedUserIdSet.add(resultSet.getInt("user_id"));
       }
+      
       resultSet.close();
+      resultSet = null;
+      
+      statement.close();
+      statement = null;
     }
     finally {
       
+      QueryUtil.closeNoThrow(resultSet);
       QueryUtil.closeNoThrow(statement);
     }
     return bannedUserIdSet;

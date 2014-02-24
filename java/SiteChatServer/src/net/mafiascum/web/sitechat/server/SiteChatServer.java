@@ -546,20 +546,24 @@ public class SiteChatServer extends Server implements SignalHandler {
     lagLogger.debug("Sending User List To All Web Sockets. START.");
     List<SiteChatUser> siteChatUserList = new LinkedList<SiteChatUser>();
     List<SiteChatBarebonesConversation> siteChatBarebonesConversations = new LinkedList<SiteChatBarebonesConversation>();
-
+    
     for(int userId : userIdToLastNetworkActivityDatetime.keySet()) {
       
       siteChatUserList.add(siteChatUserMap.get(userId));
     }
+    
+    logger.debug("Generating user list packet for " + siteChatUserList.size() + " users.");
 
     //Generate message for each user.
     for(int userId : siteChatUserMap.keySet()) {
       
+      logger.debug("Preparing user list packet for user #" + userId);
       List<SiteChatWebSocket> siteChatWebSockets = userIdToSiteChatWebSocketsMap.get(userId);
       siteChatBarebonesConversations.clear();
       
       if(siteChatWebSockets == null) {
         
+        logger.debug("No web sockets. Skipping.");
         continue;
       }
       
@@ -976,6 +980,12 @@ public class SiteChatServer extends Server implements SignalHandler {
       synchronized(this.getConnection()) {
         if(this.getConnection().isOpen()) {
           String siteChatOutboundPacketJson = new GsonBuilder().registerTypeAdapter(Date.class, new DateUnixTimestampSerializer()).create().toJson(siteChatOutboundPacket);
+          
+          if(siteChatOutboundPacket instanceof SiteChatOutboundUserListPacket) {
+            
+            logger.debug("Sending User List Packet. Length: " + siteChatOutboundPacketJson);
+          }
+          
           this.getConnection().getRemote().sendStringByFuture(siteChatOutboundPacketJson);
         }
       }

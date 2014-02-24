@@ -63,6 +63,19 @@ public abstract class QueryUtil {
       // Ignore - as requested
     }
   }
+  
+  public static void closeNoThrow (ResultSet resultSet) {
+    
+    if(resultSet == null)
+      return;
+    
+    try {
+      resultSet.close();
+    }
+    catch(SQLException sqlException) {
+      //Ignore.
+    }
+  }
 
   /**
    * Execute the specified update statement on the specified connection.  This
@@ -105,11 +118,21 @@ public abstract class QueryUtil {
    * id that matches the specified value exists.<br>
    */
   public static boolean hasAtLeastOneRow (Statement statement, String sql) throws SQLException {
-    ResultSet rs = statement.executeQuery(sql);
+    ResultSet resultSet = null;
+    
+    try {
+      statement.executeQuery(sql);
 
-    boolean hasResultRow = rs.next();
+      boolean hasResultRow = resultSet.next();
+    
+      resultSet.close();
 
-    return hasResultRow;
+      return hasResultRow;
+    }
+    finally {
+      
+      QueryUtil.closeNoThrow(resultSet);
+    }
   }
 
   /**
