@@ -11,7 +11,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import net.mafiascum.util.MiscUtil;
 import net.mafiascum.util.ThreadUtil;
 
 import org.apache.log4j.Logger;
@@ -105,6 +104,21 @@ public class ConnectionPool {
     
     logger.debug("Releasing Connection.");
     connectionInvocationHandler.setLastClosedDatetime(new Date());
+    
+    long timeOpen = System.currentTimeMillis() - connectionInvocationHandler.getLastOpenedDatetime().getTime();
+    
+    if(timeOpen >= 1000) {
+      
+      try {
+        
+        throw new Exception("");
+      }
+      catch(Exception exception) {
+        
+        logger.debug("Connection held for " + timeOpen + " ms:", exception);
+      }
+    }
+    
     openConnections.remove(connectionInvocationHandler);
     availableConnections.add(connectionInvocationHandler);
 
