@@ -121,7 +121,7 @@ public abstract class QueryUtil {
     ResultSet resultSet = null;
     
     try {
-      statement.executeQuery(sql);
+      resultSet = statement.executeQuery(sql);
 
       boolean hasResultRow = resultSet.next();
     
