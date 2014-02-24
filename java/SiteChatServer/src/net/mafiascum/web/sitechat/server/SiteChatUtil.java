@@ -297,7 +297,6 @@ public class SiteChatUtil {
     Statement statement = null;
     
     try {
-      logger.info("Creating Statement.");
       statement = connection.createStatement();
       String sql;
     
@@ -306,21 +305,16 @@ public class SiteChatUtil {
           + " WHERE session_id = " + SQLUtil.escapeQuoteString(sessionId)
           + " AND session_user_id = " + userId;
     
-      logger.info("Querying.");
       boolean hasAtLeastOneRow = QueryUtil.hasAtLeastOneRow(statement, sql);
       
-      logger.info("Closing Statement.");
       statement.close();
       statement = null;
       
-      logger.info("Returning.");
       return hasAtLeastOneRow;
     }
     finally {
       
-      logger.info("Closing No Throw.");
       QueryUtil.closeNoThrow(statement);
-      logger.info("Done.");
     }
   }
   

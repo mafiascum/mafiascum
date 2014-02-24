@@ -105,7 +105,7 @@ public class ConnectionPool {
     
     logger.debug("Releasing Connection.");
     connectionInvocationHandler.setLastClosedDatetime(new Date());
-    
+    /***
     long timeOpen = System.currentTimeMillis() - connectionInvocationHandler.getLastOpenedDatetime().getTime();
     
     if(timeOpen >= 1000) {
@@ -113,6 +113,7 @@ public class ConnectionPool {
       logger.error("Connection held for " + timeOpen + " ms:");
       logger.error(MiscUtil.getPrintableStackTrace(Thread.currentThread().getStackTrace()));
     }
+    ***/
     
     openConnections.remove(connectionInvocationHandler);
     availableConnections.add(connectionInvocationHandler);
