@@ -50,6 +50,8 @@ public class SiteChatServerServiceThread extends Thread {
           }
           catch(Throwable throwable) {
             
+            throwable.printStackTrace();
+            logger.error("Could not send user list. Error: " + throwable.getMessage());
             logger.error("Could not send user list:", throwable);
           }
           

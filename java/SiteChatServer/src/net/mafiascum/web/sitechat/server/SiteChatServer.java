@@ -560,56 +560,58 @@ public class SiteChatServer extends Server implements SignalHandler {
       List<SiteChatWebSocket> siteChatWebSockets = userIdToSiteChatWebSocketsMap.get(userId);
       siteChatBarebonesConversations.clear();
       
-      if(siteChatWebSockets == null) {
+      if(siteChatWebSockets == null || siteChatWebSockets.size() == 0) {
         
         continue;
       }
 
       logger.debug("Preparing user list packet for user #" + userId);
-      synchronized(siteChatWebSockets) {
-       
-        for(int siteChatConversationId : siteChatConversationWithMemberListMap.keySet()) {
+
+      for(int siteChatConversationId : siteChatConversationWithMemberListMap.keySet()) {
           
-          SiteChatConversationWithUserList siteChatConversationWithUserList = siteChatConversationWithMemberListMap.get(siteChatConversationId);
+        SiteChatConversationWithUserList siteChatConversationWithUserList = siteChatConversationWithMemberListMap.get(siteChatConversationId);
           
-          synchronized(siteChatConversationWithUserList) {
+        synchronized(siteChatConversationWithUserList) {
           
-            if(siteChatConversationWithUserList.getUserIdSet().isEmpty()) {
+          if(siteChatConversationWithUserList.getUserIdSet().isEmpty()) {
             
+            continue;
+          }
+          if(siteChatConversationWithUserList.getSiteChatConversation().getPassword() != null) {
+            
+            if(!siteChatConversationWithUserList.getUserIdSet().contains(userId)) {
+              
               continue;
             }
-            if(siteChatConversationWithUserList.getSiteChatConversation().getPassword() != null) {
-            
-              if(!siteChatConversationWithUserList.getUserIdSet().contains(userId)) {
-              
-                continue;
-              }
-            }
-            
-            //Copy all but the message array over. We do not need it for this.
-            SiteChatBarebonesConversation barebonesConversation = new SiteChatBarebonesConversation();
-            barebonesConversation.setId(siteChatConversationWithUserList.getSiteChatConversation().getId());
-            barebonesConversation.setName(siteChatConversationWithUserList.getSiteChatConversation().getName());
-            barebonesConversation.setUserIdSet(siteChatConversationWithUserList.getUserIdSet());
-            barebonesConversation.setCreatedByUserId(siteChatConversationWithUserList.getSiteChatConversation().getCreatedByUserId());
-            
-            siteChatBarebonesConversations.add(barebonesConversation);
           }
+            
+          //Copy all but the message array over. We do not need it for this.
+          logger.debug("Creating barebones conversation.");
+          SiteChatBarebonesConversation barebonesConversation = new SiteChatBarebonesConversation();
+          barebonesConversation.setId(siteChatConversationWithUserList.getSiteChatConversation().getId());
+          barebonesConversation.setName(siteChatConversationWithUserList.getSiteChatConversation().getName());
+          barebonesConversation.setUserIdSet(siteChatConversationWithUserList.getUserIdSet());
+          barebonesConversation.setCreatedByUserId(siteChatConversationWithUserList.getSiteChatConversation().getCreatedByUserId());
+          logger.debug("Barebones conversation created.");
+          siteChatBarebonesConversations.add(barebonesConversation);
         }
-        
-        SiteChatOutboundUserListPacket siteChatOutboundUserListPacket = new SiteChatOutboundUserListPacket();
-        siteChatOutboundUserListPacket.setSiteChatUsers(siteChatUserList);
-        siteChatOutboundUserListPacket.setSiteChatConversations(siteChatBarebonesConversations);
-        siteChatOutboundUserListPacket.setPacketSentDatetime(new Date());
-        
-        for(SiteChatWebSocket siteChatWebSocket : siteChatWebSockets) {
+      }
+      
+      logger.debug("Creating outbound user list packet. Users: " + siteChatUserList.size() + ", Conversations: " + siteChatBarebonesConversations.size());
+      SiteChatOutboundUserListPacket siteChatOutboundUserListPacket = new SiteChatOutboundUserListPacket();
+      siteChatOutboundUserListPacket.setSiteChatUsers(siteChatUserList);
+      siteChatOutboundUserListPacket.setSiteChatConversations(siteChatBarebonesConversations);
+      siteChatOutboundUserListPacket.setPacketSentDatetime(new Date());
+      
+      for(SiteChatWebSocket siteChatWebSocket : siteChatWebSockets) {
           
-          synchronized(siteChatWebSocket) {
-            siteChatWebSocket.sendOutboundPacket(siteChatOutboundUserListPacket);
-          }
+        synchronized(siteChatWebSocket) {
+          siteChatWebSocket.sendOutboundPacket(siteChatOutboundUserListPacket);
+          logger.debug("Message sent.");
         }
       }
     }
+    
     lagLogger.debug("Sending User List To All Web Sockets. FINISHED.");
   }
   
@@ -978,7 +980,18 @@ public class SiteChatServer extends Server implements SignalHandler {
       
       synchronized(this.getConnection()) {
         if(this.getConnection().isOpen()) {
+          
+          if(siteChatOutboundPacket instanceof SiteChatOutboundUserListPacket) {
+            
+            logger.debug("Before GSON");
+          }
+          
           String siteChatOutboundPacketJson = new GsonBuilder().registerTypeAdapter(Date.class, new DateUnixTimestampSerializer()).create().toJson(siteChatOutboundPacket);
+          
+          if(siteChatOutboundPacket instanceof SiteChatOutboundUserListPacket) {
+            
+            logger.debug("After GSON");
+          }
           
           if(siteChatOutboundPacket instanceof SiteChatOutboundUserListPacket) {
             
