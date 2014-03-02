@@ -557,12 +557,15 @@ public class SiteChatServer extends Server implements SignalHandler {
     //Generate message for each user.
     for(int userId : siteChatUserMap.keySet()) {
       
+      logger.debug("Considering Sending To User ID: " + userId);
       List<SiteChatWebSocket> siteChatWebSockets = userIdToSiteChatWebSocketsMap.get(userId);
       siteChatBarebonesConversations.clear();
       
-      if(siteChatWebSockets == null || siteChatWebSockets.size() == 0) {
+      synchronized(siteChatWebSockets) {
+        if(siteChatWebSockets == null || siteChatWebSockets.size() == 0) {
         
-        continue;
+          continue;
+        }
       }
 
       logger.debug("Preparing user list packet for user #" + userId);
@@ -603,11 +606,14 @@ public class SiteChatServer extends Server implements SignalHandler {
       siteChatOutboundUserListPacket.setSiteChatConversations(siteChatBarebonesConversations);
       siteChatOutboundUserListPacket.setPacketSentDatetime(new Date());
       
-      for(SiteChatWebSocket siteChatWebSocket : siteChatWebSockets) {
+      synchronized(siteChatWebSockets) {
+        for(SiteChatWebSocket siteChatWebSocket : siteChatWebSockets) {
           
-        synchronized(siteChatWebSocket) {
-          siteChatWebSocket.sendOutboundPacket(siteChatOutboundUserListPacket);
-          logger.debug("Message sent.");
+          synchronized(siteChatWebSocket) {
+            logger.debug("Sending Message.");
+            siteChatWebSocket.sendOutboundPacket(siteChatOutboundUserListPacket);
+            logger.debug("Message sent.");
+          }
         }
       }
     }
