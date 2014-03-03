@@ -549,14 +549,22 @@ public class SiteChatServer extends Server implements SignalHandler {
     
     for(int userId : userIdToLastNetworkActivityDatetime.keySet()) {
       
-      siteChatUserList.add(siteChatUserMap.get(userId));
+      synchronized(siteChatUserMap) {
+        siteChatUserList.add(siteChatUserMap.get(userId));
+      }
     }
     
     logger.debug("Generating user list packet for " + siteChatUserList.size() + " users.");
 
     //Generate message for each user.
-    for(int userId : siteChatUserMap.keySet()) {
+    for(SiteChatUser siteChatUser : siteChatUserList) {
       
+      int userId;
+      
+      synchronized(siteChatUser) {
+        
+        userId = siteChatUser.getId();
+      }
       logger.debug("Considering Sending To User ID: " + userId);
       List<SiteChatWebSocket> siteChatWebSockets = userIdToSiteChatWebSocketsMap.get(userId);
       siteChatBarebonesConversations.clear();

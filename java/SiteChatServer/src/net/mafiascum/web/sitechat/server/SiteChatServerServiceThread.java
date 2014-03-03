@@ -52,7 +52,7 @@ public class SiteChatServerServiceThread extends Thread {
             
             throwable.printStackTrace();
             logger.error("Could not send user list. Error: " + throwable.getClass().getSimpleName());
-            logger.error("Could not send user list:", throwable);
+            logger.error("Could not send user list:\n" + MiscUtil.getPrintableStackTrace(throwable));
           }
           
           lastUserListDatetime = nowDatetime;
