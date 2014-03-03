@@ -561,9 +561,14 @@ public class SiteChatServer extends Server implements SignalHandler {
       List<SiteChatWebSocket> siteChatWebSockets = userIdToSiteChatWebSocketsMap.get(userId);
       siteChatBarebonesConversations.clear();
       
-      synchronized(siteChatWebSockets) {
-        if(siteChatWebSockets == null || siteChatWebSockets.size() == 0) {
+      if(siteChatWebSockets == null) {
         
+        continue;
+      }
+      
+      synchronized(siteChatWebSockets) {
+        if(siteChatWebSockets.isEmpty()) {
+          
           continue;
         }
       }
