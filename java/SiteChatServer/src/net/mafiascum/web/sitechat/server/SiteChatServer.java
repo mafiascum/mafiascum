@@ -239,24 +239,45 @@ public class SiteChatServer extends Server implements SignalHandler {
     BigDecimal totalMemory = new BigDecimal(Runtime.getRuntime().totalMemory()).divide(new BigDecimal(1024*1024), BigDecimal.ROUND_HALF_DOWN);
     BigDecimal maxMemory = new BigDecimal(Runtime.getRuntime().maxMemory()).divide(new BigDecimal(1024*1024), BigDecimal.ROUND_HALF_DOWN);
     
-    logger.debug("Descriptors: " + descriptors.size());
-    logger.debug("Convos With Member list Map: " + siteChatConversationWithMemberListMap.size());
-    logger.debug("Private Convo Map: " + siteChatPrivateConversationMessageHistoryMap.size());
-    logger.debug("User ID To Activity Map: " + userIdToLastNetworkActivityDatetime.size());
-    logger.debug("User Map: " + siteChatUserMap.size());
-    logger.debug("User ID To Web Socket Map: " + userIdToSiteChatWebSocketsMap.size());
-    logger.debug("Messages To Save: " + siteChatConversationMessagesToSave.size());
+    synchronized(descriptors) {
+      logger.debug("Descriptors: " + descriptors.size());
+    }
+    synchronized(siteChatConversationWithMemberListMap) {
+      logger.debug("Convos With Member list Map: " + siteChatConversationWithMemberListMap.size());
+    }
+    synchronized(siteChatPrivateConversationMessageHistoryMap) {
+      logger.debug("Private Convo Map: " + siteChatPrivateConversationMessageHistoryMap.size());
+    }
+    synchronized(userIdToLastNetworkActivityDatetime) {
+      logger.debug("User ID To Activity Map: " + userIdToLastNetworkActivityDatetime.size());
+    }
+    synchronized(siteChatUserMap) {
+      logger.debug("User Map: " + siteChatUserMap.size());
+    }
+    synchronized(userIdToSiteChatWebSocketsMap) {
+      logger.debug("User ID To Web Socket Map: " + userIdToSiteChatWebSocketsMap.size());
+    }
+    synchronized(siteChatConversationMessagesToSave) {
+      logger.debug("Messages To Save: " + siteChatConversationMessagesToSave.size());
+    }
     logger.debug("Total: " + totalMemory + "MB, Free: " + freeMemory + "MB, Max: " + maxMemory + "MB.");
   }
   
   public void associateWebSocketWithUser(int userId, SiteChatWebSocket siteChatWebSocket) {
     
-    if(userIdToSiteChatWebSocketsMap.get(userId) == null) {
+    synchronized(siteChatConversationWithMemberListMap) {
       
-      userIdToSiteChatWebSocketsMap.put(userId, new LinkedList<SiteChatWebSocket>());
-    }
+      List<SiteChatWebSocket> siteChatWebSockets = userIdToSiteChatWebSocketsMap.get(userId);
+      if(siteChatWebSockets == null) {
+      
+        siteChatWebSockets = new LinkedList<SiteChatWebSocket>();
+        userIdToSiteChatWebSocketsMap.put(userId, siteChatWebSockets);
+      }
     
-    userIdToSiteChatWebSocketsMap.get(userId).add(siteChatWebSocket);
+      synchronized(siteChatWebSockets) {
+        siteChatWebSockets.add(siteChatWebSocket);
+      }
+    }
   }
   
   public SiteChatConversationWithUserList getSiteChatConversationWithUserList(String siteChatConversationName) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
@@ -554,7 +575,7 @@ public class SiteChatServer extends Server implements SignalHandler {
       }
     }
     
-    logger.debug("Generating user list packet for " + siteChatUserList.size() + " users.");
+    //logger.debug("Generating user list packet for " + siteChatUserList.size() + " users.");
 
     //Generate message for each user.
     for(SiteChatUser siteChatUser : siteChatUserList) {
@@ -565,7 +586,7 @@ public class SiteChatServer extends Server implements SignalHandler {
         
         userId = siteChatUser.getId();
       }
-      logger.debug("Considering Sending To User ID: " + userId);
+      //logger.debug("Considering Sending To User ID: " + userId);
       List<SiteChatWebSocket> siteChatWebSockets = userIdToSiteChatWebSocketsMap.get(userId);
       siteChatBarebonesConversations.clear();
       
@@ -581,7 +602,7 @@ public class SiteChatServer extends Server implements SignalHandler {
         }
       }
 
-      logger.debug("Preparing user list packet for user #" + userId);
+      //logger.debug("Preparing user list packet for user #" + userId);
 
       for(int siteChatConversationId : siteChatConversationWithMemberListMap.keySet()) {
           
@@ -602,18 +623,18 @@ public class SiteChatServer extends Server implements SignalHandler {
           }
             
           //Copy all but the message array over. We do not need it for this.
-          logger.debug("Creating barebones conversation.");
+          //logger.debug("Creating barebones conversation.");
           SiteChatBarebonesConversation barebonesConversation = new SiteChatBarebonesConversation();
           barebonesConversation.setId(siteChatConversationWithUserList.getSiteChatConversation().getId());
           barebonesConversation.setName(siteChatConversationWithUserList.getSiteChatConversation().getName());
           barebonesConversation.setUserIdSet(siteChatConversationWithUserList.getUserIdSet());
           barebonesConversation.setCreatedByUserId(siteChatConversationWithUserList.getSiteChatConversation().getCreatedByUserId());
-          logger.debug("Barebones conversation created.");
+          //logger.debug("Barebones conversation created.");
           siteChatBarebonesConversations.add(barebonesConversation);
         }
       }
       
-      logger.debug("Creating outbound user list packet. Users: " + siteChatUserList.size() + ", Conversations: " + siteChatBarebonesConversations.size());
+      //logger.debug("Creating outbound user list packet. Users: " + siteChatUserList.size() + ", Conversations: " + siteChatBarebonesConversations.size());
       SiteChatOutboundUserListPacket siteChatOutboundUserListPacket = new SiteChatOutboundUserListPacket();
       siteChatOutboundUserListPacket.setSiteChatUsers(siteChatUserList);
       siteChatOutboundUserListPacket.setSiteChatConversations(siteChatBarebonesConversations);
@@ -623,15 +644,14 @@ public class SiteChatServer extends Server implements SignalHandler {
         for(SiteChatWebSocket siteChatWebSocket : siteChatWebSockets) {
           
           synchronized(siteChatWebSocket) {
-            logger.debug("Sending Message.");
+            //logger.debug("Sending Message.");
             siteChatWebSocket.sendOutboundPacket(siteChatOutboundUserListPacket);
-            logger.debug("Message sent.");
+            //logger.debug("Message sent.");
           }
         }
       }
     }
     
-    lagLogger.debug("Sending User List To All Web Sockets. FINISHED.");
   }
   
   public void removeIdleUsers(Date contextDatetime) throws Exception {
@@ -686,11 +706,17 @@ public class SiteChatServer extends Server implements SignalHandler {
           siteChatWebSocket.getConnection().close();
           siteChatWebSocketIter.remove();
           
-          if(userIdToSiteChatWebSocketsMap.get(userId) != null) {
+          synchronized(userIdToSiteChatWebSocketsMap) {
+            List<SiteChatWebSocket> siteChatWebSockets = userIdToSiteChatWebSocketsMap.get(userId);
+            if(siteChatWebSockets != null) {
             
-            userIdToSiteChatWebSocketsMap.get(userId).remove(siteChatWebSocket);
-            if(userIdToSiteChatWebSocketsMap.get(userId).size() == 0) {
-              userIdToSiteChatWebSocketsMap.remove(userId);
+              synchronized(siteChatWebSockets) {
+              
+                siteChatWebSockets.remove(siteChatWebSocket);
+                if(siteChatWebSockets.size() == 0) {
+                  userIdToSiteChatWebSocketsMap.remove(userId);
+                }
+              }
             }
           }
           
@@ -1038,11 +1064,19 @@ public class SiteChatServer extends Server implements SignalHandler {
       if(this.getSiteChatUser() != null) {
         
         int userId = this.getSiteChatUser().getId();
-        if(userIdToSiteChatWebSocketsMap.get(userId) != null) {
-          userIdToSiteChatWebSocketsMap.get(userId).remove(this);
+        
+        synchronized(userIdToSiteChatWebSocketsMap) {
           
-          if(userIdToSiteChatWebSocketsMap.get(userId).size() == 0) {
-            userIdToSiteChatWebSocketsMap.remove(userId);
+          List<SiteChatWebSocket> siteChatWebSockets = userIdToSiteChatWebSocketsMap.get(userId);
+          if(siteChatWebSockets != null) {
+            
+            synchronized(siteChatWebSockets) {
+              siteChatWebSockets.remove(this);
+          
+              if(siteChatWebSockets.size() == 0) {
+                userIdToSiteChatWebSocketsMap.remove(userId);
+              }
+            }
           }
         }
       }
@@ -1073,7 +1107,7 @@ public class SiteChatServer extends Server implements SignalHandler {
         }
         catch(Throwable throwable) {
 
-          logger.error("Error in onWebSocketText()", throwable);
+          logger.error("Error in onWebSocketText()\n" + MiscUtil.getPrintableStackTrace(throwable));
           return;
         }
       }
