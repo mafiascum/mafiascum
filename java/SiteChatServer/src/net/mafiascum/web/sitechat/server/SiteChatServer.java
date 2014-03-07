@@ -1026,22 +1026,7 @@ public class SiteChatServer extends Server implements SignalHandler {
       synchronized(this.getConnection()) {
         if(this.getConnection().isOpen()) {
           
-          if(siteChatOutboundPacket instanceof SiteChatOutboundUserListPacket) {
-            
-            logger.debug("Before GSON");
-          }
-          
           String siteChatOutboundPacketJson = new GsonBuilder().registerTypeAdapter(Date.class, new DateUnixTimestampSerializer()).create().toJson(siteChatOutboundPacket);
-          
-          if(siteChatOutboundPacket instanceof SiteChatOutboundUserListPacket) {
-            
-            logger.debug("After GSON");
-          }
-          
-          if(siteChatOutboundPacket instanceof SiteChatOutboundUserListPacket) {
-            
-            logger.debug("Sending User List Packet. Length: " + siteChatOutboundPacketJson.length());
-          }
           
           this.getConnection().getRemote().sendStringByFuture(siteChatOutboundPacketJson);
         }
