@@ -56,7 +56,6 @@ public class ConnectionPool {
     while(true) {
       while(availableConnections.size() <= 0) {
 
-//      logger.debug("Waiting to allocate connection...\n" + MiscUtil.getPrintableStackTrace(Thread.currentThread().getStackTrace()));
         notifyAll();
         wait();
       }

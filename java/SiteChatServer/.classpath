@@ -5,9 +5,6 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7"/>
 	<classpathentry kind="lib" path="lib/gson-1.7.1.jar"/>
 	<classpathentry kind="lib" path="lib/mysql-connector-java-5.0.3-bin.jar"/>
-	<classpathentry kind="lib" path="lib/log4j-1.2-api-2.0-beta7.jar"/>
-	<classpathentry kind="lib" path="lib/log4j-core-2.0-beta7.jar"/>
-	<classpathentry kind="lib" path="lib/log4j-api-2.0-beta7.jar"/>
 	<classpathentry kind="lib" path="lib/jetty-annotations-9.0.3.v20130506.jar"/>
 	<classpathentry kind="lib" path="lib/jetty-client-9.0.3.v20130506.jar"/>
 	<classpathentry kind="lib" path="lib/jetty-continuation-9.0.3.v20130506.jar"/>
@@ -35,5 +32,6 @@
 	<classpathentry kind="lib" path="lib/websocket-server-9.0.3.v20130506.jar"/>
 	<classpathentry kind="lib" path="lib/websocket-servlet-9.0.3.v20130506.jar"/>
 	<classpathentry kind="lib" path="lib/commons-codec-1.8.jar"/>
+	<classpathentry kind="lib" path="lib/log4j-1.2.17.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

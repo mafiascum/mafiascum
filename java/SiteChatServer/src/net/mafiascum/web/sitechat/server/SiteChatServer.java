@@ -1092,7 +1092,7 @@ public class SiteChatServer extends Server implements SignalHandler {
         }
         catch(Throwable throwable) {
 
-          logger.error("Error in onWebSocketText()\n" + MiscUtil.getPrintableStackTrace(throwable));
+          logger.error("Error in onWebSocketText()", throwable);
           return;
         }
       }

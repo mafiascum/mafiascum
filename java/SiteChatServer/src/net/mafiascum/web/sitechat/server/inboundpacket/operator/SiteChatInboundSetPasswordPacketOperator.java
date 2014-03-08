@@ -39,7 +39,7 @@ public class SiteChatInboundSetPasswordPacketOperator implements SiteChatInbound
     }
     catch(Exception exception) {
       
-      logger.error(MiscUtil.getPrintableStackTrace(exception));
+      logger.error("Error updating conversation password:", exception);
       error = "An error has occurred.";
     }
     
