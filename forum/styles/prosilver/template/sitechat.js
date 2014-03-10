@@ -814,7 +814,7 @@ function Client()
 		if (client.rooms){
 					for (var room in client.rooms) {
 						if (client.rooms[room] !== undefined && client.rooms[room] !== null){
-							$("#roomstab").append('<div id="chatroom' + client.rooms[room].id + '"><div class="roomtitle"><span class="expand-icon">' + (client.rooms[room].expanded ? '-' : "+") + '</span>' + client.rooms[room].name + '<span class="usercount">(' + client.rooms[room].userIdSet.length + ')</span><span class="joinbutton">JOIN</span></div><div class="userlist"' + (client.rooms[room].expanded ? '' : "style='display:none;'") + '></div></div>');
+							$("#roomstab").append('<div id="chatroom' + client.rooms[room].id + '"><div class="roomtitle"><span class="expand-icon">' + (client.rooms[room].expanded ? '-' : "+") + '</span>' + client.rooms[room].name + '<span class="usercount">(' + client.rooms[room].userIdSet.length + ')</span></div><div class="userlist"' + (client.rooms[room].expanded ? '' : "style='display:none;'") + '></div></div>');
 							var identifier = '#chatroom' + client.rooms[room].id + ' .userlist';
 							$(identifier).append('<ul>');
 							for (var k = 0; k < client.rooms[room].userIdSet.length; k++){
