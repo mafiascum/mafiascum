@@ -143,7 +143,7 @@ function Client()
 					conversationId = parseInt(key);//Support old format.
 
 				var conversation = JSON.parse(localStorage[client.namespace + "conversation" + key]);
-				client.createChatWindow(conversationId, recipientUserId, conversation.createdByUserId, conversation.title, conversation.userIdSet, conversation.expanded, conversation.messages, false, conversation.blinking, conversation.width, conversation.height);
+				client.createChatWindow(conversationId, recipientUserId, conversation.createdByUserId, conversation.title, conversation.userIdSet, conversation.expanded, conversation.messages, false, conversation.blinking, conversation.width, conversation.height, conversation.authCode);
 
 			}
 		}
@@ -177,7 +177,7 @@ function Client()
 		
 		var recipientUserId = parseInt($(this).data("user-id"));
 		if(client.chatWindows["P" + recipientUserId] == undefined)
-			client.createChatWindow(null, recipientUserId, null, $(this).data("username"), [], true, [], true, null, null);
+			client.createChatWindow(null, recipientUserId, null, $(this).data("username"), [], true, [], true, null, null, null);
 	}
 
 	
@@ -324,12 +324,25 @@ function Client()
 			client.attemptReconnectIntervalId = null;
 		}
 		$("#utilitywindow .exclamation").addClass("hidden");
+
+		var conversationKeySet = client.getConversationKeySet();
+		var coversationIdToAuthCodeMap = {}
+		var self = this;
+		conversationKeySet.forEach(function(conversationKey) {
+
+			var authCode = client.chatWindows[ conversationKey ].authCode;
+			var conversationId = client.chatWindows[ conversationKey ].siteChatConversationId;
+			if(authCode)
+				coversationIdToAuthCodeMap[conversationId] = authCode;
+		});
+
 		var siteChatPacket =
 		{
 			command:"LogIn",
 			userId:client.userId,
 			sessionId:client.sessionId,
-			conversationKeySet:client.getConversationKeySet(),
+			conversationKeySet:conversationKeySet,
+			coversationIdToAuthCodeMap:coversationIdToAuthCodeMap,
 			conversationKeyToMostRecentMessageIdMap:new Object()
 		};
 		
@@ -362,8 +375,7 @@ function Client()
 		client.attemptingLogin = false;
 	}
 
-	this.createChatWindow = function(conversationId, recipientUserId, createdByUserId, title, userIdSet, expanded, messages, save, blinking, width, height)
-
+	this.createChatWindow = function(conversationId, recipientUserId, createdByUserId, title, userIdSet, expanded, messages, save, blinking, width, height, authCode)
 	{
 		var chatWindowIdPrefix = (conversationId != null ? "C" : "P");
 		var chatWindowUniqueIdentifier = (conversationId != null ? conversationId : recipientUserId);
@@ -408,6 +420,7 @@ function Client()
 		chatWindow.messages = [];
 		chatWindow.width = (width ? width : $chatWindow.width());
 		chatWindow.height = (height ? height : $outputBuffer.height());
+		chatWindow.authCode = authCode;
 		
 		$chatWindow.width(chatWindow.width);
 		$outputBuffer.height(chatWindow.height);
@@ -484,7 +497,7 @@ function Client()
 		
 		if(!client.chatWindows[messageKey] && siteChatConversationMessage.recipientUserId != null)
 		{//If this is a private conversation & the window has not yet been created, we should have enough information to make it ourselves.
-			client.createChatWindow(null, siteChatUser.id, null, siteChatUser.name, [siteChatUser.id], true, [], true, null, null);
+			client.createChatWindow(null, siteChatUser.id, null, siteChatUser.name, [siteChatUser.id], true, [], true, null, null, null);
 		}
 		var chatWindow = client.chatWindows[ messageKey ];
 		
@@ -632,7 +645,8 @@ function Client()
 		}
 		else if(siteChatPacket.command == "Connect")
 		{
-			if(client.chatWindows["C" + siteChatPacket.siteChatConversationId] == undefined)
+			var chatWindow = client.chatWindows["C" + siteChatPacket.siteChatConversationId];
+			if(chatWindow == undefined)
 			{//Create chat window
 				var siteChatUserIdSet = [];
 				for(var siteChatUserIndex = 0;siteChatUserIndex < siteChatPacket.users.length;++siteChatUserIndex)
@@ -643,8 +657,13 @@ function Client()
 					client.addUser(siteChatUser, true);
 				}
 				//Setting recipientUserId to null because I do not believe we will be "connecting" to private conversations.
-				client.createChatWindow(siteChatPacket.siteChatConversationId, null, siteChatPacket.createdByUserId, siteChatPacket.titleText, siteChatUserIdSet, true, [], true, false, null, null);
+				client.createChatWindow(siteChatPacket.siteChatConversationId, null, siteChatPacket.createdByUserId, siteChatPacket.titleText, siteChatUserIdSet, true, [], true, false, null, null, siteChatPacket.authCode);
 			}
+			else if(siteChatPacket.authCode != null) {
+				chatWindow.authCode = siteChatPacket.authCode;
+				client.saveChatWindow(chatWindow);
+			}
+
 
 			$.fancybox.close();
 		}
