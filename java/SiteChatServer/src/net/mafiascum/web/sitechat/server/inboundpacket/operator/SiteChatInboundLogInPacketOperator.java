@@ -5,6 +5,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import net.mafiascum.web.sitechat.server.SiteChatServer;
 import net.mafiascum.web.sitechat.server.SiteChatServer.SiteChatWebSocket;
@@ -70,6 +71,8 @@ public class SiteChatInboundLogInPacketOperator implements SiteChatInboundPacket
       siteChatServer.associateWebSocketWithUser(userId, siteChatWebSocket);
     }
     
+    Map<Integer, String> conversationIdToAuthCodeMap = siteChatInboundLogInPacket.getCoversationIdToAuthCodeMap();
+    
     //Reconnect to conversations the user has been removed from.
     for(String siteChatConversationKey : siteChatInboundLogInPacket.getConversationKeySet()) {
 
@@ -94,7 +97,7 @@ public class SiteChatInboundLogInPacketOperator implements SiteChatInboundPacket
           
           if(!siteChatConversationWithUserList.getUserIdSet().contains(siteChatUser.getId())) {
             
-            siteChatServer.attemptJoinConversation(siteChatWebSocket, siteChatUser.getId(), siteChatConversationId, false, true, null);
+            siteChatServer.attemptJoinConversation(siteChatWebSocket, siteChatUser.getId(), siteChatConversationId, false, true, null, conversationIdToAuthCodeMap.get(siteChatConversationId));
           }
         }
       }

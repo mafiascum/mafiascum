@@ -50,6 +50,6 @@ public class SiteChatInboundConnectPacketOperator implements SiteChatInboundPack
       siteChatConversationWithUserList = siteChatServer.createSiteChatConversation(siteChatInboundConnectPacket.getSiteChatConversationName(), siteChatUser.getId());
     }
     
-    siteChatServer.attemptJoinConversation(siteChatWebSocket, siteChatUser.getId(), siteChatConversationWithUserList.getSiteChatConversation().getId(), true, true, siteChatInboundConnectPacket.getPassword());
+    siteChatServer.attemptJoinConversation(siteChatWebSocket, siteChatUser.getId(), siteChatConversationWithUserList.getSiteChatConversation().getId(), true, true, siteChatInboundConnectPacket.getPassword(), null);
   }
 }

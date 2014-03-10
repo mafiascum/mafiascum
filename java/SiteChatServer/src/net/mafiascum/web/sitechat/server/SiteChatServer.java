@@ -818,7 +818,7 @@ public class SiteChatServer extends Server implements SignalHandler {
     }
   }
   
-  public void attemptJoinConversation(SiteChatWebSocket siteChatWebSocket, int siteChatUserId, int siteChatConversationId, boolean notifyUser, boolean notifyConversationMembers, String password) throws IOException {
+  public void attemptJoinConversation(SiteChatWebSocket siteChatWebSocket, int siteChatUserId, int siteChatConversationId, boolean notifyUser, boolean notifyConversationMembers, String password, String authCode) throws IOException {
     
     synchronized(this.siteChatUserMap) {
       SiteChatUser siteChatUser = siteChatUserMap.get(siteChatUserId);
@@ -830,12 +830,14 @@ public class SiteChatServer extends Server implements SignalHandler {
         
         if(password == null) {
           
-          SiteChatOutboundPasswordRequiredPacket siteChatOutboundPasswordRequiredPacket = new SiteChatOutboundPasswordRequiredPacket();
-          siteChatOutboundPasswordRequiredPacket.setConversationName(siteChatConversation.getName());
-          siteChatWebSocket.sendOutboundPacket(siteChatOutboundPasswordRequiredPacket);
+          if(authCode == null || !authCode.equals(SiteChatUtil.generateConversationAuthCode(siteChatUserId, siteChatConversationId, siteChatConversation.getPassword()))) {
+            SiteChatOutboundPasswordRequiredPacket siteChatOutboundPasswordRequiredPacket = new SiteChatOutboundPasswordRequiredPacket();
+            siteChatOutboundPasswordRequiredPacket.setConversationName(siteChatConversation.getName());
+            siteChatWebSocket.sendOutboundPacket(siteChatOutboundPasswordRequiredPacket);
           
-          logger.debug("Password required!");
-          return;
+            logger.debug("Password required!");
+            return;
+          }
         }
         else if(!StringUtil.getSHA1(password).equals(siteChatConversation.getPassword())) {
           
@@ -859,6 +861,12 @@ public class SiteChatServer extends Server implements SignalHandler {
         siteChatOutboundConnectPacket.setSiteChatConversationId(siteChatConversationWithUserList.getSiteChatConversation().getId());
         siteChatOutboundConnectPacket.setTitleText(StringUtil.escapeHTMLCharacters(siteChatConversation.getName()));
         siteChatOutboundConnectPacket.setCreatedByUserId(siteChatConversationWithUserList.getSiteChatConversation().getCreatedByUserId());
+        
+        if(siteChatConversation.getPassword() != null) {
+          
+          siteChatOutboundConnectPacket.setAuthCode(SiteChatUtil.generateConversationAuthCode(siteChatUser.getId(), siteChatConversation.getId(), siteChatConversation.getPassword()));
+          
+        }
         
         Set<SiteChatUser> siteChatUserSet = new HashSet<SiteChatUser>();
       

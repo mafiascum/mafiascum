@@ -9,6 +9,7 @@ public class SiteChatInboundLogInPacket extends SiteChatInboundPacket {
   protected String sessionId;
   protected Set<String> conversationKeySet;
   protected Map<String, Integer> conversationKeyToMostRecentMessageIdMap;
+  protected Map<Integer, String> coversationIdToAuthCodeMap;
 
   public int getUserId() {
     return userId;
@@ -44,5 +45,13 @@ public class SiteChatInboundLogInPacket extends SiteChatInboundPacket {
 
   public void setConversationKeyToMostRecentMessageIdMap(Map<String, Integer> conversationKeyToMostRecentMessageIdMap) {
     this.conversationKeyToMostRecentMessageIdMap = conversationKeyToMostRecentMessageIdMap;
+  }
+  
+  public Map<Integer, String> getCoversationIdToAuthCodeMap() {
+    return coversationIdToAuthCodeMap;
+  }
+  
+  public void setCoversationIdToAuthCodeMap(Map<Integer, String> coversationIdToAuthCodeMap) {
+    this.coversationIdToAuthCodeMap = coversationIdToAuthCodeMap;
   }
 }

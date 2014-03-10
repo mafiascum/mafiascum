@@ -16,6 +16,7 @@ import java.util.Set;
 import net.mafiascum.jdbc.BatchInsertStatement;
 import net.mafiascum.util.QueryUtil;
 import net.mafiascum.util.SQLUtil;
+import net.mafiascum.util.StringUtil;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversation;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationMessage;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationType;
@@ -448,5 +449,10 @@ public class SiteChatUtil {
       return userId1 + "_" + userId2;
     else
       return userId2 + "_" + userId1;
+  }
+  
+  public static String generateConversationAuthCode(int siteChatUserId, int siteChatConversationId, String siteChatConversationPasswordSha1) {
+    
+    return StringUtil.getSHA1(String.valueOf(siteChatUserId) + String.valueOf(siteChatConversationId) + siteChatConversationPasswordSha1);
   }
 }
