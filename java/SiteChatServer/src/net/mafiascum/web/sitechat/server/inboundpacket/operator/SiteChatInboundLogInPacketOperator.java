@@ -97,7 +97,7 @@ public class SiteChatInboundLogInPacketOperator implements SiteChatInboundPacket
           
           if(!siteChatConversationWithUserList.getUserIdSet().contains(siteChatUser.getId())) {
             
-            siteChatServer.attemptJoinConversation(siteChatWebSocket, siteChatUser.getId(), siteChatConversationId, false, true, null, conversationIdToAuthCodeMap.get(siteChatConversationId));
+            siteChatServer.attemptJoinConversation(siteChatWebSocket, siteChatUser.getId(), siteChatConversationId, false, true, null, conversationIdToAuthCodeMap == null ? null : conversationIdToAuthCodeMap.get(siteChatConversationId));
           }
         }
       }
