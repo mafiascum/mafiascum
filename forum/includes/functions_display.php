@@ -311,7 +311,8 @@ function display_forums($root_data = '', $display_moderators = true, $return_mod
 				'FORUM_FOLDER_IMG_SRC'	=> '',
 				'FORUM_IMAGE'			=> ($row['forum_image']) ? '<img src="' . $phpbb_root_path . $row['forum_image'] . '" alt="' . $user->lang['FORUM_CAT'] . '" />' : '',
 				'FORUM_IMAGE_SRC'		=> ($row['forum_image']) ? $phpbb_root_path . $row['forum_image'] : '',
-				'U_VIEWFORUM'			=> append_sid("{$phpbb_root_path}viewforum.$phpEx", 'f=' . $row['forum_id']))
+				'U_VIEWFORUM'			=> append_sid("{$phpbb_root_path}viewforum.$phpEx", 'f=' . $row['forum_id']),
+				'S_IS_PUBLIC'				=> !($row['forum_id'] == PRIVATE_FORUM))
 			);
 
 			continue;
@@ -482,7 +483,8 @@ function display_forums($root_data = '', $display_moderators = true, $return_mod
 			'U_UNAPPROVED_TOPICS'	=> ($row['forum_id_unapproved_topics']) ? append_sid("{$phpbb_root_path}mcp.$phpEx", 'i=queue&amp;mode=unapproved_topics&amp;f=' . $row['forum_id_unapproved_topics']) : '',
 			'U_VIEWFORUM'		=> $u_viewforum,
 			'U_LAST_POSTER'		=> get_username_string('profile', $row['forum_last_poster_id'], $row['forum_last_poster_name'], $row['forum_last_poster_colour']),
-			'U_LAST_POST'		=> $last_post_url)
+			'U_LAST_POST'		=> $last_post_url,
+			'S_IS_PUBLIC'				=> !($row['forum_id'] == PRIVATE_FORUM))
 		);
 
 		// Assign subforums loop for style authors

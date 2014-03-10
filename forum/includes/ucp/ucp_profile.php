@@ -563,7 +563,9 @@ class ucp_profile
 				$category = basename(request_var('category', ''));
 
 				$can_upload = (file_exists($phpbb_root_path . $config['avatar_path']) && phpbb_is_writable($phpbb_root_path . $config['avatar_path']) && $auth->acl_get('u_chgavatar') && (@ini_get('file_uploads') || strtolower(@ini_get('file_uploads')) == 'on')) ? true : false;
+
 				add_form_key('ucp_avatar');
+
 				if ($submit)
 				{
 					if (check_form_key('ucp_avatar'))
@@ -582,6 +584,7 @@ class ucp_profile
 					// Replace "error" strings with their real, localised form
 					$error = preg_replace('#^([A-Z_]+)$#e', "(!empty(\$user->lang['\\1'])) ? \$user->lang['\\1'] : '\\1'", $error);
 				}
+
 				if (!$config['allow_avatar'] && $user->data['user_avatar_type'])
 				{
 					$error[] = $user->lang['AVATAR_NOT_ALLOWED'];
@@ -592,7 +595,7 @@ class ucp_profile
 				{
 					$error[] = $user->lang['AVATAR_TYPE_NOT_ALLOWED'];
 				}
-				
+
 				$template->assign_vars(array(
 					'ERROR'			=> (sizeof($error)) ? implode('<br />', $error) : '',
 					'AVATAR'		=> get_user_avatar($user->data['user_avatar'], $user->data['user_avatar_type'], $user->data['user_avatar_width'], $user->data['user_avatar_height'], 'USER_AVATAR', true),

@@ -437,7 +437,7 @@ else
 }
 
 // Grab just the sorted topic ids
-$sql = 'SELECT t.topic_id
+$sql = 'SELECT DISTINCT t.topic_id
 	FROM ' . TOPICS_TABLE . " t
 	LEFT JOIN phpbb_private_topic_users ptu
 	ON t.topic_id = ptu.topic_id
@@ -670,6 +670,7 @@ if (sizeof($topic_list))
 		// END Topic Preview Mod
 
 		// Send vars to template
+		
 		$template->assign_block_vars('topicrow', array(
 			'FORUM_ID'					=> $topic_forum_id,
 			'TOPIC_ID'					=> $topic_id,

@@ -22,8 +22,8 @@ include($phpbb_root_path . 'includes/message_parser.' . $phpEx);
 
 // Start session management
 $user->session_begin();
-
-// MOVED FROM BELOW USER AUTHENTICATION TO ABOVE BECAUSE WE NEED TOPID_ID FOR POST MASKING
+$auth->acl($user->data);
+include($phpbb_root_path . 'includes/functions_user.' . $phpEx);
 // Grab only parameters needed here
 $post_id	= request_var('p', 0);
 $topic_id	= request_var('t', 0);
@@ -33,38 +33,6 @@ $multipost_ids = request_var('m',  array('' => 0));
 for ($i = 0; $i < count($multipost_ids); $i++){
 	$multipost_ids[$i] = (int)$db->sql_escape($multipost_ids[$i]);
 }
-// MOVED FROM BELOW USER AUTHENTICATION TO ABOVE BECAUSE WE NEED TOPID_ID FOR POST MASKING
-
-// Some code to set the proper masked to ID here
-if ($user->data['user_id']){
-	$sql = 'SELECT * FROM phpbb_post_masking WHERE topic_id=' . $topic_id . ' AND user_main_id=' . $user->data['user_id'];
-	$result = $db->sql_query($sql);
-	$row = $db->sql_fetchrow($result);
-	$user_id_mask = $row['user_mask_id'];
-}
-// End of some Code
-
-// Some code to set a dumby user object to auth against
-	if ($user_id_mask){
-		$sql = "SELECT u.* FROM " . USERS_TABLE . " u
-			WHERE u.user_id =" . $user_id_mask;
-		$result = $db->sql_query($sql);
-		$data = $db->sql_fetchrow($result);
-		$db->sql_freeresult($result);
-	}
-//
-// if masked use bumby user mask instead of real user object
-if (sizeOf($data)){
-	$data['is_registered'] = 1;
-	$data['is_bot'] = 0;
-	$data['session_id'] = $user->data['session_id'];
-	$data['user_form_salt'] = $user->data['user_form_salt'];
-	$user->data = $data;
-}
-
-$auth->acl($user->data);
-include($phpbb_root_path . 'includes/functions_user.' . $phpEx);
-
 $lastclick	= request_var('lastclick', 0);
 
 $QR			= (isset($_POST['postqr']) || isset($_POST['previewqr']));
@@ -859,7 +827,13 @@ if ($submit || $preview || $refresh)
 			}
 		}
 	}
-	
+	//Private Topics
+	$first_post_id = ((isset($post_data['topic_first_post_id'])) ? ((int) $post_data['topic_first_post_id']) : 0);
+	if ($forum_id ==PRIVATE_FORUM && (($mode == 'edit' && $first_post_id == $post_id) || ($mode == 'post' && $first_post_id == 0))){
+		$post_data['is_private_old']	= $post_data['is_private'];
+		$post_data['is_private']	= (int)request_var('topic_privacy', (($mode != 'post') ? $post_data['is_private'] : 0));
+	}
+	//End Private Topics
 	/***
 	for($index = 0;$index < strlen($message_parser->message);++$index)
 	{
@@ -873,50 +847,7 @@ if ($submit || $preview || $refresh)
 	$post_data['orig_topic_type']	= $post_data['topic_type'];
 	$post_data['topic_type']		= request_var('topic_type', (($mode != 'post') ? (int) $post_data['topic_type'] : POST_NORMAL));
 	
-	// PRIVATE TOPICS
-	$first_post_id = ((isset($post_data['topic_first_post_id'])) ? ((int) $post_data['topic_first_post_id']) : 0);
-	if ($forum_id ==PRIVATE_FORUM && (($mode == 'edit' && $first_post_id == $post_id) || ($mode == 'post' && $first_post_id == 0))){
-		$post_data['is_private_old']	= $post_data['is_private'];
-		$post_data['is_private']	= request_var('topic_privacy', (($mode != 'post') ? $post_data['is_private'] : 0));
-		if ($post_data['is_private']){
-			$post_data['private_users'] = array();
-			$private_users	= isset($_REQUEST['private_users']) ? $_REQUEST['private_users'] : array();
-			if (!is_array($private_users)){
-				$private_users = array();
-			}
-			$temp_users = $private_users;
-			$private_users = array();
-			foreach ($temp_users as $users){
-				if ($users != ''){
-					$private_users[] = $users;
-				}
-			}
-			if (sizeof($private_users)){
-				$user_id_ary = array();
-				user_get_id_name($user_id_ary, $private_users, array(USER_NORMAL, USER_FOUNDER));
-				$post_data['private_users'] = $user_id_ary;
-				if(!sizeof($user_id_ary)){
-					$error[] = $user->lang['PM_NO_USERS'];
-				}
-			}
-			$private_users_add = array_diff($post_data['private_users'], $private_users_old);
-			$private_users_remove = array_diff ($private_users_old, $post_data['private_users']);
-			if (sizeof($private_users_remove)){
-				$sql = 'DELETE FROM phpbb_private_topic_users WHERE topic_id=' . $topic_id . ' AND user_id IN(' . implode(',',$private_users_remove) . ');';
-				$db->sql_query($sql);
-			}
-			if (sizeof($private_users_add)){
-				foreach ($private_users_add as $users){
-					if (($mode=='post' && $users != $user->data['user_id']) || ($mode=='edit' && $users != $post_data['topic_poster'])){
-						$sql = 'INSERT INTO phpbb_private_topic_users (user_id, topic_id, permission_type) VALUES('.$users .','.$topic_id .',1);';
-						$db->sql_query($sql);
-					}
-				}
-				
-			}
-		}
-	}
-	// END PRIVATE TOPICS
+	
 	$post_data['topic_time_limit']	= request_var('topic_time_limit', (($mode != 'post') ? (int) $post_data['topic_time_limit'] : 0));
 
 	if ($post_data['enable_icons'] && $auth->acl_get('f_icons', $forum_id))
@@ -1250,7 +1181,6 @@ if ($submit || $preview || $refresh)
 			$error[] = sprintf($user->lang['IP_BLACKLISTED'], $user->ip, $dnsbl[1]);
 		}
 	}
-
 	// Store message, sync counters
 	if (!sizeof($error) && $submit)
 	{
@@ -1307,7 +1237,7 @@ if ($submit || $preview || $refresh)
 				}
 			}
 		}
-
+		
 		if ($submit)
 		{
 			// Lock/Unlock Topic
@@ -1394,7 +1324,6 @@ if ($submit || $preview || $refresh)
 
 			// The last parameter tells submit_post if search indexer has to be run
 			$redirect_url = submit_post($mode, $post_data['post_subject'], $post_data['username'], $post_data['topic_type'], $poll, $data, $update_message, ($update_message || $update_subject) ? true : false, !$post_data['is_private']);
-			
 			if ($config['enable_post_confirm'] && !$user->data['is_registered'] && (isset($captcha) && $captcha->is_solved() === true) && ($mode == 'post' || $mode == 'reply' || $mode == 'quote' || $mode == 'select' || $mode == 'multi'))
 			{
 				$captcha->reset();
@@ -1416,6 +1345,50 @@ if ($submit || $preview || $refresh)
 			}
 
 			$message .= '<br /><br />' . sprintf($user->lang['RETURN_FORUM'], '<a href="' . append_sid("{$phpbb_root_path}viewforum.$phpEx", 'f=' . $data['forum_id']) . '">', '</a>');
+			// PRIVATE TOPICS
+			if ($forum_id ==PRIVATE_FORUM && (($mode == 'edit' && $first_post_id == $post_id) || ($mode == 'post' && $first_post_id == 0))){
+				$topic_url = parse_url($redirect_url);
+				parse_str($topic_url['query'], $topic_id_array);
+				$topic_id=$topic_id_array['amp;t'];
+				if ($post_data['is_private']){
+					$post_data['private_users'] = array();
+					$private_users	= isset($_REQUEST['private_users']) ? $_REQUEST['private_users'] : array();
+					if (!is_array($private_users)){
+						$private_users = array();
+					}
+					$temp_users = $private_users;
+					$private_users = array();
+					foreach ($temp_users as $users){
+						if ($users != ''){
+							$private_users[] = $users;
+						}
+					}
+					if (sizeof($private_users)){
+						$user_id_ary = array();
+						user_get_id_name($user_id_ary, $private_users, array(USER_NORMAL, USER_FOUNDER));
+						$post_data['private_users'] = $user_id_ary;
+						if(!sizeof($user_id_ary)){
+							$error[] = $user->lang['PM_NO_USERS'];
+						}
+					}
+					$private_users_add = array_diff($post_data['private_users'], $private_users_old);
+					$private_users_remove = array_diff ($private_users_old, $post_data['private_users']);
+					if (sizeof($private_users_remove)){
+						$sql = 'DELETE FROM phpbb_private_topic_users WHERE topic_id=' . $topic_id . ' AND user_id IN(' . implode(',',$private_users_remove) . ');';
+						$db->sql_query($sql);
+					}
+					if (sizeof($private_users_add)){
+						foreach ($private_users_add as $users){
+							if (($mode=='post' && $users != $user->data['user_id']) || ($mode=='edit' && $users != $post_data['topic_poster'])){
+								$sql = 'INSERT INTO phpbb_private_topic_users (user_id, topic_id, permission_type) VALUES('.$users .','.$topic_id .',1);';
+								$db->sql_query($sql);
+							}
+						}
+						
+					}
+				}
+			}
+			// END PRIVATE TOPICS
 			trigger_error($message);
 		}
 	}
@@ -1855,7 +1828,7 @@ $template->assign_vars(array(
 	
 	'HAS_PRIVATE_USERS'			=> sizeof($post_data['private_users']),
 	'S_ALLOW_PRIVATE'			=> $forum_allow_private,
-	'S_PUBLIC'					=> (($mode == 'post') ? (false): ($post_data['is_private'])),
+	'S_PUBLIC'					=> ($post_data['is_private']),
 	'PRIVATE_USER_NAME'			=> 'private_users[0]',
 	'PRIVATE_USER_ID'			=> 'private_users[0]',
 	
@@ -1916,23 +1889,7 @@ if (($mode == 'post' || ($mode == 'edit' && $post_id == $post_data['topic_first_
 		'POLL_LENGTH'			=> $post_data['poll_length'])
 	);
 }
-// post masking
-$sql = 'SELECT * FROM phpbb_post_masking WHERE topic_id='.$topic_id;
-	$result = $db->sql_query($sql);
-	while ($row = $db->sql_fetchrow($result)){
-		$user_ids = array ($row['user_mask_id'], $row['user_entered_id']);
-		user_get_id_name($user_ids, $user_name_ary, array(USER_NORMAL, USER_FOUNDER));
-		
-		$template->assign_block_vars('masking', array(
-				'USERNAME'		=> $user_name_ary[$row['user_entered_id']],
-				'MASKEDNAME'	=> $user_name_ary[$row['user_mask_id']]
-			));
-		unset($user_ids);
-		unset($user_name_ary);
-	}
-			
 
-//
 // Show attachment box for adding attachments if true
 $allowed = ($auth->acl_get('f_attach', $forum_id) && $auth->acl_get('u_attach') && $config['allow_attachments'] && $form_enctype);
 

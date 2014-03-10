@@ -229,7 +229,7 @@ class bbcode
 					$this->bbcode_cache[$bbcode_id] = array(
 						'preg' => array(
 							'#\[url:$uid\]((.*?))\[/url:$uid\]#s'			=> $this->bbcode_tpl('url', $bbcode_id),
-							'#\[url=(+*):$uid\](.*?)\[/url:$uid\]#s'	=> $this->bbcode_tpl('url', $bbcode_id),
+							'#\[url=([^\[]+?):$uid\](.*?)\[/url:$uid\]#s'	=> $this->bbcode_tpl('url', $bbcode_id),
 						)
 					);
 				break;

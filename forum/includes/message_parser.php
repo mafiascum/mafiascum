@@ -1106,8 +1106,7 @@ class bbcode_firstpass extends bbcode
 	function validate_url($var1, $var2)
 	{
 		global $config;
-		echo ($var1 . ' ' . $var2);
-		exit;
+
 		$var1 = str_replace("\r\n", "\n", str_replace('\"', '"', trim($var1)));
 		$var2 = str_replace("\r\n", "\n", str_replace('\"', '"', trim($var2)));
 
