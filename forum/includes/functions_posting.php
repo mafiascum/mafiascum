@@ -2405,7 +2405,6 @@ function submit_post($mode, $subject, $username, $topic_type, &$poll, &$data, $u
 		}
 		else if ((($topic_row['topic_type'] == POST_GLOBAL && $topic_type != POST_GLOBAL)||($topic_privacy==1 && $data['is_private'] ==0)) && $forum_row['forum_last_post_id'] < $topic_row['topic_last_post_id'])
 		{
-			echo('1-2');
 			// this post has a higher id, it is newer
 			$sql = 'SELECT p.post_id, p.post_subject, p.post_time, p.poster_id, p.post_username, u.user_id, u.username, u.user_colour
 				FROM ' . POSTS_TABLE . ' p, ' . USERS_TABLE . ' u
