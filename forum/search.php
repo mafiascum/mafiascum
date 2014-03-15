@@ -632,7 +632,8 @@ if ($keywords || $author || $author_id || $search_id || $submit)
 					LEFT JOIN ' . TOPICS_TABLE . ' t ON (p.topic_id = t.topic_id)
 					LEFT JOIN ' . FORUMS_TABLE . ' f ON (p.forum_id = f.forum_id)
 					LEFT JOIN ' . USERS_TABLE . " u ON (p.poster_id = u.user_id)
-				WHERE $sql_where";
+					LEFT JOIN phpbb_private_topic_users ptu ON (" . "t.is_private=1 AND ptu.user_id =" . $user->data['user_id'] . " AND t.topic_id=ptu.topic_id)" . "
+				WHERE $sql_where AND" . "(p.topic_id IS NULL OR t.is_private = 0 OR ptu.topic_id IS NOT NULL)";
 		}
 		else
 		{
@@ -649,7 +650,8 @@ if ($keywords || $author || $author_id || $search_id || $submit)
 						AND t.topic_id = tp.topic_id)';
 					$sql_select .= ', tp.topic_posted';
 				}
-
+				$sql_from .= "LEFT JOIN phpbb_private_topic_users ptu ON (" . "t.is_private=1 AND ptu.user_id =" . $user->data['user_id'] . " AND t.topic_id=ptu.topic_id)"; 
+				$sql_where .= "AND" . "(t.is_private = 0 OR ptu.topic_id IS NOT NULL)";
 				if ($config['load_db_lastread'])
 				{
 					$sql_from .= ' LEFT JOIN ' . TOPICS_TRACK_TABLE . ' tt ON (tt.user_id = ' . $user->data['user_id'] . '
