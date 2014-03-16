@@ -15,6 +15,13 @@ public class SiteChatUser extends DataObjectWithIntId {
     id = NEW;
   }
   
+  public SiteChatUser(SiteChatUser siteChatUser) {
+    setName(siteChatUser.getName());
+    setAvatarUrl(siteChatUser.getAvatarUrl());
+    setLastActivityDatetime(new Date(siteChatUser.getLastActivityDatetime().getTime()));
+    setId(siteChatUser.getId());
+  }
+  
   public String getName() {
     
     return name;
