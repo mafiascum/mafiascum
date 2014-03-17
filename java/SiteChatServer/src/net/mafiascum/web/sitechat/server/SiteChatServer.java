@@ -568,10 +568,12 @@ public class SiteChatServer extends Server implements SignalHandler {
     List<SiteChatUser> siteChatUserList = new LinkedList<SiteChatUser>();
     List<SiteChatBarebonesConversation> siteChatBarebonesConversations = new LinkedList<SiteChatBarebonesConversation>();
     
-    for(int userId : userIdToLastNetworkActivityDatetime.keySet()) {
+    synchronized(userIdToLastNetworkActivityDatetime) {
+      for(int userId : userIdToLastNetworkActivityDatetime.keySet()) {
       
-      synchronized(siteChatUserMap) {
-        siteChatUserList.add(new SiteChatUser(siteChatUserMap.get(userId)));
+        synchronized(siteChatUserMap) {
+          siteChatUserList.add(new SiteChatUser(siteChatUserMap.get(userId)));
+        }
       }
     }
     
@@ -787,25 +789,30 @@ public class SiteChatServer extends Server implements SignalHandler {
   
   public void sendOutboundPacketToUsers(Set<Integer> userIdSet, SiteChatOutboundPacket siteChatOutboundPacket, Integer excludeUserId) throws IOException {
     
-    for(SiteChatWebSocket siteChatWebSocket : descriptors) {
-      
-      if(siteChatWebSocket.getSiteChatUser() != null) {
+    synchronized(descriptors) {
+      for(SiteChatWebSocket siteChatWebSocket : descriptors) {
         
-        for(Integer userId : userIdSet) {
-          
-          if(excludeUserId != null && excludeUserId == userId) {
+        synchronized(siteChatWebSocket) {
+        
+          if(siteChatWebSocket.getSiteChatUser() != null) {
             
-            continue;
-          }
-          
-          if(siteChatWebSocket.getSiteChatUser().getId() == userId) {
-            
-            try {
-              siteChatWebSocket.sendOutboundPacket(siteChatOutboundPacket);
-            }
-            catch(IOException ioException) {
+            for(Integer userId : userIdSet) {
               
-              logger.error("Could not send outbound packet: ", ioException);
+              if(excludeUserId != null && excludeUserId == userId) {
+                
+                continue;
+              }
+              
+              if(siteChatWebSocket.getSiteChatUser().getId() == userId) {
+                
+                try {
+                  siteChatWebSocket.sendOutboundPacket(siteChatOutboundPacket);
+                }
+                catch(IOException ioException) {
+                  
+                  logger.error("Could not send outbound packet: ", ioException);
+                }
+              }
             }
           }
         }
