@@ -1,0 +1,47 @@
+<!-- INCLUDE ucp_header.html -->
+
+<form id="ucp" method="post" action="{S_UCP_ACTION}"{S_FORM_ENCTYPE}>
+
+<h2>{L_TITLE}</h2>
+
+<div class="panel">
+	<div class="inner"><span class="corners-top"><span></span></span>
+
+	<fieldset>
+	<!-- IF ERROR --><p class="error">{ERROR}</p><!-- ENDIF -->
+
+	<!-- IF S_IS_VLA --><p>Currently V/LA.</p><!-- ENDIF -->
+
+	<dl>
+			<dt><label for="vlastart_day">{L_VLA_SET_START_DATE}:</label></dt>
+			<dd>
+				<label for="vlastart_day">{L_DAY}: <select name="vlastart_day" id="vlastart_day" style="width: 4em;">{S_VLASTART_DAY_OPTIONS}</select></label> 
+				<label for="vlastart_month">{L_MONTH}: <select name="vlastart_month" id="vlastart_month" style="width: 8em;">{S_VLASTART_MONTH_OPTIONS}</select></label> 
+				<label for="vlastart_year">{L_YEAR}: <select name="vlastart_year" id="vlastart_year" style="width: 6em;">{S_VLASTART_YEAR_OPTIONS}</select></label>
+			</dd>
+		</dl>
+		<dl>
+			<dt><label for="vlatill_day">{L_VLA_SET_END_DATE}:</label></dt>
+			<dd>
+				<label for="vlatill_day">{L_DAY}: <select name="vlatill_day" id="vlatill_day" style="width: 4em;">{S_VLATILL_DAY_OPTIONS}</select></label> 
+				<label for="vlatill_month">{L_MONTH}: <select name="vlatill_month" id="vlatill_month" style="width: 8em;">{S_VLATILL_MONTH_OPTIONS}</select></label> 
+				<label for="vlatill_year">{L_YEAR}: <select name="vlatill_year" id="vlatill_year" style="width: 6em;">{S_VLATILL_YEAR_OPTIONS}</select></label>
+			</dd>
+		</dl>
+
+	</fieldset>
+
+	<span class="corners-bottom"><span></span></span></div>
+</div>
+	
+<fieldset class="submit-buttons">
+	{S_HIDDEN_FIELDS}
+	<input type="submit" name="submit" value="{L_SUBMIT}" class="button1" />&nbsp;
+	<!-- IF S_IS_VLA --><input type="submit" name="clearVLA" value="{L_CLEAR_VLA}" class="button1" />&nbsp;<!-- ENDIF -->
+	<input type="reset" value="{L_RESET}" name="reset" class="button2" />
+
+	{S_FORM_TOKEN}
+</fieldset>
+</form>
+
+<!-- INCLUDE ucp_footer.html -->

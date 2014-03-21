@@ -1,0 +1,91 @@
+<!-- INCLUDE overall_header.html -->
+<!-- IF U_MCP --><p>[&nbsp;<a href="{U_MCP}">{L_MCP}</a>&nbsp;]</p><!-- ENDIF -->
+
+<style type="text/css">
+
+#gameListMaster {
+
+	margin-left: auto;
+	margin-right: auto;
+	width: 950px;
+}
+
+#gameListTable {
+
+	font-size: 11px;
+}
+
+.gameListRow {
+
+	width: 100%;
+}
+
+.gameListHeaderCell {
+
+	font-weight: bold;
+	text-align: center;
+	color: #EFEDE8;
+	border: none;
+}
+#createGamePanel {
+
+	margin-top: 5px;
+}
+
+#gameName {
+
+	width: 300px;
+}
+
+</style>
+
+<div id="gameListMaster">
+ <div class="forumbg forumbg-table">
+  <div class="inner">
+   <span class="corners-top">
+    <span></span>
+   </span>
+   <table class="table1" cellspacing="1" id="gameListTable">
+    <thead>
+     <tr>
+      <th class="gameListHeaderCell">ID</th>
+      <th class="gameListHeaderCell">Game Name</th>
+      <th class="gameListHeaderCell">Type</th>
+      <th class="gameListHeaderCell">Status</th>
+      <th class="gameListHeaderCell">Start Date</th>
+      <th class="gameListHeaderCell">End Date</th>
+     </tr>
+    </thead>
+<!-- BEGIN gamerow -->
+    <tbody>
+     <tr class="bg1">
+      <td class="">{gamerow.GAME_ID}</td>
+      <td class="">{gamerow.GAME_URL}</td>
+      <td class="">{gamerow.GAME_TYPE}</td>
+      <td class="">{gamerow.GAME_STATUS}</td>
+      <td class="">{gamerow.STARTED_DATE}</td>
+      <td class="">{gamerow.COMPLETED_DATE}</td>
+     </tr>
+    </tbody>
+<!-- END gamerow -->
+   </table>
+   <span class="corners-bottom"><span></span></span>
+  </div>
+ </div>
+ <div id="createGamePanel">
+  <form method="post" id="createGameForm" action="{CREATE_GAME_ACTION}">
+   <input type="hidden" name="action" value="create" />
+   <input type="text" id="gameName" name="gameName" class="inputbox" value="<Enter Game Name>" onfocus="if(this.value == this.defaultValue) this.value = ''" onBlur="if(this.value == '') this.value = this.defaultValue"></input>
+   <input type="submit" id="gameCreateButton" name ="gameCreateButton" class="button1" value="Create Game"></input>
+  </form>
+ </div>
+</div>
+
+<!-- INCLUDE jumpbox.html -->
+
+<!-- IF S_DISPLAY_POST_INFO -->
+	<h3>{L_FORUM_PERMISSIONS}</h3>
+	<p><!-- BEGIN rules -->{rules.RULE}<br /><!-- END rules --></p>
+<!-- ENDIF -->
+
+<!-- INCLUDE overall_footer.html -->
