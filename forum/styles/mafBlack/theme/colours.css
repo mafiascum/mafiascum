@@ -17,8 +17,8 @@ h2 {
 }
 
 h3 {
-	border-bottom-color: #FF0000;
-	color: #FF0000;
+	border-bottom-color: #FFFFFF;
+	color: #FFFFFF;
 }
 
 hr {
@@ -68,8 +68,8 @@ hr.dashed {
 }
 
 .panel {
-	background-color: #EDDDC7;
-	color: #2D1800;
+	background-color: #333333;
+	color: #FFFFFF;
 }
 
 .post:target .content {
@@ -89,7 +89,7 @@ hr.dashed {
 }
 
 .fieldsbg {
-	background-color: #EAE0D5;
+	background-color: #FFFFFF;
 }
 
 /* Horizontal lists
@@ -139,7 +139,7 @@ dl.details dt {
 }
 
 dl.details dd {
-	color: #7F6851;
+	color: #FFFFFF;
 }
 
 .sep {
@@ -184,7 +184,7 @@ dl.details dd {
 ---------------------------------------- */
 
 .copyright {
-	color: #563B23;
+	color: #DDDDDD;
 }
 
 .error {
@@ -275,7 +275,7 @@ a.topictitle:active {
 }
 
 .postlink:visited {
-	color: #60391F;
+	color: #BBBBBB;
 	border-bottom-color: #666666;
 }
 
@@ -294,7 +294,7 @@ a.topictitle:active {
 
 /* Profile links */
 .postprofile a:link, .postprofile a:active, .postprofile a:visited, .postprofile dt.author a {
-	color: #7F3503;
+	color: #EEEEEE;
 }
 
 .postprofile a:hover, .postprofile dt.author a:hover {
@@ -375,7 +375,7 @@ li.row {
 }
 
 li.row strong {
-	color: #000000;
+	color: #FFFFFF;
 }
 
 li.row:hover {
@@ -409,12 +409,12 @@ ul.topiclist dd.searchextra {
 /* Content container styles
 ----------------------------------------*/
 .content {
-	color: #333333;
+	color: #000000;
 }
 
 .content h2, .panel h2 {
-	color: #4C4131;
-	border-bottom-color:  #CCC1B3;
+	color: #FFFFFF;
+	border-bottom-color:  #FFFFFF;
 }
 
 dl.faq dt {
@@ -736,7 +736,7 @@ ul.cplist {
 }
 
 #cp-main .panel li.header dd, #cp-main .panel li.header dt {
-	color: #000000;
+	color: #FFFFFF;
 }
 
 #cp-main table.table1 thead th {
@@ -812,8 +812,8 @@ ul.cplist {
 }
 
 #navigation #active-subsection a {
-	color: #B72724;
-	background-color: #DDDDDD;
+	color: #FFFFFF;
+	background-color: #555555;
 	background-image: none;
 }
 
@@ -828,7 +828,7 @@ ul.cplist {
 }
 
 #cp-main .panel {
-	background-color: #DDDDDD;
+	background-color: #555555;
 }
 
 #cp-main .pm {
@@ -903,7 +903,7 @@ select {
 }
 
 label {
-	color: #703B16;
+	color: #FFFFFF;
 }
 
 option.disabled-option {
@@ -913,7 +913,7 @@ option.disabled-option {
 /* Definition list layout for forms
 ---------------------------------------- */
 dd label {
-	color: #333333;
+	color: #EEEEEE;
 }
 
 /* Hover effects */
@@ -958,13 +958,13 @@ fieldset.quick-login input.inputbox {
 ---------------------------------------- */
 
 a.button1, input.button1, input.button3, a.button2, input.button2 {
-	color: #472D09;
+	color: #000000;
 	background-color: #EFEDE8;
 	background-image: url("{T_THEME_PATH}/images/bg_button.png");
 }
 
 a.button1, input.button1 {
-	border-color: #703B16;
+	border-color: #FF0000;
 }
 
 input.button3 {
@@ -973,7 +973,7 @@ input.button3 {
 
 /* Alternative button */
 a.button2, input.button2, input.button3 {
-	border-color: #703B16;
+	border-color: #000000;
 }
 
 /* <a> button in the style of the form buttons */
