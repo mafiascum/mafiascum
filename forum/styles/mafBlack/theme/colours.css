@@ -69,7 +69,7 @@ hr.dashed {
 
 .panel {
 	background-color: #333333;
-	color: #FFFFFF;
+	color: #333333;
 }
 
 .post:target .content {
@@ -618,7 +618,7 @@ fieldset.polls dd div {
 /* Poster profile block
 ----------------------------------------*/
 .postprofile {
-	color: #666666;
+	color: #000000;
 	border-left-color: #EFEDE8;
 }
 
@@ -824,7 +824,7 @@ ul.cplist {
 /* Preferences pane layout
 ----------------------------------------*/
 #cp-main h2 {
-	color: #333333;
+	color: #FFFFFF;
 }
 
 #cp-main .panel {
@@ -832,7 +832,7 @@ ul.cplist {
 }
 
 #cp-main .pm {
-	background-color: #EFEDE8;
+	background-color: #888888;
 }
 
 /* Friends list */
@@ -864,11 +864,11 @@ dl.mini dt {
 }
 
 .pmlist li.pm_marked_colour, .pm_marked_colour {
-	border-color: #FF6600;
+	border-color: #FF0000;
 }
 
 .pmlist li.pm_replied_colour, .pm_replied_colour {
-	border-color: #A9B8C2;
+	border-color: #0000FF;
 }
 
 .pmlist li.pm_friend_colour, .pm_friend_colour {
@@ -934,15 +934,15 @@ fieldset.quick-login input.inputbox {
 ----------------------------------------*/
 
 #message-box textarea {
-	color: #333333;
+	color: #000000;
 }
 
 /* Input field styles
 ---------------------------------------- */
 .inputbox {
-	background-color: #EFEDE8; 
-	border-color: #A58C61;
-	color: #333333;
+	background-color: #FFFFFF; 
+	border-color: #000000;
+	color: #000000;
 }
 
 .inputbox:hover {

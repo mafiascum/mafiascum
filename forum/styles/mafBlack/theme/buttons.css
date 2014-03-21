@@ -34,12 +34,12 @@
 .buttons div a:hover span	{ background-position: 0 100%; }
 
 /* Big button images */
-.reply-icon span	{ background: #FFFFFF none 0 0 no-repeat; }
-.post-icon span		{ background: #FFFFFF none 0 0 no-repeat; }
-.locked-icon span	{ background: #FFFFFF none 0 0 no-repeat; }
-.pmreply-icon span	{ background: #FFFFFF none 0 0 no-repeat; }
-.newpm-icon span 	{ background: #FFFFFF none 0 0 no-repeat; }
-.forwardpm-icon span 	{ background: #FFFFFF none 0 0 no-repeat; }
+.reply-icon span	{ background: transparent none 0 0 no-repeat; }
+.post-icon span		{ background: transparent none 0 0 no-repeat; }
+.locked-icon span	{ background: transparent none 0 0 no-repeat; }
+.pmreply-icon span	{ background: transparent none 0 0 no-repeat; }
+.newpm-icon span 	{ background: transparent none 0 0 no-repeat; }
+.forwardpm-icon span 	{ background: transparent none 0 0 no-repeat; }
 
 /* Set big button dimensions */
 .buttons div.reply-icon		{ width: {IMG_BUTTON_TOPIC_REPLY_WIDTH}px; height: {IMG_BUTTON_TOPIC_REPLY_HEIGHT}px; }
