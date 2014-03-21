@@ -5,7 +5,7 @@ Colours and backgrounds for common.css
 
 html, body {
 	color: #543100;
-	background-color: #FFFFFF;
+	background-color: #000000;
 }
 
 h1 {
@@ -48,23 +48,23 @@ hr.dashed {
 /* Round cornered boxes and backgrounds
 ---------------------------------------- */
 .headerbar {
-	background-color: #A88F74;
-	background-image: url("{T_THEME_PATH}/images/bg_header.png");
+	background-color: #333333;
+	background-image: url("{T_THEME_PATH}/images/bg_header.gif");
 	color: #EFEDE8;
 }
 
 .navbar {
-	background-color: #d4c3a9;
+	background-color: #333333;
 }
 
 .forabg {
-	background-color: #AB1300;
-	background-image: url("{T_THEME_PATH}/images/bg_list.png");
+	background-color: #222222;
+	background-image: url("{T_THEME_PATH}/images/bg_list.gif");
 }
 
 .forumbg {
-	background-color: #A39078;
-	background-image: url("{T_THEME_PATH}/images/bg_header.png");
+	background-color: #333333;
+	background-image: url("{T_THEME_PATH}/images/bg_header.gif");
 }
 
 .panel {
@@ -217,9 +217,9 @@ p.rules {
 Colours and backgrounds for links.css
 -------------------------------------------------------------- */
 
-a:link	{ color: #7F3503; }
-a:visited	{ color: #60391F; }
-a:hover	{ color: #B72724; }
+a:link	{ color: #FFFFFF; }
+a:visited	{ color: #BBBBBB; }
+a:hover	{ color: #FF0000; }
 a:active	{ color: #B72724; }
 
 /* Links on gradient backgrounds */
@@ -241,13 +241,13 @@ a:active	{ color: #B72724; }
 
 /* Links for forum/topic lists */
 a.forumtitle {
-	color: #7F3503;
+	color: #FFFFFF;
 }
 
 /* a.forumtitle:visited { color: #60391F; } */
 
 a.forumtitle:hover {
-	color: #BA2D2A;
+	color: #FF0000;
 }
 
 a.forumtitle:active {
@@ -255,13 +255,13 @@ a.forumtitle:active {
 }
 
 a.topictitle {
-	color: #7F3503;
+	color: #FFFFFF;
 }
 
 /* a.topictitle:visited { color: #60391F; } */
 
 a.topictitle:hover {
-	color: #BA2D2A;
+	color: #FF0000;
 }
 
 a.topictitle:active {
@@ -344,7 +344,7 @@ Colours and backgrounds for content.css
 -------------------------------------------------------------- */
 
 ul.forums {
-	background-color: #e6ded4;
+	background-color: #6e6e6e;
 	background-image: url("{T_THEME_PATH}/images/gradient.png");
 }
 
