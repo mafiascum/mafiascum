@@ -349,7 +349,7 @@ ul.forums {
 }
 
 ul.topiclist li {
-	color: #663515;
+	color: #DDDDDD;
 }
 
 ul.topiclist dd {
@@ -379,7 +379,7 @@ li.row strong {
 }
 
 li.row:hover {
-	background-color: #F6F4D0;
+	background-color: #4b4b4b;
 }
 
 li.row:hover dd {
@@ -440,9 +440,9 @@ dl.faq dt {
 ----------------------------------------*/
 /* Quote block */
 blockquote {
-	background-color: #EDDFD0;
+	background-color: #FFFFFF;
 	background-image: url("{T_THEME_PATH}/images/quote.png");
-	border-color:#B7A687;
+	border-color:#000000;
 }
 
 .rtl blockquote {
@@ -451,27 +451,27 @@ blockquote {
 
 blockquote blockquote {
 	/* Nested quotes */
-	background-color:#EAE4DC;
+	background-color:#DDDDDD;
 }
 
 blockquote blockquote blockquote {
 	/* Nested quotes */
-	background-color: #EDDFD0;
+	background-color: #FFFFFF;
 }
 
 blockquote blockquote blockquote blockquote {
 	/* Nested quotes */
-	background-color:#EAE4DC;
+	background-color:#DDDDDD;
 }
 
 blockquote blockquote blockquote blockquote blockquote {
 	/* Nested quotes */
-	background-color: #EDDFD0;
+	background-color: #FFFFFF;
 }
 
 blockquote blockquote blockquote blockquote blockquote blockquote {
 	/* Nested quotes */
-	background-color:#EAE4DC;
+	background-color:#DDDDDD;
 }
 
 /* Code block */
