@@ -184,6 +184,6 @@ margin-bottom:6px;
 
 
 /*style specifc changes */
-#site-description h1,p {
+#site-description h1,#site-description p {
 	display:none;
 }
