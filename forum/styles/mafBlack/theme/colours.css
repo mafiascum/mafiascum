@@ -9,7 +9,7 @@ html, body {
 }
 
 h1 {
-	color: #EFEDE8;
+	color: #FFFFFF;
 }
 
 h2 {
@@ -757,7 +757,7 @@ ul.cplist {
 
 #tabs a span {
 	background-image: url("{T_THEME_PATH}/images/bg_tabs2.png");
-	color: #7F6F57;
+	color: #FFFFFF;
 }
 
 #tabs a:hover span {
