@@ -181,3 +181,9 @@ margin-bottom:6px;
 	clear: both;
 	display: block;
 }
+
+
+/*style specifc changes */
+#site-description h1,p {
+	display:none;
+}
