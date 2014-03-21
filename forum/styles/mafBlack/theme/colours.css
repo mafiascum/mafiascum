@@ -13,36 +13,36 @@ h1 {
 }
 
 h2 {
-	color: #4C4131;
+	color: #FFFFFF;
 }
 
 h3 {
-	border-bottom-color: #CCC1B3;
-	color: #4C4131;
+	border-bottom-color: #FFFFFF;
+	color: #FFFFFF;
 }
 
 hr {
-	border-color: #EFEDE8;
-	border-top-color: #CCC1B3;
+	border-color: #FFFFFF;
+	border-top-color: #000000;
 }
 
 hr.dashed {
-	border-top-color: #CCC1B3;
+	border-top-color: #000000;
 }
 
 /* Search box
 --------------------------------------------- */
 
 #search-box {
-	color: #EFEDE8;
+	color: #FFFFFF;
 }
 
 #search-box #keywords {
-	background-color: #EFEDE8;
+	background-color: #FFFFFF;
 }
 
 #search-box input {
-	border-color: #6B4225;
+	border-color: #BBBBBB;
 }
 
 /* Round cornered boxes and backgrounds
@@ -80,9 +80,9 @@ hr.dashed {
 	color: #000000;
 }
 
-.bg1	{ background-color: #E2D3BE; }
-.bg2	{ background-color: #E8DDC7;  }
-.bg3	{ background-color: #E5D5BC; }
+.bg1	{ background-color: #9f9f9f; }
+.bg2	{ background-color: #8e8e8e;  }
+.bg3	{ background-color: #333333; }
 
 .ucprowbg {
 	background-color: #E0D3BE;
@@ -270,7 +270,7 @@ a.topictitle:active {
 
 /* Post body links */
 .postlink {
-	color: #B28449;
+	color: #FFFFFF;
 	border-bottom-color: #B28449;
 }
 
@@ -284,7 +284,7 @@ a.topictitle:active {
 }
 
 .postlink:hover {
-	background-color: #E5C79E;
+	background-color: #FFFFFF;
 	color: #BA2D2A;
 }
 
@@ -723,12 +723,12 @@ Colours and backgrounds for cp.css
 ----------------------------------------*/
 
 #cp-main h3, #cp-main hr, #cp-menu hr {
-	border-color: #AF8B70;
+	border-color: #000000;
 }
 
 #cp-main .panel li.row {
-	border-bottom-color: #D6BCA2;
-	border-top-color: #F9F9F9;
+	border-bottom-color: #FFFFFF;
+	border-top-color: #000000;
 }
 
 ul.cplist {
@@ -765,7 +765,7 @@ ul.cplist {
 }
 
 #tabs .activetab a {
-	border-bottom-color: #CADCEB;
+	border-bottom-color: #000000;
 }
 
 #tabs .activetab a span {
@@ -796,7 +796,7 @@ ul.cplist {
 /* Link styles for the sub-section links */
 #navigation a {
 	color: #333;
-	background-color: #e1c9a8;
+	background-color: #8d8d8d;
 	background-image: url("{T_THEME_PATH}/images/bg_menu.png");
 }
 
@@ -807,13 +807,13 @@ ul.cplist {
 
 #navigation a:hover {
 	background-image: none;
-	background-color: #FCEC88;
-	color: #BA2D2A;
+	background-color: #555555;
+	color: #FFFFFF;
 }
 
 #navigation #active-subsection a {
 	color: #B72724;
-	background-color: #F9F9F9;
+	background-color: #DDDDDD;
 	background-image: none;
 }
 
@@ -828,7 +828,7 @@ ul.cplist {
 }
 
 #cp-main .panel {
-	background-color: #F9F9F9;
+	background-color: #DDDDDD;
 }
 
 #cp-main .pm {
