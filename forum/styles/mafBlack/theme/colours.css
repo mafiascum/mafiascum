@@ -115,7 +115,7 @@ table.table1 tbody tr:hover, table.table1 tbody tr.hover {
 }
 
 table.table1 td {
-	color: #7F6851;
+	color: #FFFFFF;
 }
 
 table.table1 tbody td {
@@ -344,7 +344,7 @@ Colours and backgrounds for content.css
 -------------------------------------------------------------- */
 
 ul.forums {
-	background-color: #6e6e6e;
+	background-color: #4b4b4b;
 	background-image: url("{T_THEME_PATH}/images/gradient.png");
 }
 
@@ -379,7 +379,7 @@ li.row strong {
 }
 
 li.row:hover {
-	background-color: #4b4b4b;
+	background-color: #6e6e6e;
 }
 
 li.row:hover dd {
