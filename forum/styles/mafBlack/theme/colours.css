@@ -343,6 +343,11 @@ a.right:hover {
 Colours and backgrounds for content.css
 -------------------------------------------------------------- */
 
+/*fix for the color below the emoticons*/
+#smiley-box {
+	color: #FFFFFF;
+}
+
 ul.forums {
 	background-color: #4b4b4b;
 	background-image: url("{T_THEME_PATH}/images/gradient.png");
