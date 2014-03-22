@@ -218,7 +218,7 @@ Colours and backgrounds for links.css
 -------------------------------------------------------------- */
 
 a:link	{ color: #FFFFFF; }
-a:visited	{ color: #BBBBBB; }
+a:visited	{ color: #CCCCCC; }
 a:hover	{ color: #FF0000; }
 a:active	{ color: #B72724; }
 
