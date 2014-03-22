@@ -271,7 +271,7 @@ a.topictitle:active {
 /* Post body links */
 .postlink {
 	color: #FFFFFF;
-	border-bottom-color: #B28449;
+	border-bottom-color: #FFFFFF;
 }
 
 .postlink:visited {
@@ -481,16 +481,17 @@ blockquote blockquote blockquote blockquote blockquote blockquote {
 
 /* Code block */
 dl.codebox {
-	background-color: #EFEDE8;
-	border-color: #721816;
+	background-color: #222222;
+	border-color: #FFFFFF;
+	color: #FFFFFF;
 }
 
 dl.codebox dt {
-	border-bottom-color:  #CCC1B3;
+	border-bottom-color:  #FFFFFF;
 }
 
 dl.codebox code {
-	color: #004EC4;
+	color: #00EE00;
 }
 
 .syntaxbg		{ color: #FFFFFF; }
@@ -737,7 +738,7 @@ Colours and backgrounds for cp.css
 }
 
 ul.cplist {
-	border-top-color: #D6BCA2;
+	border-top-color: #FFFFFF;
 }
 
 #cp-main .panel li.header dd, #cp-main .panel li.header dt {
