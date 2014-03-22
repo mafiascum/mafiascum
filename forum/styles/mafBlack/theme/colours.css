@@ -80,8 +80,8 @@ hr.dashed {
 	color: #000000;
 }
 
-.bg1	{ background-color: #9f9f9f; }
-.bg2	{ background-color: #8e8e8e;  }
+.bg1	{ background-color: #9b9b9b; }
+.bg2	{ background-color: #808080;  }
 .bg3	{ background-color: #333333; }
 
 .ucprowbg {
@@ -445,7 +445,7 @@ dl.faq dt {
 ----------------------------------------*/
 /* Quote block */
 blockquote {
-	background-color: #FFFFFF;
+	background-color: #CCCCCC;
 	background-image: url("{T_THEME_PATH}/images/quote.png");
 	border-color:#000000;
 }
@@ -461,7 +461,7 @@ blockquote blockquote {
 
 blockquote blockquote blockquote {
 	/* Nested quotes */
-	background-color: #FFFFFF;
+	background-color: #CCCCCC;
 }
 
 blockquote blockquote blockquote blockquote {
@@ -471,7 +471,7 @@ blockquote blockquote blockquote blockquote {
 
 blockquote blockquote blockquote blockquote blockquote {
 	/* Nested quotes */
-	background-color: #FFFFFF;
+	background-color: #CCCCCC;
 }
 
 blockquote blockquote blockquote blockquote blockquote blockquote {
