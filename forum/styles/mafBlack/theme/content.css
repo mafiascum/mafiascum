@@ -149,7 +149,10 @@ dd.lastpost {
 	width: 20%;
 	font-size: 1.1em;
 }
-
+dd.lastpost a {
+	font-weight: bold;
+	text-shadow: 1px 1px #000000;
+}
 dd.redirect {
 	font-size: 1.1em;
 	line-height: 2.5em;
