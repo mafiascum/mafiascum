@@ -10,7 +10,9 @@ ul.topiclist {
 ul.forums {
 	background: #f9f9f9 none repeat-x 0 0;
 }
-
+.post {
+text-shadow: 1px 1px #000000;
+}
 ul.topiclist li {
 	display: block;
 	list-style-type: none;
@@ -150,6 +152,10 @@ dd.lastpost {
 	font-size: 1.1em;
 }
 dd.lastpost a {
+	font-weight: bold;
+	text-shadow: 1px 1px #000000;
+}
+dt a.username-coloured {
 	font-weight: bold;
 	text-shadow: 1px 1px #000000;
 }
