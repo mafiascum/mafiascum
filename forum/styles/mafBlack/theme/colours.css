@@ -73,11 +73,11 @@ hr.dashed {
 }
 
 .post:target .content {
-	color: #000000;
+	color: #FFFFFF;
 }
 
 .post:target h3 a {
-	color: #000000;
+	color: #FFFFFF;
 }
 
 .bg1	{ background-color: #575757; }
@@ -624,7 +624,7 @@ fieldset.polls dd div {
 /* Poster profile block
 ----------------------------------------*/
 .postprofile {
-	color: #000000;
+	color: #DFDFDF;
 	border-left-color: #000000;
 }
 
