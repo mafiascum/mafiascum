@@ -349,7 +349,7 @@ Colours and backgrounds for content.css
 }
 
 ul.forums {
-	background-color: #4b4b4b;
+	background-color: #000000;
 	background-image: url("{T_THEME_PATH}/images/gradient.png");
 }
 
