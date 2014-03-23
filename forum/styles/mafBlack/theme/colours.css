@@ -729,11 +729,11 @@ Colours and backgrounds for cp.css
 ----------------------------------------*/
 
 #cp-main h3, #cp-main hr, #cp-menu hr {
-	border-color: #000000;
+	border-color: #FFFFFF;
 }
 
 #cp-main .panel li.row {
-	border-bottom-color: #FFFFFF;
+	border-bottom-color: #000000;
 	border-top-color: #000000;
 }
 
@@ -746,8 +746,8 @@ ul.cplist {
 }
 
 #cp-main table.table1 thead th {
-	color: #333333;
-	border-bottom-color: #333333;
+	color: #FFFFFF;
+	border-bottom-color: #FFFFFF;
 }
 
 #cp-main .pm-message {
@@ -843,11 +843,11 @@ ul.cplist {
 
 /* Friends list */
 .cp-mini {
-	background-color: #F7F1ED;
+	background-color: #666666;
 }
 
 dl.mini dt {
-	color: #563D28;
+	color: #FFFFFF;
 }
 
 /* PM Styles
