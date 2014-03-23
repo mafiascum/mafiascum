@@ -81,7 +81,7 @@ hr.dashed {
 }
 
 .bg1	{ background-color: #9b9b9b; }
-.bg2	{ background-color: #808080;  }
+.bg2	{ background-color: #777777;  }
 .bg3	{ background-color: #333333; }
 
 .ucprowbg {
@@ -384,7 +384,7 @@ li.row strong {
 }
 
 li.row:hover {
-	background-color: #6e6e6e;
+	background-color: #656565;
 }
 
 li.row:hover dd {
