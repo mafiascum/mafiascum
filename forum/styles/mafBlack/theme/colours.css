@@ -358,7 +358,7 @@ ul.topiclist li {
 }
 
 ul.topiclist dd {
-	border-left-color: #EFEDE8;
+	border-left-color: #000000;
 }
 
 .rtl ul.topiclist dd {
@@ -388,7 +388,7 @@ li.row:hover {
 }
 
 li.row:hover dd {
-	border-left-color: #CCC1B3;
+	border-left-color: #000000;
 }
 
 .rtl li.row:hover dd {
