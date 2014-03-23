@@ -408,7 +408,7 @@ ul.topiclist dd.searchextra {
 /* Post body styles
 ----------------------------------------*/
 .postbody {
-	color: #333333;
+	color: #DDDDDD;
 }
 
 /* Content container styles
@@ -433,12 +433,12 @@ dl.faq dt {
 
 /* Post signature */
 .signature {
-	border-top-color: #CCC1B3;
+	border-top-color: #000000;
 }
 
 /* Post noticies */
 .notice {
-	border-top-color:  #CCC1B3;
+	border-top-color:  #000000;
 }
 
 /* BB Code styles
@@ -625,7 +625,7 @@ fieldset.polls dd div {
 ----------------------------------------*/
 .postprofile {
 	color: #000000;
-	border-left-color: #EFEDE8;
+	border-left-color: #000000;
 }
 
 .rtl .postprofile {
@@ -838,7 +838,7 @@ ul.cplist {
 }
 
 #cp-main .pm {
-	background-color: #8d8d8d;
+	background-color: #555555;
 }
 
 /* Friends list */
@@ -924,7 +924,7 @@ dd label {
 
 /* Hover effects */
 fieldset dl:hover dt label {
-	color: #000000;
+	color: #B72724;
 }
 
 fieldset.fields2 dl:hover dt label {

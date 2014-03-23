@@ -223,11 +223,11 @@ a#logo:hover {
 }
 
 .post:target .content {
-	color: #000000;
+	color: #FFFFFF;
 }
 
 .post:target h3 a {
-	color: #000000;
+	color: #FFFFFF;
 }
 
 .bg1	{ background-color: #f7f7f7;}

@@ -135,7 +135,7 @@ span.gameFieldValue {
 
 a.signature_hideshow {
 	text-decoration:none;
-	color: #ac9b84;
+	color: #FFFFFF;
 	font-size:.85em;
 	line-height: 100%;
 }
@@ -148,7 +148,7 @@ a.signature_hideshow:hover{
 }
 .postbody .noboldsig{font-weight:bold;}
 .signature .noboldsig{font-weight:normal;}
-.signature .nocolorsig{color:#333333;}
+.signature .nocolorsig{color:#FFFFFF;}
 
 /* Unread PM Indicator */
 .unread_flag{
