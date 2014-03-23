@@ -150,21 +150,21 @@ dl.details dd {
 ---------------------------------------- */
 
 .pagination span strong {
-	color: #42311B;
-	background-color: #BC9E73;
-	border-color: #42311B;
+	color: #FFFFFF;
+	background-color: #888888;
+	border-color: #FFFFFF;
 }
 
 .pagination span a, .pagination span a:link, .pagination span a:visited, .pagination span a:active {
-	color: #42311B;
-	background-color: #F7F3EA;
-	border-color: #42311B;
+	color: #FFFFFF;
+	background-color: #000000;
+	border-color: #FFFFFF;
 }
 
 .pagination span a:hover {
-	border-color: #9B621D;
-	background-color: #9B621D;
-	color: #F7F3EA;
+	border-color: #FFFFFF;
+	background-color: #FFFFFF;
+	color: #000000;
 }
 
 /* Pagination in viewforum for multipage topics */
@@ -173,11 +173,11 @@ dl.details dd {
 }
 
 .row .pagination span a, li.pagination span a {
-	background-color: #EFEDE8;
+	background-color: #888888;
 }
 
 .row .pagination span a:hover, li.pagination span a:hover {
-	background-color: #B28449;
+	background-color: #000000;
 }
 
 /* Miscellaneous styles
@@ -375,7 +375,7 @@ ul.topiclist li.row dt a.subforum.unread {
 }
 
 li.row {
-	border-top-color:  #FFFFFF;
+	border-top-color:  #000000;
 	border-bottom-color: #000000;
 }
 
@@ -414,7 +414,7 @@ ul.topiclist dd.searchextra {
 /* Content container styles
 ----------------------------------------*/
 .content {
-	color: #000000;
+	color: #FFFFFF;
 }
 
 .content h2, .panel h2 {
@@ -445,7 +445,7 @@ dl.faq dt {
 ----------------------------------------*/
 /* Quote block */
 blockquote {
-	background-color: #CCCCCC;
+	background-color: #888888;
 	background-image: url("{T_THEME_PATH}/images/quote.png");
 	border-color:#000000;
 }
@@ -456,27 +456,27 @@ blockquote {
 
 blockquote blockquote {
 	/* Nested quotes */
-	background-color:#DDDDDD;
+	background-color:#666666;
 }
 
 blockquote blockquote blockquote {
 	/* Nested quotes */
-	background-color: #CCCCCC;
+	background-color: #888888;
 }
 
 blockquote blockquote blockquote blockquote {
 	/* Nested quotes */
-	background-color:#DDDDDD;
+	background-color:#666666;
 }
 
 blockquote blockquote blockquote blockquote blockquote {
 	/* Nested quotes */
-	background-color: #CCCCCC;
+	background-color: #888888;
 }
 
 blockquote blockquote blockquote blockquote blockquote blockquote {
 	/* Nested quotes */
-	background-color:#DDDDDD;
+	background-color:#666666;
 }
 
 /* Code block */
@@ -838,7 +838,7 @@ ul.cplist {
 }
 
 #cp-main .pm {
-	background-color: #888888;
+	background-color: #8d8d8d;
 }
 
 /* Friends list */

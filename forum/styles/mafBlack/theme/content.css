@@ -392,6 +392,7 @@ p.author {
 	font-family: Verdana, Helvetica, Arial, sans-serif;
 	font-size: 1em;
 	line-height: 1.2em;
+	color: #FFFFFF;
 }
 
 /* Post signature */
@@ -525,15 +526,15 @@ dl.codebox code {
 
 /* Dice block */
 div.dicebox {
-	background-color: #FFF7DF;
-	border: 1px solid #47751D;
+	background-color: #222222;
+	border: 1px solid #FFFFFF;
 	font-size: 1em;
 	min-width: 100px;
 }
 
 div.dicetop {
 	text-transform: uppercase;
-	border-bottom: 1px solid  #47751D;
+	border-bottom: 1px solid  #FFFFFF;
 	padding: 3px;
 	font-size: 0.8em;
 	font-weight: bold;
