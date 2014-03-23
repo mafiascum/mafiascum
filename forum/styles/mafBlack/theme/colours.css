@@ -330,11 +330,11 @@ a.up:hover {
 }
 
 a.left:hover {
-	color: #B28449;
+	color: #FF0000;
 }
 
 a.right:hover {
-	color: #B28449;
+	color: #FF0000;
 }
 
 
@@ -860,7 +860,7 @@ dl.mini dt {
 /* PM panel adjustments */
 .pm-panel-header,
 #cp-main .pm-message-nav {
-	border-bottom-color: #BCA98E;
+	border-bottom-color: #FFFFFF;
 }
 
 /* PM marking colours */
