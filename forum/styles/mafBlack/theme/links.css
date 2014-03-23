@@ -112,6 +112,7 @@ a.topictitle:active {
 /* Profile links */
 .postprofile a:link, .postprofile a:active, .postprofile a:visited, .postprofile dt.author a {
 	font-weight: bold;
+	text-shadow: 1px 1px #000000;
 	color: #898989;
 	text-decoration: none;
 }
