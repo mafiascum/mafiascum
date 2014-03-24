@@ -178,6 +178,7 @@ dl.details dd {
 
 .row .pagination span a:hover, li.pagination span a:hover {
 	background-color: #000000;
+	color: #FFFFFF;
 }
 
 /* Miscellaneous styles
