@@ -555,12 +555,12 @@ dl.thumbnail dt a:hover img {
 ----------------------------------------*/
 
 fieldset.polls dl {
-	border-top-color: #DCDEE2;
-	color: #666666;
+	border-top-color: #FFFFFF;
+	color: #DADADA;
 }
 
 fieldset.polls dl.voted {
-	color: #000000;
+	color: #FFFFFF;
 }
 
 fieldset.polls dd div {
@@ -860,7 +860,7 @@ dl.mini dt {
 /* PM panel adjustments */
 .pm-panel-header,
 #cp-main .pm-message-nav {
-	border-bottom-color: #FFFFFF;
+	border-bottom-color: #000000;
 }
 
 /* PM marking colours */
