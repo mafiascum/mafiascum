@@ -123,9 +123,9 @@ dl.icon {
 }
 
 dl.icon dt {
-	padding-left: 75px;					/* Space for folder icon */
+	padding-left: 55px;					/* Space for folder icon */
 	background-repeat: no-repeat;
-	background-position: 5px 95%;		/* Position of topic icon */
+	background-position: 5px 25%;		/* Position of topic icon */
 }
 
 dd.posts, dd.topics, dd.views {
