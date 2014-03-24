@@ -192,10 +192,10 @@ margin-bottom:6px;
 .bbtableheader{
 	border:1px solid black; 
 	padding:3px; 
-	background-color: #DDDDDD;
+	background-color: #BBBBBB;
 }
 .bbvote{
 font-weight: bold; 
-background:#FFFFFF;
+background:#000000;
 padding: 0px 2px;
 }
