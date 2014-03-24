@@ -187,3 +187,10 @@ margin-bottom:6px;
 #site-description h1,#site-description p {
 	display:none;
 }
+
+/*bbcode*/
+.bbtableheader{
+	border:1px solid black; 
+	padding:3px; 
+	background-color: #DDDDDD;
+}

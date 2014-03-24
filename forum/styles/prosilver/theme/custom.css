@@ -72,3 +72,10 @@ margin-bottom:6px;
 	clear: both;
 	display: block;
 }
+
+/*bbcode*/
+.bbtableheader{
+	border:1px solid black; 
+	padding:3px; 
+	background-color: #DDDDDD;
+}
