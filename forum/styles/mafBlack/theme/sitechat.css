@@ -79,12 +79,12 @@
 
 .chatWindow.collapsed .title
 {
-	background-color: #E1DFE6;
+	background-color: #4C4C4C;
 }
 
 .chatWindow.collapsed .title:hover
 {
-	background-color: #FFF;
+	background-color: #5c5c5c;
 }
 
 .chatWindow .title .name

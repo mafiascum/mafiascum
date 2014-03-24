@@ -14,3 +14,16 @@ a.signature_hideshow:hover{
 	font-size:.85em;
 	line-height: 100%;
 }
+
+/*bbcode*/
+
+.bbtableheader{
+	border:1px solid black; 
+	padding:3px; 
+	background-color: #DDDDDD;
+}
+.bbvote{
+font-weight: bold; 
+background:#FFFFFF;
+padding: 0px 2px;
+}
