@@ -651,7 +651,7 @@ if ($keywords || $author || $author_id || $search_id || $submit)
 					$sql_select .= ', tp.topic_posted';
 				}
 				$sql_from .= "LEFT JOIN phpbb_private_topic_users ptu ON (" . "t.is_private=1 AND ptu.user_id =" . $user->data['user_id'] . " AND t.topic_id=ptu.topic_id)"; 
-				$sql_where .= "AND" . "(t.is_private = 0 OR ptu.topic_id IS NOT NULL)";
+				$sql_where .= " AND" . "(t.is_private = 0 OR ptu.topic_id IS NOT NULL)";
 				if ($config['load_db_lastread'])
 				{
 					$sql_from .= ' LEFT JOIN ' . TOPICS_TRACK_TABLE . ' tt ON (tt.user_id = ' . $user->data['user_id'] . '
