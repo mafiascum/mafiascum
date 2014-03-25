@@ -153,6 +153,7 @@ dd.lastpost {
 }
 dd.lastpost a {
 	font-weight: bold;
+	color: #FFFFFF;
 	text-shadow: 1px 1px #000000;
 }
 dt a.username-coloured {
