@@ -115,8 +115,10 @@
 
 <script type="text/javascript" src="./styles/prosilver/template/jquery.color-2.1.0.js"></script>
 <script type="text/javascript" src="./styles/prosilver/template/autogrow.min.js"></script>
+<script type="text/javascript" src="./styles/prosilver/template/textshadowscript.js"></script>
 
 <script type="text/javascript">
+var templatepath = "{T_THEME_PATH}";
 window.onerror = function(msg, url, lineNo)  {
 
 	$.ajax({
@@ -135,13 +137,13 @@ window.onerror = function(msg, url, lineNo)  {
 <!-- IF not S_IS_BOT and S_USER_LOGGED_IN and S_CHAT -->
 
 <script>
+
 $(document).ready(function(){
 	client = new Client();
 	client.setup("{SESSION_ID}", {S_USER_ID}, <!-- IF S_LOBBY -->true<!-- ELSE -->false<!-- ENDIF -->, "{SITE_CHAT_URL}", "{SITE_CHAT_PROTOCOL}");
 });
 </script>
 <!-- ENDIF -->
-
 <script type="text/javascript">
 
   var _gaq = _gaq || [];
