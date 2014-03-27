@@ -54,11 +54,11 @@ hr.dashed {
 }
 
 .navbar {
-	background-color: #d4c3a9;
+	background-color: #b57edc;
 }
 
 .forabg {
-	background-color: #AB1300;
+	background-color: #9999FF;
 	background-image: url("{T_THEME_PATH}/images/bg_list.png");
 }
 
@@ -96,7 +96,7 @@ hr.dashed {
 ----------------------------------------*/
 
 ul.navlinks {
-	border-bottom-color: #EFEDE8;
+	border-bottom-color: #483258;
 }
 
 /* Table styles
@@ -217,7 +217,7 @@ p.rules {
 Colours and backgrounds for links.css
 -------------------------------------------------------------- */
 
-a:link	{ color: #7F3503; }
+a:link	{ color: #660066; }
 a:visited	{ color: #60391F; }
 a:hover	{ color: #B72724; }
 a:active	{ color: #B72724; }
@@ -241,7 +241,7 @@ a:active	{ color: #B72724; }
 
 /* Links for forum/topic lists */
 a.forumtitle {
-	color: #7F3503;
+	color: #660066;
 }
 
 /* a.forumtitle:visited { color: #60391F; } */
