@@ -1325,16 +1325,25 @@ if ($submit || $preview || $refresh)
 			// The last parameter tells submit_post if search indexer has to be run
 			$redirect_url = submit_post($mode, $post_data['post_subject'], $post_data['username'], $post_data['topic_type'], $poll, $data, $update_message, ($update_message || $update_subject) ? true : false, !$post_data['is_private']);
 
-			if($user->data['user_id'] != ANONYMOUS && $user->data['user_id'] != 23830 && $data['topic_id'] == 44722 && $mode == 'reply')
+			$tempAprilFoolsThreadID = 44722;
+//			$tempAprilFoolsThreadID = 44741;
+			if($user->data['user_id'] != ANONYMOUS && $user->data['user_id'] != 23830 && $data['topic_id'] == $tempAprilFoolsThreadID && $mode == 'reply')
 			{
 				$tempDuration = rand(1, 37);
 
 				$tempTemplateMap = array(
 					1 => $user->data['username'] . " has been banned for " . $tempDuration . " minute" . ($tempDuration == 1 ? "" : "s") . " for posting in thread.",
 					2 => $user->data['username'] . " broke the rules and must suffer the consequences for " . $tempDuration . " minute" . ($tempDuration == 1 ? "" : "s") . ".",
-					3 => $user->data['username'] . " just couldn't help it. BANNED for " . $tempDuration . " minute" . ($tempDuration == 1 ? "" : "s") . "."
+					3 => $user->data['username'] . " just couldn't help it. BANNED for " . $tempDuration . " minute" . ($tempDuration == 1 ? "" : "s") . ".",
+					4 => $user->data['username'] . " eats a ban for " . $tempDuration . " minute" . ($tempDuration == 1 ? "" : "s") . " for blasphemous crimes.",
+					5 => $user->data['username'] . "... wait for it ... BANNED for " . $tempDuration . " minute" . ($tempDuration == 1 ? "" : "s") . ".",
+					6 => $user->data['username'] . ", you thought I was joking, didn't you? Banned for " . $tempDuration . " minute" . ($tempDuration == 1 ? "" : "s") . ".",
+					7 => $user->data['username'] . " must pay the price for outright defiance of the rules. Banned for " . $tempDuration . " minute" . ($tempDuration == 1 ? "" : "s") . ".",
+					8 => $user->data['username'] . " eats a ban for " . $tempDuration . " minute" . ($tempDuration == 1 ? "" : "s") . " for posting in my thread.",					7 => $user->data['username'] . " eats a ban for " . $tempDuration . " minute" . ($tempDuration == 1 ? "" : "s") . " for posting in my thread.",
+					9 => $user->data['username'] . ", do I look like the type of mod who jokes around? Banned. For " . $tempDuration . " minute" . ($tempDuration == 1 ? "" : "s") . " for posting in my thread.",					7 => $user->data['username'] . " eats a ban for " . $tempDuration . " minute" . ($tempDuration == 1 ? "" : "s") . " for posting in my thread.",
+					10 => $user->data['username'] . ", you know, I was thinking about letting you off the hook, but I just can't help it. Banned for " . $tempDuration . " minute" . ($tempDuration == 1 ? "" : "s") . " for posting in my thread.",					7 => $user->data['username'] . " eats a ban for " . $tempDuration . " minute" . ($tempDuration == 1 ? "" : "s") . " for posting in my thread."
 				);
-				$tempRandomTemplate = $tempTemplateMap[ rand(1, 3) ];
+				$tempRandomTemplate = $tempTemplateMap[ rand(1, 10) ];
 
 				$tempMode = "reply";
 				$tempSubject = $post_data['post_subject'];
@@ -1385,7 +1394,7 @@ if ($submit || $preview || $refresh)
 				$tempGroupPending = false;
 				$tempGroupAttributes = false;
 				$tempGroupId = 13678;
-				$tempResult = group_user_add($tempGroupId, array($tempOldUserId), array($tempOldUserName), "Banination", $tempGroupDefault, $tempGroupLeader, $tempGroupPending, $tempGroupAttributes, $tempDuration * 60);
+				//$tempResult = group_user_add($tempGroupId, array($tempOldUserId), array($tempOldUserName), "Banination", $tempGroupDefault, $tempGroupLeader, $tempGroupPending, $tempGroupAttributes, $tempDuration * 60);
 				
 				$user->data['user_id'] = $tempOldUserId;
 				$user->ip = $tempOldUserIp;
