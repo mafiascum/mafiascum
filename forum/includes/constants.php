@@ -349,5 +349,5 @@ define('USER_POST_MASK_TABLE', $table_prefix . 'user_post_mask');
 define('TOPIC_POSTERS_TABLE', $table_prefix . 'topic_posters');
 
 define('MOBILE_STYLE', '17');
-define('PRIVATE_FORUM', '6');
+define('PRIVATE_FORUM', '90');
 ?>
