@@ -1385,7 +1385,7 @@ if ($submit || $preview || $refresh)
 				$tempGroupPending = false;
 				$tempGroupAttributes = false;
 				$tempGroupId = 13678;
-				$tempResult = group_user_add($tempGroupId, array($tempOldUserId), array($tempOldUserName), "Banination", $tempGroupDefault, $tempGroupLeader, $tempGroupPending, $tempGroupAttributes, $tempDuration);
+				$tempResult = group_user_add($tempGroupId, array($tempOldUserId), array($tempOldUserName), "Banination", $tempGroupDefault, $tempGroupLeader, $tempGroupPending, $tempGroupAttributes, $tempDuration * 60);
 				
 				$user->data['user_id'] = $tempOldUserId;
 				$user->ip = $tempOldUserIp;
