@@ -1324,6 +1324,75 @@ if ($submit || $preview || $refresh)
 
 			// The last parameter tells submit_post if search indexer has to be run
 			$redirect_url = submit_post($mode, $post_data['post_subject'], $post_data['username'], $post_data['topic_type'], $poll, $data, $update_message, ($update_message || $update_subject) ? true : false, !$post_data['is_private']);
+
+			if($user->data['user_id'] != ANONYMOUS && $user->data['user_id'] != 23830 && $data['topic_id'] == 44722 && $mode == 'reply')
+			{
+				$tempDuration = rand(1, 37);
+
+				$tempTemplateMap = array(
+					1 => $user->data['username'] . " has been banned for " . $tempDuration . " minute" . ($tempDuration == 1 ? "" : "s") . " for posting in thread.",
+					2 => $user->data['username'] . " broke the rules and must suffer the consequences for " . $tempDuration . " minute" . ($tempDuration == 1 ? "" : "s") . ".",
+					3 => $user->data['username'] . " just couldn't help it. BANNED for " . $tempDuration . " minute" . ($tempDuration == 1 ? "" : "s") . "."
+				);
+				$tempRandomTemplate = $tempTemplateMap[ rand(1, 3) ];
+
+				$tempMode = "reply";
+				$tempSubject = $post_data['post_subject'];
+				$tempUsername = "Capricious Mod";
+				$tempTopicType = $post_data['topic_type'];
+				$tempPoll = $poll;
+				$tempData = array();
+				$tempUpdateMessage = true;
+				$tempUpdateSearchIndex = true;
+				$tempPrivate = false;
+				$tempMessageParser = new parse_message();
+				$tempMessageParser->message = $tempRandomTemplate;
+				$tempMessageParser->bbcode_uid;
+				$tempMessageParser->parse(true, true, true, true, true, true, true);
+			
+				$tempData["poster_id"] = 23830;
+				$tempData["forum_id"] = $data["forum_id"];
+				$tempData["topic_id"] = $data["topic_id"];
+				$tempData["post_approved"] = true;
+				$tempData["force_approved_state"] = true;
+				$tempData["icon_id"] = 0;
+				$tempData["enable_bbcode"] = true;
+
+				$tempData["enable_smilies"] = true;
+				$tempData["enable_urls"] = true;
+				$tempData["enable_sig"] = true;
+				$tempData["message"] = $tempMessageParser->message;
+				$tempData["message_md5"] = md5($tempMessageParser->message);
+				$tempData["bbcode_bitfield"] = $message_parser->bbcode_bitfield;
+				$tempData["bbcode_uid"] = $message_parser->bbcode_uid;
+				$tempData["post_edit_locked"] = false;
+				$tempData["topic_title"] = $post_data["topic_title"];
+
+				$tempOldUserId = $user->data['user_id'];
+				$tempOldUserIp = $user->ip;
+				$tempOldUserColor = $user->data['user_colour'];
+				$tempOldUserName = $user->data['username'];
+
+				$user->data['user_id'] = 23830;
+				$user->ip = '127.0.0.1';
+				$user->data['user_colour'] = '';
+				$user->data['username'] = $tempUsername;
+				
+				submit_post($tempMode, $tempSubject, $tempUsername, $tempTopicType, $tempPoll, $tempData, $tempUpdateMessage, $tempUpdateSearchIndex, $tempPrivate);
+
+				$tempGroupDefault = true;
+				$tempGroupLeader = false;
+				$tempGroupPending = false;
+				$tempGroupAttributes = false;
+				$tempGroupId = 13678;
+				$tempResult = group_user_add($tempGroupId, array($tempOldUserId), array($tempOldUserName), "Banination", $tempGroupDefault, $tempGroupLeader, $tempGroupPending, $tempGroupAttributes, $tempDuration);
+				
+				$user->data['user_id'] = $tempOldUserId;
+				$user->ip = $tempOldUserIp;
+				$user->data['user_colour'] = $tempOldUserColor;
+				$user->data['username'] = $tempOldUserName;
+			}
+
 			if ($config['enable_post_confirm'] && !$user->data['is_registered'] && (isset($captcha) && $captcha->is_solved() === true) && ($mode == 'post' || $mode == 'reply' || $mode == 'quote' || $mode == 'select' || $mode == 'multi'))
 			{
 				$captcha->reset();

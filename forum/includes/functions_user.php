@@ -2786,7 +2786,7 @@ function group_user_add($group_id, $user_id_ary = false, $username_ary = false, 
 	$auto_remove_time = 0;
 	if($duration !== 0)
 	{
-		$auto_remove_time = time() + (24 * 60 * 60 * $duration);
+		$auto_remove_time = time() + $duration;
 	}
 
 	$db->sql_transaction('begin');
