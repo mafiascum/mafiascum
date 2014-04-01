@@ -1,7 +1,7 @@
 	function getLightestShade(r,g,b){
 		var percent = 0.0;
 		var yiq = ((r*299)+(g*587)+(b*114));
-		if (yiq < 75000){
+		if (yiq < 100000){
 			if (r > g && r > b){
 				percent = 255.0/r;
 			} else if (b > g) {
@@ -16,11 +16,24 @@
 			
 			yiq = ((r*299)+(g*587)+(b*114));
 			
-			if (yiq < 75000){
-			 var target = 75000 - yiq;
-			 var r_g_ratio = (r/1.0)/g;
-			 var newg = target/(r_g_ration*299 + 589);
-			 var newr = r_g_ratio*newg;
+			if (yiq < 100000 && b >= 254){
+			 var target = 100000 - yiq;
+			 var r_g_ratio = 0.0;
+			 var newg = 0;
+			 var newr = 0;
+			 if (g > 0){
+				 r_g_ratio = (r/1.0)/g;
+				 newg = target/(r_g_ratio*299 + 589);
+				 newr = r_g_ratio*newg;
+			 } else if (r > 0) {
+				 r_g_ratio = (g/1.0)/r;
+				 newr = target/(r_g_ratio*589 + 299);
+				 newg = r_g_ratio*newr;
+			 } else {
+				r_g_ratio = 1.0;
+				 newg = target/(r_g_ratio*299 + 589);
+				 newr = r_g_ratio*newg;
+			 }
 			 r = r + Math.round(newr);
 			 g = g + Math.round(newg);
 			}
