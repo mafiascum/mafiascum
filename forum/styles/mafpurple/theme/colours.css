@@ -5,7 +5,7 @@ Colours and backgrounds for common.css
 
 html, body {
 	color: #362642;
-	background-color: #6CC2AA;
+	background-color: #A89BCC;
 }
 
 h1 {
@@ -17,7 +17,7 @@ h2 {
 }
 
 h3 {
-	border-bottom-color: #CCC1B3;
+	border-bottom-color: #483258;
 	color: #4C4131;
 }
 
@@ -48,7 +48,7 @@ hr.dashed {
 /* Round cornered boxes and backgrounds
 ---------------------------------------- */
 .headerbar {
-	background-color: #A88F74;
+	background-color: #B57EDC;
 	background-image: url("{T_THEME_PATH}/images/bg_header.png");
 	color: #EFEDE8;
 }
@@ -68,7 +68,7 @@ hr.dashed {
 }
 
 .panel {
-	background-color: #EDDDC7;
+	background-color: #D3B2EC;
 	color: #2D1800;
 }
 
@@ -80,9 +80,9 @@ hr.dashed {
 	color: #000000;
 }
 
-.bg1	{ background-color: #E2D3BE; }
-.bg2	{ background-color: #E8DDC7;  }
-.bg3	{ background-color: #E5D5BC; }
+.bg1	{ background-color: #CBA5E6; }
+.bg2	{ background-color: #D3B2EA;  }
+.bg3	{ background-color: #DABEEE; }
 
 .ucprowbg {
 	background-color: #E0D3BE;
@@ -218,9 +218,9 @@ Colours and backgrounds for links.css
 -------------------------------------------------------------- */
 
 a:link	{ color: #660066; }
-a:visited	{ color: #60391F; }
-a:hover	{ color: #B72724; }
-a:active	{ color: #B72724; }
+a:visited	{ color: #6600CC; }
+a:hover	{ color: #666699; }
+a:active	{ color: #9999FF; }
 
 /* Links on gradient backgrounds */
 #search-box a:link, .navbg a:link, .forumbg .header a:link, .forabg .header a:link, th a:link {
@@ -241,13 +241,13 @@ a:active	{ color: #B72724; }
 
 /* Links for forum/topic lists */
 a.forumtitle {
-	color: #660066;
+	color: #6;
 }
 
 /* a.forumtitle:visited { color: #60391F; } */
 
 a.forumtitle:hover {
-	color: #BA2D2A;
+	color: #666699;
 }
 
 a.forumtitle:active {
@@ -255,13 +255,13 @@ a.forumtitle:active {
 }
 
 a.topictitle {
-	color: #7F3503;
+	color: #660066;
 }
 
 /* a.topictitle:visited { color: #60391F; } */
 
 a.topictitle:hover {
-	color: #BA2D2A;
+	color: #666699;
 }
 
 a.topictitle:active {
@@ -344,16 +344,16 @@ Colours and backgrounds for content.css
 -------------------------------------------------------------- */
 
 ul.forums {
-	background-color: #e6ded4;
+	background-color: #d292ff;
 	background-image: url("{T_THEME_PATH}/images/gradient.png");
 }
 
 ul.topiclist li {
-	color: #663515;
+	color: #362642;
 }
 
 ul.topiclist dd {
-	border-left-color: #EFEDE8;
+	border-left-color: #483258;
 }
 
 .rtl ul.topiclist dd {
@@ -370,8 +370,8 @@ ul.topiclist li.row dt a.subforum.unread {
 }
 
 li.row {
-	border-top-color:  #EFEDE8;
-	border-bottom-color: #663617;
+	border-top-color:  #F0E5F8;
+	border-bottom-color: #6D4C84;
 }
 
 li.row strong {
@@ -379,11 +379,11 @@ li.row strong {
 }
 
 li.row:hover {
-	background-color: #F6F4D0;
+	background-color: #E9D8F4;
 }
 
 li.row:hover dd {
-	border-left-color: #CCC1B3;
+	border-left-color: #483258;
 }
 
 .rtl li.row:hover dd {
@@ -392,7 +392,7 @@ li.row:hover dd {
 }
 
 li.header dt, li.header dd {
-	color: #EFEDE8;
+	color: #E9D8F4;
 }
 
 /* Forum list column styles */
@@ -414,7 +414,7 @@ ul.topiclist dd.searchextra {
 
 .content h2, .panel h2 {
 	color: #4C4131;
-	border-bottom-color:  #CCC1B3;
+	border-bottom-color:  #CCC1b3;
 }
 
 dl.faq dt {
