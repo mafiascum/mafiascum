@@ -348,5 +348,5 @@ define('GAME_PROGRESS_SETUP', 4);
 define('GAME_PROGRESS_ONGOING', 5);
 define('GAME_PROGRESS_COMPLETED', 6);
 
-define('PRIVATE_FORUM', '6');
+define('PRIVATE_FORUM', '90');
 ?>
