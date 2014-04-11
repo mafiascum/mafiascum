@@ -649,7 +649,7 @@ if (($config['email_enable'] || $config['jab_enable']) && $config['allow_topic_n
 		'POST_TIME_SORT_URL' => " {$server_path}viewtopic.$phpEx?f=$forum_id&amp;t=$topic_id&amp;activity_overview=1&amp;sort_type=pt&amp;sort_order=" . ($sort_type == 'pt' && $sort_order == 'd' ? "a" : "d") ,
 		'FIRST_POST_TIME_SORT_URL' => " {$server_path}viewtopic.$phpEx?f=$forum_id&amp;t=$topic_id&amp;activity_overview=1&amp;sort_type=fpt&amp;sort_order=" . ($sort_type == 'fpt' && $sort_order == 'd' ? "a" : "d") ,
 		'POST_COUNT_SORT_URL' => " {$server_path}viewtopic.$phpEx?f=$forum_id&amp;t=$topic_id&amp;activity_overview=1&amp;sort_type=pc&amp;sort_order=" . ($sort_type == 'pc' && $sort_order == 'd' ? "a" : "d") ,
-		'TOPIC_TITLE' => $topic_data['topic_title'],
+		'TOPIC_TITLE' => $topic_data['is_private'] ? 'PRIVATE TOPIC: ' . $topic_data['topic_title'] : $topic_data['topic_title'],
 		'U_VIEW_TOPIC' => "{$server_path}viewtopic.$phpEx?f=$forum_id&amp;t=$topic_id",
 		'S_POST_ACTION' => append_sid("{$phpbb_root_path}ucp.$phpEx", "i=pm&amp;mode=compose&amp;action=post", true, $user->session_id)
         ) );
@@ -694,7 +694,7 @@ if (($config['email_enable'] || $config['jab_enable']) && $config['allow_topic_n
 
 	$db->sql_freeresult($resultSet);
 
-	page_header($topic_data['topic_title'], true, $forum_id);
+	page_header($topic_data['is_private'] ? 'PRIVATE TOPIC: ' . $topic_data['topic_title'] : $topic_data['topic_title'], true, $forum_id);
 
 	$template->set_filenames(array(
 		'body' => 'viewtopic_activity_overview.html')
@@ -811,7 +811,7 @@ $template->assign_vars(array(
 	'FORUM_NAME' 	=> $topic_data['forum_name'],
 	'FORUM_DESC'	=> generate_text_for_display($topic_data['forum_desc'], $topic_data['forum_desc_uid'], $topic_data['forum_desc_bitfield'], $topic_data['forum_desc_options']),
 	'TOPIC_ID' 		=> $topic_id,
-	'TOPIC_TITLE' 	=> $topic_data['topic_title'],
+	'TOPIC_TITLE' 	=> $topic_data['is_private'] ? 'PRIVATE TOPIC: ' . $topic_data['topic_title'] : $topic_data['topic_title'],
 	'TOPIC_POSTER'	=> $topic_data['topic_poster'],
 
 	'TOPIC_AUTHOR_FULL'		=> get_username_string('full', $topic_data['topic_poster'], $topic_data['topic_first_poster_name'], $topic_data['topic_first_poster_colour']),

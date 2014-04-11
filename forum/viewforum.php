@@ -688,7 +688,7 @@ if (sizeof($topic_list))
 			'PAGINATION'		=> topic_generate_pagination($replies, $view_topic_url),
 			'REPLIES'			=> $replies,
 			'VIEWS'				=> $row['topic_views'],
-			'TOPIC_TITLE'		=> censor_text($row['topic_title']),
+			'TOPIC_TITLE'		=> censor_text($row['is_private'] ? 'PRIVATE TOPIC: ' . $row['topic_title'] : $row['topic_title']),
 			'TOPIC_TYPE'		=> $topic_type,
 
 			'TOPIC_FOLDER_IMG'		=> $user->img($folder_img, $folder_alt),

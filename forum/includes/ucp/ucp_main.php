@@ -145,7 +145,7 @@ class ucp_main
 						'LAST_POST_AUTHOR'			=> get_username_string('username', $row['topic_last_poster_id'], $row['topic_last_poster_name'], $row['topic_last_poster_colour']),
 						'LAST_POST_AUTHOR_COLOUR'	=> get_username_string('colour', $row['topic_last_poster_id'], $row['topic_last_poster_name'], $row['topic_last_poster_colour']),
 						'LAST_POST_AUTHOR_FULL'		=> get_username_string('full', $row['topic_last_poster_id'], $row['topic_last_poster_name'], $row['topic_last_poster_colour']),
-						'TOPIC_TITLE'				=> censor_text($row['topic_title']),
+						'TOPIC_TITLE'				=> censor_text($row['is_private'] ? 'PRIVATE TOPIC: ' . $row['topic_title'] : $row['topic_title']),
 						'TOPIC_TYPE'				=> $topic_type,
 
 						'TOPIC_FOLDER_IMG'		=> $user->img($folder_img, $folder_alt),
@@ -807,7 +807,7 @@ class ucp_main
 				'PAGINATION'		=> topic_generate_pagination($replies, append_sid("{$phpbb_root_path}viewtopic.$phpEx", 'f=' . (($row['forum_id']) ? $row['forum_id'] : $forum_id) . "&amp;t=$topic_id")),
 				'REPLIES'			=> $replies,
 				'VIEWS'				=> $row['topic_views'],
-				'TOPIC_TITLE'		=> censor_text($row['topic_title']),
+				'TOPIC_TITLE'		=> censor_text($row['is_private'] ? 'PRIVATE TOPIC: ' . $row['topic_title'] : $row['topic_title']),
 				'TOPIC_TYPE'		=> $topic_type,
 				'FORUM_NAME'		=> $row['forum_name'],
 

@@ -71,28 +71,6 @@ define('INACTIVE_EMAILFLAG', 6);
 define('INACTIVE_IPFLAG', 7);
 define('INACTIVE_PASSWORDFLAG', 8);
 
-//Mafia Game Types
-define('MAFIA_GAME_TYPE_LARGE_NORMAL', 0);
-define('MAFIA_GAME_TYPE_MINI_NORMAL', 1);
-define('MAFIA_GAME_TYPE_NEWBIE', 2);
-define('MAFIA_GAME_TYPE_LARGE_THEME', 3);
-define('MAFIA_GAME_TYPE_MINI_NORMAL', 4);
-define('MAFIA_GAME_TYPE_MINI_THEME', 5);
-define('MAFIA_GAME_TYPE_OPEN', 6);
-define('MAFIA_GAME_TYPE_MARATHON', 7);
-
-//Mafia Game Statuses
-define('MAFIA_GAME_STATUS_PENDING', 0);
-define('MAFIA_GAME_STATUS_SIGNUPS', 1);
-define('MAFIA_GAME_STATUS_ONGOING', 2);
-define('MAFIA_GAME_STATUS_COMPLETE', 3);
-
-define('MAFIA_MODATOR_TYPE_PRIMARY', 0);
-define('MAFIA_MODATOR_TYPE_COMOD', 1);
-define('MAFIA_MODATOR_TYPE_BACKUP', 2);
-
-define('MAFIA_PLAYER_STATUS_ALIVE', 0);
-define('MAFIA_PLAYER_STATUS_DEAD', 1);
 
 //Mafia Alignments
 define('MAFIA_ALIGNMENT_TOWN', 0);
@@ -100,15 +78,6 @@ define('MAFIA_ALIGNMENT_MAFIA', 1);
 define('MAFIA_ALIGNMENT_CULT', 2);
 define('MAFIA_ALIGNMENT_THIRD_PARTY', 3);
 define('MAFIA_ALIGNMENT_NEUTRAL', 4);
-
-//Mafia Slot Statuses
-define('MAFIA_SLOT_STATUS_ALIVE', 0);
-define('MAFIA_SLOT_STATUS_DEAD', 1);
-
-//Mafia Slot Outcomes
-define('MAFIA_SLOT_OUTCOME_WON', 0);
-define('MAFIA_SLOT_OUTCOME_LOST', 1);
-define('MAFIA_SLOT_OUTCOME_DRAW', 2);
 
 // ACL
 define('ACL_NEVER', 0);
@@ -342,12 +311,42 @@ define('MAFIA_MODERATORS_TABLE', $table_prefix . 'mafia_moderators');
 define('MAFIA_PLAYERS_TABLE', $table_prefix . 'mafia_players');
 define('MAFIA_SLOTS_TABLE', $table_prefix . 'mafia_slots');
 define('MAFIA_FACTIONS_TABLE', $table_prefix . 'mafia_factions');
+define('MAFIA_GAME_TYPES_TABLE', $table_prefix . 'mafia_game_types');
+define('MAFIA_ROLES_TABLE', $table_prefix . 'mafia_roles');
+define('MAFIA_MODIFIERS_TABLE', $table_prefix . 'mafia_modifiers');
 define('BACKUP_TABLE', $table_prefix . 'backup');
 define('BACKUP_REMOTE_FILE_TABLE', $table_prefix . 'backup_remote_file');
 define('POSTS_ARCHIVE_TABLE', $table_prefix . 'posts_archive');
-define('USER_POST_MASK_TABLE', $table_prefix . 'user_post_mask');
+define('MAFIA_GAME_STATUS_TABLE', $table_prefix . 'mafia_game_status');
 define('TOPIC_POSTERS_TABLE', $table_prefix . 'topic_posters');
 
 define('MOBILE_STYLE', '17');
-define('PRIVATE_FORUM', '90');
+
+//Moderator Constants
+define('MODERATOR_TYPE_MAIN',0);
+define('MODERATOR_TYPE_COMOD',1);
+define('MODERATOR_TYPE_BACKUP',2);
+//Signup Constants
+define('STANDARD_IN', 0);
+define('PREIN', 1);
+define('REPLACEMENT', 2);
+//Slot Constants
+define('SLOT_STATUS_PENDING', 0);
+define('SLOT_ALIVE', 1);
+define('SLOT_DEAD', 2);
+define('SLOT_OTHER', 3);
+define('SLOT_OUTCOME_PENDING', 0);
+define('SLOT_DRAW', 3);
+define('SLOT_LOSS', 1);
+define('SLOT_WIN', 2);
+
+//Progress Constants
+define('GAME_PROGRESS_PENDING', 1);
+define('GAME_PROGRESS_QUEUED', 2);
+define('GAME_PROGRESS_SIGNUPS', 3);
+define('GAME_PROGRESS_SETUP', 4);
+define('GAME_PROGRESS_ONGOING', 5);
+define('GAME_PROGRESS_COMPLETED', 6);
+
+define('PRIVATE_FORUM', '6');
 ?>

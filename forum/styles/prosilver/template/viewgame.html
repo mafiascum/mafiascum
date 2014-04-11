@@ -2,209 +2,105 @@
 <!-- IF U_MCP --><p>[&nbsp;<a href="{U_MCP}">{L_MCP}</a>&nbsp;]</p><!-- ENDIF -->
 
 <style type="text/css">
-
-div#gameInfoMaster {
-
-	width: 100%;
-	font-size: 13px;
-	margin-bottom: 30px;
-	float: left;
-}
-
-div.gameFieldNameLabel {
-
-	width: 150px;
-	height: 27px;
-	display: inline-block;
-}
-
-span.gameFieldValue {
-
-	font-weight: bold;
-}
-
-#gameInfoLeft {
-
-	float: left;
-	width: 300px;
-}
-
-#gameInfoRight {
-
-	overflow: hidden;
-	width: 80%;
-}
-
-#gameModeratorTable {
-
-	font-size: 10px;
-	border-bottom: none;
-	float: left;
-}
-
-
-
-#gamePlayerTable {
-	float: left;
-	font-size: 10px;
-}
-
-#gameModeratorTableContainer {
-	
-}
-
-#gamePlayerTableContainer {
-	margin-top: 15px;
-}
-
-.gamePlayerHeader {
-	font-weight: bold;
-	border: none;
-	color: #EFEDE8;
-}
-
-#gameInfoButtonRow {
-	margin-top: 7px;
-}
-
-.gameInfoUnorderedListButtonIcon
-{
-	float: right;
-	width: auto;
-	padding: 0;
-}
-
-ul.gameInfoUnorderedListButtonIcon li
-{
-	float: left;
-	list-style: none;
-}
-
-ul.gameInfoUnorderedListButtonIcon li.removeIcon
-{
-	width: 17px;
-	height: 20px;
-	background-image: url("./styles/prosilver/imageset/icon_post_delete.png");
-}
-
-ul.gameInfoUnorderedListButtonIcon li.removeIcon:hover
-{
-	background-position: 0px -20px !important;
-}
-
-ul.gameInfoUnorderedListButtonIcon li.editIcon
-{
-	width: 53px;
-	height: 20px;
-	background-image: url("./styles/prosilver/imageset/en/icon_post_edit.png");
-}
-
-ul.gameInfoUnorderedListButtonIcon li.editIcon:hover
-{
-	background-position: 0px -20px !important;
-}
-
-ul.gameInfoUnorderedListButtonIcon li.removeIcon
-{
-	width: 17px;
-	height: 20px;
-	background-image: url("./styles/prosilver/imageset/icon_post_delete.png");
-}
-
-ul.gameInfoUnorderedListButtonIcon li.removeIcon:hover
-{
-	background-position: 0px -20px !important;
-}
-
-ul.gameInfoUnorderedListButtonIcon li a
-{
-	display: block;
-	background-position: 0 0;
-	width: 100%;
-	height: 100%;
-}
-
-input.gameInfoLabel {
-	width: 125px;
-	font-weight:bold;
-}
-
-.hidden {
-	display:none;
-}
-
-div#addModeratorContainer
-{
-	margin-top: 15px;
-}
-
-div#addModeratorContainer .label
-{
-	display: inline-block;
-	width: 150px;
-	height: 27px;
-}
-
-div#addModeratorContainer .addModeratorInput
-{
-	width: 200px;
-	display: inline-block;
-}
-
-
-div#addPlayerContainer
-{
-	margin-top: 15px;
-}
-
-div#addPlayerContainer .label
-{
-	display: inline-block;
-	width: 150px;
-	height: 27px;
-}
-
-div#addPlayerContainer .addPlayerInput
-{
-	width: 200px;
-	display: inline-block;
-}
 </style>
 
 <script type="text/javascript">
 $(document).ready(function() {
 	$("#editGameInfoButton").bind("click", function() {
-
-		$(".gameFieldValue").hide();
-		$("#gameInfoGameCreatedInputField").show();
-		$("#gameInfoGameStartedInputField").show();
-		$("#gameInfoGameCompletedInputField").show();
-		$("#gameInfoGameTypeInputField").show();
-		$("#gameInfoGameStatusInputField").show();
+		if ($("#saveGameInfoButton").css('display')=='none'){
+			$("#editGameInfoButton").val('Cancel');
+			$(".gameFieldValueEditable").hide();
+			$("#saveGameInfoButton").show();
+			<!-- IF not IS_APPROVED -->
+				$("#gameInfoGameNameInputField").show();
+				$("#gameInfoGameDescriptionInputField").show();
+				$("#gameInfoGameTypeInputField").show();
+				$("#gameInfoGameSizeInputField").show();
+			<!-- ENDIF -->
+			$("#gameInfoGameStartedInputField").show();
+			$("#gameInfoGameCompletedInputField").show();
+			<!-- IF STATUS_SELECT -->
+				$("#gameInfoGameStatusInputField").show();
+			<!-- ENDIF -->
+		}else{
+			$("#editGameInfoButton").val('Edit Details');
+			$(".gameFieldValueEditable").show();
+			$("#saveGameInfoButton").hide();
+			<!-- IF not IS_APPROVED -->
+				$("#gameInfoGameNameInputField").hide();
+				$("#gameInfoGameNameInputField").val('{GAME_NAME_ESCAPED}'); 
+				$("#gameInfoGameTypeInputField").hide();
+				$("#gameInfoGameDescriptionInputField").hide();
+				$("#gameInfoGameDescriptionInputField").val('{GAME_DESCRIPTION_ESCAPED}'); 
+				$("#gameInfoGameSizeInputField").hide();
+				$("#gameInfoGameSizeInputField").val('{MAXIMUM_PLAYER_TOTAL}'); 
+			<!-- ENDIF -->
+			$("#gameInfoGameStartedInputField").hide();
+			$("#gameInfoGameStartedInputField").val('{STARTED_TIME}'); 
+			$("#gameInfoGameCompletedInputField").hide();
+			$("#gameInfoGameCompletedInputField").val('{COMPLETED_TIME}'); 
+			<!-- IF STATUS_SELECT -->
+				$("#gameInfoGameStatusInputField").hide();
+				$("#gameInfoGameStatusInputField").val('{STATUS_VAL}');
+			<!-- ENDIF -->
+		}
 	});
 
-	$(".moderatorRemoveButton").bind("click", function() {
-
+	$(".moderatorEditButton").bind("click", function() {
 		var moderatorId = $(this).attr("moderatorid");
-
-		//TODO: Send ajax request, handle response.
-
-		$(this).closest("tr").hide("slow", function() { $(this).remove(); });
+		$('.moderatorEditPanel').hide();
+		$('#ModeratorEditor' + moderatorId).show();
+		$('#ModeratorEditor').hide();
 	});
-
-	$(".playerRemoveButton").bind("click", function() {
-
-		var playerId = $(this).attr("playerid");
-
-		//TODO: Send ajax request, handle response.
-
-		$(this).closest("tr").hide("slow", function() { $(this).remove(); });
+	$(".moderatorRemoveButton").bind("click", function() {
+		var moderatorId = $(this).attr("moderatorid");
+		$('#moderatorDelete').prop('value', moderateId);
+		$('#ModeratorDeleteForm').sumbit();
+		
 	});
-
+	
+	$('.cancelModeratorEditSaveButton').bind("click", function() {
+		$('.moderatorEditPanel').hide();
+		$('#ModeratorEditor').show();
+	});
 	$(".playerEditButton").bind("click", function() {
-
 		var playerId = $(this).attr("playerid");
-		alert("Editing player #" + playerId + ".");
+		$('.playerEditPanel').hide();
+		$('#playerEditor' + playerId).show();
+		$('#playerEditor').hide();
+	});
+
+	$('.cancelPlayerEditSaveButton').bind("click", function() {
+		$('.playerEditPanel').hide();
+		$('#playerEditor').show();
+	});
+	<!-- IF DETAIL_EDIT_ERROR -->
+			$("#editGameInfoButton").prop('value', 'Cancel');
+			$(".gameFieldValueEditable").hide();
+			$("#saveGameInfoButton").show();
+			<!-- IF not IS_APPROVED -->
+				$("#gameInfoGameNameInputField").show();
+				$("#gameInfoGameDescriptionInputField").show();
+				$("#gameInfoGameTypeInputField").show();
+				$("#gameInfoGameSizeInputField").show();
+			<!-- ENDIF -->
+			$("#gameInfoGameStartedInputField").show();
+			$("#gameInfoGameCompletedInputField").show();
+			<!-- IF STATUS_SELECT -->
+				$("#gameInfoGameStatusInputField").show();
+			<!-- ENDIF -->
+	<!-- ENDIF -->
+
+	$("#addFactionButton").bind("click", function() {
+		$("#addFactionPane").show();
+		$("#newFactionName").focus();
+		$('.playerEditPanel').hide();
+	});
+	$("#addFactionCancel").bind("click", function(){
+		$("#addFactionPane").hide();
+		$("#newFactionName").val("");
+		$("#newFactionAlignment").val(0);
+		$("#addPlayerContainer").show();
 	});
 });
 </script>
@@ -212,45 +108,71 @@ $(document).ready(function() {
 
 
 <h2>{GAME_NAME}</h2>
-<h3>Description goes here!</h3>
-
+<h3>{GAME_DESCRIPTION}</h3>
+<!-- IF DELETE_MOD -->
+<div class="panel">
+	<div class="inner">
+	<span class="corners-top"><span></span></span>
+		<form id='PlayerEditor' method="post" action={U_EDITFORM}>
+		<p> Are you sure you want to remove {DELETE_MOD_USER_NAME} as a mod? </p>
+		<input type="hidden" name="mod_id" value={DELETE_MOD}>
+		<input type="submit" class="button2" name="confirmDeleteMod" value="Confirm" />
+		<input type="submit" class="button2" name="cancelDeleteMod" value="Cancel" />
+		</form>
+		<span class="corners-bottom"><span></span></span>
+	</div>
+</div>
+<!-- ELSE -->
 <div id="gameInfoMaster">
 
  <div id="gameInfoLeft">
 
-  <div class="gameFieldNameLabel">ID</div> <span class="gameFieldValue">{GAME_ID}</span><br/>
+  <div class="gameFieldNameLabel">ID:</div> <span class="gameFieldValue">{GAME_ID}</span><br/>
+<!-- IF EDIT --><form id='DetailsEditor' method="post" action={U_EDITFORM}><!-- ENDIF -->
+   <div class="gameFieldNameLabel">Name:</div>
+   <!-- IF EDIT --><input type="text" id="gameInfoGameNameInputField" name="gameInfoGameName" class="gameInfoLabel inputbox hidden" value="{GAME_NAME}" <!-- IF IS_APPROVED -->readonly="readonly"<!-- ENDIF -->/><!-- ENDIF -->
+   <span id="gameInfoGameNameField" <!-- IF IS_APPROVED -->class="gameFieldValue"<!-- ELSE -->class="gameFieldValueEditable"<!-- ENDIF -->>{GAME_NAME}</span><br/>
 
-  <div class="gameFieldNameLabel">Created</div>
-   <input type="text" id="gameInfoGameCreatedInputField" name="gameInfoGameCreated" class="gameInfoLabel inputbox hidden" value="{CREATED_TIME}" />
-   <span id="gameInfoGameCreatedField" class="gameFieldValue">{CREATED_TIME}</span><br/>
+   <div class="gameFieldNameLabel gameFieldNameDescription">Description:</div>
+   <!-- IF EDIT --><textarea id="gameInfoGameDescriptionInputField" name="gameInfoGameDescription" class="gameInfoLabel inputbox hidden" <!-- IF IS_APPROVED -->readonly="readonly"<!-- ENDIF --> >{GAME_DESCRIPTION}</textarea><!-- ENDIF -->
+   <span id="gameInfoGameDescriptionField" <!-- IF IS_APPROVED -->class="gameFieldValue"<!-- ELSE -->class="gameFieldValueEditable"<!-- ENDIF -->>{GAME_DESCRIPTION}</span><br/>
+  
+   <div class="gameFieldNameLabel">Type:</div>
+   <!-- IF EDIT -->{TYPE_SELECT}<!-- ENDIF -->
+   <span id="gameInfoGameTypeField" <!-- IF IS_APPROVED -->class="gameFieldValue"<!-- ELSE -->class="gameFieldValueEditable"<!-- ENDIF -->>{GAME_TYPE}</span><br/>
 
-  <div class="gameFieldNameLabel">Started</div>
-   <input type="text" id="gameInfoGameStartedInputField" name="gameInfoGameStarted" class="gameInfoLabel inputbox hidden" value="{STARTED_TIME}" />
-   <span id="gameInfoGameStartedField" class="gameFieldValue">{STARTED_TIME}</span><br/>
+  <div class="gameFieldNameLabel">Status:</div>
+   <!-- IF EDIT --><!-- IF STATUS_SELECT -->{STATUS_SELECT}<!-- ENDIF --><!-- ENDIF -->
+   <span id="gameInfoGameStatusField" <!-- IF STATUS_SELECT --> class="gameFieldValueEditable" <!-- ELSE --> class="gameFieldValue" <!-- ENDIF -->>{STATUS}</span><br/>
 
-  <div class="gameFieldNameLabel">Completed</div>
-   <input type="text" id="gameInfoGameCompletedInputField" name="gameInfoGameCompleted" class="gameInfoLabel inputbox hidden" value="{COMPLETED_TIME}" />
-   <span id="gameInfoGameCompletedField" class="gameFieldValue">{COMPLETED_TIME}</span><br/>
+  <div class="gameFieldNameLabel">Players:</div>
+   <span id="gameInfoGamePlayersField" class="gameFieldValue">{ENTERED_PLAYER_TOTAL}</span><br/>
 
-  <div class="gameFieldNameLabel">Type</div>
-   <select id="gameInfoGameTypeInputField" name="gameInfoGameType" class="gameInfoLabel hidden">
-    <option id="0">Large Normal</option>
-    <option id="1" selected>Large Theme</option>
-   </select>
-   <span id="gameInfoGameTypeField" class="gameFieldValue">{GAME_TYPE}</span><br/>
+  <div class="gameFieldNameLabel">Game Size:</div>
+   <!-- IF EDIT --><input type="text" id="gameInfoGameSizeInputField" name="gameInfoGameSize" class="gameInfoLabel inputbox hidden" value="{MAXIMUM_PLAYER_TOTAL}" <!-- IF IS_APPROVED -->readonly="readonly"<!-- ENDIF -->/><!-- ENDIF -->
+   <span id="gameInfoGameField" <!-- IF IS_APPROVED -->class="gameFieldValue"<!-- ELSE -->class="gameFieldValueEditable"<!-- ENDIF -->>{MAXIMUM_PLAYER_TOTAL}</span><br/>
 
-  <div class="gameFieldNameLabel">Status</div>
-   <select id="gameInfoGameStatusInputField" name="gameInfoStatusType" class="gameInfoLabel hidden">
-    <option id="0">Pending</option>
-    <option id="1">Signups</option>
-    <option id="2">Ongoing</option>
-    <option id="3" selected>Completed</option>
-   </select>
-   <span id="gameInfoGameStatusField" class="gameFieldValue">{GAME_STATUS}</span><br/>
+<div class="gameFieldNameLabel">Game Topic:</div>
+  <!-- IF GAME_TOPIC --> <a href="{GAME_TOPIC}" id="gameInfoGameField" class="gameFieldValue">{GAME_NAME}</a><!-- ENDIF --><br/>
 
-  <div class="gameInfoButtonRow" id="gameInfoButtonRow">
+  <div class="gameFieldNameLabel">Created:</div>
+   <span id="gameInfoGameCreatedField" class="gameFieldValue">{CREATION_TIME}</span><br/>
+
+  <div class="gameFieldNameLabel">Started:</div>
+   <!-- IF EDIT --><input type="text" id="gameInfoGameStartedInputField" name="gameInfoGameStarted" class="gameInfoLabel inputbox hidden" value="{STARTED_TIME}" /><!-- ENDIF -->
+   <span id="gameInfoGameStartedField" class="gameFieldValueEditable">{STARTED_TIME}</span><br/>
+
+  <div class="gameFieldNameLabel">Completed:</div>
+   <!-- IF EDIT --><input type="text" id="gameInfoGameCompletedInputField" name="gameInfoGameCompleted" class="gameInfoLabel inputbox hidden" value="{COMPLETED_TIME}" /><!-- ENDIF -->
+   <span id="gameInfoGameCompletedField" class="gameFieldValueEditable">{COMPLETED_TIME}</span><br/>
+	
+	<div class="error">{DETAIL_EDIT_ERROR}</div><br/>
+
+  <!-- IF EDIT --><div class="gameInfoButtonRow" id="gameInfoButtonRow">
    <input type="button" class="button2" name="editGameInfoButton" id="editGameInfoButton" value="Edit Details" />
-  </div>
+   <input type="submit" class="button2" name="saveGameInfoButton" id="saveGameInfoButton" value="Save Details" style="display: none;"/>
+  </div><!-- ENDIF -->
+  <!-- IF EDIT --></form><!-- ENDIF -->
  </div>
 
  <div id="gameInfoRight">
@@ -267,41 +189,65 @@ $(document).ready(function() {
       </tr>
      </thead>
      <tbody>
-<!-- BEGIN moderator -->
+<!-- BEGIN mods -->
       <tr class="bg1">
-       <td class="">
-        {moderator.USER_URL}
-        <ul class="gameInfoUnorderedListButtonIcon">
-         <li class="editIcon">
-          <a href="#" class="edit" onclick="return 0;" class="moderatorEditButton" moderatorid="{moderator.ID}" /></a>
+       <td class="username">
+		<span class="in-table-username">
+        {mods.MODERATOR}
+		</span>
+        <ul class="profile-icons in-table-icons">
+        <!-- IF EDIT --><li class="gameicon edit-icon">
+          <a href="#" onclick="return false;" class="moderatorEditButton" moderatorid="{mods.USER_ID}" /></a>
          </li>
-         <li class="removeIcon">
-          <a href="#" class="delete" onclick="return 0;" class="moderatorRemoveButton" moderatorid="{moderator.ID}" /></a>
-         </li>
+         <li class="gameicon delete-icon">
+          <a href="{mods.U_REMOVE_MOD}" class="moderatorRemoveButton" moderatorid="{mods.USER_ID}" /></a>
+         </li><!-- ENDIF -->
         </ul>
        </td>
-       <td class="">{moderator.TYPE}</td>
+       <td class="">{mods.MOD_TYPE}</td>
       </tr>
-<!-- END moderator -->
+<!-- END mods -->
      </tbody>
     </table>
     <span class="corners-bottom"><span></span></span>
    </div> <!--- End gameModeratorTableContainer -->
   </div>
-
 <!-- Moderator Edit Panel -->
-  <div id="addModeratorContainer">
+  <!-- IF EDIT --> <div id="addModeratorContainer">
+  <form id='ModeratorEditor' method="post" action={U_EDITFORM} onsubmit="">
+   <div>
+   <div class="error">{MOD_ADD_ERROR}</div><br/>
    <div class="label">Moderator Name:</div>
    <input type="text" id="addModeratorName" name="addModeratorName" class="addModeratorInput inputbox"/><br/>
+   <div><strong><a href="{U_FIND_USERNAME}" onclick="find_username(this.href); return false;">{L_FIND_USERNAME}</a></strong></div>
    <div class="label">Type:</div>
    <select name="addModeratorType" name="addModeratorType">
     <option value = "0" selected="selected">Primary</option>
-    <option value = "1">Backup</option>
+    <option value = "1">Co-Mod</option>
+	<option value = "2">Backup</option>
    </select><br/>
    <input type="hidden" name="addModeratorId" value="-1" />
-   <input type="button" class="button2" name="addModeratorSaveButton" value="Save Changes" />
+	</div>
+   <input type="submit" class="button2" id="addModeratorSaveButton" name="addModeratorSaveButton" value="Add Mod" />
+   </form>
+<!-- BEGIN mods -->
+<form id='ModeratorEditor{mods.USER_ID}' method="post" action={U_EDITFORM} class="moderatorEditPanel hidden">
+	<div id='editModeratorPanel{mods.USER_ID}'>
+		<br/>
+		<div class="label">Moderator Name:</div>
+		<span id="gameInfoGameNameField" class="modFieldValue">{mods.MODERATOR}</span><br/>
+		   <div class="label">Type:</div>
+		   <select name="editModeratorType" <!-- IF mods.MOD_TYPE eq 'Main Moderator' --> disabled="disabled" <!-- ENDIF --> >
+		   {mods.MOD_TYPE_OPTIONS}
+		   </select>
+	</div>
+	<input type ="hidden" name="moderatorID" value="{mods.USER_ID}"/>
+	<input type="button" class="button2 cancelModeratorEditSaveButton" value="Cancel" />
+    <input type="submit" class="button2" name="editModeratorSaveButton" value="Save Changes" />
+</form>
+<!-- END mods -->
   </div>
-
+  <!-- ENDIF -->
   <div id="gamePlayerTableContainer" class="forumbg forumbg-table">
    <div class="inner">
     <span class="corners-top">
@@ -310,90 +256,113 @@ $(document).ready(function() {
     <table class="table1" cellspacing="1" id="gamePlayerTable">
      <thead>
       <tr>
-       <th class="gameListHeaderCell">Player Name</th>
+	   <th class="gameListHeaderCell">Player Name</th>
        <th class="gameListHeaderCell">Slot #</th>
-       <th class="gameListHeaderCell">Alignment</th>
        <th class="gameListHeaderCell">Faction</th>
        <th class="gameListHeaderCell">Role</th>
-       <th class="gameListHeaderCell">Start Date</th>
+       <th class="gameListHeaderCell">Status</th>
+       <th class="gameListHeaderCell">Type</th>
+	   <th class="gameListHeaderCell">First Post</th>
       </tr>
      </thead>
      <tbody>
-<!-- BEGIN player -->
+<!-- BEGIN players -->
       <tr class="bg1">
-       <td>
-        {player.USER_URL}
-        <ul class="gameInfoUnorderedListButtonIcon">
-         <li class="editIcon">
-          <a href="#" onclick="return 0;" class="playerEditButton" playerid="{player.ID}" /></a>
+       <td class="username">
+	   <span class="in-table-username">
+        {players.USER}
+		</span>
+        <ul class="profile-icons in-table-icons">
+         <!-- IF EDIT --><li class="gameicon edit-icon">
+          <a href="#" onclick="return false;" class="playerEditButton" playerid="{players.USER_ID}" /></a>
          </li>
-         <li class="removeIcon">
-          <a href="#" onclick="return 0;" class="playerRemoveButton" playerid="{player.ID}" /></a>
-         </li>
+         <li class="gameicon delete-icon">
+          <a href="#" onclick="return false;" class="playerRemoveButton" playerid="{players.USER_ID}" /></a>
+         </li><!-- ENDIF -->
         </ul>
        </td>
-       <td>??</td>
-       <td>{player.ALIGNMENT}</td>
-       <td>{player.FACTION}</td>
-       <td>??</td>
-       <td>{player.FIRST_ACTIVE_TIME}</td>
+       <td>{players.SLOT_ID}</td>
+       <td>{players.FACTION_NAME}</td>
+       <td>{players.FULL_ROLE}</td>
+       <td>{players.STATUS}</td>
+	   <td>{players.TYPE}</td>
+       <td>{players.FIRST_POST}</td>
       </tr>
-<!-- END player -->
+<!-- END players -->
      </tbody>
     </table>
     <span class="corners-bottom"><span></span></span>
    </div>
   </div> <!--- End gamePlayerContainer -->
 
-  <!-- Player Edit Panel -->
+  <!-- IF EDIT --><!-- Player Edit Panel -->
   <div id="addPlayerContainer">
-
-   <!-- Player Name -->
-   <div class="label">Player Name:</div>
-   <input type="text" id="addPlayerName" name="addPlayerName" class="addPlayerInput inputbox"/><br/>
-   
-   <!-- Slot Number -->
-   <div class="label">Slot Number:</div>
-   <input type="text" id="addPlayerSlotNumber" name="addPlayerSlotNumber" class="addPlayerInput inputbox"/><br/>
-
-   <!-- Player Alignment -->
-   <div class="label">Aligmnet:</div>
-   <select name="addPlayerAlignment" name="addPlayerAlignment">
+  </div>
+  <!-- End Player Edit Panel -->
+  <!-- Edit Player Panels -->
+		  <!-- BEGIN players -->
+			<form id='playerEditor{players.USER_ID}' method="post" action={U_EDITFORM} class="playerEditPanel hidden">
+				<div id='editPlayerPanel{players.USER_ID}'>
+				  <!-- Player Name -->
+				  <div class="error">{PLAYER_EDIT_ERROR}</div><br/>
+				   <div class="label">Player Name:</div>
+				   <span class="playerFieldValue">{players.USER}</span><br/>
+				   <!-- Slot Number -->
+				   <div class="label">Slot Number:</div>
+				   <span class="playerFieldValue">{players.SLOT_ID}</span><br/>
+				   <!-- Player Faction -->
+				   <div id="factionPane">
+				   <div class="label">Faction:</div>
+				   {players.FACTION_SELECT}
+				   <input id="addFactionButton" type="button" class="button2" value="+" />
+				   </div>
+				   <!-- Player Role -->
+					<div class="label">Role Name:</div>
+					<input type="text" id="addRoleFlavour" name="editRoleFlavourName" class="addPlayerInput inputbox" value="{players.ROLE_NAME}"/><br/>
+					<div class="label">Role:</div>
+					{players.BASICROLES_SELECT}
+					<br/>
+					<div class="label">Role Modifier:</div>
+					{players.MODIFIER_SELECT}
+				   <br/>
+				   <div class="label">Status:</div>
+				   {players.PLAYER_STATUS_SELECT}
+				   <br/>
+				<input type ="hidden" name="playerID" value="{players.USER_ID}"/>
+				<input type="button" class="button2 cancelPlayerEditSaveButton" value="Cancel" />
+				<input type="submit" class="button2" name="editPlayerSaveButton" value="Save Changes" />
+				</div>
+			</form>
+		<!-- END players -->
+  <!-- End Edit Player Panels -->
+  <!-- Add Faction -->
+  <div id="addFactionPane" class="hidden">
+   <form id='factionEditor' method="post" action={U_EDITFORM} onsubmit="">
+	<div class="label">Create New Faction:</div>
+	<br/>
+	<div id="internalAddFactionPane">
+    <div class="label">New Faction Name:</div>
+	<input id="newFactionName" name="factionNameInput" type="text" class="addPlayerInput"/>
+	<br/>
+	<div class="label">New Faction Alignment:</div>
+	<select id="newFactionAlignment" name="factionAlignmentInput">
     <option value = "0" selected="selected">Town</option>
     <option value = "1">Mafia</option>
     <option value = "2">Third Party</option>
    </select><br/>
-
-   <!-- Player Faction -->
-   <div class="label">Faction:</div>
-   <select name="addPlayerFaction" name="addPlayerFaction">
-    <option value = "0" selected="selected">Innocent Characters</option>
-    <option value = "1">Scum/option>
-   </select><br/>
-
-   <!-- Player Role -->
-   <div class="label">Role:</div>
-   <select name="addPlayerRole" name="addPlayerRole">
-   </select><br/>
-
-   <!-- Player First Post ID -->
-   <div class="label">First Post ID:</div>
-   <input type="text" id="addPlayerFirstPostId" name="addPlayerFirstPostId" class="addPlayerInput inputbox"/><br/>
-
-   <!-- Player Last Post ID -->
-   <div class="label">Last Post ID:</div>
-   <input type="text" id="addPlayerLastPostId" name="addPlayerLastPostId" class="addPlayerInput inputbox"/><br/>
-
-   <input type="hidden" name="addPlayerId" value="-1" />
-   <input type="button" class="button2" name="addPlayerSaveButton" value="Save Changes" />
-  </div>
-  <!-- End Player Edit Panel -->
+	<input id="addFactionSubmit" name="addFactionSubmit" type="submit" class="button2" value="Add Faction" />
+	<input id="addFactionCancel" type="button" class="button2" value="Cancel" />
+   </div>
+   </form>
+   </div>
+<!-- End Add Faction -->
+<!-- ENDIF -->
 
   <div style="clear: left;"></div>
  </div>
 </div>
 <div style="clear: left;"></div>
-
+<!-- ENDIF -->
 <!-- IF S_DISPLAY_POST_INFO -->
 	<h3>{L_FORUM_PERMISSIONS}</h3>
 	<p><!-- BEGIN rules -->{rules.RULE}<br /><!-- END rules --></p>
