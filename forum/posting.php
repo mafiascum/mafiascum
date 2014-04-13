@@ -1911,6 +1911,7 @@ $template->assign_vars(array(
 	'HAS_PRIVATE_USERS'			=> sizeof($post_data['private_users']),
 	'S_ALLOW_PRIVATE'			=> $forum_allow_private,
 	'S_PUBLIC'					=> ($post_data['is_private']),
+	'IS_PRIVATE'					=> ($post_data['is_private']),
 	
 	'S_PRIVMSGS'				=> false,
 	'S_CLOSE_PROGRESS_WINDOW'	=> (isset($_POST['add_file'])) ? true : false,

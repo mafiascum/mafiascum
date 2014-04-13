@@ -34,6 +34,17 @@ a.signature_hideshow:hover{
 .private a {
 	color: white;
 }
+.private {
+	color: black;
+	text-shadow: none;
+}
+.private .content, .private .postprofile, .private .postprofile strong,.private .author {
+	color: black;
+}
+.private .post , .private .postbody{
+	color: black;
+	text-shadow: none;
+}
 .private .back2top {
 	border-color: black;
 }
@@ -41,17 +52,17 @@ a.signature_hideshow:hover{
 	border-color: black;
 }
 .private .bg1 {
-	background: #FFC66B;
+	background: #32AD10;
 }
 .private .headerbar {
 	background-image: none;
-	background-color: #FFB742;
+	background-color: #348F1B;
 }
 .private .bg2 {
-	background: #FFB742;
+	background: #348F1B;
 }
 .private .panel, .private .navbar{
-	background: #FF9D00;
+	background: #528C42;
 }
 .private .corners-top, .private .corners-bottom {
  background-image: none;
