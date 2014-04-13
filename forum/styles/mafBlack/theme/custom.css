@@ -356,11 +356,50 @@ background-color:#0000FF;
 .indi-legend{
 margin-bottom:6px;
 }
-#add_private_topic_user li {
+/*private topics*/
+#private_user_list li {
 	list-style-type: none;
 }
-
-
+#private_user_list li a{
+	display: inline-block;
+}
+#site-description p, #site-description h1 {
+	display:none;
+}
+#private_user_input {
+	cursor: text;
+}
+.private {
+	background: #000000;
+}
+.private a {
+	color: white;
+}
+.private .back2top {
+	border-color: black;
+}
+.private .postprofilecontainer {
+	border-color: black;
+}
+.private .bg1 {
+	background: #FFC66B;
+}
+.private .headerbar {
+	background-image: none;
+	background-color: #FFB742;
+}
+.private .bg2 {
+	background: #FFB742;
+}
+.private .panel, .private .navbar{
+	background: #FF9D00;
+}
+.private .corners-top, .private .corners-bottom {
+ background-image: none;
+}
+.repeatable-remove{
+	cursor: pointer;
+}
 .navlinks-footer{
 	clear: both;
 	display: block;
@@ -374,7 +413,8 @@ margin-bottom:6px;
 }
 
 .bbvote{
-font-weight: bold; 
-background:#FFFFFF;
-padding: 0px 2px;
+	font-weight: bold; 
+	background:#FFFFFF;
+	color: black;
+	padding: 0px 2px;
 }

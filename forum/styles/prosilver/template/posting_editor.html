@@ -250,34 +250,42 @@
 				<dt><label for="topic_type-0"><!-- IF S_EDIT_POST -->Change topic privacy to<!-- ELSE -->Post topic privacy as<!-- ENDIF -->:</label></dt>
 				<dd><label for="topic_type-public"><input type="radio" name="topic_privacy" id="topic_type-public" value="0" <!-- IF not S_PUBLIC --> checked='checked'<!-- ENDIF -->/>Public</label><label for="topic_type-private"><input type="radio" name="topic_privacy" id="topic_type-private" value="1" <!-- IF S_PUBLIC --> checked='checked'<!-- ENDIF -->/>Private</label></dd>	
 			</dl>
+				<dl>User List: </dl>
+				
 				<!-- IF S_PUBLIC -->
-				<div>
+				<dl>
 					<ul id="private_user_list">
 						<!-- IF HAS_PRIVATE_USERS -->
 							<!-- BEGIN private_users -->
 							<li>
+								<button type="button" class="repeatable-remove">x</button>
 								{private_users.LINK}
 								<input name="{private_users.NAME}" id="{private_users.ID}" value="{private_users.VALUE}" type = 'hidden'/> 
-								<button type="button" class="repeatable-remove">x</button></li>  
+								</li>  
 							<!-- END private_users -->
 						<!-- ENDIF -->
 					</ul>
 					<input id="private_user_input" value="" />
-				</div>
+					<button id='private_usr_add_button' type ='button'>Add User</button>
+					<span>(<a onclick="find_username(this.href); return false;" href="./memberlist.php?mode=searchuser&amp;form=postform&amp;field=private_user_input&amp;select_single=true">Find a member</a>)</span>
+				</dl>
 				<!-- ELSEIF not S_EDIT_POST-->
-				<div>
+				<dl>
 					<ul id="private_user_list">
 						<!-- IF HAS_PRIVATE_USERS -->
 							<!-- BEGIN private_users -->
 							<li>
+								<button type="button" class="repeatable-remove">x</button>
 								{private_users.LINK}
-								<input name="{private_users.NAME}" id="{private_users.ID}" value="{private_users.VALUE}" type = 'hidden'/> 
-								<button type="button" class="repeatable-remove">x</button></li>  
+								<input class='' name="{private_users.NAME}" id="{private_users.ID}" value="{private_users.VALUE}" type = 'hidden'/> 
+								</li>  
 							<!-- END private_users -->
 						<!-- ENDIF -->
 					</ul>
 					<input id="private_user_input" value="" />
-				</div>
+					<button id='private_usr_add_button' type ='button'>Add User</button>
+					<span>(<a onclick="find_username(this.href); return false;" href="./memberlist.php?mode=searchuser&amp;form=postform&amp;field=private_user_input&amp;select_single=true">Find a member</a>)</span>
+				</dl>
 				<!-- ENDIF -->
 			<!-- ENDIF -->
 	

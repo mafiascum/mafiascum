@@ -56,22 +56,24 @@ $(document).ready(function() {
 	$('#jumpto2').keyup(function(e) {
 			jumptobinding(e, '#jumpto2');
 		}); 
-    $('#private_user_input').on('change', function(){
+    $('#private_usr_add_button').on('click', function(){
 		var username = $('#private_user_input').val();
 		private_id_count++;
+		console.log(username);
+		console.log(encodeURI(username));
 		$.ajax({
 			url : 'verify_username.php',
 			type: 'POST',
-			data: {name: username, id: private_id_count},
+			data: {name: encodeURI(username), id: private_id_count},
 			success : function(data){
 				if (data == 'false'){
-					$('#' + username).text('invalid username');
+					$('#privateuser' + private_id_count).text('invalid username');
 					setTimeout (function(){
-						$('#' + username).remove();
+						$('#privateuser' + private_id_count).remove();
 					}, 2000);
 				}
 				else {
-					$('#' + username).html(data);
+					$('#privateuser' + private_id_count).html(data);
 					$('.repeatable-remove').on("click", function(){
 						$(this).parent().remove();  
 					}); 
@@ -79,7 +81,7 @@ $(document).ready(function() {
 			}
 		})
 		$('#private_user_input').val('');
-		$('#private_user_list').append('<li id="' + username + '">Processing...</li>');
+		$('#private_user_list').append('<li id="privateuser' + private_id_count + '">Processing...</li>');
 	});
     $('.repeatable-remove').on("click", function(){
         $(this).parent().remove();  

@@ -6,7 +6,7 @@ require($phpbb_root_path . 'common.' . $phpEx);
 require($phpbb_root_path . 'includes/functions_user.' . $phpEx);
 $user->session_begin();
 $auth->acl($user->data);
-$username = mysql_real_escape_string($_POST['name']);
+$username =  urldecode(mysql_real_escape_string($_POST['name']));
 $private_id = (int)$_POST['id'];
 $out = '';
 if (!empty($username)){
