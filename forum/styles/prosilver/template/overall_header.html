@@ -119,6 +119,10 @@
 
 <script type="text/javascript">
 var templatepath = "{T_THEME_PATH}";
+<!-- IF SCRIPT_NAME eq 'posting' -->
+	var private_id_count = {HAS_PRIVATE_USERS};
+<!-- ENDIF -->
+
 window.onerror = function(msg, url, lineNo)  {
 
 	$.ajax({

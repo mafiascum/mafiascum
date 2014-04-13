@@ -733,6 +733,10 @@ if ($load && ($mode == 'reply' || $mode == 'quote' || $mode == 'multi' || $mode 
 		$db->sql_freeresult($result);
 	}
 	$post_data['private_users'] = $private_users_old;
+	$first_post_id = ((isset($post_data['topic_first_post_id'])) ? ((int) $post_data['topic_first_post_id']) : 0);
+	if ($forum_id == PRIVATE_FORUM && $mode == 'post' && $first_post_id == 0){
+		$post_data['is_private'] = 1;
+	}
 //
 
 if ($submit || $preview || $refresh)
@@ -828,10 +832,9 @@ if ($submit || $preview || $refresh)
 		}
 	}
 	//Private Topics
-	$first_post_id = ((isset($post_data['topic_first_post_id'])) ? ((int) $post_data['topic_first_post_id']) : 0);
 	if ($forum_id ==PRIVATE_FORUM && (($mode == 'edit' && $first_post_id == $post_id) || ($mode == 'post' && $first_post_id == 0))){
 		$post_data['is_private_old']	= $post_data['is_private'];
-		$post_data['is_private']	= (int)request_var('topic_privacy', (($mode != 'post') ? $post_data['is_private'] : 0));
+		$post_data['is_private']	= (int)request_var('topic_privacy', (($mode != 'post') ? $post_data['is_private'] : 1));
 	}
 	//End Private Topics
 	/***
@@ -1867,7 +1870,8 @@ $count = 0;
 				'NAME'		=> 'private_users[' . $count . ']',
 				'ID'		=> 'private_users[' . $count . ']',
 				'VALUE'		=> $user_name_ary[$users],
-				'NUM'		=> $count
+				'NUM'		=> $count,
+				'LINK'		=> get_username_string('full', $users, $user_name_ary[$users])
 			));
 			$count++;
 	}
@@ -1907,8 +1911,6 @@ $template->assign_vars(array(
 	'HAS_PRIVATE_USERS'			=> sizeof($post_data['private_users']),
 	'S_ALLOW_PRIVATE'			=> $forum_allow_private,
 	'S_PUBLIC'					=> ($post_data['is_private']),
-	'PRIVATE_USER_NAME'			=> 'private_users[0]',
-	'PRIVATE_USER_ID'			=> 'private_users[0]',
 	
 	'S_PRIVMSGS'				=> false,
 	'S_CLOSE_PROGRESS_WINDOW'	=> (isset($_POST['add_file'])) ? true : false,

@@ -252,37 +252,31 @@
 			</dl>
 				<!-- IF S_PUBLIC -->
 				<div>
-					<a class="repeatable-add button" href="#">Add Private Topic Users</a>
-					<ul id="add_private_topic_user" class="custom_repeatable">
+					<ul id="private_user_list">
 						<!-- IF HAS_PRIVATE_USERS -->
 							<!-- BEGIN private_users -->
-							<li><span class="sort hndle"></span>
-								<input name="{private_users.NAME}" id="{private_users.ID}" value="{private_users.VALUE}"/> 
-								<a class="repeatable-remove button" href="#">Remove User</a></li>  
+							<li>
+								{private_users.LINK}
+								<input name="{private_users.NAME}" id="{private_users.ID}" value="{private_users.VALUE}" type = 'hidden'/> 
+								<button type="button" class="repeatable-remove">x</button></li>  
 							<!-- END private_users -->
-						<!-- ELSE -->
-						<li><span class="sort hndle"></span>
-							<input name="{PRIVATE_USER_NAME}" id="{PRIVATE_USER_ID}" value="" />
-							<a class="repeatable-remove button" href="#">Remove User</a></li>
 						<!-- ENDIF -->
 					</ul>
+					<input id="private_user_input" value="" />
 				</div>
 				<!-- ELSEIF not S_EDIT_POST-->
 				<div>
-					<a class="repeatable-add button" href="#">Add Private Topic Users</a>
-					<ul id="add_private_topic_user" class="custom_repeatable">
+					<ul id="private_user_list">
 						<!-- IF HAS_PRIVATE_USERS -->
 							<!-- BEGIN private_users -->
-							<li><span class="sort hndle"></span>
-								<input name="{private_users.NAME}" id="{private_users.ID}" value="{private_users.VALUE}"/> 
-								<a class="repeatable-remove button" href="#">Remove User</a></li>  
+							<li>
+								{private_users.LINK}
+								<input name="{private_users.NAME}" id="{private_users.ID}" value="{private_users.VALUE}" type = 'hidden'/> 
+								<button type="button" class="repeatable-remove">x</button></li>  
 							<!-- END private_users -->
-						<!-- ELSE -->
-						<li><span class="sort hndle"></span>
-							<input name="{PRIVATE_USER_NAME}" id="{PRIVATE_USER_ID}" value="" />
-							<a class="repeatable-remove button" href="#">Remove User</a></li>
 						<!-- ENDIF -->
 					</ul>
+					<input id="private_user_input" value="" />
 				</div>
 				<!-- ENDIF -->
 			<!-- ENDIF -->
