@@ -1,8 +1,9 @@
-#!/usr/local/bin/bash
+#!/bin/bash
 
 IsProcessRunning() {
 
-	RUNNING_PROCESSES=`ps | grep $1 | grep -v grep`
+#	RUNNING_PROCESSES=`ps | grep $1 | grep -v grep`
+	RUNNING_PROCESSES=`ps axuw | grep $1 | grep -v grep`
 
 	if [[ "$RUNNING_PROCESSES" == *"$1"* ]];
 	then
@@ -13,7 +14,8 @@ IsProcessRunning() {
 }
 
 PROCESS_IS_RUNNING=false
-PID=`sockstat -4 -l | grep :4241 | awk '{print $3}' | head -1`
+#PID=`sockstat -4 -l | grep :4241 | awk '{print $3}' | head -1`
+PID=`netstat -nlp | grep ":4241" | awk '{print $7;}' | sed -E 's/\/.*//g'`
 
 if [ -z "$PID" ];
 then
@@ -32,7 +34,7 @@ then
 	kill $PID
 
 	COUNTER=0
-	while [ $COUNTER -lt 5 ]
+	while [ $COUNTER -lt 15 ]
 	do
 		sleep 1
 		IsProcessRunning $PID
@@ -62,7 +64,7 @@ then
 	kill -9 $PID
 
 	COUNTER=0
-	while [ $COUNTER -lt 5 ]
+	while [ $COUNTER -lt 15 ]
 	do
 		sleep 1
 		IsProcessRunning $PID
@@ -86,3 +88,4 @@ then
 else
 	echo "Server is still running."
 fi
+

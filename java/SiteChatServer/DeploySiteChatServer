@@ -1,5 +1,6 @@
-#!/usr/local/bin/bash
-COMMAND=~mafiascum/bin/ant" -buildfile ./DeploySiteChatServer.xml"
+#!/bin/bash
+COMMAND=ant" -buildfile ./DeploySiteChatServer.xml"
+source ./ProdConfig
 
 if [ ! -z "$1" ]
 then

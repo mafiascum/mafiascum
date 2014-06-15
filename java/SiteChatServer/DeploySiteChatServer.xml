@@ -33,8 +33,9 @@
     </target>
 
 	<target name="svn-checkout">
-		<exec dir="." executable="ssh">
-			<arg line="ms-nfs svn export http://199.217.116.144/svn/mafiascum/${branch}/java/SiteChatServer${revision} ~/control/SiteChatServer/ --username=mmason --password='W@qsablast' -q" />
+		<echo>SVN Checkout. Root: ${checkout-root} SRC: ${checkout-src}</echo>
+		<exec dir="." executable="svn">
+			<arg line="export http://199.217.116.144/svn/mafiascum/${branch}/java/SiteChatServer${revision} ./SiteChatServer/ --force --username=mmason --password='W@qsablast'" />
 		</exec>
 	</target>
 	
@@ -65,7 +66,7 @@
 		<delete dir="${checkout-classes}" failonerror="false"/>
 		<mkdir dir="${checkout-classes}"/>
 
-		<javac srcdir="${checkout-src}" destdir="${checkout-classes}" debug="true" classpathref="classpath">
+		<javac executable="/usr/bin/javac" fork="true" srcdir="${checkout-src}" destdir="${checkout-classes}" debug="true" classpathref="classpath">
 			<include name="**/*.java"/>
 		</javac>
 
