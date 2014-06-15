@@ -1,7 +1,8 @@
 <?php
-
 /**
  * Delete archived (deleted from public) revisions from the database
+ *
+ * Shamelessly stolen from deleteOldRevisions.php by Rob Church :)
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,13 +19,20 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  * http://www.gnu.org/copyleft/gpl.html
  *
+ * @file
  * @ingroup Maintenance
  * @author Aaron Schulz
- * Shamelessly stolen from deleteOldRevisions.php by Rob Church :)
  */
 
-require_once( dirname(__FILE__) . '/Maintenance.php' );
+require_once __DIR__ . '/Maintenance.php';
+require_once __DIR__ . '/deleteArchivedRevisions.inc';
 
+/**
+ * Maintenance script to delete archived (deleted from public) revisions
+ * from the database.
+ *
+ * @ingroup Maintenance
+ */
 class DeleteArchivedRevisions extends Maintenance {
 	public function __construct() {
 		parent::__construct();
@@ -32,31 +40,17 @@ class DeleteArchivedRevisions extends Maintenance {
 		$this->addOption( 'delete', 'Performs the deletion' );
 	}
 
+	public function handleOutput( $str ) {
+		$this->output( $str );
+	}
+
 	public function execute() {
 		$this->output( "Delete archived revisions\n\n" );
 		# Data should come off the master, wrapped in a transaction
-		$dbw = wfGetDB( DB_MASTER );
-		if( $this->hasOption('delete') ) {
-			$dbw->begin();
-	
-			$tbl_arch = $dbw->tableName( 'archive' );
-	
-			# Delete as appropriate
-			$this->output( "Deleting archived revisions... " );
-			$dbw->query( "TRUNCATE TABLE $tbl_arch" );
-	
-			$count = $dbw->affectedRows();
-			$deletedRows = $count != 0;
-	
-			$this->output( "done. $count revisions deleted.\n" );
-	
-			# This bit's done
-			# Purge redundant text records
-			$dbw->commit();
-			if( $deletedRows ) {
-				$this->purgeRedundantText( true );
-			}
+		if ( $this->hasOption( 'delete' ) ) {
+			DeleteArchivedRevisionsImplementation::doDelete( $this );
 		} else {
+			$dbw = wfGetDB( DB_MASTER );
 			$res = $dbw->selectRow( 'archive', 'COUNT(*) as count', array(), __FUNCTION__ );
 			$this->output( "Found {$res->count} revisions to delete.\n" );
 			$this->output( "Please run the script again with the --delete option to really delete the revisions.\n" );
@@ -65,4 +59,4 @@ class DeleteArchivedRevisions extends Maintenance {
 }
 
 $maintClass = "DeleteArchivedRevisions";
-require_once( DO_MAINTENANCE );
+require_once RUN_MAINTENANCE_IF_MAIN;

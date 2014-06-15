@@ -1,75 +1,108 @@
 <?php
+/**
+ * Implements Special:Preferences
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ * http://www.gnu.org/copyleft/gpl.html
+ *
+ * @file
+ * @ingroup SpecialPage
+ */
 
+/**
+ * A special page that allows users to change their preferences
+ *
+ * @ingroup SpecialPage
+ */
 class SpecialPreferences extends SpecialPage {
 	function __construct() {
 		parent::__construct( 'Preferences' );
 	}
 
-	function execute( $par ) {
-		global $wgOut, $wgUser, $wgRequest;
-
+	public function execute( $par ) {
 		$this->setHeaders();
 		$this->outputHeader();
-		$wgOut->disallowUserJs();  # Prevent hijacked user scripts from sniffing passwords etc.
+		$out = $this->getOutput();
+		$out->disallowUserJs(); # Prevent hijacked user scripts from sniffing passwords etc.
 
-		if ( $wgUser->isAnon() ) {
-			$wgOut->showErrorPage( 'prefsnologin', 'prefsnologintext', array( $this->getTitle()->getPrefixedDBkey() ) );
-			return;
+		$user = $this->getUser();
+		if ( $user->isAnon() ) {
+			throw new ErrorPageError(
+				'prefsnologin',
+				'prefsnologintext',
+				array( $this->getTitle()->getPrefixedDBkey() )
+			);
 		}
-		if ( wfReadOnly() ) {
-			$wgOut->readOnlyPage();
-			return;
-		}
+		$this->checkReadOnly();
 
 		if ( $par == 'reset' ) {
 			$this->showResetForm();
+
 			return;
 		}
-		
-		$wgOut->addScriptFile( 'prefs.js' );
 
-		if ( $wgRequest->getCheck( 'success' ) ) {
-			$wgOut->wrapWikiMsg(
-				'<div class="successbox"><strong>$1</strong></div><div id="mw-pref-clear"></div>',
+		$out->addModules( 'mediawiki.special.preferences' );
+
+		if ( $this->getRequest()->getCheck( 'success' ) ) {
+			$out->wrapWikiMsg(
+				"<div class=\"successbox\">\n$1\n</div>",
 				'savedprefs'
 			);
 		}
-		
-		if ( $wgRequest->getCheck( 'eauth' ) ) {
-			$wgOut->wrapWikiMsg( "<div class='error' style='clear: both;'>\n$1</div>",
-									'eauthentsent', $wgUser->getName() );
-		}
 
-		$htmlForm = Preferences::getFormObject( $wgUser );
+		$htmlForm = Preferences::getFormObject( $user, $this->getContext() );
 		$htmlForm->setSubmitCallback( array( 'Preferences', 'tryUISubmit' ) );
 
 		$htmlForm->show();
 	}
 
-	function showResetForm() {
-		global $wgOut;
+	private function showResetForm() {
+		if ( !$this->getUser()->isAllowed( 'editmyoptions' ) ) {
+			throw new PermissionsError( 'editmyoptions' );
+		}
 
-		$wgOut->addWikiMsg( 'prefs-reset-intro' );
+		$this->getOutput()->addWikiMsg( 'prefs-reset-intro' );
 
-		$htmlForm = new HTMLForm( array(), 'prefs-restore' );
+		$context = new DerivativeContext( $this->getContext() );
+		$context->setTitle( $this->getTitle( 'reset' ) ); // Reset subpage
+		$htmlForm = new HTMLForm( array(), $context, 'prefs-restore' );
 
-		$htmlForm->setSubmitText( wfMsg( 'restoreprefs' ) );
-		$htmlForm->setTitle( $this->getTitle( 'reset' ) );
-		$htmlForm->setSubmitCallback( array( __CLASS__, 'submitReset' ) );
+		$htmlForm->setSubmitTextMsg( 'restoreprefs' );
+		$htmlForm->setSubmitCallback( array( $this, 'submitReset' ) );
 		$htmlForm->suppressReset();
 
 		$htmlForm->show();
 	}
 
-	static function submitReset( $formData ) {
-		global $wgUser, $wgOut;
-		$wgUser->resetOptions();
-		$wgUser->saveSettings();
+	public function submitReset( $formData ) {
+		if ( !$this->getUser()->isAllowed( 'editmyoptions' ) ) {
+			throw new PermissionsError( 'editmyoptions' );
+		}
 
-		$url = SpecialPage::getTitleFor( 'Preferences' )->getFullURL( 'success' );
+		$user = $this->getUser();
+		$user->resetOptions( 'all', $this->getContext() );
+		$user->saveSettings();
 
-		$wgOut->redirect( $url );
+		$url = $this->getTitle()->getFullURL( 'success' );
+
+		$this->getOutput()->redirect( $url );
 
 		return true;
+	}
+
+	protected function getGroupName() {
+		return 'users';
 	}
 }

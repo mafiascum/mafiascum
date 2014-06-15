@@ -1,13 +1,25 @@
 <?php
 /**
- * A special page to search for files by MIME type as defined in the
- * img_major_mime and img_minor_mime fields in the image table
+ * Implements Special:MIMESearch
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ * http://www.gnu.org/copyleft/gpl.html
  *
  * @file
  * @ingroup SpecialPage
- *
  * @author Ævar Arnfjörð Bjarmason <avarab@gmail.com>
- * @license http://www.gnu.org/copyleft/gpl.html GNU General Public License 2.0 or later
  */
 
 /**
@@ -16,129 +28,164 @@
  * @ingroup SpecialPage
  */
 class MIMEsearchPage extends QueryPage {
-	var $major, $minor;
+	protected $major, $minor;
 
-	function MIMEsearchPage( $major, $minor ) {
-		$this->major = $major;
-		$this->minor = $minor;
+	function __construct( $name = 'MIMEsearch' ) {
+		parent::__construct( $name );
 	}
 
-	function getName() { return 'MIMEsearch'; }
+	function isExpensive() {
+		return false;
+	}
 
-	/**
-	 * Due to this page relying upon extra fields being passed in the SELECT it
-	 * will fail if it's set as expensive and misermode is on
-	 */
-	function isExpensive() { return true; }
-	function isSyndicated() { return false; }
+	function isSyndicated() {
+		return false;
+	}
+
+	function isCacheable() {
+		return false;
+	}
 
 	function linkParameters() {
-		$arr = array( $this->major, $this->minor );
-		$mime = implode( '/', $arr );
-		return array( 'mime' => $mime );
+		return array( 'mime' => "{$this->major}/{$this->minor}" );
 	}
 
-	function getSQL() {
-		$dbr = wfGetDB( DB_SLAVE );
-		$image = $dbr->tableName( 'image' );
-		$major = $dbr->addQuotes( $this->major );
-		$minor = $dbr->addQuotes( $this->minor );
-
-		return
-			"SELECT 'MIMEsearch' AS type,
-				" . NS_FILE . " AS namespace,
-				img_name AS title,
-				img_major_mime AS value,
-
-				img_size,
-				img_width,
-				img_height,
-				img_user_text,
-				img_timestamp
-			FROM $image
-			WHERE img_major_mime = $major AND img_minor_mime = $minor
-			";
+	public function getQueryInfo() {
+		$qi = array(
+			'tables' => array( 'image' ),
+			'fields' => array(
+				'namespace' => NS_FILE,
+				'title' => 'img_name',
+				// Still have a value field just in case,
+				// but it isn't actually used for sorting.
+				'value' => 'img_name',
+				'img_size',
+				'img_width',
+				'img_height',
+				'img_user_text',
+				'img_timestamp'
+			),
+			'conds' => array(
+				'img_major_mime' => $this->major,
+				'img_minor_mime' => $this->minor,
+				// This is in order to trigger using
+				// the img_media_mime index in "range" mode.
+				'img_media_type' => array(
+					MEDIATYPE_BITMAP,
+					MEDIATYPE_DRAWING,
+					MEDIATYPE_AUDIO,
+					MEDIATYPE_VIDEO,
+					MEDIATYPE_MULTIMEDIA,
+					MEDIATYPE_UNKNOWN,
+					MEDIATYPE_OFFICE,
+					MEDIATYPE_TEXT,
+					MEDIATYPE_EXECUTABLE,
+					MEDIATYPE_ARCHIVE,
+				),
+			),
+		);
+		return $qi;
 	}
 
+	/**
+	 * The index is on (img_media_type, img_major_mime, img_minor_mime)
+	 * which unfortunately doesn't have img_name at the end for sorting.
+	 * So tell db to sort it however it wishes (Its not super important
+	 * that this report gives results in a logical order). As an aditional
+	 * note, mysql seems to by default order things by img_name ASC, which
+	 * is what we ideally want, so everything works out fine anyhow.
+	 */
+	function getOrderFields() {
+		return array();
+	}
+
+	function execute( $par ) {
+		global $wgScript;
+
+		$mime = $par ? $par : $this->getRequest()->getText( 'mime' );
+
+		$this->setHeaders();
+		$this->outputHeader();
+		$this->getOutput()->addHTML(
+			Xml::openElement(
+				'form',
+				array( 'id' => 'specialmimesearch', 'method' => 'get', 'action' => $wgScript )
+			) .
+				Xml::openElement( 'fieldset' ) .
+				Html::hidden( 'title', $this->getTitle()->getPrefixedText() ) .
+				Xml::element( 'legend', null, $this->msg( 'mimesearch' )->text() ) .
+				Xml::inputLabel( $this->msg( 'mimetype' )->text(), 'mime', 'mime', 20, $mime ) .
+				' ' .
+				Xml::submitButton( $this->msg( 'ilsubmit' )->text() ) .
+				Xml::closeElement( 'fieldset' ) .
+				Xml::closeElement( 'form' )
+		);
+
+		list( $this->major, $this->minor ) = File::splitMime( $mime );
+
+		if ( $this->major == '' || $this->minor == '' || $this->minor == 'unknown' ||
+			!self::isValidType( $this->major )
+		) {
+			return;
+		}
+
+		parent::execute( $par );
+	}
+
+	/**
+	 * @param Skin $skin
+	 * @param object $result Result row
+	 * @return string
+	 */
 	function formatResult( $skin, $result ) {
-		global $wgContLang, $wgLang;
+		global $wgContLang;
 
 		$nt = Title::makeTitle( $result->namespace, $result->title );
 		$text = $wgContLang->convert( $nt->getText() );
-		$plink = $skin->link(
+		$plink = Linker::link(
 			Title::newFromText( $nt->getPrefixedText() ),
 			htmlspecialchars( $text )
 		);
 
-		$download = $skin->makeMediaLinkObj( $nt, wfMsgHtml( 'download' ) );
-		$bytes = wfMsgExt( 'nbytes', array( 'parsemag', 'escape'),
-			$wgLang->formatNum( $result->img_size ) );
-		$dimensions = htmlspecialchars( wfMsg( 'widthheight',
-			$wgLang->formatNum( $result->img_width ),
-			$wgLang->formatNum( $result->img_height )
-		) );
-		$user = $skin->link( Title::makeTitle( NS_USER, $result->img_user_text ), htmlspecialchars( $result->img_user_text ) );
-		$time = htmlspecialchars( $wgLang->timeanddate( $result->img_timestamp ) );
+		$download = Linker::makeMediaLinkObj( $nt, $this->msg( 'download' )->escaped() );
+		$download = $this->msg( 'parentheses' )->rawParams( $download )->escaped();
+		$lang = $this->getLanguage();
+		$bytes = htmlspecialchars( $lang->formatSize( $result->img_size ) );
+		$dimensions = $this->msg( 'widthheight' )->numParams( $result->img_width,
+			$result->img_height )->escaped();
+		$user = Linker::link(
+			Title::makeTitle( NS_USER, $result->img_user_text ),
+			htmlspecialchars( $result->img_user_text )
+		);
 
-		return "($download) $plink . . $dimensions . . $bytes . . $user . . $time";
-	}
-}
+		$time = $lang->userTimeAndDate( $result->img_timestamp, $this->getUser() );
+		$time = htmlspecialchars( $time );
 
-/**
- * Output the HTML search form, and constructs the MIMEsearchPage object.
- */
-function wfSpecialMIMEsearch( $par = null ) {
-	global $wgRequest, $wgOut;
-
-	$mime = isset( $par ) ? $par : $wgRequest->getText( 'mime' );
-
-	$wgOut->addHTML(
-		Xml::openElement( 'form', array( 'id' => 'specialmimesearch', 'method' => 'get', 'action' => SpecialPage::getTitleFor( 'MIMEsearch' )->getLocalUrl() ) ) .
-		Xml::openElement( 'fieldset' ) .
-		Xml::hidden( 'title', SpecialPage::getTitleFor( 'MIMEsearch' )->getPrefixedText() ) .
-		Xml::element( 'legend', null, wfMsg( 'mimesearch' ) ) .
-		Xml::inputLabel( wfMsg( 'mimetype' ), 'mime', 'mime', 20, $mime ) . ' ' .
-		Xml::submitButton( wfMsg( 'ilsubmit' ) ) .
-		Xml::closeElement( 'fieldset' ) .
-		Xml::closeElement( 'form' )
-	);
-
-	list( $major, $minor ) = wfSpecialMIMEsearchParse( $mime );
-	if ( $major == '' or $minor == '' or !wfSpecialMIMEsearchValidType( $major ) )
-		return;
-	$wpp = new MIMEsearchPage( $major, $minor );
-
-	list( $limit, $offset ) = wfCheckLimits();
-	$wpp->doQuery( $offset, $limit );
-}
-
-function wfSpecialMIMEsearchParse( $str ) {
-	// searched for an invalid MIME type.
-	if( strpos( $str, '/' ) === false) {
-		return array ('', '');
+		return "$download $plink . . $dimensions . . $bytes . . $user . . $time";
 	}
 
-	list( $major, $minor ) = explode( '/', $str, 2 );
+	/**
+	 * @param $type string
+	 * @return bool
+	 */
+	protected static function isValidType( $type ) {
+		// From maintenance/tables.sql => img_major_mime
+		$types = array(
+			'unknown',
+			'application',
+			'audio',
+			'image',
+			'text',
+			'video',
+			'message',
+			'model',
+			'multipart'
+		);
 
-	return array(
-		ltrim( $major, ' ' ),
-		rtrim( $minor, ' ' )
-	);
-}
+		return in_array( $type, $types );
+	}
 
-function wfSpecialMIMEsearchValidType( $type ) {
-	// From maintenance/tables.sql => img_major_mime
-	$types = array(
-		'unknown',
-		'application',
-		'audio',
-		'image',
-		'text',
-		'video',
-		'message',
-		'model',
-		'multipart'
-	);
-
-	return in_array( $type, $types );
+	protected function getGroupName() {
+		return 'media';
+	}
 }

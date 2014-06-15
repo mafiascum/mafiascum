@@ -1,11 +1,10 @@
 <?php
-
-/*
+/**
+ *
+ *
  * Created on Jan 4, 2008
  *
- * API for MediaWiki 1.8+
- *
- * Copyright (C) 2008 Yuri Astrakhan <Firstname><Lastname>@gmail.com,
+ * Copyright © 2008 Yuri Astrakhan "<Firstname><Lastname>@gmail.com",
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,14 +18,11 @@
  *
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, write to the Free Software Foundation, Inc.,
- * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  * http://www.gnu.org/copyleft/gpl.html
+ *
+ * @file
  */
-
-if ( !defined( 'MEDIAWIKI' ) ) {
-	// Eclipse helper - will be ignored in production
-	require_once ( 'ApiBase.php' );
-}
 
 /**
  * API module to allow users to watch a page
@@ -35,63 +31,107 @@ if ( !defined( 'MEDIAWIKI' ) ) {
  */
 class ApiWatch extends ApiBase {
 
-	public function __construct( $main, $action ) {
-		parent :: __construct( $main, $action );
-	}
-
 	public function execute() {
-		global $wgUser;
-		if ( !$wgUser->isLoggedIn() )
+		$user = $this->getUser();
+		if ( !$user->isLoggedIn() ) {
 			$this->dieUsage( 'You must be logged-in to have a watchlist', 'notloggedin' );
+		}
+		if ( !$user->isAllowed( 'editmywatchlist' ) ) {
+			$this->dieUsage( 'You don\'t have permission to edit your watchlist', 'permissiondenied' );
+		}
 
 		$params = $this->extractRequestParams();
 		$title = Title::newFromText( $params['title'] );
 
-		if ( !$title )
+		if ( !$title || $title->isExternal() || !$title->canExist() ) {
 			$this->dieUsageMsg( array( 'invalidtitle', $params['title'] ) );
+		}
 
-		$article = new Article( $title );
 		$res = array( 'title' => $title->getPrefixedText() );
 
-		if ( $params['unwatch'] )
-		{
+		// Currently unnecessary, code to act as a safeguard against any change in current behavior of uselang
+		// Copy from ApiParse
+		$oldLang = null;
+		if ( isset( $params['uselang'] ) && $params['uselang'] != $this->getContext()->getLanguage()->getCode() ) {
+			$oldLang = $this->getContext()->getLanguage(); // Backup language
+			$this->getContext()->setLanguage( Language::factory( $params['uselang'] ) );
+		}
+
+		if ( $params['unwatch'] ) {
 			$res['unwatched'] = '';
-			$success = $article->doUnwatch();
-		}
-		else
-		{
+			$res['message'] = $this->msg( 'removedwatchtext', $title->getPrefixedText() )->title( $title )->parseAsBlock();
+			$status = UnwatchAction::doUnwatch( $title, $user );
+		} else {
 			$res['watched'] = '';
-			$success = $article->doWatch();
+			$res['message'] = $this->msg( 'addedwatchtext', $title->getPrefixedText() )->title( $title )->parseAsBlock();
+			$status = WatchAction::doWatch( $title, $user );
 		}
-		if ( !$success )
-			$this->dieUsageMsg( array( 'hookaborted' ) );
+
+		if ( !is_null( $oldLang ) ) {
+			$this->getContext()->setLanguage( $oldLang ); // Reset language to $oldLang
+		}
+
+		if ( !$status->isOK() ) {
+			$this->dieStatus( $status );
+		}
 		$this->getResult()->addValue( null, $this->getModuleName(), $res );
+	}
+
+	public function mustBePosted() {
+		return true;
 	}
 
 	public function isWriteMode() {
 		return true;
 	}
 
+	public function needsToken() {
+		return true;
+	}
+
+	public function getTokenSalt() {
+		return 'watch';
+	}
+
 	public function getAllowedParams() {
-		return array (
-			'title' => null,
+		return array(
+			'title' => array(
+				ApiBase::PARAM_TYPE => 'string',
+				ApiBase::PARAM_REQUIRED => true
+			),
 			'unwatch' => false,
+			'uselang' => null,
+			'token' => array(
+				ApiBase::PARAM_TYPE => 'string',
+				ApiBase::PARAM_REQUIRED => true
+			),
 		);
 	}
 
 	public function getParamDescription() {
-		return array (
+		return array(
 			'title' => 'The page to (un)watch',
 			'unwatch' => 'If set the page will be unwatched rather than watched',
+			'uselang' => 'Language to show the message in',
+			'token' => 'A token previously acquired via prop=info',
+		);
+	}
+
+	public function getResultProperties() {
+		return array(
+			'' => array(
+				'title' => 'string',
+				'unwatched' => 'boolean',
+				'watched' => 'boolean',
+				'message' => 'string'
+			)
 		);
 	}
 
 	public function getDescription() {
-		return array (
-			'Add or remove a page from/to the current user\'s watchlist'
-		);
+		return 'Add or remove a page from/to the current user\'s watchlist';
 	}
-	
+
 	public function getPossibleErrors() {
 		return array_merge( parent::getPossibleErrors(), array(
 			array( 'code' => 'notloggedin', 'info' => 'You must be logged-in to have a watchlist' ),
@@ -100,14 +140,14 @@ class ApiWatch extends ApiBase {
 		) );
 	}
 
-	protected function getExamples() {
+	public function getExamples() {
 		return array(
-			'api.php?action=watch&title=Main_Page',
-			'api.php?action=watch&title=Main_Page&unwatch',
+			'api.php?action=watch&title=Main_Page' => 'Watch the page "Main Page"',
+			'api.php?action=watch&title=Main_Page&unwatch=' => 'Unwatch the page "Main Page"',
 		);
 	}
 
-	public function getVersion() {
-		return __CLASS__ . ': $Id: ApiWatch.php 69578 2010-07-20 02:46:20Z tstarling $';
+	public function getHelpUrls() {
+		return 'https://www.mediawiki.org/wiki/API:Watch';
 	}
 }

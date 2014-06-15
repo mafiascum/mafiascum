@@ -1,5 +1,7 @@
 <?php
 /**
+ * Refresh link tables.
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -15,11 +17,17 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  * http://www.gnu.org/copyleft/gpl.html
  *
+ * @file
  * @ingroup Maintenance
  */
 
-require_once( dirname(__FILE__) . '/Maintenance.php' );
+require_once __DIR__ . '/Maintenance.php';
 
+/**
+ * Maintenance script to refresh link tables.
+ *
+ * @ingroup Maintenance
+ */
 class RefreshLinks extends Maintenance {
 	public function __construct() {
 		parent::__construct();
@@ -35,10 +43,10 @@ class RefreshLinks extends Maintenance {
 	}
 
 	public function execute() {
-		if( !$this->hasOption( 'dfn-only' ) ) {
+		$max = $this->getOption( 'm', 0 );
+		if ( !$this->hasOption( 'dfn-only' ) ) {
 			$start = $this->getArg( 0, 1 );
 			$new = $this->getOption( 'new-only', false );
-			$max = $this->getOption( 'm', false );
 			$end = $this->getOption( 'e', 0 );
 			$redir = $this->getOption( 'redirects-only', false );
 			$oldRedir = $this->getOption( 'old-redirects-only', false );
@@ -56,49 +64,60 @@ class RefreshLinks extends Maintenance {
 	 * @param $redirectsOnly bool Only fix redirects
 	 * @param $oldRedirectsOnly bool Only fix redirects without redirect entries
 	 */
-	private function doRefreshLinks( $start, $newOnly = false, $maxLag = false, 
+	private function doRefreshLinks( $start, $newOnly = false, $maxLag = false,
 						$end = 0, $redirectsOnly = false, $oldRedirectsOnly = false ) {
-		global $wgUser, $wgParser, $wgUseTidy;
+		global $wgParser, $wgUseTidy;
 
 		$reportingInterval = 100;
 		$dbr = wfGetDB( DB_SLAVE );
 		$start = intval( $start );
 
-		# Don't generate TeX PNGs (lack of a sensible current directory causes errors anyway)
-		$wgUser->setOption('math', MW_MATH_SOURCE);
+		// Give extensions a chance to optimize settings
+		wfRunHooks( 'MaintenanceRefreshLinksInit', array( $this ) );
 
 		# Don't generate extension images (e.g. Timeline)
-		if( method_exists( $wgParser, "clearTagHooks" ) ) {
-			$wgParser->clearTagHooks();
-		}
+		$wgParser->clearTagHooks();
 
 		# Don't use HTML tidy
 		$wgUseTidy = false;
 
 		$what = $redirectsOnly ? "redirects" : "links";
 
-		if( $oldRedirectsOnly ) {
+		if ( $oldRedirectsOnly ) {
 			# This entire code path is cut-and-pasted from below.  Hurrah.
-			$res = $dbr->query(
-				"SELECT page_id ".
-				"FROM page ".
-				"LEFT JOIN redirect ON page_id=rd_from ".
-				"WHERE page_is_redirect=1 AND rd_from IS NULL AND ".
-				($end == 0 ? "page_id >= $start"
-						   : "page_id BETWEEN $start AND $end"),
-				__METHOD__
+
+			$conds = array(
+				"page_is_redirect=1",
+				"rd_from IS NULL"
 			);
-			$num = $dbr->numRows( $res );
+
+			if ( $end == 0 ) {
+				$conds[] = "page_id >= $start";
+			} else {
+				$conds[] = "page_id BETWEEN $start AND $end";
+			}
+
+			$res = $dbr->select(
+				array( 'page', 'redirect' ),
+				'page_id',
+				$conds,
+				__METHOD__,
+				array(),
+				array( 'redirect' => array( "LEFT JOIN", "page_id=rd_from" ) )
+			);
+			$num = $res->numRows();
 			$this->output( "Refreshing $num old redirects from $start...\n" );
 
-			foreach( $res as $row ) {
+			$i = 0;
+
+			foreach ( $res as $row ) {
 				if ( !( ++$i % $reportingInterval ) ) {
 					$this->output( "$i\n" );
-					wfWaitForSlaves( $maxLag );
+					wfWaitForSlaves();
 				}
 				$this->fixRedirect( $row->page_id );
 			}
-		} elseif( $newOnly ) {
+		} elseif ( $newOnly ) {
 			$this->output( "Refreshing $what from " );
 			$res = $dbr->select( 'page',
 				array( 'page_id' ),
@@ -107,19 +126,20 @@ class RefreshLinks extends Maintenance {
 					"page_id >= $start" ),
 				__METHOD__
 			);
-			$num = $dbr->numRows( $res );
+			$num = $res->numRows();
 			$this->output( "$num new articles...\n" );
-	
+
 			$i = 0;
 			foreach ( $res as $row ) {
 				if ( !( ++$i % $reportingInterval ) ) {
 					$this->output( "$i\n" );
-					wfWaitForSlaves( $maxLag );
+					wfWaitForSlaves();
 				}
-				if($redirectsOnly)
+				if ( $redirectsOnly ) {
 					$this->fixRedirect( $row->page_id );
-				else
-					$this->fixLinksFromArticle( $row->page_id );
+				} else {
+					self::fixLinksFromArticle( $row->page_id );
+				}
 			}
 		} else {
 			if ( !$end ) {
@@ -129,104 +149,115 @@ class RefreshLinks extends Maintenance {
 			}
 			$this->output( "Refreshing redirects table.\n" );
 			$this->output( "Starting from page_id $start of $end.\n" );
-	
-			for ($id = $start; $id <= $end; $id++) {
-	
-				if ( !($id % $reportingInterval) ) {
+
+			for ( $id = $start; $id <= $end; $id++ ) {
+
+				if ( !( $id % $reportingInterval ) ) {
 					$this->output( "$id\n" );
-					wfWaitForSlaves( $maxLag );
+					wfWaitForSlaves();
 				}
 				$this->fixRedirect( $id );
 			}
 
-			if(!$redirectsOnly) {
-				$this->output( "Refreshing links table.\n" );
+			if ( !$redirectsOnly ) {
+				$this->output( "Refreshing links tables.\n" );
 				$this->output( "Starting from page_id $start of $end.\n" );
 
-				for ($id = $start; $id <= $end; $id++) {
-	
-					if ( !($id % $reportingInterval) ) {
+				for ( $id = $start; $id <= $end; $id++ ) {
+
+					if ( !( $id % $reportingInterval ) ) {
 						$this->output( "$id\n" );
-						wfWaitForSlaves( $maxLag );
+						wfWaitForSlaves();
 					}
-					$this->fixLinksFromArticle( $id );
+					self::fixLinksFromArticle( $id );
 				}
 			}
 		}
 	}
 
 	/**
-	 * Update the redirect entry for a given page
-	 * @param $id int The page_id of the redirect
+	 * Update the redirect entry for a given page.
+	 *
+	 * This methods bypasses the "redirect" table to get the redirect target,
+	 * and parses the page's content to fetch it. This allows to be sure that
+	 * the redirect target is up to date and valid.
+	 * This is particularly useful when modifying namespaces to be sure the
+	 * entry in the "redirect" table points to the correct page and not to an
+	 * invalid one.
+	 *
+	 * @param $id int The page ID to check
 	 */
-	private function fixRedirect( $id ){
-		global $wgTitle, $wgArticle;
-	
-		$wgTitle = Title::newFromID( $id );
+	private function fixRedirect( $id ) {
+		$page = WikiPage::newFromID( $id );
 		$dbw = wfGetDB( DB_MASTER );
-	
-		if ( is_null( $wgTitle ) ) {
+
+		if ( $page === null ) {
 			// This page doesn't exist (any more)
 			// Delete any redirect table entry for it
 			$dbw->delete( 'redirect', array( 'rd_from' => $id ),
 				__METHOD__ );
 			return;
 		}
-		$wgArticle = new Article($wgTitle);
-	
-		$rt = $wgArticle->followRedirect();
-	
-		if($rt == false || !is_object($rt)) {
-			// $wgTitle is not a redirect
-			// Delete any redirect table entry for it
-			$dbw->delete( 'redirect', array( 'rd_from' => $id ),
-				__METHOD__ );
-		} else {
-			$wgArticle->updateRedirectOn($dbw,$rt);
+
+		$rt = null;
+		$content = $page->getContent( Revision::RAW );
+		if ( $content !== null ) {
+			$rt = $content->getUltimateRedirectTarget();
 		}
+
+		if ( $rt === null ) {
+			// The page is not a redirect
+			// Delete any redirect table entry for it
+			$dbw->delete( 'redirect', array( 'rd_from' => $id ), __METHOD__ );
+			$fieldValue = 0;
+		} else {
+			$page->insertRedirectEntry( $rt );
+			$fieldValue = 1;
+		}
+
+		// Update the page table to be sure it is an a consistent state
+		$dbw->update( 'page', array( 'page_is_redirect' => $fieldValue ),
+			array( 'page_id' => $id ), __METHOD__ );
 	}
 
 	/**
 	 * Run LinksUpdate for all links on a given page_id
 	 * @param $id int The page_id
 	 */
-	private function fixLinksFromArticle( $id ) {
-		global $wgTitle, $wgParser;
+	public static function fixLinksFromArticle( $id ) {
+		$page = WikiPage::newFromID( $id );
 
-		$wgTitle = Title::newFromID( $id );
+		LinkCache::singleton()->clear();
+
+		if ( $page === null ) {
+			return;
+		}
+
+		$content = $page->getContent( Revision::RAW );
+		if ( $content === null ) {
+			return;
+		}
+
 		$dbw = wfGetDB( DB_MASTER );
+		$dbw->begin( __METHOD__ );
 
-		$linkCache =& LinkCache::singleton();
-		$linkCache->clear();
+		$updates = $content->getSecondaryDataUpdates( $page->getTitle() );
+		DataUpdate::runUpdates( $updates );
 
-		if ( is_null( $wgTitle ) ) {
-			return;
-		}
-		$dbw->begin();
-
-		$revision = Revision::newFromTitle( $wgTitle );
-		if ( !$revision ) {
-			return;
-		}
-
-		$options = new ParserOptions;
-		$parserOutput = $wgParser->parse( $revision->getText(), $wgTitle, $options, true, true, $revision->getId() );
-		$update = new LinksUpdate( $wgTitle, $parserOutput, false );
-		$update->doUpdate();
-		$dbw->commit();
+		$dbw->commit( __METHOD__ );
 	}
 
-	/*
+	/**
 	 * Removes non-existing links from pages from pagelinks, imagelinks,
-	 * categorylinks, templatelinks and externallinks tables.
+	 * categorylinks, templatelinks, externallinks, interwikilinks, langlinks and redirect tables.
 	 *
-	 * @param $maxLag
-	 * @param $batchSize The size of deletion batches
+	 * @param $maxLag int
+	 * @param $batchSize int The size of deletion batches
 	 *
 	 * @author Merlijn van Deen <valhallasw@arctus.nl>
 	 */
 	private function deleteLinksFromNonexistent( $maxLag = 0, $batchSize = 100 ) {
-		wfWaitForSlaves( $maxLag );
+		wfWaitForSlaves();
 
 		$dbw = wfGetDB( DB_MASTER );
 
@@ -240,29 +271,33 @@ class RefreshLinks extends Maintenance {
 			'categorylinks' => 'cl_from',
 			'templatelinks' => 'tl_from',
 			'externallinks' => 'el_from',
+			'iwlinks' => 'iwl_from',
+			'langlinks' => 'll_from',
+			'redirect' => 'rd_from',
+			'page_props' => 'pp_page',
 		);
 
 		foreach ( $linksTables as $table => $field ) {
 			$this->output( "Retrieving illegal entries from $table... " );
 
 			// SELECT DISTINCT( $field ) FROM $table LEFT JOIN page ON $field=page_id WHERE page_id IS NULL;
-			$results = $dbr->select( array( $table, 'page' ),
-						  $field,
-						  array('page_id' => null ),
-						  __METHOD__,
-						  'DISTINCT',
-						  array( 'page' => array( 'LEFT JOIN', "$field=page_id"))
+			$results = $dbr->select(
+				array( $table, 'page' ),
+				$field,
+				array( 'page_id' => null ),
+				__METHOD__,
+				'DISTINCT',
+				array( 'page' => array( 'LEFT JOIN', "$field=page_id" ) )
 			);
 
 			$counter = 0;
 			$list = array();
 			$this->output( "0.." );
-
-			foreach( $results as $row ) {
+			foreach ( $results as $row ) {
 				$counter++;
 				$list[] = $row->$field;
 				if ( ( $counter % $batchSize ) == 0 ) {
-					wfWaitForSlaves(5);
+					wfWaitForSlaves();
 					$dbw->delete( $table, array( $field => $list ), __METHOD__ );
 
 					$this->output( $counter . ".." );
@@ -270,14 +305,15 @@ class RefreshLinks extends Maintenance {
 				}
 			}
 			$this->output( $counter );
-			if (count($list) > 0) {
+			if ( count( $list ) > 0 ) {
 				$dbw->delete( $table, array( $field => $list ), __METHOD__ );
 			}
 			$this->output( "\n" );
+			wfWaitForSlaves();
 		}
 		$lb->closeAll();
 	}
 }
 
 $maintClass = 'RefreshLinks';
-require_once( DO_MAINTENANCE );
+require_once RUN_MAINTENANCE_IF_MAIN;

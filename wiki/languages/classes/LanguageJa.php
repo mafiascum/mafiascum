@@ -1,4 +1,25 @@
 <?php
+/**
+ * Japanese (日本語) specific code.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ * http://www.gnu.org/copyleft/gpl.html
+ *
+ * @file
+ * @ingroup Language
+ */
 
 /**
  * Japanese (日本語)
@@ -6,7 +27,12 @@
  * @ingroup Language
  */
 class LanguageJa extends Language {
-	function wordSegmentation( $string ) {
+
+	/**
+	 * @param $string string
+	 * @return string
+	 */
+	function segmentByWord( $string ) {
 		// Strip known punctuation ?
 		// $s = preg_replace( '/\xe3\x80[\x80-\xbf]/', '', $s ); # U3000-303f
 
@@ -23,16 +49,13 @@ class LanguageJa extends Language {
 		return $s;
 	}
 
-	function normalizeForSearch( $string ) {
-		// Double-width roman characters
-		$s = self::convertDoubleWidth( $string );
-		
-		# Do general case folding and UTF-8 armoring
-		return parent::normalizeForSearch( $s );
-	}
-
-	# Italic is not appropriate for Japanese script
-	# Unfortunately most browsers do not recognise this, and render <em> as italic
+	/**
+	 * Italic is not appropriate for Japanese script
+	 * Unfortunately most browsers do not recognise this, and render <em> as italic
+	 *
+	 * @param $text string
+	 * @return string
+	 */
 	function emphasize( $text ) {
 		return $text;
 	}

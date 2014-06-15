@@ -1,58 +1,145 @@
 <?php
 /**
+ * Search index updater
+ *
  * See deferred.txt
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ * http://www.gnu.org/copyleft/gpl.html
+ *
+ * @file
  * @ingroup Search
  */
-class SearchUpdate {
 
-	/* private */ var $mId = 0, $mNamespace, $mTitle, $mText;
-	/* private */ var $mTitleWords;
+/**
+ * Database independant search index updater
+ *
+ * @ingroup Search
+ */
+class SearchUpdate implements DeferrableUpdate {
+	/**
+	 * Page id being updated
+	 * @var int
+	 */
+	private $id = 0;
 
-	function SearchUpdate( $id, $title, $text = false ) {
-		$nt = Title::newFromText( $title );
-		if( $nt ) {
-			$this->mId = $id;
-			$this->mText = $text;
+	/**
+	 * Title we're updating
+	 * @var Title
+	 */
+	private $title;
 
-			$this->mNamespace = $nt->getNamespace();
-			$this->mTitle = $nt->getText(); # Discard namespace
+	/**
+	 * Content of the page (not text)
+	 * @var Content|false
+	 */
+	private $content;
 
-			$this->mTitleWords = $this->mTextWords = array();
+	/**
+	 * Constructor
+	 *
+	 * @param int $id Page id to update
+	 * @param Title|string $title Title of page to update
+	 * @param Content|string|false $c Content of the page to update.
+	 *  If a Content object, text will be gotten from it. String is for back-compat.
+	 *  Passing false tells the backend to just update the title, not the content
+	 */
+	public function __construct( $id, $title, $c = false ) {
+		if ( is_string( $title ) ) {
+			$nt = Title::newFromText( $title );
+		} else {
+			$nt = $title;
+		}
+
+		if ( $nt ) {
+			$this->id = $id;
+			// is_string() check is back-compat for ApprovedRevs
+			if ( is_string( $c ) ) {
+				$this->content = new TextContent( $c );
+			} else {
+				$this->content = $c ?: false;
+			}
+			$this->title = $nt;
 		} else {
 			wfDebug( "SearchUpdate object created with invalid title '$title'\n" );
 		}
 	}
 
-	function doUpdate() {
-		global $wgContLang, $wgDisableSearchUpdate;
+	/**
+	 * Perform actual update for the entry
+	 */
+	public function doUpdate() {
+		global $wgDisableSearchUpdate;
 
-		if( $wgDisableSearchUpdate || !$this->mId ) {
-			return false;
-		}
-		$fname = 'SearchUpdate::doUpdate';
-		wfProfileIn( $fname );
-
-		$search = SearchEngine::create();
-		$lc = SearchEngine::legalSearchChars() . '&#;';
-
-		if( $this->mText === false ) {
-			$search->updateTitle($this->mId,
-				Title::indexTitle( $this->mNamespace, $this->mTitle ));
-			wfProfileOut( $fname );
+		if ( $wgDisableSearchUpdate || !$this->id ) {
 			return;
 		}
 
-		# Language-specific strip/conversion
-		$text = $wgContLang->normalizeForSearch( $this->mText );
+		wfProfileIn( __METHOD__ );
 
-		wfProfileIn( $fname.'-regexps' );
+		$page = WikiPage::newFromId( $this->id, WikiPage::READ_LATEST );
+		$indexTitle = Title::indexTitle( $this->title->getNamespace(), $this->title->getText() );
+
+		foreach ( SearchEngine::getSearchTypes() as $type ) {
+			$search = SearchEngine::create( $type );
+			if ( !$search->supports( 'search-update' ) ) {
+				continue;
+			}
+
+			$normalTitle = $search->normalizeText( $indexTitle );
+
+			if ( $page === null ) {
+				$search->delete( $this->id, $normalTitle );
+				continue;
+			} elseif ( $this->content === false ) {
+				$search->updateTitle( $this->id, $normalTitle );
+				continue;
+			}
+
+			$text = $search->getTextFromContent( $this->title, $this->content );
+			if ( !$search->textAlreadyUpdatedForIndex() ) {
+				$text = self::updateText( $text );
+			}
+
+			# Perform the actual update
+			$search->update( $this->id, $normalTitle, $search->normalizeText( $text ) );
+		}
+
+		wfProfileOut( __METHOD__ );
+	}
+
+	/**
+	 * Clean text for indexing. Only really suitable for indexing in databases.
+	 * If you're using a real search engine, you'll probably want to override
+	 * this behavior and do something nicer with the original wikitext.
+	 */
+	public static function updateText( $text ) {
+		global $wgContLang;
+
+		# Language-specific strip/conversion
+		$text = $wgContLang->normalizeForSearch( $text );
+		$lc = SearchEngine::legalSearchChars() . '&#;';
+
+		wfProfileIn( __METHOD__ . '-regexps' );
 		$text = preg_replace( "/<\\/?\\s*[A-Za-z][^>]*?>/",
 			' ', $wgContLang->lc( " " . $text . " " ) ); # Strip HTML markup
 		$text = preg_replace( "/(^|\\n)==\\s*([^\\n]+)\\s*==(\\s)/sD",
-		  "\\1\\2 \\2 \\2\\3", $text ); # Emphasize headings
+			"\\1\\2 \\2 \\2\\3", $text ); # Emphasize headings
 
 		# Strip external URLs
-		$uc = "A-Za-z0-9_\\/:.,~%\\-+&;#?!=()@\\xA0-\\xFF";
+		$uc = "A-Za-z0-9_\\/:.,~%\\-+&;#?!=()@\\x80-\\xFF";
 		$protos = "http|https|ftp|mailto|news|gopher";
 		$pat = "/(^|[^\\[])({$protos}):[{$uc}]+([^{$uc}]|$)/";
 		$text = preg_replace( $pat, "\\1 \\3", $text );
@@ -67,7 +154,7 @@ class SearchUpdate {
 		$text = preg_replace( $pat2, " \\1 \\3", $text );
 
 		$text = preg_replace( "/([^{$lc}])([{$lc}]+)]]([a-z]+)/",
-		  "\\1\\2 \\2\\3", $text ); # Handle [[game]]s
+			"\\1\\2 \\2\\3", $text ); # Handle [[game]]s
 
 		# Strip all remaining non-search characters
 		$text = preg_replace( "/[^{$lc}]+/", " ", $text );
@@ -92,22 +179,7 @@ class SearchUpdate {
 
 		# Strip wiki '' and '''
 		$text = preg_replace( "/''[']*/", " ", $text );
-		wfProfileOut( "$fname-regexps" );
-
-		wfRunHooks( 'SearchUpdate', array( $this->mId, $this->mNamespace, $this->mTitle, &$text ) );
-
-		# Perform the actual update
-		$search->update($this->mId, Title::indexTitle( $this->mNamespace, $this->mTitle ),
-				$text);
-
-		wfProfileOut( $fname );
+		wfProfileOut( __METHOD__ . '-regexps' );
+		return $text;
 	}
-}
-
-/**
- * Placeholder class
- * @ingroup Search
- */
-class SearchUpdateMyISAM extends SearchUpdate {
-	# Inherits everything
 }

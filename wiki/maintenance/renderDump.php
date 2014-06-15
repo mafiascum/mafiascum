@@ -27,9 +27,15 @@
  * @file
  * @ingroup Maintenance
  */
- 
-require_once( dirname(__FILE__) . '/Maintenance.php' );
 
+require_once __DIR__ . '/Maintenance.php';
+
+/**
+ * Maintenance script that takes page text out of an XML dump file
+ * and render basic HTML out to files.
+ *
+ * @ingroup Maintenance
+ */
 class DumpRenderer extends Maintenance {
 
 	private $count = 0;
@@ -39,11 +45,20 @@ class DumpRenderer extends Maintenance {
 		parent::__construct();
 		$this->mDescription = "Take page text out of an XML dump file and render basic HTML out to files";
 		$this->addOption( 'output-dir', 'The directory to output the HTML files to', true, true );
+		$this->addOption( 'prefix', 'Prefix for the rendered files (defaults to wiki)', false, true );
+		$this->addOption( 'parser', 'Use an alternative parser class', false, true );
 	}
 
 	public function execute() {
 		$this->outputDirectory = $this->getOption( 'output-dir' );
-		$this->startTime = wfTime();
+		$this->prefix = $this->getOption( 'prefix', 'wiki' );
+		$this->startTime = microtime( true );
+
+		if ( $this->hasOption( 'parser' ) ) {
+			global $wgParserConf;
+			$wgParserConf['class'] = $this->getOption( 'parser' );
+			$this->prefix .= "-{$wgParserConf['class']}";
+		}
 
 		$source = new ImportStreamSource( $this->getStdin() );
 		$importer = new WikiImporter( $source );
@@ -51,16 +66,23 @@ class DumpRenderer extends Maintenance {
 		$importer->setRevisionCallback(
 			array( &$this, 'handleRevision' ) );
 
-		return $importer->doImport();
+		$importer->doImport();
+
+		$delta = microtime( true ) - $this->startTime;
+		$this->error( "Rendered {$this->count} pages in " . round( $delta, 2 ) . " seconds " );
+		if ( $delta > 0 ) {
+			$this->error( round( $this->count / $delta, 2 ) . " pages/sec" );
+		}
+		$this->error( "\n" );
 	}
-	
+
 	/**
 	 * Callback function for each revision, turn into HTML and save
 	 * @param $rev Revision
 	 */
-	private function handleRevision( $rev ) {
+	public function handleRevision( $rev ) {
 		$title = $rev->getTitle();
-		if (!$title) {
+		if ( !$title ) {
 			$this->error( "Got bogus revision with null title!" );
 			return;
 		}
@@ -69,27 +91,26 @@ class DumpRenderer extends Maintenance {
 		$this->count++;
 
 		$sanitized = rawurlencode( $display );
-		$filename = sprintf( "%s/wiki-%07d-%s.html", 
+		$filename = sprintf( "%s/%s-%07d-%s.html",
 			$this->outputDirectory,
+			$this->prefix,
 			$this->count,
 			$sanitized );
-		$this->output( sprintf( $this->stderr, "%s\n", $filename, $display ) );
+		$this->output( sprintf( "%s\n", $filename, $display ) );
 
-		// fixme (what?)
 		$user = new User();
-		$parser = new Parser();
 		$options = ParserOptions::newFromUser( $user );
 
-		$output = $parser->parse( $rev->getText(), $title, $options );
+		$content = $rev->getContent();
+		$output = $content->getParserOutput( $title, null, $options );
 
 		file_put_contents( $filename,
-			"<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" " .
-			"\"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n" .
-			"<html xmlns=\"http://www.w3.org/1999/xhtml\">\n" .
+			"<!DOCTYPE html>\n" .
+			"<html lang=\"en\" dir=\"ltr\">\n" .
 			"<head>\n" .
-			"<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />\n" .
+			"<meta charset=\"UTF-8\" />\n" .
 			"<title>" . htmlspecialchars( $display ) . "</title>\n" .
-			"</head>\n" . 
+			"</head>\n" .
 			"<body>\n" .
 			$output->getText() .
 			"</body>\n" .
@@ -98,4 +119,4 @@ class DumpRenderer extends Maintenance {
 }
 
 $maintClass = "DumpRenderer";
-require_once( DO_MAINTENANCE );
+require_once RUN_MAINTENANCE_IF_MAIN;

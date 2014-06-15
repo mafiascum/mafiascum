@@ -1,6 +1,6 @@
 <?php
 /**
- * Dump a the list of files uploaded, for feeding to tar or similar
+ * Dump a the list of files uploaded, for feeding to tar or similar.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,11 +17,18 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  * http://www.gnu.org/copyleft/gpl.html
  *
+ * @file
  * @ingroup Maintenance
  */
 
-require_once( dirname(__FILE__) . '/Maintenance.php' );
+require_once __DIR__ . '/Maintenance.php';
 
+/**
+ * Maintenance script to dump a the list of files uploaded,
+ * for feeding to tar or similar.
+ *
+ * @ingroup Maintenance
+ */
 class UploadDumper extends Maintenance {
 	public function __construct() {
 		parent::__construct();
@@ -34,22 +41,22 @@ By default, outputs relative paths against the parent directory of \$wgUploadDir
 	}
 
 	public function execute() {
-		global $IP, $wgUseSharedUploads;
+		global $IP;
 		$this->mAction = 'fetchLocal';
 		$this->mBasePath = $this->getOption( 'base', $IP );
 		$this->mShared = false;
 		$this->mSharedSupplement = false;
 
-		if( $this->hasOption('local') ) {
+		if ( $this->hasOption( 'local' ) ) {
 			$this->mAction = 'fetchLocal';
 		}
-		
-		if( $this->hasOption('used') ) {
+
+		if ( $this->hasOption( 'used' ) ) {
 			$this->mAction = 'fetchUsed';
 		}
-		
-		if( $this->hasOption('shared') ) {
-			if( $this->hasOption('used') ) {
+
+		if ( $this->hasOption( 'shared' ) ) {
+			if ( $this->hasOption( 'used' ) ) {
 				// Include shared-repo files in the used check
 				$this->mShared = true;
 			} else {
@@ -57,52 +64,54 @@ By default, outputs relative paths against the parent directory of \$wgUploadDir
 				$this->mSharedSupplement = true;
 			}
 		}
-		$this->{$this->mAction}( $this->mShared );
-		if( $this->mSharedSupplement ) {
+		$this-> { $this->mAction } ( $this->mShared );
+		if ( $this->mSharedSupplement ) {
 			$this->fetchUsed( true );
 		}
 	}
 
 	/**
-	 * Fetch a list of all or used images from a particular image source.
-	 * @param string $table
-	 * @param string $directory Base directory where files are located
-	 * @param bool $shared true to pass shared-dir settings to hash func
+	 * Fetch a list of used images from a particular image source.
+	 *
+	 * @param $shared Boolean: true to pass shared-dir settings to hash func
 	 */
 	function fetchUsed( $shared ) {
 		$dbr = wfGetDB( DB_SLAVE );
 		$image = $dbr->tableName( 'image' );
 		$imagelinks = $dbr->tableName( 'imagelinks' );
-		
+
 		$sql = "SELECT DISTINCT il_to, img_name
 			FROM $imagelinks
 			LEFT OUTER JOIN $image
 			ON il_to=img_name";
 		$result = $dbr->query( $sql );
-		
-		foreach( $result as $row ) {
+
+		foreach ( $result as $row ) {
 			$this->outputItem( $row->il_to, $shared );
 		}
-		$dbr->freeResult( $result );
 	}
 
+	/**
+	 * Fetch a list of all images from a particular image source.
+	 *
+	 * @param $shared Boolean: true to pass shared-dir settings to hash func
+	 */
 	function fetchLocal( $shared ) {
 		$dbr = wfGetDB( DB_SLAVE );
 		$result = $dbr->select( 'image',
 			array( 'img_name' ),
 			'',
 			__METHOD__ );
-		
-		foreach( $result as $row ) {
+
+		foreach ( $result as $row ) {
 			$this->outputItem( $row->img_name, $shared );
 		}
-		$dbr->freeResult( $result );
 	}
-	
+
 	function outputItem( $name, $shared ) {
 		$file = wfFindFile( $name );
-		if( $file && $this->filterItem( $file, $shared ) ) {
-			$filename = $file->getFullPath();
+		if ( $file && $this->filterItem( $file, $shared ) ) {
+			$filename = $file->getPath();
 			$rel = wfRelativePath( $filename, $this->mBasePath );
 			$this->output( "$rel\n" );
 		} else {
@@ -116,4 +125,4 @@ By default, outputs relative paths against the parent directory of \$wgUploadDir
 }
 
 $maintClass = "UploadDumper";
-require_once( DO_MAINTENANCE );
+require_once RUN_MAINTENANCE_IF_MAIN;

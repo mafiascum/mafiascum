@@ -1,23 +1,25 @@
 <?php
-# Copyright (C) 2004 Brion Vibber <brion@pobox.com>
-# http://www.mediawiki.org/
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License along
-# with this program; if not, write to the Free Software Foundation, Inc.,
-# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
-# http://www.gnu.org/copyleft/gpl.html
-
 /**
+ * MySQL search engine
+ *
+ * Copyright (C) 2004 Brion Vibber <brion@pobox.com>
+ * http://www.mediawiki.org/
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ * http://www.gnu.org/copyleft/gpl.html
+ *
  * @file
  * @ingroup Search
  */
@@ -30,14 +32,22 @@ class SearchMySQL extends SearchEngine {
 	var $strictMatching = true;
 	static $mMinSearchLength;
 
-	/** @todo document */
+	/**
+	 * Creates an instance of this class
+	 * @param $db DatabaseMysql: database object
+	 */
 	function __construct( $db ) {
-		$this->db = $db;
+		parent::__construct( $db );
 	}
 
-	/** 
-	 * Parse the user's query and transform it into an SQL fragment which will 
+	/**
+	 * Parse the user's query and transform it into an SQL fragment which will
 	 * become part of a WHERE clause
+	 *
+	 * @param $filteredText string
+	 * @param $fulltext string
+	 *
+	 * @return string
 	 */
 	function parseQuery( $filteredText, $fulltext ) {
 		global $wgContLang;
@@ -45,36 +55,38 @@ class SearchMySQL extends SearchEngine {
 		$searchon = '';
 		$this->searchTerms = array();
 
-		# FIXME: This doesn't handle parenthetical expressions.
+		# @todo FIXME: This doesn't handle parenthetical expressions.
 		$m = array();
-		if( preg_match_all( '/([-+<>~]?)(([' . $lc . ']+)(\*?)|"[^"]*")/',
-			  $filteredText, $m, PREG_SET_ORDER ) ) {
-			foreach( $m as $bits ) {
+		if ( preg_match_all( '/([-+<>~]?)(([' . $lc . ']+)(\*?)|"[^"]*")/',
+				$filteredText, $m, PREG_SET_ORDER ) ) {
+			foreach ( $m as $bits ) {
 				@list( /* all */, $modifier, $term, $nonQuoted, $wildcard ) = $bits;
-				
-				if( $nonQuoted != '' ) {
+
+				if ( $nonQuoted != '' ) {
 					$term = $nonQuoted;
 					$quote = '';
 				} else {
 					$term = str_replace( '"', '', $term );
 					$quote = '"';
 				}
-			
-				if( $searchon !== '' ) $searchon .= ' ';
-				if( $this->strictMatching && ($modifier == '') ) {
+
+				if ( $searchon !== '' ) {
+					$searchon .= ' ';
+				}
+				if ( $this->strictMatching && ( $modifier == '' ) ) {
 					// If we leave this out, boolean op defaults to OR which is rarely helpful.
 					$modifier = '+';
 				}
-				
+
 				// Some languages such as Serbian store the input form in the search index,
 				// so we may need to search for matches in multiple writing system variants.
 				$convertedVariants = $wgContLang->autoConvertToAllVariants( $term );
-				if( is_array( $convertedVariants ) ) {
+				if ( is_array( $convertedVariants ) ) {
 					$variants = array_unique( array_values( $convertedVariants ) );
 				} else {
 					$variants = array( $term );
 				}
-				
+
 				// The low-level search index does some processing on input to work
 				// around problems with minimum lengths and encoding in MySQL's
 				// fulltext engine.
@@ -82,18 +94,19 @@ class SearchMySQL extends SearchEngine {
 				$strippedVariants = array_map(
 					array( $wgContLang, 'normalizeForSearch' ),
 					$variants );
-				
+
 				// Some languages such as Chinese force all variants to a canonical
 				// form when stripping to the low-level search index, so to be sure
 				// let's check our variants list for unique items after stripping.
 				$strippedVariants = array_unique( $strippedVariants );
-				
+
 				$searchon .= $modifier;
-				if( count( $strippedVariants) > 1 )
+				if ( count( $strippedVariants ) > 1 ) {
 					$searchon .= '(';
-				foreach( $strippedVariants as $stripped ) {
+				}
+				foreach ( $strippedVariants as $stripped ) {
 					$stripped = $this->normalizeText( $stripped );
-					if( $nonQuoted && strpos( $stripped, ' ' ) !== false ) {
+					if ( $nonQuoted && strpos( $stripped, ' ' ) !== false ) {
 						// Hack for Chinese: we need to toss in quotes for
 						// multiple-character phrases since normalizeForSearch()
 						// added spaces between them to make word breaks.
@@ -101,9 +114,10 @@ class SearchMySQL extends SearchEngine {
 					}
 					$searchon .= "$quote$stripped$quote$wildcard ";
 				}
-				if( count( $strippedVariants) > 1 )
+				if ( count( $strippedVariants ) > 1 ) {
 					$searchon .= ')';
-				
+				}
+
 				// Match individual terms or quoted phrase in result highlighting...
 				// Note that variants will be introduced in a later stage for highlighting!
 				$regexp = $this->regexTerm( $term, $wildcard );
@@ -119,13 +133,13 @@ class SearchMySQL extends SearchEngine {
 		$field = $this->getIndexField( $fulltext );
 		return " MATCH($field) AGAINST('$searchon' IN BOOLEAN MODE) ";
 	}
-	
+
 	function regexTerm( $string, $wildcard ) {
 		global $wgContLang;
-		
+
 		$regex = preg_quote( $string, '/' );
-		if( $wgContLang->hasWordBreaks() ) {
-			if( $wildcard ) {
+		if ( $wgContLang->hasWordBreaks() ) {
+			if ( $wildcard ) {
 				// Don't cut off the final bit!
 				$regex = "\b$regex";
 			} else {
@@ -146,7 +160,7 @@ class SearchMySQL extends SearchEngine {
 	/**
 	 * Perform a full text search query and return a result set.
 	 *
-	 * @param $term String: raw search term
+	 * @param string $term raw search term
 	 * @return MySQLSearchResultSet
 	 */
 	function searchText( $term ) {
@@ -156,91 +170,119 @@ class SearchMySQL extends SearchEngine {
 	/**
 	 * Perform a title-only search query and return a result set.
 	 *
-	 * @param $term String: raw search term
+	 * @param string $term raw search term
 	 * @return MySQLSearchResultSet
 	 */
 	function searchTitle( $term ) {
 		return $this->searchInternal( $term, false );
 	}
-	
+
 	protected function searchInternal( $term, $fulltext ) {
 		global $wgCountTotalSearchHits;
-		
+
+		// This seems out of place, why is this called with empty term?
+		if ( trim( $term ) === '' ) {
+			return null;
+		}
+
 		$filteredTerm = $this->filter( $term );
-		$resultSet = $this->db->query( $this->getQuery( $filteredTerm, $fulltext ) );
-		
+		$query = $this->getQuery( $filteredTerm, $fulltext );
+		$resultSet = $this->db->select(
+			$query['tables'], $query['fields'], $query['conds'],
+			__METHOD__, $query['options'], $query['joins']
+		);
+
 		$total = null;
-		if( $wgCountTotalSearchHits ) {
-			$totalResult = $this->db->query( $this->getCountQuery( $filteredTerm, $fulltext ) );
+		if ( $wgCountTotalSearchHits ) {
+			$query = $this->getCountQuery( $filteredTerm, $fulltext );
+			$totalResult = $this->db->select(
+				$query['tables'], $query['fields'], $query['conds'],
+				__METHOD__, $query['options'], $query['joins']
+			);
+
 			$row = $totalResult->fetchObject();
-			if( $row ) {
+			if ( $row ) {
 				$total = intval( $row->c );
 			}
 			$totalResult->free();
 		}
-		
+
 		return new MySQLSearchResultSet( $resultSet, $this->searchTerms, $total );
 	}
 
-
-	/**
-	 * Return a partial WHERE clause to exclude redirects, if so set
-	 * @return String
-	 */
-	function queryRedirect() {
-		if( $this->showRedirects ) {
-			return '';
-		} else {
-			return 'AND page_is_redirect=0';
+	public function supports( $feature ) {
+		switch ( $feature ) {
+		case 'title-suffix-filter':
+			return true;
+		default:
+			return parent::supports( $feature );
 		}
 	}
 
 	/**
-	 * Return a partial WHERE clause to limit the search to the given namespaces
-	 * @return String
+	 * Add special conditions
+	 * @param $query Array
+	 * @since 1.18
 	 */
-	function queryNamespaces() {
-		if( is_null($this->namespaces) )
-			return '';  # search all
-		if ( !count( $this->namespaces ) ) {
-			$namespaces = '0';
-		} else {
-			$namespaces = $this->db->makeList( $this->namespaces );
+	protected function queryFeatures( &$query ) {
+		foreach ( $this->features as $feature => $value ) {
+			if ( $feature === 'list-redirects' && !$value ) {
+				$query['conds']['page_is_redirect'] = 0;
+			} elseif ( $feature === 'title-suffix-filter' && $value ) {
+				$query['conds'][] = 'page_title' . $this->db->buildLike( $this->db->anyString(), $value );
+			}
 		}
-		return 'AND page_namespace IN (' . $namespaces . ')';
 	}
 
 	/**
-	 * Return a LIMIT clause to limit results on the query.
-	 * @return String
+	 * Add namespace conditions
+	 * @param $query Array
+	 * @since 1.18 (changed)
 	 */
-	function queryLimit() {
-		return $this->db->limitResult( '', $this->limit, $this->offset );
+	function queryNamespaces( &$query ) {
+		if ( is_array( $this->namespaces ) ) {
+			if ( count( $this->namespaces ) === 0 ) {
+				$this->namespaces[] = '0';
+			}
+			$query['conds']['page_namespace'] = $this->namespaces;
+		}
 	}
 
 	/**
-	 * Does not do anything for generic search engine
-	 * subclasses may define this though
-	 * @return String
+	 * Add limit options
+	 * @param $query Array
+	 * @since 1.18
 	 */
-	function queryRanking( $filteredTerm, $fulltext ) {
-		return '';
+	protected function limitResult( &$query ) {
+		$query['options']['LIMIT'] = $this->limit;
+		$query['options']['OFFSET'] = $this->offset;
 	}
 
 	/**
-	 * Construct the full SQL query to do the search.
+	 * Construct the SQL query to do the search.
 	 * The guts shoulds be constructed in queryMain()
 	 * @param $filteredTerm String
 	 * @param $fulltext Boolean
+	 * @return Array
+	 * @since 1.18 (changed)
 	 */
 	function getQuery( $filteredTerm, $fulltext ) {
-		return $this->queryMain( $filteredTerm, $fulltext ) . ' ' .
-			$this->queryRedirect() . ' ' .
-			$this->queryNamespaces() . ' ' .
-			$this->queryRanking( $filteredTerm, $fulltext ) . ' ' .
-			$this->queryLimit();
+		$query = array(
+			'tables' => array(),
+			'fields' => array(),
+			'conds' => array(),
+			'options' => array(),
+			'joins' => array(),
+		);
+
+		$this->queryMain( $query, $filteredTerm, $fulltext );
+		$this->queryFeatures( $query );
+		$this->queryNamespaces( $query );
+		$this->limitResult( $query );
+
+		return $query;
 	}
-	
+
 	/**
 	 * Picks which field to index on, depending on what type of query.
 	 * @param $fulltext Boolean
@@ -252,32 +294,42 @@ class SearchMySQL extends SearchEngine {
 
 	/**
 	 * Get the base part of the search query.
-	 * The actual match syntax will depend on the server
-	 * version; MySQL 3 and MySQL 4 have different capabilities
-	 * in their fulltext search indexes.
 	 *
+	 * @param &$query array Search query array
 	 * @param $filteredTerm String
 	 * @param $fulltext Boolean
-	 * @return String
+	 * @since 1.18 (changed)
 	 */
-	function queryMain( $filteredTerm, $fulltext ) {
+	function queryMain( &$query, $filteredTerm, $fulltext ) {
 		$match = $this->parseQuery( $filteredTerm, $fulltext );
-		$page        = $this->db->tableName( 'page' );
-		$searchindex = $this->db->tableName( 'searchindex' );
-		return 'SELECT page_id, page_namespace, page_title ' .
-			"FROM $page,$searchindex " .
-			'WHERE page_id=si_page AND ' . $match;
+		$query['tables'][] = 'page';
+		$query['tables'][] = 'searchindex';
+		$query['fields'][] = 'page_id';
+		$query['fields'][] = 'page_namespace';
+		$query['fields'][] = 'page_title';
+		$query['conds'][] = 'page_id=si_page';
+		$query['conds'][] = $match;
 	}
 
+	/**
+	 * @since 1.18 (changed)
+	 * @return array
+	 */
 	function getCountQuery( $filteredTerm, $fulltext ) {
 		$match = $this->parseQuery( $filteredTerm, $fulltext );
-		$page        = $this->db->tableName( 'page' );
-		$searchindex = $this->db->tableName( 'searchindex' );
-		return "SELECT COUNT(*) AS c " .
-			"FROM $page,$searchindex " .
-			'WHERE page_id=si_page AND ' . $match .
-			$this->queryRedirect() . ' ' .
-			$this->queryNamespaces();
+
+		$query = array(
+			'tables' => array( 'page', 'searchindex' ),
+			'fields' => array( 'COUNT(*) as c' ),
+			'conds' => array( 'page_id=si_page', $match ),
+			'options' => array(),
+			'joins' => array(),
+		);
+
+		$this->queryFeatures( $query );
+		$this->queryNamespaces( $query );
+
+		return $query;
 	}
 
 	/**
@@ -306,27 +358,40 @@ class SearchMySQL extends SearchEngine {
 	 * @param $id Integer
 	 * @param $title String
 	 */
-    function updateTitle( $id, $title ) {
+	function updateTitle( $id, $title ) {
 		$dbw = wfGetDB( DB_MASTER );
 
 		$dbw->update( 'searchindex',
 			array( 'si_title' => $this->normalizeText( $title ) ),
-			array( 'si_page'  => $id ),
+			array( 'si_page' => $id ),
 			__METHOD__,
 			array( $dbw->lowPriorityOption() ) );
 	}
 
 	/**
+	 * Delete an indexed page
+	 * Title should be pre-processed.
+	 *
+	 * @param Integer $id Page id that was deleted
+	 * @param String $title Title of page that was deleted
+	 */
+	function delete( $id, $title ) {
+		$dbw = wfGetDB( DB_MASTER );
+
+		$dbw->delete( 'searchindex', array( 'si_page' => $id ), __METHOD__ );
+	}
+
+	/**
 	 * Converts some characters for MySQL's indexing to grok it correctly,
 	 * and pads short words to overcome limitations.
+	 * @return mixed|string
 	 */
 	function normalizeText( $string ) {
 		global $wgContLang;
 
 		wfProfileIn( __METHOD__ );
-		
-		// Some languages such as Chinese require word segmentation
-		$out = $wgContLang->wordSegmentation( $string );
+
+		$out = parent::normalizeText( $string );
 
 		// MySQL fulltext index doesn't grok utf-8, so we
 		// need to fold cases and convert to hex
@@ -339,7 +404,7 @@ class SearchMySQL extends SearchEngine {
 		// ignores short words... Pad them so we can pass them
 		// through without reconfiguring the server...
 		$minLength = $this->minSearchLength();
-		if( $minLength > 1 ) {
+		if ( $minLength > 1 ) {
 			$n = $minLength - 1;
 			$out = preg_replace(
 				"/\b(\w{1,$n})\b/",
@@ -359,7 +424,7 @@ class SearchMySQL extends SearchEngine {
 			$out );
 
 		wfProfileOut( __METHOD__ );
-		
+
 		return $out;
 	}
 
@@ -367,6 +432,7 @@ class SearchMySQL extends SearchEngine {
 	 * Armor a case-folded UTF-8 string to get through MySQL's
 	 * fulltext search without being mucked up by funny charset
 	 * settings or anything else of the sort.
+	 * @return string
 	 */
 	protected function stripForSearchCallback( $matches ) {
 		return 'u8' . bin2hex( $matches[1] );
@@ -375,11 +441,11 @@ class SearchMySQL extends SearchEngine {
 	/**
 	 * Check MySQL server's ft_min_word_len setting so we know
 	 * if we need to pad short words...
-	 * 
+	 *
 	 * @return int
 	 */
 	protected function minSearchLength() {
-		if( is_null( self::$mMinSearchLength ) ) {
+		if ( is_null( self::$mMinSearchLength ) ) {
 			$sql = "SHOW GLOBAL VARIABLES LIKE 'ft\\_min\\_word\\_len'";
 
 			$dbr = wfGetDB( DB_SLAVE );
@@ -387,7 +453,7 @@ class SearchMySQL extends SearchEngine {
 			$row = $result->fetchObject();
 			$result->free();
 
-			if( $row && $row->Variable_name == 'ft_min_word_len' ) {
+			if ( $row && $row->Variable_name == 'ft_min_word_len' ) {
 				self::$mMinSearchLength = intval( $row->Value );
 			} else {
 				self::$mMinSearchLength = 0;
@@ -401,7 +467,7 @@ class SearchMySQL extends SearchEngine {
  * @ingroup Search
  */
 class MySQLSearchResultSet extends SqlSearchResultSet {
-	function MySQLSearchResultSet( $resultSet, $terms, $totalHits=null ) {
+	function __construct( $resultSet, $terms, $totalHits = null ) {
 		parent::__construct( $resultSet, $terms );
 		$this->mTotalHits = $totalHits;
 	}

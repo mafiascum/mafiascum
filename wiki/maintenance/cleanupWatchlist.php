@@ -1,12 +1,12 @@
 <?php
-/*
- * Script to remove broken, unparseable titles in the Watchlist.
+/**
+ * Remove broken, unparseable titles in the watchlist table.
  *
  * Usage: php cleanupWatchlist.php [--fix]
  * Options:
  *   --fix  Actually remove entries; without will only report.
  *
- * Copyright (C) 2005,2006 Brion Vibber <brion@pobox.com>
+ * Copyright © 2005,2006 Brion Vibber <brion@pobox.com>
  * http://www.mediawiki.org/
  *
  * This program is free software; you can redistribute it and/or modify
@@ -24,12 +24,18 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  * http://www.gnu.org/copyleft/gpl.html
  *
+ * @file
  * @author Brion Vibber <brion at pobox.com>
  * @ingroup Maintenance
  */
 
-require_once( dirname(__FILE__) . '/cleanupTable.inc' );
+require_once __DIR__ . '/cleanupTable.inc';
 
+/**
+ * Maintenance script to remove broken, unparseable titles in the watchlist table.
+ *
+ * @ingroup Maintenance
+ */
 class WatchlistCleanup extends TableCleanup {
 	protected $defaultParams = array(
 		'table' => 'watchlist',
@@ -58,7 +64,7 @@ class WatchlistCleanup extends TableCleanup {
 		$verified = $wgContLang->normalize( $display );
 		$title = Title::newFromText( $verified );
 
-		if( $row->wl_user == 0 || is_null( $title ) || !$title->equals( $current ) ) {
+		if ( $row->wl_user == 0 || is_null( $title ) || !$title->equals( $current ) ) {
 			$this->output( "invalid watch by {$row->wl_user} for ({$row->wl_namespace}, \"{$row->wl_title}\")\n" );
 			$updated = $this->removeWatch( $row );
 			$this->progress( $updated );
@@ -68,12 +74,12 @@ class WatchlistCleanup extends TableCleanup {
 	}
 
 	private function removeWatch( $row ) {
-		if( !$this->dryrun && $this->hasOption( 'fix' ) ) {
+		if ( !$this->dryrun && $this->hasOption( 'fix' ) ) {
 			$dbw = wfGetDB( DB_MASTER );
 			$dbw->delete( 'watchlist', array(
-				'wl_user'      => $row->wl_user,
+				'wl_user' => $row->wl_user,
 				'wl_namespace' => $row->wl_namespace,
-				'wl_title'     => $row->wl_title ),
+				'wl_title' => $row->wl_title ),
 			__METHOD__ );
 			$this->output( "- removed\n" );
 			return 1;
@@ -84,4 +90,4 @@ class WatchlistCleanup extends TableCleanup {
 }
 
 $maintClass = "WatchlistCleanup";
-require_once( DO_MAINTENANCE );
+require_once RUN_MAINTENANCE_IF_MAIN;

@@ -1,329 +1,380 @@
 <?php
 /**
+ * Implements Special:Emailuser
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ * http://www.gnu.org/copyleft/gpl.html
+ *
  * @file
  * @ingroup SpecialPage
  */
 
 /**
- * 	Constructor for Special:Emailuser.
- */
-function wfSpecialEmailuser( $par ) {
-	global $wgRequest, $wgUser, $wgOut;
-
-	if ( !EmailUserForm::userEmailEnabled() ) {
-		$wgOut->showErrorPage( 'nosuchspecialpage', 'nospecialpagetext' );
-		return;
-	}
-
-	$action = $wgRequest->getVal( 'action' );
-	$target = isset($par) ? $par : $wgRequest->getVal( 'target' );
-	$targetUser = EmailUserForm::validateEmailTarget( $target );
-	
-	if ( !( $targetUser instanceof User ) ) {
-		$wgOut->showErrorPage( $targetUser.'title', $targetUser.'text' );
-		return;
-	}
-	
-	$form = new EmailUserForm( $targetUser,
-			$wgRequest->getText( 'wpText' ),
-			$wgRequest->getText( 'wpSubject' ),
-			$wgRequest->getBool( 'wpCCMe' ) );
-	if ( $action == 'success' ) {
-		$form->showSuccess();
-		return;
-	}
-					
-	$error = EmailUserForm::getPermissionsError( $wgUser, $wgRequest->getVal( 'wpEditToken' ) );
-	if ( $error ) {
-		switch ( $error ) {
-			case 'blockedemailuser':
-				$wgOut->blockedPage();
-				return;
-			case 'actionthrottledtext':
-				$wgOut->rateLimited();
-				return;
-			case 'sessionfailure':
-				$form->showForm();
-				return;
-			case 'mailnologin':
-				$wgOut->showErrorPage( 'mailnologin', 'mailnologintext' );
-				return;
-			default:
-				// It's a hook error
-				list( $title, $msg, $params ) = $error;
-				$wgOut->showErrorPage( $title, $msg, $params );
-				return;
-				
-		}
-	}	
-	
-	if ( "submit" == $action && $wgRequest->wasPosted() ) {
-		$result = $form->doSubmit();
-		
-		if ( !is_null( $result ) ) {
-			$wgOut->addHTML( wfMsg( "usermailererror" ) .
-					' ' . htmlspecialchars( $result->getMessage() ) );
-		} else {
-			$titleObj = SpecialPage::getTitleFor( "Emailuser" );
-			$encTarget = wfUrlencode( $form->getTarget()->getName() );
-			$wgOut->redirect( $titleObj->getFullURL( "target={$encTarget}&action=success" ) );
-		}
-	} else {
-		$form->showForm();
-	}
-}
-
-/**
- * Implements the Special:Emailuser web interface, and invokes userMailer for sending the email message.
+ * A special page that allows users to send e-mails to other users
+ *
  * @ingroup SpecialPage
  */
-class EmailUserForm {
-
-	var $target;
-	var $text, $subject;
-	var $cc_me;     // Whether user requested to be sent a separate copy of their email.
+class SpecialEmailUser extends UnlistedSpecialPage {
+	protected $mTarget;
 
 	/**
-	 * @param User $target
+	 * @var User|string $mTargetObj
 	 */
-	function EmailUserForm( $target, $text, $subject, $cc_me ) {
-		$this->target = $target;
-		$this->text = $text;
-		$this->subject = $subject;
-		$this->cc_me = $cc_me;
+	protected $mTargetObj;
+
+	public function __construct() {
+		parent::__construct( 'Emailuser' );
 	}
 
-	function showForm() {
-		global $wgOut, $wgUser;
-		$skin = $wgUser->getSkin();
-
-		$wgOut->setPagetitle( wfMsg( "emailpage" ) );
-		$wgOut->addWikiMsg( "emailpagetext" );
-
-		if ( $this->subject === "" ) {
-			$this->subject = wfMsgExt( 'defemailsubject', array( 'content', 'parsemag' ) );
+	public function getDescription() {
+		$target = self::getTarget( $this->mTarget );
+		if ( !$target instanceof User ) {
+			return $this->msg( 'emailuser-title-notarget' )->text();
 		}
 
-		$titleObj = SpecialPage::getTitleFor( "Emailuser" );
-		$action = $titleObj->getLocalURL( "target=" .
-			urlencode( $this->target->getName() ) . "&action=submit" );
+		return $this->msg( 'emailuser-title-target', $target->getName() )->text();
+	}
 
-		$wgOut->addHTML(  
-			Xml::openElement( 'form', array( 'method' => 'post', 'action' => $action, 'id' => 'emailuser' ) ) .
-			Xml::openElement( 'fieldset' ) .
-			Xml::element( 'legend', null, wfMsgExt( 'email-legend', 'parsemag' ) ) .
-			Xml::openElement( 'table', array( 'class' => 'mw-emailuser-table' ) ) .
-			"<tr>
-				<td class='mw-label'>" .
-					Xml::label( wfMsg( 'emailfrom' ), 'emailfrom' ) .
-				"</td>
-				<td class='mw-input' id='mw-emailuser-sender'>" .
-					$skin->link( $wgUser->getUserPage(), htmlspecialchars( $wgUser->getName() ) ) .
-				"</td>
-			</tr>
-			<tr>
-				<td class='mw-label'>" .
-					Xml::label( wfMsg( 'emailto' ), 'emailto' ) .
-				"</td>
-				<td class='mw-input' id='mw-emailuser-recipient'>" .
-					$skin->link( $this->target->getUserPage(), htmlspecialchars( $this->target->getName() ) ) .
-				"</td>
-			</tr>
-			<tr>
-				<td class='mw-label'>" .
-					Xml::label( wfMsg( 'emailsubject' ), 'wpSubject' ) .
-				"</td>
-				<td class='mw-input'>" .
-					Xml::input( 'wpSubject', 60, $this->subject, array( 'type' => 'text', 'maxlength' => 200 ) ) .
-				"</td>
-			</tr>
-			<tr>
-				<td class='mw-label'>" .
-					Xml::label( wfMsg( 'emailmessage' ), 'wpText' ) .
-				"</td>
-				<td class='mw-input'>" .
-					Xml::textarea( 'wpText', $this->text, 80, 20, array( 'id' => 'wpText' ) ) .
-				"</td>
-			</tr>
-			<tr>
-				<td></td>
-				<td class='mw-input'>" .
-					Xml::checkLabel( wfMsg( 'emailccme' ), 'wpCCMe', 'wpCCMe', $wgUser->getBoolOption( 'ccmeonemails' ) ) .
-				"</td>
-			</tr>
-			<tr>
-				<td></td>
-				<td class='mw-submit'>" .
-					Xml::submitButton( wfMsg( 'emailsend' ), array( 'name' => 'wpSend', 'accesskey' => 's' ) ) .
-				"</td>
-			</tr>" .
-			Xml::hidden( 'wpEditToken', $wgUser->editToken() ) .
-			Xml::closeElement( 'table' ) .
-			Xml::closeElement( 'fieldset' ) .
-			Xml::closeElement( 'form' )
+	protected function getFormFields() {
+		return array(
+			'From' => array(
+				'type' => 'info',
+				'raw' => 1,
+				'default' => Linker::link(
+					$this->getUser()->getUserPage(),
+					htmlspecialchars( $this->getUser()->getName() )
+				),
+				'label-message' => 'emailfrom',
+				'id' => 'mw-emailuser-sender',
+			),
+			'To' => array(
+				'type' => 'info',
+				'raw' => 1,
+				'default' => Linker::link(
+					$this->mTargetObj->getUserPage(),
+					htmlspecialchars( $this->mTargetObj->getName() )
+				),
+				'label-message' => 'emailto',
+				'id' => 'mw-emailuser-recipient',
+			),
+			'Target' => array(
+				'type' => 'hidden',
+				'default' => $this->mTargetObj->getName(),
+			),
+			'Subject' => array(
+				'type' => 'text',
+				'default' => $this->msg( 'defemailsubject',
+					$this->getUser()->getName() )->inContentLanguage()->text(),
+				'label-message' => 'emailsubject',
+				'maxlength' => 200,
+				'size' => 60,
+				'required' => true,
+			),
+			'Text' => array(
+				'type' => 'textarea',
+				'rows' => 20,
+				'cols' => 80,
+				'label-message' => 'emailmessage',
+				'required' => true,
+			),
+			'CCMe' => array(
+				'type' => 'check',
+				'label-message' => 'emailccme',
+				'default' => $this->getUser()->getBoolOption( 'ccmeonemails' ),
+			),
 		);
 	}
 
-	/*
-	 * Really send a mail. Permissions should have been checked using 
-	 * EmailUserForm::getPermissionsError. It is probably also a good idea to
-	 * check the edit token and ping limiter in advance.
+	public function execute( $par ) {
+		$out = $this->getOutput();
+		$out->addModuleStyles( 'mediawiki.special' );
+
+		$this->mTarget = is_null( $par )
+			? $this->getRequest()->getVal( 'wpTarget', $this->getRequest()->getVal( 'target', '' ) )
+			: $par;
+
+		// This needs to be below assignment of $this->mTarget because
+		// getDescription() needs it to determine the correct page title.
+		$this->setHeaders();
+		$this->outputHeader();
+
+		// error out if sending user cannot do this
+		$error = self::getPermissionsError(
+			$this->getUser(),
+			$this->getRequest()->getVal( 'wpEditToken' )
+		);
+
+		switch ( $error ) {
+			case null:
+				# Wahey!
+				break;
+			case 'badaccess':
+				throw new PermissionsError( 'sendemail' );
+			case 'blockedemailuser':
+				throw new UserBlockedError( $this->getUser()->mBlock );
+			case 'actionthrottledtext':
+				throw new ThrottledError;
+			case 'mailnologin':
+			case 'usermaildisabled':
+				throw new ErrorPageError( $error, "{$error}text" );
+			default:
+				# It's a hook error
+				list( $title, $msg, $params ) = $error;
+				throw new ErrorPageError( $title, $msg, $params );
+		}
+		// Got a valid target user name? Else ask for one.
+		$ret = self::getTarget( $this->mTarget );
+		if ( !$ret instanceof User ) {
+			if ( $this->mTarget != '' ) {
+				$ret = ( $ret == 'notarget' ) ? 'emailnotarget' : ( $ret . 'text' );
+				$out->wrapWikiMsg( "<p class='error'>$1</p>", $ret );
+			}
+			$out->addHTML( $this->userForm( $this->mTarget ) );
+
+			return false;
+		}
+
+		$this->mTargetObj = $ret;
+
+		$context = new DerivativeContext( $this->getContext() );
+		$context->setTitle( $this->getTitle() ); // Remove subpage
+		$form = new HTMLForm( $this->getFormFields(), $context );
+		// By now we are supposed to be sure that $this->mTarget is a user name
+		$form->addPreText( $this->msg( 'emailpagetext', $this->mTarget )->parse() );
+		$form->setSubmitTextMsg( 'emailsend' );
+		$form->setSubmitCallback( array( __CLASS__, 'uiSubmit' ) );
+		$form->setWrapperLegendMsg( 'email-legend' );
+		$form->loadData();
+
+		if ( !wfRunHooks( 'EmailUserForm', array( &$form ) ) ) {
+			return false;
+		}
+
+		$result = $form->show();
+
+		if ( $result === true || ( $result instanceof Status && $result->isGood() ) ) {
+			$out->setPageTitle( $this->msg( 'emailsent' ) );
+			$out->addWikiMsg( 'emailsenttext', $this->mTarget );
+			$out->returnToMain( false, $this->mTargetObj->getUserPage() );
+		}
+	}
+
+	/**
+	 * Validate target User
+	 *
+	 * @param string $target target user name
+	 * @return User object on success or a string on error
 	 */
-	function doSubmit() {
-		global $wgUser, $wgUserEmailUseReplyTo, $wgSiteName;
-
-		$to = new MailAddress( $this->target );
-		$from = new MailAddress( $wgUser );
-		$subject = $this->subject;
-
-		// Add a standard footer and trim up trailing newlines
-		$this->text = rtrim($this->text) . "\n\n-- \n" . wfMsgExt( 'emailuserfooter',
-			array( 'content', 'parsemag' ), array( $from->name, $to->name ) );
-		
-		if( wfRunHooks( 'EmailUser', array( &$to, &$from, &$subject, &$this->text ) ) ) {
-
-			if( $wgUserEmailUseReplyTo ) {
-				// Put the generic wiki autogenerated address in the From:
-				// header and reserve the user for Reply-To.
-				//
-				// This is a bit ugly, but will serve to differentiate
-				// wiki-borne mails from direct mails and protects against
-				// SPF and bounce problems with some mailers (see below).
-				global $wgPasswordSender;
-				$mailFrom = new MailAddress( $wgPasswordSender );
-				$replyTo = $from;
-			} else {
-				// Put the sending user's e-mail address in the From: header.
-				//
-				// This is clean-looking and convenient, but has issues.
-				// One is that it doesn't as clearly differentiate the wiki mail
-				// from "directly" sent mails.
-				//
-				// Another is that some mailers (like sSMTP) will use the From
-				// address as the envelope sender as well. For open sites this
-				// can cause mails to be flunked for SPF violations (since the
-				// wiki server isn't an authorized sender for various users'
-				// domains) as well as creating a privacy issue as bounces
-				// containing the recipient's e-mail address may get sent to
-				// the sending user.
-				$mailFrom = $from;
-				$replyTo = null;
-			}
-			
-			$mailResult = UserMailer::send( $to, $mailFrom, $subject, $this->text, $replyTo );
-
-			if( WikiError::isError( $mailResult ) ) {
-				return $mailResult;
-				
-			} else {
-
-				// if the user requested a copy of this mail, do this now,
-				// unless they are emailing themselves, in which case one copy of the message is sufficient.
-				if ($this->cc_me && $to != $from) {
-					$cc_subject = wfMsg('emailccsubject', $this->target->getName(), $subject);
-					if( wfRunHooks( 'EmailUser', array( &$from, &$from, &$cc_subject, &$this->text ) ) ) {
-						$ccResult = UserMailer::send( $from, $from, $cc_subject, $this->text );
-						if( WikiError::isError( $ccResult ) ) {
-							// At this stage, the user's CC mail has failed, but their
-							// original mail has succeeded. It's unlikely, but still, what to do?
-							// We can either show them an error, or we can say everything was fine,
-							// or we can say we sort of failed AND sort of succeeded. Of these options,
-							// simply saying there was an error is probably best.
-							return $ccResult;
-						}
-					}
-				}
-
-				wfRunHooks( 'EmailUserComplete', array( $to, $from, $subject, $this->text ) );
-				return;
-			}
-		}
-	}
-
-	function showSuccess( &$user = null ) {
-		global $wgOut;
-		
-		if ( is_null($user) )
-			$user = $this->target;
-
-		$wgOut->setPagetitle( wfMsg( "emailsent" ) );
-		$wgOut->addWikiMsg( 'emailsenttext' );
-
-		$wgOut->returnToMain( false, $user->getUserPage() );
-	}
-	
-	function getTarget() {
-		return $this->target;
-	}
-	
-	static function userEmailEnabled() {
-		global $wgEnableEmail, $wgEnableUserEmail;
-		return $wgEnableEmail && $wgEnableUserEmail;
-		
-	}
-	static function validateEmailTarget ( $target ) {
-		if ( $target == "" ) {
+	public static function getTarget( $target ) {
+		if ( $target == '' ) {
 			wfDebug( "Target is empty.\n" );
-			return "notarget";
+
+			return 'notarget';
 		}
-	
-		$nt = Title::newFromURL( $target );
-		if ( is_null( $nt ) ) {
-			wfDebug( "Target is invalid title.\n" );
-			return "notarget";
-		}
-	
-		$nu = User::newFromName( $nt->getText() );
-		if( !$nu instanceof User || !$nu->getId() ) {
+
+		$nu = User::newFromName( $target );
+		if ( !$nu instanceof User || !$nu->getId() ) {
 			wfDebug( "Target is invalid user.\n" );
-			return "notarget";
-		} else if ( !$nu->isEmailConfirmed() ) {
+
+			return 'notarget';
+		} elseif ( !$nu->isEmailConfirmed() ) {
 			wfDebug( "User has no valid email.\n" );
-			return "noemail";
-		} else if ( !$nu->canReceiveEmail() ) {
+
+			return 'noemail';
+		} elseif ( !$nu->canReceiveEmail() ) {
 			wfDebug( "User does not allow user emails.\n" );
-			return "nowikiemail";
+
+			return 'nowikiemail';
 		}
-		
+
 		return $nu;
 	}
-	static function getPermissionsError ( $user, $editToken ) {
-		if( !$user->canSendEmail() ) {
-			wfDebug( "User can't send.\n" );
-			// FIXME: this is also the error if user is in a group
-			//        that is not allowed to send e-mail (no right
-			//        'sendemail'). Error messages should probably
-			//        be more fine grained.
-			return "mailnologin";
+
+	/**
+	 * Check whether a user is allowed to send email
+	 *
+	 * @param $user User object
+	 * @param string $editToken edit token
+	 * @return null on success or string on error
+	 */
+	public static function getPermissionsError( $user, $editToken ) {
+		global $wgEnableEmail, $wgEnableUserEmail;
+
+		if ( !$wgEnableEmail || !$wgEnableUserEmail ) {
+			return 'usermaildisabled';
 		}
-		
-		if( $user->isBlockedFromEmailuser() ) {
+
+		if ( !$user->isAllowed( 'sendemail' ) ) {
+			return 'badaccess';
+		}
+
+		if ( !$user->isEmailConfirmed() ) {
+			return 'mailnologin';
+		}
+
+		if ( $user->isBlockedFromEmailuser() ) {
 			wfDebug( "User is blocked from sending e-mail.\n" );
+
 			return "blockedemailuser";
 		}
-		
-		if( $user->pingLimiter( 'emailuser' ) ) {
-			wfDebug( "Ping limiter triggered.\n" );	
+
+		if ( $user->pingLimiter( 'emailuser' ) ) {
+			wfDebug( "Ping limiter triggered.\n" );
+
 			return 'actionthrottledtext';
 		}
-		
-		$hookErr = null;
+
+		$hookErr = false;
+
+		wfRunHooks( 'UserCanSendEmail', array( &$user, &$hookErr ) );
 		wfRunHooks( 'EmailUserPermissionsErrors', array( $user, $editToken, &$hookErr ) );
-		
-		if ($hookErr) {
+
+		if ( $hookErr ) {
 			return $hookErr;
 		}
-		
-		if( !$user->matchEditToken( $editToken ) ) {
-			wfDebug( "Matching edit token failed.\n" );
-			return 'sessionfailure';
+
+		return null;
+	}
+
+	/**
+	 * Form to ask for target user name.
+	 *
+	 * @param string $name user name submitted.
+	 * @return String: form asking for user name.
+	 */
+	protected function userForm( $name ) {
+		global $wgScript;
+		$string = Xml::openElement(
+			'form',
+			array( 'method' => 'get', 'action' => $wgScript, 'id' => 'askusername' )
+		) .
+			Html::hidden( 'title', $this->getTitle()->getPrefixedText() ) .
+			Xml::openElement( 'fieldset' ) .
+			Html::rawElement( 'legend', null, $this->msg( 'emailtarget' )->parse() ) .
+			Xml::inputLabel(
+				$this->msg( 'emailusername' )->text(),
+				'target',
+				'emailusertarget',
+				30,
+				$name
+			) .
+			' ' .
+			Xml::submitButton( $this->msg( 'emailusernamesubmit' )->text() ) .
+			Xml::closeElement( 'fieldset' ) .
+			Xml::closeElement( 'form' ) . "\n";
+
+		return $string;
+	}
+
+	/**
+	 * Submit callback for an HTMLForm object, will simply call submit().
+	 *
+	 * @since 1.20
+	 * @param $data array
+	 * @param $form HTMLForm object
+	 * @return Status|string|bool
+	 */
+	public static function uiSubmit( array $data, HTMLForm $form ) {
+		return self::submit( $data, $form->getContext() );
+	}
+
+	/**
+	 * Really send a mail. Permissions should have been checked using
+	 * getPermissionsError(). It is probably also a good
+	 * idea to check the edit token and ping limiter in advance.
+	 *
+	 * @param array $data
+	 * @param IContextSource $context
+	 * @return Mixed: Status object, or potentially a String on error
+	 * or maybe even true on success if anything uses the EmailUser hook.
+	 */
+	public static function submit( array $data, IContextSource $context ) {
+		global $wgUserEmailUseReplyTo;
+
+		$target = self::getTarget( $data['Target'] );
+		if ( !$target instanceof User ) {
+			return $context->msg( $target . 'text' )->parseAsBlock();
+		}
+
+		$to = new MailAddress( $target );
+		$from = new MailAddress( $context->getUser() );
+		$subject = $data['Subject'];
+		$text = $data['Text'];
+
+		// Add a standard footer and trim up trailing newlines
+		$text = rtrim( $text ) . "\n\n-- \n";
+		$text .= $context->msg( 'emailuserfooter',
+			$from->name, $to->name )->inContentLanguage()->text();
+
+		$error = '';
+		if ( !wfRunHooks( 'EmailUser', array( &$to, &$from, &$subject, &$text, &$error ) ) ) {
+			return $error;
+		}
+
+		if ( $wgUserEmailUseReplyTo ) {
+			// Put the generic wiki autogenerated address in the From:
+			// header and reserve the user for Reply-To.
+			//
+			// This is a bit ugly, but will serve to differentiate
+			// wiki-borne mails from direct mails and protects against
+			// SPF and bounce problems with some mailers (see below).
+			global $wgPasswordSender, $wgPasswordSenderName;
+
+			$mailFrom = new MailAddress( $wgPasswordSender, $wgPasswordSenderName );
+			$replyTo = $from;
+		} else {
+			// Put the sending user's e-mail address in the From: header.
+			//
+			// This is clean-looking and convenient, but has issues.
+			// One is that it doesn't as clearly differentiate the wiki mail
+			// from "directly" sent mails.
+			//
+			// Another is that some mailers (like sSMTP) will use the From
+			// address as the envelope sender as well. For open sites this
+			// can cause mails to be flunked for SPF violations (since the
+			// wiki server isn't an authorized sender for various users'
+			// domains) as well as creating a privacy issue as bounces
+			// containing the recipient's e-mail address may get sent to
+			// the sending user.
+			$mailFrom = $from;
+			$replyTo = null;
+		}
+
+		$status = UserMailer::send( $to, $mailFrom, $subject, $text, $replyTo );
+
+		if ( !$status->isGood() ) {
+			return $status;
+		} else {
+			// if the user requested a copy of this mail, do this now,
+			// unless they are emailing themselves, in which case one
+			// copy of the message is sufficient.
+			if ( $data['CCMe'] && $to != $from ) {
+				$cc_subject = $context->msg( 'emailccsubject' )->rawParams(
+					$target->getName(), $subject )->text();
+				wfRunHooks( 'EmailUserCC', array( &$from, &$from, &$cc_subject, &$text ) );
+				$ccStatus = UserMailer::send( $from, $from, $cc_subject, $text );
+				$status->merge( $ccStatus );
+			}
+
+			wfRunHooks( 'EmailUserComplete', array( $to, $from, $subject, $text ) );
+
+			return $status;
 		}
 	}
-	
-	static function newFromURL( $target, $text, $subject, $cc_me )
-	{
-		$nt = Title::newFromURL( $target );
-		$nu = User::newFromName( $nt->getText() );
-		return new EmailUserForm( $nu, $text, $subject, $cc_me );
+
+	protected function getGroupName() {
+		return 'users';
 	}
 }

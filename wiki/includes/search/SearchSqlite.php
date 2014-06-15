@@ -1,22 +1,22 @@
 <?php
-# SQLite search backend, based upon SearchMysql
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License along
-# with this program; if not, write to the Free Software Foundation, Inc.,
-# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
-# http://www.gnu.org/copyleft/gpl.html
-
 /**
+ * SQLite search backend, based upon SearchMysql
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ * http://www.gnu.org/copyleft/gpl.html
+ *
  * @file
  * @ingroup Search
  */
@@ -26,15 +26,18 @@
  * @ingroup Search
  */
 class SearchSqlite extends SearchEngine {
-	// Cached because SearchUpdate keeps recreating our class
-	private static $fulltextSupported = null;
+
+	/**
+	 * @var DatabaseSqlite
+	 */
+	protected $db;
 
 	/**
 	 * Creates an instance of this class
 	 * @param $db DatabaseSqlite: database object
 	 */
 	function __construct( $db ) {
-		$this->db = $db;
+		parent::__construct( $db );
 	}
 
 	/**
@@ -42,19 +45,14 @@ class SearchSqlite extends SearchEngine {
 	 * @return Boolean
 	 */
 	function fulltextSearchSupported() {
-		if ( self::$fulltextSupported === null ) {
-			self::$fulltextSupported = $this->db->selectField( 
-				'updatelog', 
-				'ul_key', 
-				array( 'ul_key' => 'fts3' ), 
-				__METHOD__ ) !== false;
-		}
-		return self::$fulltextSupported;
+		return $this->db->checkForEnabledSearch();
 	}
 
-	/** 
-	 * Parse the user's query and transform it into an SQL fragment which will 
+	/**
+	 * Parse the user's query and transform it into an SQL fragment which will
 	 * become part of a WHERE clause
+	 *
+	 * @return string
 	 */
 	function parseQuery( $filteredText, $fulltext ) {
 		global $wgContLang;
@@ -63,12 +61,12 @@ class SearchSqlite extends SearchEngine {
 		$this->searchTerms = array();
 
 		$m = array();
-		if( preg_match_all( '/([-+<>~]?)(([' . $lc . ']+)(\*?)|"[^"]*")/',
-			  $filteredText, $m, PREG_SET_ORDER ) ) {
-			foreach( $m as $bits ) {
+		if ( preg_match_all( '/([-+<>~]?)(([' . $lc . ']+)(\*?)|"[^"]*")/',
+				$filteredText, $m, PREG_SET_ORDER ) ) {
+			foreach ( $m as $bits ) {
 				@list( /* all */, $modifier, $term, $nonQuoted, $wildcard ) = $bits;
-				
-				if( $nonQuoted != '' ) {
+
+				if ( $nonQuoted != '' ) {
 					$term = $nonQuoted;
 					$quote = '';
 				} else {
@@ -76,17 +74,19 @@ class SearchSqlite extends SearchEngine {
 					$quote = '"';
 				}
 
-				if( $searchon !== '' ) $searchon .= ' ';
+				if ( $searchon !== '' ) {
+					$searchon .= ' ';
+				}
 
 				// Some languages such as Serbian store the input form in the search index,
 				// so we may need to search for matches in multiple writing system variants.
 				$convertedVariants = $wgContLang->autoConvertToAllVariants( $term );
-				if( is_array( $convertedVariants ) ) {
+				if ( is_array( $convertedVariants ) ) {
 					$variants = array_unique( array_values( $convertedVariants ) );
 				} else {
 					$variants = array( $term );
 				}
-				
+
 				// The low-level search index does some processing on input to work
 				// around problems with minimum lengths and encoding in MySQL's
 				// fulltext engine.
@@ -94,17 +94,18 @@ class SearchSqlite extends SearchEngine {
 				$strippedVariants = array_map(
 					array( $wgContLang, 'normalizeForSearch' ),
 					$variants );
-				
+
 				// Some languages such as Chinese force all variants to a canonical
 				// form when stripping to the low-level search index, so to be sure
 				// let's check our variants list for unique items after stripping.
 				$strippedVariants = array_unique( $strippedVariants );
-				
+
 				$searchon .= $modifier;
-				if( count( $strippedVariants) > 1 )
+				if ( count( $strippedVariants ) > 1 ) {
 					$searchon .= '(';
-				foreach( $strippedVariants as $stripped ) {
-					if( $nonQuoted && strpos( $stripped, ' ' ) !== false ) {
+				}
+				foreach ( $strippedVariants as $stripped ) {
+					if ( $nonQuoted && strpos( $stripped, ' ' ) !== false ) {
 						// Hack for Chinese: we need to toss in quotes for
 						// multiple-character phrases since normalizeForSearch()
 						// added spaces between them to make word breaks.
@@ -112,9 +113,10 @@ class SearchSqlite extends SearchEngine {
 					}
 					$searchon .= "$quote$stripped$quote$wildcard ";
 				}
-				if( count( $strippedVariants) > 1 )
+				if ( count( $strippedVariants ) > 1 ) {
 					$searchon .= ')';
-				
+				}
+
 				// Match individual terms or quoted phrase in result highlighting...
 				// Note that variants will be introduced in a later stage for highlighting!
 				$regexp = $this->regexTerm( $term, $wildcard );
@@ -129,13 +131,13 @@ class SearchSqlite extends SearchEngine {
 		$field = $this->getIndexField( $fulltext );
 		return " $field MATCH '$searchon' ";
 	}
-	
+
 	function regexTerm( $string, $wildcard ) {
 		global $wgContLang;
-		
+
 		$regex = preg_quote( $string, '/' );
-		if( $wgContLang->hasWordBreaks() ) {
-			if( $wildcard ) {
+		if ( $wgContLang->hasWordBreaks() ) {
+			if ( $wildcard ) {
 				// Don't cut off the final bit!
 				$regex = "\b$regex";
 			} else {
@@ -156,7 +158,7 @@ class SearchSqlite extends SearchEngine {
 	/**
 	 * Perform a full text search query and return a result set.
 	 *
-	 * @param $term String: raw search term
+	 * @param string $term raw search term
 	 * @return SqliteSearchResultSet
 	 */
 	function searchText( $term ) {
@@ -166,13 +168,13 @@ class SearchSqlite extends SearchEngine {
 	/**
 	 * Perform a title-only search query and return a result set.
 	 *
-	 * @param $term String: raw search term
+	 * @param string $term raw search term
 	 * @return SqliteSearchResultSet
 	 */
 	function searchTitle( $term ) {
 		return $this->searchInternal( $term, false );
 	}
-	
+
 	protected function searchInternal( $term, $fulltext ) {
 		global $wgCountTotalSearchHits, $wgContLang;
 
@@ -182,27 +184,26 @@ class SearchSqlite extends SearchEngine {
 
 		$filteredTerm = $this->filter( $wgContLang->lc( $term ) );
 		$resultSet = $this->db->query( $this->getQuery( $filteredTerm, $fulltext ) );
-		
+
 		$total = null;
-		if( $wgCountTotalSearchHits ) {
+		if ( $wgCountTotalSearchHits ) {
 			$totalResult = $this->db->query( $this->getCountQuery( $filteredTerm, $fulltext ) );
 			$row = $totalResult->fetchObject();
-			if( $row ) {
+			if ( $row ) {
 				$total = intval( $row->c );
 			}
 			$totalResult->free();
 		}
-		
+
 		return new SqliteSearchResultSet( $resultSet, $this->searchTerms, $total );
 	}
-
 
 	/**
 	 * Return a partial WHERE clause to exclude redirects, if so set
 	 * @return String
 	 */
 	function queryRedirect() {
-		if( $this->showRedirects ) {
+		if ( $this->showRedirects ) {
 			return '';
 		} else {
 			return 'AND page_is_redirect=0';
@@ -214,8 +215,9 @@ class SearchSqlite extends SearchEngine {
 	 * @return String
 	 */
 	function queryNamespaces() {
-		if( is_null($this->namespaces) )
+		if ( is_null( $this->namespaces ) ) {
 			return '';  # search all
+		}
 		if ( !count( $this->namespaces ) ) {
 			$namespaces = '0';
 		} else {
@@ -226,7 +228,7 @@ class SearchSqlite extends SearchEngine {
 
 	/**
 	 * Returns a query with limit for number of results set.
-	 * @param $sql String: 
+	 * @param $sql String:
 	 * @return String
 	 */
 	function limitResult( $sql ) {
@@ -238,6 +240,7 @@ class SearchSqlite extends SearchEngine {
 	 * The guts shoulds be constructed in queryMain()
 	 * @param $filteredTerm String
 	 * @param $fulltext Boolean
+	 * @return String
 	 */
 	function getQuery( $filteredTerm, $fulltext ) {
 		return $this->limitResult(
@@ -246,7 +249,7 @@ class SearchSqlite extends SearchEngine {
 			$this->queryNamespaces()
 		);
 	}
-	
+
 	/**
 	 * Picks which field to index on, depending on what type of query.
 	 * @param $fulltext Boolean
@@ -265,7 +268,7 @@ class SearchSqlite extends SearchEngine {
 	 */
 	function queryMain( $filteredTerm, $fulltext ) {
 		$match = $this->parseQuery( $filteredTerm, $fulltext );
-		$page        = $this->db->tableName( 'page' );
+		$page = $this->db->tableName( 'page' );
 		$searchindex = $this->db->tableName( 'searchindex' );
 		return "SELECT $searchindex.rowid, page_namespace, page_title " .
 			"FROM $page,$searchindex " .
@@ -274,7 +277,7 @@ class SearchSqlite extends SearchEngine {
 
 	function getCountQuery( $filteredTerm, $fulltext ) {
 		$match = $this->parseQuery( $filteredTerm, $fulltext );
-		$page        = $this->db->tableName( 'page' );
+		$page = $this->db->tableName( 'page' );
 		$searchindex = $this->db->tableName( 'searchindex' );
 		return "SELECT COUNT(*) AS c " .
 			"FROM $page,$searchindex " .
@@ -295,12 +298,12 @@ class SearchSqlite extends SearchEngine {
 		if ( !$this->fulltextSearchSupported() ) {
 			return;
 		}
-		// @todo: find a method to do it in a single request,
+		// @todo find a method to do it in a single request,
 		// couldn't do it so far due to typelessness of FTS3 tables.
 		$dbw = wfGetDB( DB_MASTER );
 
 		$dbw->delete( 'searchindex', array( 'rowid' => $id ), __METHOD__ );
-		
+
 		$dbw->insert( 'searchindex',
 			array(
 				'rowid' => $id,
@@ -316,7 +319,7 @@ class SearchSqlite extends SearchEngine {
 	 * @param $id Integer
 	 * @param $title String
 	 */
-    function updateTitle( $id, $title ) {
+	function updateTitle( $id, $title ) {
 		if ( !$this->fulltextSearchSupported() ) {
 			return;
 		}
@@ -324,7 +327,7 @@ class SearchSqlite extends SearchEngine {
 
 		$dbw->update( 'searchindex',
 			array( 'si_title' => $title ),
-			array( 'rowid'  => $id ),
+			array( 'rowid' => $id ),
 			__METHOD__ );
 	}
 }
@@ -333,7 +336,7 @@ class SearchSqlite extends SearchEngine {
  * @ingroup Search
  */
 class SqliteSearchResultSet extends SqlSearchResultSet {
-	function SqliteSearchResultSet( $resultSet, $terms, $totalHits=null ) {
+	function __construct( $resultSet, $terms, $totalHits = null ) {
 		parent::__construct( $resultSet, $terms );
 		$this->mTotalHits = $totalHits;
 	}

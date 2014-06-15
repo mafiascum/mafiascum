@@ -18,11 +18,17 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  * http://www.gnu.org/copyleft/gpl.html
  *
+ * @file
  * @ingroup Maintenance
  */
 
-require_once( dirname(__FILE__) . '/Maintenance.php' );
+require_once __DIR__ . '/Maintenance.php';
 
+/**
+ * Maintenance script that manually runs an SQL patch outside of the general updaters.
+ *
+ * @ingroup Maintenance
+ */
 class PatchSql extends Maintenance {
 	public function __construct() {
 		parent::__construct();
@@ -36,14 +42,14 @@ class PatchSql extends Maintenance {
 
 	public function execute() {
 		$dbw = wfGetDB( DB_MASTER );
-		foreach( $this->mArgs as $arg ) {
+		foreach ( $this->mArgs as $arg ) {
 			$files = array(
 				$arg,
-				DatabaseBase::patchPath( $arg ),
-				DatabaseBase::patchPath( "patch-$arg.sql" ),
+				$dbw->patchPath( $arg ),
+				$dbw->patchPath( "patch-$arg.sql" ),
 			);
-			foreach( $files as $file ) {
-				if( file_exists( $file ) ) {
+			foreach ( $files as $file ) {
+				if ( file_exists( $file ) ) {
 					$this->output( "$file ...\n" );
 					$dbw->sourceFile( $file );
 					continue 2;
@@ -56,4 +62,4 @@ class PatchSql extends Maintenance {
 }
 
 $maintClass = "PatchSql";
-require_once( DO_MAINTENANCE );
+require_once RUN_MAINTENANCE_IF_MAIN;

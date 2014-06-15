@@ -1,11 +1,10 @@
 <?php
-
-/*
+/**
+ *
+ *
  * Created on Sep 19, 2006
  *
- * API for MediaWiki 1.8+
- *
- * Copyright (C) 2006 Yuri Astrakhan <Firstname><Lastname>@gmail.com
+ * Copyright © 2006 Yuri Astrakhan "<Firstname><Lastname>@gmail.com"
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,27 +18,22 @@
  *
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, write to the Free Software Foundation, Inc.,
- * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  * http://www.gnu.org/copyleft/gpl.html
+ *
+ * @file
  */
 
-if ( !defined( 'MEDIAWIKI' ) ) {
-	// Eclipse helper - will be ignored in production
-	require_once ( 'ApiFormatBase.php' );
-}
-
 /**
+ * API XML output formatter
  * @ingroup API
  */
 class ApiFormatXml extends ApiFormatBase {
 
 	private $mRootElemName = 'api';
-	private $mDoubleQuote = false;
+	public static $namespace = 'http://www.mediawiki.org/xml/api/';
+	private $mIncludeNamespace = false;
 	private $mXslt = null;
-
-	public function __construct( $main, $format ) {
-		parent :: __construct( $main, $format );
-	}
 
 	public function getMimeType() {
 		return 'text/xml';
@@ -55,110 +49,153 @@ class ApiFormatXml extends ApiFormatBase {
 
 	public function execute() {
 		$params = $this->extractRequestParams();
-		$this->mDoubleQuote = $params['xmldoublequote'];
+		$this->mIncludeNamespace = $params['includexmlnamespace'];
 		$this->mXslt = $params['xslt'];
 
 		$this->printText( '<?xml version="1.0"?>' );
-		if ( !is_null( $this->mXslt ) )
+		if ( !is_null( $this->mXslt ) ) {
 			$this->addXslt();
-		$this->printText( self::recXmlPrint( $this->mRootElemName,
-				$this->getResultData(),
-				$this->getIsHtml() ? - 2 : null,
-				$this->mDoubleQuote ) );
+		}
+		if ( $this->mIncludeNamespace ) {
+			// If the result data already contains an 'xmlns' namespace added
+			// for custom XML output types, it will override the one for the
+			// generic API results.
+			// This allows API output of other XML types like Atom, RSS, RSD.
+			$data = $this->getResultData() + array( 'xmlns' => self::$namespace );
+		} else {
+			$data = $this->getResultData();
+		}
+
+		$this->printText(
+			self::recXmlPrint( $this->mRootElemName,
+				$data,
+				$this->getIsHtml() ? - 2 : null
+			)
+		);
 	}
 
 	/**
-	* This method takes an array and converts it to XML.
-	* There are several noteworthy cases:
-	*
-	*  If array contains a key '_element', then the code assumes that ALL other keys are not important and replaces them with the value['_element'].
-	*	Example:	name='root',  value = array( '_element'=>'page', 'x', 'y', 'z') creates <root>  <page>x</page>  <page>y</page>  <page>z</page> </root>
-	*
-	*  If any of the array's element key is '*', then the code treats all other key->value pairs as attributes, and the value['*'] as the element's content.
-	*	Example:	name='root',  value = array( '*'=>'text', 'lang'=>'en', 'id'=>10)   creates  <root lang='en' id='10'>text</root>
-	*
-	* If neither key is found, all keys become element names, and values become element content.
-	* The method is recursive, so the same rules apply to any sub-arrays.
-	*/
-	public static function recXmlPrint( $elemName, $elemValue, $indent, $doublequote = false ) {
+	 * This method takes an array and converts it to XML.
+	 *
+	 * There are several noteworthy cases:
+	 *
+	 * If array contains a key '_element', then the code assumes that ALL
+	 * other keys are not important and replaces them with the
+	 * value['_element'].
+	 *
+	 * @par Example:
+	 * @verbatim
+	 * name='root', value = array( '_element'=>'page', 'x', 'y', 'z')
+	 * @endverbatim
+	 * creates:
+	 * @verbatim
+	 * <root>  <page>x</page>  <page>y</page>  <page>z</page> </root>
+	 * @endverbatim
+	 *
+	 * If any of the array's element key is '*', then the code treats all
+	 * other key->value pairs as attributes, and the value['*'] as the
+	 * element's content.
+	 *
+	 * @par Example:
+	 * @verbatim
+	 * name='root', value = array( '*'=>'text', 'lang'=>'en', 'id'=>10)
+	 * @endverbatim
+	 * creates:
+	 * @verbatim
+	 * <root lang='en' id='10'>text</root>
+	 * @endverbatim
+	 *
+	 * Finally neither key is found, all keys become element names, and values
+	 * become element content.
+	 *
+	 * @note The method is recursive, so the same rules apply to any
+	 * sub-arrays.
+	 *
+	 * @param $elemName
+	 * @param $elemValue
+	 * @param $indent
+	 *
+	 * @return string
+	 */
+	public static function recXmlPrint( $elemName, $elemValue, $indent ) {
 		$retval = '';
 		if ( !is_null( $indent ) ) {
 			$indent += 2;
-			$indstr = "\n" . str_repeat( " ", $indent );
+			$indstr = "\n" . str_repeat( ' ', $indent );
 		} else {
 			$indstr = '';
 		}
 		$elemName = str_replace( ' ', '_', $elemName );
 
-		switch ( gettype( $elemValue ) ) {
-			case 'array' :
-				if ( isset ( $elemValue['*'] ) ) {
-					$subElemContent = $elemValue['*'];
-					if ( $doublequote )
-						$subElemContent = Sanitizer::encodeAttribute( $subElemContent );
-					unset ( $elemValue['*'] );
-					
-					// Add xml:space="preserve" to the
-					// element so XML parsers will leave
-					// whitespace in the content alone
-					$elemValue['xml:space'] = 'preserve';
-				} else {
-					$subElemContent = null;
+		if ( is_array( $elemValue ) ) {
+			if ( isset( $elemValue['*'] ) ) {
+				$subElemContent = $elemValue['*'];
+				unset( $elemValue['*'] );
+
+				// Add xml:space="preserve" to the
+				// element so XML parsers will leave
+				// whitespace in the content alone
+				$elemValue['xml:space'] = 'preserve';
+			} else {
+				$subElemContent = null;
+			}
+
+			if ( isset( $elemValue['_element'] ) ) {
+				$subElemIndName = $elemValue['_element'];
+				unset( $elemValue['_element'] );
+			} else {
+				$subElemIndName = null;
+			}
+
+			$indElements = array();
+			$subElements = array();
+			foreach ( $elemValue as $subElemId => & $subElemValue ) {
+				if ( is_int( $subElemId ) ) {
+					$indElements[] = $subElemValue;
+					unset( $elemValue[$subElemId] );
+				} elseif ( is_array( $subElemValue ) ) {
+					$subElements[$subElemId] = $subElemValue;
+					unset( $elemValue[$subElemId] );
+				}
+			}
+
+			if ( is_null( $subElemIndName ) && count( $indElements ) ) {
+				ApiBase::dieDebug( __METHOD__, "($elemName, ...) has integer keys without _element value. Use ApiResult::setIndexedTagName()." );
+			}
+
+			if ( count( $subElements ) && count( $indElements ) && !is_null( $subElemContent ) ) {
+				ApiBase::dieDebug( __METHOD__, "($elemName, ...) has content and subelements" );
+			}
+
+			if ( !is_null( $subElemContent ) ) {
+				$retval .= $indstr . Xml::element( $elemName, $elemValue, $subElemContent );
+			} elseif ( !count( $indElements ) && !count( $subElements ) ) {
+				$retval .= $indstr . Xml::element( $elemName, $elemValue );
+			} else {
+				$retval .= $indstr . Xml::element( $elemName, $elemValue, null );
+
+				foreach ( $subElements as $subElemId => & $subElemValue ) {
+					$retval .= self::recXmlPrint( $subElemId, $subElemValue, $indent );
 				}
 
-				if ( isset ( $elemValue['_element'] ) ) {
-					$subElemIndName = $elemValue['_element'];
-					unset ( $elemValue['_element'] );
-				} else {
-					$subElemIndName = null;
+				foreach ( $indElements as &$subElemValue ) {
+					$retval .= self::recXmlPrint( $subElemIndName, $subElemValue, $indent );
 				}
 
-				$indElements = array ();
-				$subElements = array ();
-				foreach ( $elemValue as $subElemId => & $subElemValue ) {
-					if ( is_string( $subElemValue ) && $doublequote )
-						$subElemValue = Sanitizer::encodeAttribute( $subElemValue );
-					
-					if ( gettype( $subElemId ) === 'integer' ) {
-						$indElements[] = $subElemValue;
-						unset ( $elemValue[$subElemId] );
-					} elseif ( is_array( $subElemValue ) ) {
-						$subElements[$subElemId] = $subElemValue;
-						unset ( $elemValue[$subElemId] );
-					}
-				}
-
-				if ( is_null( $subElemIndName ) && count( $indElements ) )
-					ApiBase :: dieDebug( __METHOD__, "($elemName, ...) has integer keys without _element value. Use ApiResult::setIndexedTagName()." );
-
-				if ( count( $subElements ) && count( $indElements ) && !is_null( $subElemContent ) )
-					ApiBase :: dieDebug( __METHOD__, "($elemName, ...) has content and subelements" );
-
-				if ( !is_null( $subElemContent ) ) {
-					$retval .= $indstr . Xml::element( $elemName, $elemValue, $subElemContent );
-				} elseif ( !count( $indElements ) && !count( $subElements ) ) {
-						$retval .= $indstr . Xml::element( $elemName, $elemValue );
-				} else {
-					$retval .= $indstr . Xml::element( $elemName, $elemValue, null );
-
-					foreach ( $subElements as $subElemId => & $subElemValue )
-						$retval .= self::recXmlPrint( $subElemId, $subElemValue, $indent );
-
-					foreach ( $indElements as $subElemId => & $subElemValue )
-						$retval .= self::recXmlPrint( $subElemIndName, $subElemValue, $indent );
-
-					$retval .= $indstr . Xml::closeElement( $elemName );
-				}
-				break;
-			case 'object' :
-				// ignore
-				break;
-			default :
+				$retval .= $indstr . Xml::closeElement( $elemName );
+			}
+		} elseif ( !is_object( $elemValue ) ) {
+			// to make sure null value doesn't produce unclosed element,
+			// which is what Xml::element( $elemName, null, null ) returns
+			if ( $elemValue === null ) {
+				$retval .= $indstr . Xml::element( $elemName );
+			} else {
 				$retval .= $indstr . Xml::element( $elemName, null, $elemValue );
-				break;
+			}
 		}
 		return $retval;
 	}
+
 	function addXslt() {
 		$nt = Title::newFromText( $this->mXslt );
 		if ( is_null( $nt ) || !$nt->exists() ) {
@@ -173,28 +210,25 @@ class ApiFormatXml extends ApiFormatBase {
 			$this->setWarning( 'Stylesheet should have .xsl extension.' );
 			return;
 		}
-		$this->printText( '<?xml-stylesheet href="' . $nt->escapeLocalURL( 'action=raw' ) . '" type="text/xsl" ?>' );
+		$this->printText( '<?xml-stylesheet href="' . htmlspecialchars( $nt->getLocalURL( 'action=raw' ) ) . '" type="text/xsl" ?>' );
 	}
-	
+
 	public function getAllowedParams() {
-		return array (
-			'xmldoublequote' => false,
+		return array(
 			'xslt' => null,
+			'includexmlnamespace' => false,
 		);
 	}
 
 	public function getParamDescription() {
-		return array (
-			'xmldoublequote' => 'If specified, double quotes all attributes and content.',
-			'xslt' => 'If specified, adds <xslt> as stylesheet',
+		return array(
+			'xslt' => 'If specified, adds <xslt> as stylesheet. This should be a wiki page '
+				. 'in the MediaWiki namespace whose page name ends with ".xsl"',
+			'includexmlnamespace' => 'If specified, adds an XML namespace'
 		);
 	}
 
 	public function getDescription() {
-		return 'Output data in XML format' . parent :: getDescription();
-	}
-
-	public function getVersion() {
-		return __CLASS__ . ': $Id: ApiFormatXml.php 62402 2010-02-13 00:09:05Z reedy $';
+		return 'Output data in XML format' . parent::getDescription();
 	}
 }

@@ -1,5 +1,7 @@
 <?php
 /**
+ * Check digit transformation
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -15,20 +17,26 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  * http://www.gnu.org/copyleft/gpl.html
  *
+ * @file
  * @ingroup MaintenanceLanguage
  */
 
-require_once( dirname(__FILE__).'/../Maintenance.php' );
+require_once __DIR__ . '/../Maintenance.php';
 
+/**
+ * Maintenance script that check digit transformation.
+ *
+ * @ingroup MaintenanceLanguage
+ */
 class Digit2Html extends Maintenance {
 
 	# A list of unicode numerals is available at:
 	# http://www.fileformat.info/info/unicode/category/Nd/list.htm
-	private $mLangs = array( 
-		'Ar', 'As', 'Bh', 'Bo', 'Dz', 
-		'Fa', 'Gu', 'Hi', 'Km', 'Kn', 
-		'Ks', 'Lo', 'Ml', 'Mr', 'Ne', 
-		'New', 'Or', 'Pa', 'Pi', 'Sa' 
+	private $mLangs = array(
+		'Ar', 'As', 'Bh', 'Bo', 'Dz',
+		'Fa', 'Gu', 'Hi', 'Km', 'Kn',
+		'Ks', 'Lo', 'Ml', 'Mr', 'Ne',
+		'New', 'Or', 'Pa', 'Pi', 'Sa'
 	);
 
 	public function __construct() {
@@ -37,18 +45,18 @@ class Digit2Html extends Maintenance {
 	}
 
 	public function execute() {
-		foreach( $this->mLangs as $code ) {
+		foreach ( $this->mLangs as $code ) {
 			$filename = Language::getMessagesFileName( $code );
 			$this->output( "Loading language [$code] ... " );
 			unset( $digitTransformTable );
-			require_once( $filename );
-			if( !isset( $digitTransformTable ) ) {
+			require_once $filename;
+			if ( !isset( $digitTransformTable ) ) {
 				$this->error( "\$digitTransformTable not found for lang: $code" );
 				continue;
 			}
 
 			$this->output( "OK\n\$digitTransformTable = array(\n" );
-			foreach( $digitTransformTable as $latin => $translation ) {
+			foreach ( $digitTransformTable as $latin => $translation ) {
 				$htmlent = utf8ToHexSequence( $translation );
 				$this->output( "'$latin' => '$translation', # &#x$htmlent;\n" );
 			}
@@ -58,4 +66,4 @@ class Digit2Html extends Maintenance {
 }
 
 $maintClass = "Digit2Html";
-require_once( DO_MAINTENANCE );
+require_once RUN_MAINTENANCE_IF_MAIN;

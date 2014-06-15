@@ -1,5 +1,22 @@
 <?php
 /**
+ * Implements Special:Unusedcategories
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ * http://www.gnu.org/copyleft/gpl.html
+ *
  * @file
  * @ingroup SpecialPage
  */
@@ -9,38 +26,51 @@
  */
 class UnusedCategoriesPage extends QueryPage {
 
-	function isExpensive() { return true; }
+	function isExpensive() {
+		return true;
+	}
 
-	function getName() {
-		return 'Unusedcategories';
+	function __construct( $name = 'Unusedcategories' ) {
+		parent::__construct( $name );
 	}
 
 	function getPageHeader() {
-		return wfMsgExt( 'unusedcategoriestext', array( 'parse' ) );
+		return $this->msg( 'unusedcategoriestext' )->parseAsBlock();
 	}
 
-	function getSQL() {
-		$NScat = NS_CATEGORY;
-		$dbr = wfGetDB( DB_SLAVE );
-		list( $categorylinks, $page ) = $dbr->tableNamesN( 'categorylinks', 'page' );
-		return "SELECT 'Unusedcategories' as type,
-				{$NScat} as namespace, page_title as title, page_title as value
-				FROM $page
-				LEFT JOIN $categorylinks ON page_title=cl_to
-				WHERE cl_from IS NULL
-				AND page_namespace = {$NScat}
-				AND page_is_redirect = 0";
+	function getQueryInfo() {
+		return array(
+			'tables' => array( 'page', 'categorylinks' ),
+			'fields' => array( 'namespace' => 'page_namespace',
+					'title' => 'page_title',
+					'value' => 'page_title' ),
+			'conds' => array( 'cl_from IS NULL',
+					'page_namespace' => NS_CATEGORY,
+					'page_is_redirect' => 0 ),
+			'join_conds' => array( 'categorylinks' => array(
+					'LEFT JOIN', 'cl_to = page_title' ) )
+		);
 	}
 
+	/**
+	 * A should come before Z (bug 30907)
+	 * @return bool
+	 */
+	function sortDescending() {
+		return false;
+	}
+
+	/**
+	 * @param Skin $skin
+	 * @param object $result Result row
+	 * @return string
+	 */
 	function formatResult( $skin, $result ) {
 		$title = Title::makeTitle( NS_CATEGORY, $result->title );
-		return $skin->link( $title, $title->getText() );
+		return Linker::link( $title, htmlspecialchars( $title->getText() ) );
 	}
-}
 
-/** constructor */
-function wfSpecialUnusedCategories() {
-	list( $limit, $offset ) = wfCheckLimits();
-	$uc = new UnusedCategoriesPage();
-	return $uc->doQuery( $offset, $limit );
+	protected function getGroupName() {
+		return 'maintenance';
+	}
 }

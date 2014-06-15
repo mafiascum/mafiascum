@@ -1,10 +1,25 @@
 <?php
 /**
- * This script is the SQLite database abstraction layer
- *
+ * This is the SQLite database abstraction layer.
  * See maintenance/sqlite/README for development notes and other specific information
- * @ingroup Database
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ * http://www.gnu.org/copyleft/gpl.html
+ *
  * @file
+ * @ingroup Database
  */
 
 /**
@@ -12,44 +27,74 @@
  */
 class DatabaseSqlite extends DatabaseBase {
 
+	private static $fulltextEnabled = null;
+
 	var $mAffectedRows;
 	var $mLastResult;
 	var $mDatabaseFile;
 	var $mName;
 
 	/**
+	 * @var PDO
+	 */
+	protected $mConn;
+
+	/**
 	 * Constructor.
 	 * Parameters $server, $user and $password are not used.
+	 * @param $server string
+	 * @param $user string
+	 * @param $password string
+	 * @param $dbName string
+	 * @param $flags int
 	 */
-	function __construct( $server = false, $user = false, $password = false, $dbName = false, $failFunction = false, $flags = 0 ) {
-		$this->mFailFunction = $failFunction;
-		$this->mFlags = $flags;
+	function __construct( $server = false, $user = false, $password = false, $dbName = false, $flags = 0 ) {
 		$this->mName = $dbName;
-		$this->open( $server, $user, $password, $dbName );
+		parent::__construct( $server, $user, $password, $dbName, $flags );
+		// parent doesn't open when $user is false, but we can work with $dbName
+		if ( $dbName && !$this->isOpen() ) {
+			global $wgSharedDB;
+			if ( $this->open( $server, $user, $password, $dbName ) && $wgSharedDB ) {
+				$this->attachDatabase( $wgSharedDB );
+			}
+		}
 	}
 
+	/**
+	 * @return string
+	 */
 	function getType() {
 		return 'sqlite';
 	}
 
 	/**
-	 * @todo: check if it should be true like parent class
+	 * @todo Check if it should be true like parent class
+	 *
+	 * @return bool
 	 */
-	function implicitGroupby()   { return false; }
-
-	static function newFromParams( $server, $user, $password, $dbName, $failFunction = false, $flags = 0 ) {
-		return new DatabaseSqlite( $server, $user, $password, $dbName, $failFunction, $flags );
+	function implicitGroupby() {
+		return false;
 	}
 
 	/** Open an SQLite database and return a resource handle to it
 	 *  NOTE: only $dbName is used, the other parameters are irrelevant for SQLite databases
+	 *
+	 * @param string $server
+	 * @param string $user
+	 * @param string $pass
+	 * @param string $dbName
+	 *
+	 * @throws DBConnectionError
+	 * @return PDO
 	 */
 	function open( $server, $user, $pass, $dbName ) {
 		global $wgSQLiteDataDir;
 
+		$this->close();
 		$fileName = self::generateFileName( $wgSQLiteDataDir, $dbName );
 		if ( !is_readable( $fileName ) ) {
-			throw new DBConnectionError( $this, "SQLite database not accessible" );		$this->mConn = false;
+			$this->mConn = false;
+			throw new DBConnectionError( $this, "SQLite database not accessible" );
 		}
 		$this->openFile( $fileName );
 		return $this->mConn;
@@ -57,7 +102,11 @@ class DatabaseSqlite extends DatabaseBase {
 
 	/**
 	 * Opens a database file
-	 * @return SQL connection or false if failed
+	 *
+	 * @param $fileName string
+	 *
+	 * @throws DBConnectionError
+	 * @return PDO|bool SQL connection or false if failed
 	 */
 	function openFile( $fileName ) {
 		$this->mDatabaseFile = $fileName;
@@ -71,39 +120,33 @@ class DatabaseSqlite extends DatabaseBase {
 		} catch ( PDOException $e ) {
 			$err = $e->getMessage();
 		}
-		if ( $this->mConn === false ) {
+		if ( !$this->mConn ) {
 			wfDebug( "DB connection error: $err\n" );
-			if ( !$this->mFailFunction ) {
-				throw new DBConnectionError( $this, $err );
-			} else {
-				return false;
-			}
-
+			throw new DBConnectionError( $this, $err );
 		}
 		$this->mOpened = !!$this->mConn;
 		# set error codes only, don't raise exceptions
 		if ( $this->mOpened ) {
 			$this->mConn->setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT );
+			# Enforce LIKE to be case sensitive, just like MySQL
+			$this->query( 'PRAGMA case_sensitive_like = 1' );
 			return true;
 		}
 	}
 
 	/**
-	 * Close an SQLite database
+	 * Does not actually close the connection, just destroys the reference for GC to do its work
+	 * @return bool
 	 */
-	function close() {
-		$this->mOpened = false;
-		if ( is_object( $this->mConn ) ) {
-			if ( $this->trxLevel() ) $this->commit();
-			$this->mConn = null;
-		}
+	protected function closeConnection() {
+		$this->mConn = null;
 		return true;
 	}
 
 	/**
 	 * Generates a database file name. Explicitly public for installer.
-	 * @param $dir String: Directory where database resides
-	 * @param $dbName String: Database name
+	 * @param string $dir Directory where database resides
+	 * @param string $dbName Database name
 	 * @return String
 	 */
 	public static function generateFileName( $dir, $dbName ) {
@@ -111,23 +154,81 @@ class DatabaseSqlite extends DatabaseBase {
 	}
 
 	/**
+	 * Check if the searchindext table is FTS enabled.
+	 * @return bool False if not enabled.
+	 */
+	function checkForEnabledSearch() {
+		if ( self::$fulltextEnabled === null ) {
+			self::$fulltextEnabled = false;
+			$table = $this->tableName( 'searchindex' );
+			$res = $this->query( "SELECT sql FROM sqlite_master WHERE tbl_name = '$table'", __METHOD__ );
+			if ( $res ) {
+				$row = $res->fetchRow();
+				self::$fulltextEnabled = stristr( $row['sql'], 'fts' ) !== false;
+			}
+		}
+		return self::$fulltextEnabled;
+	}
+
+	/**
 	 * Returns version of currently supported SQLite fulltext search module or false if none present.
 	 * @return String
 	 */
-	function getFulltextSearchModule() {
-		$table = 'dummy_search_test';
-		$this->query( "DROP TABLE IF EXISTS $table", __METHOD__ );
-		if ( $this->query( "CREATE VIRTUAL TABLE $table USING FTS3(dummy_field)", __METHOD__, true ) ) {
-			$this->query( "DROP TABLE IF EXISTS $table", __METHOD__ );
-			return 'FTS3';
+	static function getFulltextSearchModule() {
+		static $cachedResult = null;
+		if ( $cachedResult !== null ) {
+			return $cachedResult;
 		}
-		return false;
+		$cachedResult = false;
+		$table = 'dummy_search_test';
+
+		$db = new DatabaseSqliteStandalone( ':memory:' );
+
+		if ( $db->query( "CREATE VIRTUAL TABLE $table USING FTS3(dummy_field)", __METHOD__, true ) ) {
+			$cachedResult = 'FTS3';
+		}
+		$db->close();
+		return $cachedResult;
+	}
+
+	/**
+	 * Attaches external database to our connection, see http://sqlite.org/lang_attach.html
+	 * for details.
+	 *
+	 * @param string $name database name to be used in queries like SELECT foo FROM dbname.table
+	 * @param string $file database file name. If omitted, will be generated using $name and $wgSQLiteDataDir
+	 * @param string $fname calling function name
+	 *
+	 * @return ResultWrapper
+	 */
+	function attachDatabase( $name, $file = false, $fname = __METHOD__ ) {
+		global $wgSQLiteDataDir;
+		if ( !$file ) {
+			$file = self::generateFileName( $wgSQLiteDataDir, $name );
+		}
+		$file = $this->addQuotes( $file );
+		return $this->query( "ATTACH DATABASE $file AS $name", $fname );
+	}
+
+	/**
+	 * @see DatabaseBase::isWriteQuery()
+	 *
+	 * @param $sql string
+	 *
+	 * @return bool
+	 */
+	function isWriteQuery( $sql ) {
+		return parent::isWriteQuery( $sql ) && !preg_match( '/^ATTACH\b/i', $sql );
 	}
 
 	/**
 	 * SQLite doesn't allow buffered results or data seeking etc, so we'll use fetchAll as the result
+	 *
+	 * @param $sql string
+	 *
+	 * @return ResultWrapper
 	 */
-	function doQuery( $sql ) {
+	protected function doQuery( $sql ) {
 		$res = $this->mConn->query( $sql );
 		if ( $res === false ) {
 			return false;
@@ -139,38 +240,53 @@ class DatabaseSqlite extends DatabaseBase {
 		return $res;
 	}
 
+	/**
+	 * @param $res ResultWrapper
+	 */
 	function freeResult( $res ) {
-		if ( $res instanceof ResultWrapper )
+		if ( $res instanceof ResultWrapper ) {
 			$res->result = null;
-		else
+		} else {
 			$res = null;
+		}
 	}
 
+	/**
+	 * @param $res ResultWrapper
+	 * @return object|bool
+	 */
 	function fetchObject( $res ) {
-		if ( $res instanceof ResultWrapper )
+		if ( $res instanceof ResultWrapper ) {
 			$r =& $res->result;
-		else
+		} else {
 			$r =& $res;
+		}
 
 		$cur = current( $r );
 		if ( is_array( $cur ) ) {
 			next( $r );
 			$obj = new stdClass;
-			foreach ( $cur as $k => $v )
-				if ( !is_numeric( $k ) )
+			foreach ( $cur as $k => $v ) {
+				if ( !is_numeric( $k ) ) {
 					$obj->$k = $v;
+				}
+			}
 
 			return $obj;
 		}
 		return false;
 	}
 
+	/**
+	 * @param $res ResultWrapper
+	 * @return array|bool
+	 */
 	function fetchRow( $res ) {
-		if ( $res instanceof ResultWrapper )
+		if ( $res instanceof ResultWrapper ) {
 			$r =& $res->result;
-		else
+		} else {
 			$r =& $res;
-
+		}
 		$cur = current( $r );
 		if ( is_array( $cur ) ) {
 			next( $r );
@@ -181,35 +297,60 @@ class DatabaseSqlite extends DatabaseBase {
 
 	/**
 	 * The PDO::Statement class implements the array interface so count() will work
+	 *
+	 * @param $res ResultWrapper
+	 *
+	 * @return int
 	 */
 	function numRows( $res ) {
 		$r = $res instanceof ResultWrapper ? $res->result : $res;
 		return count( $r );
 	}
 
+	/**
+	 * @param $res ResultWrapper
+	 * @return int
+	 */
 	function numFields( $res ) {
 		$r = $res instanceof ResultWrapper ? $res->result : $res;
 		return is_array( $r ) ? count( $r[0] ) : 0;
 	}
 
+	/**
+	 * @param $res ResultWrapper
+	 * @param $n
+	 * @return bool
+	 */
 	function fieldName( $res, $n ) {
 		$r = $res instanceof ResultWrapper ? $res->result : $res;
 		if ( is_array( $r ) ) {
 			$keys = array_keys( $r[0] );
 			return $keys[$n];
 		}
-		return  false;
+		return false;
 	}
 
 	/**
 	 * Use MySQL's naming (accounts for prefix etc) but remove surrounding backticks
+	 *
+	 * @param $name
+	 * @param $format String
+	 * @return string
 	 */
-	function tableName( $name ) {
-		return str_replace( '`', '', parent::tableName( $name ) );
+	function tableName( $name, $format = 'quoted' ) {
+		// table names starting with sqlite_ are reserved
+		if ( strpos( $name, 'sqlite_' ) === 0 ) {
+			return $name;
+		}
+		return str_replace( '"', '', parent::tableName( $name, $format ) );
 	}
 
 	/**
 	 * Index names have DB scope
+	 *
+	 * @param $index string
+	 *
+	 * @return string
 	 */
 	function indexName( $index ) {
 		return $index;
@@ -217,29 +358,46 @@ class DatabaseSqlite extends DatabaseBase {
 
 	/**
 	 * This must be called after nextSequenceVal
+	 *
+	 * @return int
 	 */
 	function insertId() {
-		return $this->mConn->lastInsertId();
+		// PDO::lastInsertId yields a string :(
+		return intval( $this->mConn->lastInsertId() );
 	}
 
+	/**
+	 * @param $res ResultWrapper
+	 * @param $row
+	 */
 	function dataSeek( $res, $row ) {
-		if ( $res instanceof ResultWrapper )
+		if ( $res instanceof ResultWrapper ) {
 			$r =& $res->result;
-		else
+		} else {
 			$r =& $res;
+		}
 		reset( $r );
-		if ( $row > 0 )
-			for ( $i = 0; $i < $row; $i++ )
+		if ( $row > 0 ) {
+			for ( $i = 0; $i < $row; $i++ ) {
 				next( $r );
+			}
+		}
 	}
 
+	/**
+	 * @return string
+	 */
 	function lastError() {
-		if ( !is_object( $this->mConn ) )
+		if ( !is_object( $this->mConn ) ) {
 			return "Cannot return last error, no db connection";
+		}
 		$e = $this->mConn->errorInfo();
 		return isset( $e[2] ) ? $e[2] : '';
 	}
 
+	/**
+	 * @return string
+	 */
 	function lastErrno() {
 		if ( !is_object( $this->mConn ) ) {
 			return "Cannot return last error, no db connection";
@@ -249,6 +407,9 @@ class DatabaseSqlite extends DatabaseBase {
 		}
 	}
 
+	/**
+	 * @return int
+	 */
 	function affectedRows() {
 		return $this->mAffectedRows;
 	}
@@ -257,8 +418,10 @@ class DatabaseSqlite extends DatabaseBase {
 	 * Returns information about an index
 	 * Returns false if the index does not exist
 	 * - if errors are explicitly ignored, returns NULL on failure
+	 *
+	 * @return array
 	 */
-	function indexInfo( $table, $index, $fname = 'DatabaseSqlite::indexExists' ) {
+	function indexInfo( $table, $index, $fname = __METHOD__ ) {
 		$sql = 'PRAGMA index_info(' . $this->addQuotes( $this->indexName( $index ) ) . ')';
 		$res = $this->query( $sql, $fname );
 		if ( !$res ) {
@@ -274,7 +437,13 @@ class DatabaseSqlite extends DatabaseBase {
 		return $info;
 	}
 
-	function indexUnique( $table, $index, $fname = 'DatabaseSqlite::indexUnique' ) {
+	/**
+	 * @param $table
+	 * @param $index
+	 * @param $fname string
+	 * @return bool|null
+	 */
+	function indexUnique( $table, $index, $fname = __METHOD__ ) {
 		$row = $this->selectRow( 'sqlite_master', '*',
 			array(
 				'type' => 'index',
@@ -296,32 +465,69 @@ class DatabaseSqlite extends DatabaseBase {
 
 	/**
 	 * Filter the options used in SELECT statements
+	 *
+	 * @param $options array
+	 *
+	 * @return array
 	 */
 	function makeSelectOptions( $options ) {
-		foreach ( $options as $k => $v )
-			if ( is_numeric( $k ) && $v == 'FOR UPDATE' )
+		foreach ( $options as $k => $v ) {
+			if ( is_numeric( $k ) && ( $v == 'FOR UPDATE' || $v == 'LOCK IN SHARE MODE' ) ) {
 				$options[$k] = '';
+			}
+		}
 		return parent::makeSelectOptions( $options );
 	}
 
 	/**
-	 * Based on generic method (parent) with some prior SQLite-sepcific adjustments
+	 * @param $options array
+	 * @return string
 	 */
-	function insert( $table, $a, $fname = 'DatabaseSqlite::insert', $options = array() ) {
-		if ( !count( $a ) ) return true;
-		if ( !is_array( $options ) ) $options = array( $options );
+	function makeUpdateOptions( $options ) {
+		$options = self::fixIgnore( $options );
+		return parent::makeUpdateOptions( $options );
+	}
 
+	/**
+	 * @param $options array
+	 * @return array
+	 */
+	static function fixIgnore( $options ) {
 		# SQLite uses OR IGNORE not just IGNORE
-		foreach ( $options as $k => $v )
-			if ( $v == 'IGNORE' )
+		foreach ( $options as $k => $v ) {
+			if ( $v == 'IGNORE' ) {
 				$options[$k] = 'OR IGNORE';
+			}
+		}
+		return $options;
+	}
+
+	/**
+	 * @param $options array
+	 * @return string
+	 */
+	function makeInsertOptions( $options ) {
+		$options = self::fixIgnore( $options );
+		return parent::makeInsertOptions( $options );
+	}
+
+	/**
+	 * Based on generic method (parent) with some prior SQLite-sepcific adjustments
+	 * @return bool
+	 */
+	function insert( $table, $a, $fname = __METHOD__, $options = array() ) {
+		if ( !count( $a ) ) {
+			return true;
+		}
 
 		# SQLite can't handle multi-row inserts, so divide up into multiple single-row inserts
 		if ( isset( $a[0] ) && is_array( $a[0] ) ) {
 			$ret = true;
-			foreach ( $a as $k => $v )
-				if ( !parent::insert( $table, $v, "$fname/multi-row", $options ) )
+			foreach ( $a as $v ) {
+				if ( !parent::insert( $table, $v, "$fname/multi-row", $options ) ) {
 					$ret = false;
+				}
+			}
 		} else {
 			$ret = parent::insert( $table, $a, "$fname/single-row", $options );
 		}
@@ -329,17 +535,28 @@ class DatabaseSqlite extends DatabaseBase {
 		return $ret;
 	}
 
-	function replace( $table, $uniqueIndexes, $rows, $fname = 'DatabaseSqlite::replace' ) {
-		if ( !count( $rows ) ) return true;
-	
+	/**
+	 * @param $table
+	 * @param $uniqueIndexes
+	 * @param $rows
+	 * @param $fname string
+	 * @return bool|ResultWrapper
+	 */
+	function replace( $table, $uniqueIndexes, $rows, $fname = __METHOD__ ) {
+		if ( !count( $rows ) ) {
+			return true;
+		}
+
 		# SQLite can't handle multi-row replaces, so divide up into multiple single-row queries
 		if ( isset( $rows[0] ) && is_array( $rows[0] ) ) {
 			$ret = true;
-			foreach ( $rows as $k => $v )
-				if ( !parent::replace( $table, $uniqueIndexes, $v, "$fname/multi-row" ) )
+			foreach ( $rows as $v ) {
+				if ( !$this->nativeReplace( $table, $v, "$fname/multi-row" ) ) {
 					$ret = false;
+				}
+			}
 		} else {
-			$ret = parent::replace( $table, $uniqueIndexes, $rows, "$fname/single-row" );
+			$ret = $this->nativeReplace( $table, $rows, "$fname/single-row" );
 		}
 
 		return $ret;
@@ -348,28 +565,47 @@ class DatabaseSqlite extends DatabaseBase {
 	/**
 	 * Returns the size of a text field, or -1 for "unlimited"
 	 * In SQLite this is SQLITE_MAX_LENGTH, by default 1GB. No way to query it though.
+	 *
+	 * @return int
 	 */
 	function textFieldSize( $table, $field ) {
-		return - 1;
+		return -1;
 	}
 
+	/**
+	 * @return bool
+	 */
 	function unionSupportsOrderAndLimit() {
 		return false;
 	}
 
+	/**
+	 * @param $sqls
+	 * @param $all
+	 * @return string
+	 */
 	function unionQueries( $sqls, $all ) {
 		$glue = $all ? ' UNION ALL ' : ' UNION ';
 		return implode( $glue, $sqls );
 	}
 
+	/**
+	 * @return bool
+	 */
 	function wasDeadlock() {
 		return $this->lastErrno() == 5; // SQLITE_BUSY
 	}
 
+	/**
+	 * @return bool
+	 */
 	function wasErrorReissuable() {
-		return $this->lastErrno() ==  17; // SQLITE_SCHEMA;
+		return $this->lastErrno() == 17; // SQLITE_SCHEMA;
 	}
 
+	/**
+	 * @return bool
+	 */
 	function wasReadOnlyError() {
 		return $this->lastErrno() == 8; // SQLITE_READONLY;
 	}
@@ -377,8 +613,8 @@ class DatabaseSqlite extends DatabaseBase {
 	/**
 	 * @return string wikitext of a link to the server software's web site
 	 */
-	function getSoftwareLink() {
-		return "[http://sqlite.org/ SQLite]";
+	public function getSoftwareLink() {
+		return "[{{int:version-db-sqlite-url}} SQLite]";
 	}
 
 	/**
@@ -390,16 +626,19 @@ class DatabaseSqlite extends DatabaseBase {
 	}
 
 	/**
-	 * Query whether a given column exists in the mediawiki schema
+	 * @return string User-friendly database information
 	 */
-	function fieldExists( $table, $field, $fname = '' ) {
-		$info = $this->fieldInfo( $table, $field );
-		return (bool)$info;
+	public function getServerInfo() {
+		return wfMessage( self::getFulltextSearchModule() ? 'sqlite-has-fts' : 'sqlite-no-fts', $this->getServerVersion() )->text();
 	}
 
 	/**
 	 * Get information about a given field
 	 * Returns false if the field does not exist.
+	 *
+	 * @param $table string
+	 * @param $field string
+	 * @return SQLiteField|bool False on failure
 	 */
 	function fieldInfo( $table, $field ) {
 		$tableName = $this->tableName( $table );
@@ -413,36 +652,58 @@ class DatabaseSqlite extends DatabaseBase {
 		return false;
 	}
 
-	function begin( $fname = '' ) {
-		if ( $this->mTrxLevel == 1 ) $this->commit();
-		$this->mConn->beginTransaction();
+	protected function doBegin( $fname = '' ) {
+		if ( $this->mTrxLevel == 1 ) {
+			$this->commit( __METHOD__ );
+		}
+		try {
+			$this->mConn->beginTransaction();
+		} catch ( PDOException $e ) {
+			throw new DBUnexpectedError( $this, 'Error in BEGIN query: ' . $e->getMessage() );
+		}
 		$this->mTrxLevel = 1;
 	}
 
-	function commit( $fname = '' ) {
-		if ( $this->mTrxLevel == 0 ) return;
-		$this->mConn->commit();
+	protected function doCommit( $fname = '' ) {
+		if ( $this->mTrxLevel == 0 ) {
+			return;
+		}
+		try {
+			$this->mConn->commit();
+		} catch ( PDOException $e ) {
+			throw new DBUnexpectedError( $this, 'Error in COMMIT query: ' . $e->getMessage() );
+		}
 		$this->mTrxLevel = 0;
 	}
 
-	function rollback( $fname = '' ) {
-		if ( $this->mTrxLevel == 0 ) return;
+	protected function doRollback( $fname = '' ) {
+		if ( $this->mTrxLevel == 0 ) {
+			return;
+		}
 		$this->mConn->rollBack();
 		$this->mTrxLevel = 0;
 	}
 
-	function limitResultForUpdate( $sql, $num ) {
-		return $this->limitResult( $sql, $num );
-	}
-
+	/**
+	 * @param $s string
+	 * @return string
+	 */
 	function strencode( $s ) {
 		return substr( $this->addQuotes( $s ), 1, - 1 );
 	}
 
+	/**
+	 * @param $b
+	 * @return Blob
+	 */
 	function encodeBlob( $b ) {
 		return new Blob( $b );
 	}
 
+	/**
+	 * @param $b Blob|string
+	 * @return string
+	 */
 	function decodeBlob( $b ) {
 		if ( $b instanceof Blob ) {
 			$b = $b->fetch();
@@ -450,18 +711,31 @@ class DatabaseSqlite extends DatabaseBase {
 		return $b;
 	}
 
+	/**
+	 * @param $s Blob|string
+	 * @return string
+	 */
 	function addQuotes( $s ) {
 		if ( $s instanceof Blob ) {
 			return "x'" . bin2hex( $s->fetch() ) . "'";
+		} elseif ( is_bool( $s ) ) {
+			return (int)$s;
+		} elseif ( strpos( $s, "\0" ) !== false ) {
+			// SQLite doesn't support \0 in strings, so use the hex representation as a workaround.
+			// This is a known limitation of SQLite's mprintf function which PDO should work around,
+			// but doesn't. I have reported this to php.net as bug #63419:
+			// https://bugs.php.net/bug.php?id=63419
+			// There was already a similar report for SQLite3::escapeString, bug #62361:
+			// https://bugs.php.net/bug.php?id=62361
+			return "x'" . bin2hex( $s ) . "'";
 		} else {
 			return $this->mConn->quote( $s );
 		}
 	}
 
-	function quote_ident( $s ) {
-		return $s;
-	}
-
+	/**
+	 * @return string
+	 */
 	function buildLike() {
 		$params = func_get_args();
 		if ( count( $params ) > 0 && is_array( $params[0] ) ) {
@@ -471,48 +745,15 @@ class DatabaseSqlite extends DatabaseBase {
 	}
 
 	/**
-	 * How lagged is this slave?
+	 * @return string
 	 */
-	public function getLag() {
-		return 0;
-	}
-
-	/**
-	 * Called by the installer script (when modified according to the MediaWikiLite installation instructions)
-	 * - this is the same way PostgreSQL works, MySQL reads in tables.sql and interwiki.sql using dbsource (which calls db->sourceFile)
-	 */
-	public function setup_database() {
-		global $IP;
-
-		# Process common MySQL/SQLite table definitions
-		$err = $this->sourceFile( "$IP/maintenance/tables.sql" );
-		if ( $err !== true ) {
-			echo " <b>FAILED</b></li>";
-			dieout( htmlspecialchars( $err ) );
-		}
-		echo " done.</li>";
-
-		# Use DatabasePostgres's code to populate interwiki from MySQL template
-		$f = fopen( "$IP/maintenance/interwiki.sql", 'r' );
-		if ( $f == false ) {
-			dieout( "Could not find the interwiki.sql file." );
-		}
-		
-		$sql = "INSERT INTO interwiki(iw_prefix,iw_url,iw_local) VALUES ";
-		while ( !feof( $f ) ) {
-			$line = fgets( $f, 1024 );
-			$matches = array();
-			if ( !preg_match( '/^\s*(\(.+?),(\d)\)/', $line, $matches ) ) continue;
-			$this->query( "$sql $matches[1],$matches[2])" );
-		}
-	}
-	
 	public function getSearchEngine() {
 		return "SearchSqlite";
 	}
 
 	/**
 	 * No-op version of deadlockLoop
+	 * @return mixed
 	 */
 	public function deadlockLoop( /*...*/ ) {
 		$args = func_get_args();
@@ -520,6 +761,10 @@ class DatabaseSqlite extends DatabaseBase {
 		return call_user_func_array( $function, $args );
 	}
 
+	/**
+	 * @param $s string
+	 * @return string
+	 */
 	protected function replaceVars( $s ) {
 		$s = parent::replaceVars( $s );
 		if ( preg_match( '/^\s*(CREATE|ALTER) TABLE/i', $s ) ) {
@@ -530,9 +775,11 @@ class DatabaseSqlite extends DatabaseBase {
 			// no such thing as unsigned
 			$s = preg_replace( '/\b(un)?signed\b/i', '', $s );
 			// INT -> INTEGER
-			$s = preg_replace( '/\b(tiny|small|medium|big|)int(\([\s\d]*\)|\b)/i', 'INTEGER', $s );
+			$s = preg_replace( '/\b(tiny|small|medium|big|)int(\s*\(\s*\d+\s*\)|\b)/i', 'INTEGER', $s );
+			// floating point types -> REAL
+			$s = preg_replace( '/\b(float|double(\s+precision)?)(\s*\(\s*\d+\s*(,\s*\d+\s*)?\)|\b)/i', 'REAL', $s );
 			// varchar -> TEXT
-			$s = preg_replace( '/\bvarchar\(\d+\)/i', 'TEXT', $s );
+			$s = preg_replace( '/\b(var)?char\s*\(.*?\)/i', 'TEXT', $s );
 			// TEXT normalization
 			$s = preg_replace( '/\b(tiny|medium|long)text\b/i', 'TEXT', $s );
 			// BLOB normalization
@@ -542,13 +789,15 @@ class DatabaseSqlite extends DatabaseBase {
 			// DATETIME -> TEXT
 			$s = preg_replace( '/\b(datetime|timestamp)\b/i', 'TEXT', $s );
 			// No ENUM type
-			$s = preg_replace( '/enum\([^)]*\)/i', 'BLOB', $s );
+			$s = preg_replace( '/\benum\s*\([^)]*\)/i', 'TEXT', $s );
 			// binary collation type -> nothing
 			$s = preg_replace( '/\bbinary\b/i', '', $s );
 			// auto_increment -> autoincrement
 			$s = preg_replace( '/\bauto_increment\b/i', 'AUTOINCREMENT', $s );
 			// No explicit options
 			$s = preg_replace( '/\)[^);]*(;?)\s*$/', ')\1', $s );
+			// AUTOINCREMENT should immedidately follow PRIMARY KEY
+			$s = preg_replace( '/primary key (.*?) autoincrement/i', 'PRIMARY KEY AUTOINCREMENT $1', $s );
 		} elseif ( preg_match( '/^\s*CREATE (\s*(?:UNIQUE|FULLTEXT)\s+)?INDEX/i', $s ) ) {
 			// No truncated indexes
 			$s = preg_replace( '/\(\d+\)/', '', $s );
@@ -558,22 +807,73 @@ class DatabaseSqlite extends DatabaseBase {
 		return $s;
 	}
 
-	/*
+	/**
 	 * Build a concatenation list to feed into a SQL query
+	 *
+	 * @param $stringList array
+	 *
+	 * @return string
 	 */
 	function buildConcat( $stringList ) {
 		return '(' . implode( ') || (', $stringList ) . ')';
 	}
 
-	function duplicateTableStructure( $oldName, $newName, $temporary = false, $fname = 'DatabaseSqlite::duplicateTableStructure' ) {
-		$res = $this->query( "SELECT sql FROM sqlite_master WHERE tbl_name='$oldName' AND type='table'", $fname );
+	/**
+	 * @throws MWException
+	 * @param $oldName
+	 * @param $newName
+	 * @param $temporary bool
+	 * @param $fname string
+	 * @return bool|ResultWrapper
+	 */
+	function duplicateTableStructure( $oldName, $newName, $temporary = false, $fname = __METHOD__ ) {
+		$res = $this->query( "SELECT sql FROM sqlite_master WHERE tbl_name=" . $this->addQuotes( $oldName ) . " AND type='table'", $fname );
 		$obj = $this->fetchObject( $res );
 		if ( !$obj ) {
 			throw new MWException( "Couldn't retrieve structure for table $oldName" );
 		}
 		$sql = $obj->sql;
-		$sql = preg_replace( '/\b' . preg_quote( $oldName ) . '\b/', $newName, $sql, 1 );
+		$sql = preg_replace( '/(?<=\W)"?' . preg_quote( trim( $this->addIdentifierQuotes( $oldName ), '"' ) ) . '"?(?=\W)/', $this->addIdentifierQuotes( $newName ), $sql, 1 );
+		if ( $temporary ) {
+			if ( preg_match( '/^\\s*CREATE\\s+VIRTUAL\\s+TABLE\b/i', $sql ) ) {
+				wfDebug( "Table $oldName is virtual, can't create a temporary duplicate.\n" );
+			} else {
+				$sql = str_replace( 'CREATE TABLE', 'CREATE TEMPORARY TABLE', $sql );
+			}
+		}
 		return $this->query( $sql, $fname );
+	}
+
+	/**
+	 * List all tables on the database
+	 *
+	 * @param string $prefix Only show tables with this prefix, e.g. mw_
+	 * @param string $fname calling function name
+	 *
+	 * @return array
+	 */
+	function listTables( $prefix = null, $fname = __METHOD__ ) {
+		$result = $this->select(
+			'sqlite_master',
+			'name',
+			"type='table'"
+		);
+
+		$endArray = array();
+
+		foreach ( $result as $table ) {
+			$vars = get_object_vars( $table );
+			$table = array_pop( $vars );
+
+			if ( !$prefix || strpos( $table, $prefix ) === 0 ) {
+				if ( strpos( $table, 'sqlite_' ) !== 0 ) {
+					$endArray[] = $table;
+				}
+
+			}
+		}
+
+		return $endArray;
 	}
 
 } // end DatabaseSqlite class
@@ -585,6 +885,7 @@ class DatabaseSqlite extends DatabaseBase {
 class DatabaseSqliteStandalone extends DatabaseSqlite {
 	public function __construct( $fileName, $flags = 0 ) {
 		$this->mFlags = $flags;
+		$this->tablePrefix( null );
 		$this->openFile( $fileName );
 	}
 }
@@ -592,7 +893,7 @@ class DatabaseSqliteStandalone extends DatabaseSqlite {
 /**
  * @ingroup Database
  */
-class SQLiteField {
+class SQLiteField implements Field {
 	private $info, $tableName;
 	function __construct( $info, $tableName ) {
 		$this->info = $info;
@@ -617,17 +918,12 @@ class SQLiteField {
 		return $this->info->dflt_value;
 	}
 
-	function maxLength() {
-		return -1;
+	/**
+	 * @return bool
+	 */
+	function isNullable() {
+		return !$this->info->notnull;
 	}
-
-	function nullable() {
-		// SQLite dynamic types are always nullable
-		return true;
-	}
-
-	# isKey(),  isMultipleKey() not implemented, MySQL-specific concept. 
-	# Suggest removal from base class [TS]
 
 	function type() {
 		return $this->info->type;

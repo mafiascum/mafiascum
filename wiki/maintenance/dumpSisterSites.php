@@ -3,7 +3,7 @@
  * Quickie page name dump script for SisterSites usage.
  * http://www.eekim.com/cgi-bin/wiki.pl?SisterSites
  *
- * Copyright (C) 2006 Brion Vibber <brion@pobox.com>
+ * Copyright © 2006 Brion Vibber <brion@pobox.com>
  * http://www.mediawiki.org/
  *
  * This program is free software; you can redistribute it and/or modify
@@ -21,36 +21,42 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  * http://www.gnu.org/copyleft/gpl.html
  *
+ * @file
  * @ingroup Maintenance
  */
 
-require_once( dirname(__FILE__) . '/Maintenance.php' );
+require_once __DIR__ . '/Maintenance.php';
 
+/**
+ * Maintenance script that generates a page name dump for SisterSites usage.
+ *
+ * @ingroup Maintenance
+ */
 class DumpSisterSites extends Maintenance {
 	public function __construct() {
 		parent::__construct();
 		$this->mDescription = "Quickie page name dump script for SisterSites usage";
 	}
-	
+
 	public function execute() {
 		$dbr = wfGetDB( DB_SLAVE );
 		$dbr->bufferResults( false );
 		$result = $dbr->select( 'page',
 			array( 'page_namespace', 'page_title' ),
-			array( 'page_namespace'   => NS_MAIN,
-				   'page_is_redirect' => 0,
+			array(
+				'page_namespace' => NS_MAIN,
+				'page_is_redirect' => 0,
 			),
 			__METHOD__ );
 
-		foreach( $result as $row ) {
+		foreach ( $result as $row ) {
 			$title = Title::makeTitle( $row->page_namespace, $row->page_title );
-			$url = $title->getFullUrl();
+			$url = $title->getFullURL();
 			$text = $title->getPrefixedText();
 			$this->output( "$url $text\n" );
 		}
-		$dbr->freeResult( $result );
 	}
 }
 
 $maintClass = "DumpSisterSites";
-require_once( DO_MAINTENANCE );
+require_once RUN_MAINTENANCE_IF_MAIN;

@@ -1,6 +1,6 @@
 <?php
 /**
- * Generic table cleanup class. Already subclasses maintenance
+ * Generic class to cleanup a database table.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,11 +17,17 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  * http://www.gnu.org/copyleft/gpl.html
  *
+ * @file
  * @ingroup Maintenance
  */
 
-require_once( dirname(__FILE__) . '/Maintenance.php' );
+require_once __DIR__ . '/Maintenance.php';
 
+/**
+ * Generic class to cleanup a database table. Already subclasses Maintenance.
+ *
+ * @ingroup Maintenance
+ */
 class TableCleanup extends Maintenance {
 	protected $defaultParams = array(
 		'table' => 'page',
@@ -35,6 +41,8 @@ class TableCleanup extends Maintenance {
 	public $batchSize = 100;
 	public $reportInterval = 100;
 
+	protected $processed, $updated, $count, $startTime, $table;
+
 	public function __construct() {
 		parent::__construct();
 		$this->addOption( 'dry-run', 'Perform a dry run' );
@@ -42,9 +50,9 @@ class TableCleanup extends Maintenance {
 
 	public function execute() {
 		global $wgUser;
-		$wgUser->setName( 'Conversion script' );
+		$wgUser = User::newFromName( 'Conversion script' );
 		$this->dryrun = $this->hasOption( 'dry-run' );
-		if( $this->dryrun ) {
+		if ( $this->dryrun ) {
 			$this->output( "Checking for bad titles...\n" );
 		} else {
 			$this->output( "Checking and fixing bad titles...\n" );
@@ -56,25 +64,28 @@ class TableCleanup extends Maintenance {
 		$this->processed = 0;
 		$this->updated = 0;
 		$this->count = $count;
-		$this->startTime = wfTime();
+		$this->startTime = microtime( true );
 		$this->table = $table;
 	}
 
+	/**
+	 * @param int $updated
+	 */
 	protected function progress( $updated ) {
 		$this->updated += $updated;
 		$this->processed++;
-		if( $this->processed % $this->reportInterval != 0 ) {
+		if ( $this->processed % $this->reportInterval != 0 ) {
 			return;
 		}
 		$portion = $this->processed / $this->count;
 		$updateRate = $this->updated / $this->processed;
 
-		$now = wfTime();
+		$now = microtime( true );
 		$delta = $now - $this->startTime;
 		$estimatedTotalTime = $delta / $portion;
 		$eta = $this->startTime + $estimatedTotalTime;
 
-		$this->output( 
+		$this->output(
 			sprintf( "%s %s: %6.2f%% done on %s; ETA %s [%d/%d] %.2f/sec <%.2f%% updated>\n",
 				wfWikiID(),
 				wfTimestamp( TS_DB, intval( $now ) ),
@@ -84,26 +95,30 @@ class TableCleanup extends Maintenance {
 				$this->processed,
 				$this->count,
 				$this->processed / $delta,
-				$updateRate * 100.0 
+				$updateRate * 100.0
 			)
 		);
 		flush();
 	}
 
+	/**
+	 * @param array $params
+	 * @throws MWException
+	 */
 	public function runTable( $params ) {
 		$dbr = wfGetDB( DB_SLAVE );
 
 		if ( array_diff( array_keys( $params ),
-			array( 'table', 'conds', 'index', 'callback' ) ) ) 
-		{
-			throw new MWException( __METHOD__.': Missing parameter ' . implode( ', ', $params ) );
+			array( 'table', 'conds', 'index', 'callback' ) )
+		) {
+			throw new MWException( __METHOD__ . ': Missing parameter ' . implode( ', ', $params ) );
 		}
 
 		$table = $params['table'];
-		$count = $dbr->selectField( $table, 'count(*)', $params['conds'], __METHOD__ );
+		// count(*) would melt the DB for huge tables, we can estimate here
+		$count = $dbr->estimateRowCount( $table, '*', '', __METHOD__ );
 		$this->init( $count, $table );
 		$this->output( "Processing $table...\n" );
-
 
 		$index = (array)$params['index'];
 		$indexConds = array();
@@ -149,6 +164,10 @@ class TableCleanup extends Maintenance {
 		$this->output( "Finished $table... $this->updated of $this->processed rows updated\n" );
 	}
 
+	/**
+	 * @param array $matches
+	 * @return string
+	 */
 	protected function hexChar( $matches ) {
 		return sprintf( "\\x%02x", ord( $matches[1] ) );
 	}

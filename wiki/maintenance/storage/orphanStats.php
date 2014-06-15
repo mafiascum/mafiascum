@@ -1,7 +1,6 @@
 <?php
-
 /**
- * Show some statistics on the blob_orphans table, created with trackBlobs.php
+ * Show some statistics on the blob_orphans table, created with trackBlobs.php.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,29 +17,36 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  * http://www.gnu.org/copyleft/gpl.html
  *
+ * @file
  * @ingroup Maintenance ExternalStorage
  */
-require_once( dirname(__FILE__) . '/../Maintenance.php' );
 
+require_once __DIR__ . '/../Maintenance.php';
+
+/**
+ * Maintenance script that shows some statistics on the blob_orphans table,
+ * created with trackBlobs.php.
+ *
+ * @ingroup Maintenance ExternalStorage
+ */
 class OrphanStats extends Maintenance {
 	public function __construct() {
 		parent::__construct();
 		$this->mDescription = "how some statistics on the blob_orphans table, created with trackBlobs.php";
 	}
 
-	private function getDB( $cluster ) {
+	protected function &getDB( $cluster, $groups = array(), $wiki = false ) {
 		$lb = wfGetLBFactory()->getExternalLB( $cluster );
 		return $lb->getConnection( DB_SLAVE );
 	}
 
 	public function execute() {
-		$extDBs = array();
 		$dbr = wfGetDB( DB_SLAVE );
-		if( !$dbr->tableExists( 'blob_orphans' ) ) {
+		if ( !$dbr->tableExists( 'blob_orphans' ) ) {
 			$this->error( "blob_orphans doesn't seem to exist, need to run trackBlobs.php first", true );
 		}
 		$res = $dbr->select( 'blob_orphans', '*', false, __METHOD__ );
-		
+
 		$num = 0;
 		$totalSize = 0;
 		$hashes = array();
@@ -49,7 +55,7 @@ class OrphanStats extends Maintenance {
 		foreach ( $res as $boRow ) {
 			$extDB = $this->getDB( $boRow->bo_cluster );
 			$blobRow = $extDB->selectRow( 'blobs', '*', array( 'blob_id' => $boRow->bo_blob_id ), __METHOD__ );
-			
+
 			$num++;
 			$size = strlen( $blobRow->blob_text );
 			$totalSize += $size;
@@ -61,11 +67,11 @@ class OrphanStats extends Maintenance {
 		$this->output( "Number of orphans: $num\n" );
 		if ( $num > 0 ) {
 			$this->output( "Average size: " . round( $totalSize / $num, 0 ) . " bytes\n" .
-			"Max size: $maxSize\n" . 
+			"Max size: $maxSize\n" .
 			"Number of unique texts: " . count( $hashes ) . "\n" );
 		}
 	}
 }
 
 $maintClass = "OrphanStats";
-require_once( DO_MAINTENANCE );
+require_once RUN_MAINTENANCE_IF_MAIN;

@@ -1,7 +1,8 @@
 <?php
-
 /**
  * Delete archived (non-current) files from the database
+ *
+ * Based on deleteOldRevisions.php by Rob Church.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,13 +19,19 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  * http://www.gnu.org/copyleft/gpl.html
  *
+ * @file
  * @ingroup Maintenance
  * @author Aaron Schulz
- * Based on deleteOldRevisions.php by Rob Church
  */
 
-require_once( dirname(__FILE__) . '/Maintenance.php' );
+require_once __DIR__ . '/Maintenance.php';
+require_once __DIR__ . '/deleteArchivedFiles.inc';
 
+/**
+ * Maintenance script to delete archived (non-current) files from the database.
+ *
+ * @ingroup Maintenance
+ */
 class DeleteArchivedFiles extends Maintenance {
 	public function __construct() {
 		parent::__construct();
@@ -33,50 +40,19 @@ class DeleteArchivedFiles extends Maintenance {
 		$this->addOption( 'force', 'Force deletion of rows from filearchive' );
 	}
 
+	public function handleOutput( $str ) {
+		return $this->output( $str );
+	}
+
 	public function execute() {
-		if( !$this->hasOption('delete') ) {
+		if ( !$this->hasOption( 'delete' ) ) {
 			$this->output( "Use --delete to actually confirm this script\n" );
 			return;
 		}
 		$force = $this->hasOption( 'force' );
-		# Data should come off the master, wrapped in a transaction
-		$dbw = wfGetDB( DB_MASTER );
-		$dbw->begin();
-		$tbl_arch = $dbw->tableName( 'filearchive' );
-		$repo = RepoGroup::singleton()->getLocalRepo();
-		# Get "active" revisions from the filearchive table
-		$this->output( "Searching for and deleting archived files...\n" );
-		$res = $dbw->query( "SELECT fa_id,fa_storage_group,fa_storage_key FROM $tbl_arch" );
-		$count = 0;
-		foreach( $res as $row ) {
-			$key = $row->fa_storage_key;
-			$group = $row->fa_storage_group;
-			$id = $row->fa_id;
-			$path = $repo->getZonePath( 'deleted' ).'/'.$repo->getDeletedHashPath($key).$key;
-			$sha1 = substr( $key, 0, strcspn( $key, '.' ) );
-			// Check if the file is used anywhere...
-			$inuse = $dbw->selectField( 'oldimage', '1',
-				array( 'oi_sha1' => $sha1,
-				'oi_deleted & '.File::DELETED_FILE => File::DELETED_FILE ),
-				__METHOD__,
-				array( 'FOR UPDATE' )
-			);
-			if ( $path && file_exists($path) && !$inuse ) {
-				unlink($path); // delete
-				$count++;
-				$dbw->query( "DELETE FROM $tbl_arch WHERE fa_id = $id" );
-			} else {
-				$this->output( "Notice - file '$key' not found in group '$group'\n" );
-				if ( $force ) {
-					$this->output( "Got --force, deleting DB entry\n" );
-					$dbw->query( "DELETE FROM $tbl_arch WHERE fa_id = $id" );
-				}
-			}
-		}
-		$dbw->commit();
-		$this->output( "Done! [$count file(s)]\n" );
+		DeleteArchivedFilesImplementation::doDelete( $this, $force );
 	}
 }
 
 $maintClass = "DeleteArchivedFiles";
-require_once( DO_MAINTENANCE );
+require_once RUN_MAINTENANCE_IF_MAIN;

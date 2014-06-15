@@ -1,46 +1,48 @@
 <?php
-# Copyright (C) 2004 Brion Vibber <brion@pobox.com>
-# http://www.mediawiki.org/
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License along
-# with this program; if not, write to the Free Software Foundation, Inc.,
-# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
-# http://www.gnu.org/copyleft/gpl.html
-
 /**
  * Implements the conformance test at:
  * http://www.unicode.org/Public/UNIDATA/NormalizationTest.txt
+ *
+ * Copyright © 2004 Brion Vibber <brion@pobox.com>
+ * http://www.mediawiki.org/
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ * http://www.gnu.org/copyleft/gpl.html
+ *
+ * @file
  * @ingroup UtfNormal
  */
 
-/** */
+if( PHP_SAPI != 'cli' ) {
+	die( "Run me from the command line please.\n" );
+}
+
 $verbose = true;
 #define( 'PRETTY_UTF8', true );
 
 if( defined( 'PRETTY_UTF8' ) ) {
 	function pretty( $string ) {
-		return preg_replace( '/([\x00-\xff])/e',
-			'sprintf("%02X", ord("$1"))',
-			$string );
+		return strtoupper( bin2hex( $string ) );
 	}
 } else {
 	/**
 	 * @ignore
+	 * @return string
 	 */
 	function pretty( $string ) {
-		return trim( preg_replace( '/(.)/use',
-			'sprintf("%04X ", utf8ToCodepoint("$1"))',
-			$string ) );
+		return strtoupper( utf8ToHexSequence( $string ) );
 	}
 }
 
@@ -48,12 +50,9 @@ if( isset( $_SERVER['argv'] ) && in_array( '--icu', $_SERVER['argv'] ) ) {
 	dl( 'php_utfnormal.so' );
 }
 
+require_once 'UtfNormalDefines.php';
 require_once 'UtfNormalUtil.php';
 require_once 'UtfNormal.php';
-
-if( php_sapi_name() != 'cli' ) {
-	die( "Run me from the command line please.\n" );
-}
 
 $in = fopen("NormalizationTest.txt", "rt");
 if( !$in ) {
@@ -87,7 +86,7 @@ while( false !== ( $line = fgets( $in ) ) ) {
 
 	$testedChars[$columns[1]] = true;
 	$total++;
-	if( testNormals( $normalizer, $columns, $comment ) ) {
+	if( testNormals( $normalizer, $columns, $comment, $verbose ) ) {
 		$success++;
 	} else {
 		$failure++;
@@ -119,7 +118,7 @@ while( false !== ($line = fgets( $in ) ) ) {
 	}
 	if( empty( $testedChars[$char] ) ) {
 		$total++;
-		if( testInvariant( $normalizer, $char, $desc ) ) {
+		if( testInvariant( $normalizer, $char, $desc, $verbose ) ) {
 			$success++;
 		} else {
 			$failure++;
@@ -154,17 +153,16 @@ function reportResults( &$total, &$success, &$failure ) {
 	return $ok;
 }
 
-function testNormals( &$u, $c, $comment, $reportFailure = false ) {
+function testNormals( &$u, $c, $comment, $verbose, $reportFailure = false ) {
 	$result = testNFC( $u, $c, $comment, $reportFailure );
 	$result = testNFD( $u, $c, $comment, $reportFailure ) && $result;
 	$result = testNFKC( $u, $c, $comment, $reportFailure ) && $result;
 	$result = testNFKD( $u, $c, $comment, $reportFailure ) && $result;
 	$result = testCleanUp( $u, $c, $comment, $reportFailure ) && $result;
 
-	global $verbose;
 	if( $verbose && !$result && !$reportFailure ) {
 		print $comment;
-		testNormals( $u, $c, $comment, true );
+		testNormals( $u, $c, $comment, $verbose, true );
 	}
 	return $result;
 }
@@ -232,16 +230,16 @@ function testNFKD( &$u, $c, $comment, $verbose ) {
 	return $result;
 }
 
-function testInvariant( &$u, $char, $desc, $reportFailure = false ) {
+function testInvariant( &$u, $char, $desc, $verbose, $reportFailure = false ) {
 	$result = verbosify( $char, $u->toNFC( $char ), 1, 'NFC', $reportFailure );
 	$result = verbosify( $char, $u->toNFD( $char ), 1, 'NFD', $reportFailure ) && $result;
 	$result = verbosify( $char, $u->toNFKC( $char ), 1, 'NFKC', $reportFailure ) && $result;
 	$result = verbosify( $char, $u->toNFKD( $char ), 1, 'NFKD', $reportFailure ) && $result;
 	$result = verbosify( $char, $u->cleanUp( $char ), 1, 'cleanUp', $reportFailure ) && $result;
-	global $verbose;
+
 	if( $verbose && !$result && !$reportFailure ) {
 		print $desc;
-		testInvariant( $u, $char, $desc, true );
+		testInvariant( $u, $char, $desc, $verbose, true );
 	}
 	return $result;
 }

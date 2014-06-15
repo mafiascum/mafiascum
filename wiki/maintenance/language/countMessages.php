@@ -17,11 +17,18 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  * http://www.gnu.org/copyleft/gpl.html
  *
+ * @file
  * @ingroup MaintenanceLanguage
  */
 
-require_once( dirname(__FILE__) . '/../Maintenance.php' );
+require_once __DIR__ . '/../Maintenance.php';
 
+/**
+ * Maintenance script that counts how many messages we have defined
+ * for each language.
+ *
+ * @ingroup MaintenanceLanguage
+ */
 class CountMessages extends Maintenance {
 	public function __construct() {
 		parent::__construct();
@@ -35,12 +42,12 @@ class CountMessages extends Maintenance {
 		$nonZero = 0;
 		foreach ( glob( "$dir/*.php" ) as $file ) {
 			$baseName = basename( $file );
-			if( !preg_match( '/Messages([A-Z][a-z_]+)\.php$/', $baseName, $m ) ) {
+			if ( !preg_match( '/Messages([A-Z][a-z_]+)\.php$/', $baseName, $m ) ) {
 				continue;
 			}
-			$code = str_replace( '_', '-', strtolower( $m[1] ) );
+
 			$numMessages = $this->getNumMessages( $file );
-			//print "$code: $numMessages\n";
+			// print "$code: $numMessages\n";
 			$total += $numMessages;
 			if ( $numMessages > 0 ) {
 				$nonZero ++;
@@ -52,7 +59,7 @@ class CountMessages extends Maintenance {
 
 	private function getNumMessages( $file ) {
 		// Separate function to limit scope
-		require( $file );
+		require $file;
 		if ( isset( $messages ) ) {
 			return count( $messages );
 		} else {
@@ -62,4 +69,4 @@ class CountMessages extends Maintenance {
 }
 
 $maintClass = "CountMessages";
-require_once( DO_MAINTENANCE );
+require_once RUN_MAINTENANCE_IF_MAIN;

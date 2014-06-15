@@ -38,12 +38,12 @@ while (<DATA>) {
 
 my $datatype = join '|' => qw(
 bool
-tinyint int bigint real float
+tinyint smallint int bigint real float
 tinytext mediumtext text char varchar varbinary binary
 timestamp datetime
 tinyblob mediumblob blob
 );
-$datatype .= q{|ENUM\([\"\w, ]+\)};
+$datatype .= q{|ENUM\([\"\w\', ]+\)};
 $datatype = qr{($datatype)};
 
 my $typeval = qr{(\(\d+\))?};
@@ -142,50 +142,6 @@ sub parse_sql {
 
 } ## end of parse_sql
 
-## Read in the parser test information
-my $parsefile = '../parserTests.inc';
-open my $pfh, '<', $parsefile or die qq{Could not open "$parsefile": $!\n};
-my $stat = 0;
-my %ptable;
-while (<$pfh>) {
-	if (!$stat) {
-		if (/function listTables/) {
-			$stat = 1;
-		}
-		next;
-	}
-	$ptable{$1}=2 while m{'(\w+)'}g;
-	last if /\);/;
-}
-close $pfh or die qq{Could not close "$parsefile": $!\n};
-
-my $OK_NOT_IN_PTABLE = '
-change_tag
-filearchive
-logging
-profiling
-querycache_info
-searchindex
-tag_summary
-trackbacks
-transcache
-user_newtalk
-updatelog
-valid_tag
-';
-
-## Make sure all tables in main tables.sql are accounted for in the parsertest.
-for my $table (sort keys %{$old{'../tables.sql'}}) {
-	$ptable{$table}++;
-	next if $ptable{$table} > 2;
-	next if $OK_NOT_IN_PTABLE =~ /\b$table\b/;
-	print qq{Table "$table" is in the schema, but not used inside of parserTest.inc\n};
-}
-## Any that are used in ptables but no longer exist in the schema?
-for my $table (sort grep { $ptable{$_} == 2 } keys %ptable) {
-	print qq{Table "$table" ($ptable{$table}) used in parserTest.inc, but not found in schema\n};
-}
-
 for my $oldfile (@old) {
 
 ## Begin non-standard indent
@@ -202,16 +158,17 @@ for my $table (sort keys %{$old{$oldfile}}) {
 	}
 }
 
-my $dtype = join '|' => qw(
+my $dtypelist = join '|' => qw(
 SMALLINT INTEGER BIGINT NUMERIC SERIAL
 TEXT CHAR VARCHAR
 BYTEA
 TIMESTAMPTZ
 CIDR
 );
-$dtype = qr{($dtype)};
+my $dtype = qr{($dtypelist)};
 my %new;
 my ($infunction,$inview,$inrule,$lastcomma) = (0,0,0,0);
+my %custom_type;
 seek $newfh, 0, 0;
 while (<$newfh>) {
 	next if /^\s*\-\-/ or /^\s*$/;
@@ -223,6 +180,15 @@ while (<$newfh>) {
 	next if /^CREATE TRIGGER/ or /^  FOR EACH ROW/;
 	next if /^INSERT INTO/ or /^  VALUES \(/;
 	next if /^ALTER TABLE/;
+	next if /^DROP SEQUENCE/;
+	next if /^DROP FUNCTION/;
+
+	if (/^CREATE TYPE (\w+)/) {
+		die "Type $1 declared more than once!\n" if $custom_type{$1}++;
+		$dtype = qr{($dtypelist|$1)};
+		next;
+	}
+
 	chomp;
 
 	if (/^\$mw\$;?$/) {
@@ -273,6 +239,7 @@ my $COLMAP = q{
 ## INTS:
 tinyint SMALLINT
 int INTEGER SERIAL
+smallint SMALLINT
 bigint BIGINT
 real NUMERIC
 float NUMERIC
@@ -316,18 +283,23 @@ rc_log_type     varbinary(255) TEXT
 
 ## Simple text-only strings:
 ar_flags          tinyblob       TEXT
+cf_name           varbinary(255) TEXT
+cf_value          blob           TEXT
+ar_sha1           varbinary(32)  TEXT
+cl_collation      varbinary(32)  TEXT
+cl_sortkey        varbinary(230) TEXT
 ct_params         blob           TEXT
-fa_minor_mime     varbinary(32)  TEXT
+fa_minor_mime     varbinary(100) TEXT
 fa_storage_group  varbinary(16)  TEXT # Just 'deleted' for now, should stay plain text
 fa_storage_key    varbinary(64)  TEXT # sha1 plus text extension
 ipb_address       tinyblob       TEXT # IP address or username
 ipb_range_end     tinyblob       TEXT # hexadecimal
 ipb_range_start   tinyblob       TEXT # hexadecimal
-img_minor_mime    varbinary(32)  TEXT
+img_minor_mime    varbinary(100) TEXT
 lc_lang           varbinary(32)  TEXT
 lc_value          varbinary(32)  TEXT
-
 img_sha1          varbinary(32)  TEXT
+iw_wikiid         varchar(64)    TEXT
 job_cmd           varbinary(60)  TEXT # Should we limit to 60 as well?
 keyname           varbinary(255) TEXT # No tablename prefix (objectcache)
 ll_lang           varbinary(20)  TEXT # Language code
@@ -335,7 +307,15 @@ lc_value          mediumblob     TEXT
 log_params        blob           TEXT # LF separated list of args
 log_type          varbinary(10)  TEXT
 ls_field          varbinary(32)  TEXT
-oi_minor_mime     varbinary(32)  TEXT
+md_deps           mediumblob     TEXT # JSON
+md_module         varbinary(255) TEXT
+md_skin           varbinary(32)  TEXT
+mr_blob           mediumblob     TEXT # JSON
+mr_lang           varbinary(32)  TEXT
+mr_resource       varbinary(255) TEXT
+mrl_message       varbinary(255) TEXT
+mrl_resource      varbinary(255) TEXT
+oi_minor_mime     varbinary(100) TEXT
 oi_sha1           varbinary(32)  TEXT
 old_flags         tinyblob       TEXT
 old_text          mediumblob     TEXT
@@ -351,21 +331,29 @@ qc_type           varbinary(32)  TEXT
 qcc_type          varbinary(32)  TEXT
 qci_type          varbinary(32)  TEXT
 rc_params         blob           TEXT
+rev_sha1          varbinary(32)  TEXT
 rlc_to_blob       blob           TEXT
 ts_tags           blob           TEXT
-ug_group          varbinary(16)  TEXT
-up_property       varbinary(32)  TEXT
+ufg_group         varbinary(32)  TEXT
+ug_group          varbinary(32)  TEXT
+ul_value          blob           TEXT
+up_property       varbinary(255) TEXT
 up_value          blob           TEXT
+us_sha1           varchar(31)    TEXT
+us_source_type    varchar(50)    TEXT
+us_status         varchar(50)    TEXT
 user_email_token  binary(32)     TEXT
 user_ip           varbinary(40)  TEXT
 user_newpassword  tinyblob       TEXT
 user_options      blob           TEXT
 user_password     tinyblob       TEXT
 user_token        binary(32)     TEXT
+iwl_prefix      varbinary(20)  TEXT
 
 ## Text URLs:
 el_index blob           TEXT
 el_to    blob           TEXT
+iw_api   blob           TEXT
 iw_url   blob           TEXT
 tb_url   blob           TEXT
 tc_url   varbinary(255) TEXT
@@ -466,6 +454,9 @@ for my $t (sort keys %{$old{$oldfile}}) {
 		next if exists $colmapok{$c}{$old}{$new};
 
 		$old =~ s/ENUM.*/ENUM/;
+
+		next if $old eq 'ENUM' and $new eq 'media_type';
+
 		if (! exists $colmap{$old}{$new}) {
 			print "Column types for $t.$c do not match: $old does not map to $new\n";
 		}
@@ -574,5 +565,4 @@ __DATA__
 OLD: searchindex          ## We use tsearch2 directly on the page table instead
 RENAME: user mwuser       ## Reserved word causing lots of problems
 RENAME: text pagecontent  ## Reserved word
-NEW: mediawiki_version    ## Just us, for now
 XFILE: ../archives/patch-profiling.sql

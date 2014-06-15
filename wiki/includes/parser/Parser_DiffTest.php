@@ -1,4 +1,25 @@
 <?php
+/**
+ * Fake parser that output the difference of two different parsers
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ * http://www.gnu.org/copyleft/gpl.html
+ *
+ * @file
+ * @ingroup Parser
+ */
 
 /**
  * @ingroup Parser
@@ -8,14 +29,13 @@ class Parser_DiffTest
 	var $parsers, $conf;
 	var $shortOutput = false;
 
-	var $dfUniqPrefix;
+	var $dtUniqPrefix;
 
 	function __construct( $conf ) {
 		if ( !isset( $conf['parsers'] ) ) {
 			throw new MWException( __METHOD__ . ': no parsers specified' );
 		}
 		$this->conf = $conf;
-		$this->dtUniqPrefix = "\x7fUNIQ" . Parser::getRandomString();
 	}
 
 	function init() {
@@ -102,14 +122,22 @@ class Parser_DiffTest
 
 	function setFunctionHook( $id, $callback, $flags = 0 ) {
 		$this->init();
-		foreach  ( $this->parsers as $i => $parser ) {
+		foreach ( $this->parsers as $parser ) {
 			$parser->setFunctionHook( $id, $callback, $flags );
 		}
 	}
 
+	/**
+	 * @param $parser Parser
+	 * @return bool
+	 */
 	function onClearState( &$parser ) {
 		// hack marker prefixes to get identical output
-		$parser->mUniqPrefix = $this->dtUniqPrefix;
+		if ( !isset( $this->dtUniqPrefix ) ) {
+			$this->dtUniqPrefix = $parser->uniqPrefix();
+		} else {
+			$parser->mUniqPrefix = $this->dtUniqPrefix;
+		}
 		return true;
 	}
 }

@@ -1,4 +1,24 @@
 <?php
+/**
+ * Native CDB file reader and writer.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ * http://www.gnu.org/copyleft/gpl.html
+ *
+ * @file
+ */
 
 /**
  * Read from a CDB file.
@@ -8,6 +28,10 @@
 abstract class CdbReader {
 	/**
 	 * Open a file and return a subclass instance
+	 *
+	 * @param $fileName string
+	 *
+	 * @return CdbReader
 	 */
 	public static function open( $fileName ) {
 		if ( self::haveExtension() ) {
@@ -20,6 +44,8 @@ abstract class CdbReader {
 
 	/**
 	 * Returns true if the native extension is available
+	 *
+	 * @return bool
 	 */
 	public static function haveExtension() {
 		if ( !function_exists( 'dba_handlers' ) ) {
@@ -44,6 +70,8 @@ abstract class CdbReader {
 
 	/**
 	 * Get a value with a given key. Only string values are supported.
+	 *
+	 * @param $key string
 	 */
 	abstract public function get( $key );
 }
@@ -56,6 +84,10 @@ abstract class CdbWriter {
 	/**
 	 * Open a writer and return a subclass instance.
 	 * The user must have write access to the directory, for temporary file creation.
+	 *
+	 * @param $fileName string
+	 *
+	 * @return CdbWriter_DBA|CdbWriter_PHP
 	 */
 	public static function open( $fileName ) {
 		if ( CdbReader::haveExtension() ) {
@@ -68,11 +100,15 @@ abstract class CdbWriter {
 
 	/**
 	 * Create the object and open the file
+	 *
+	 * @param $fileName string
 	 */
 	abstract function __construct( $fileName );
 
 	/**
 	 * Set a key to a given value. The value will be converted to string.
+	 * @param $key string
+	 * @param $value string
 	 */
 	abstract public function set( $key, $value );
 
@@ -83,7 +119,6 @@ abstract class CdbWriter {
 	abstract public function close();
 }
 
-
 /**
  * Reader class which uses the DBA extension
  */
@@ -93,13 +128,14 @@ class CdbReader_DBA {
 	function __construct( $fileName ) {
 		$this->handle = dba_open( $fileName, 'r-', 'cdb' );
 		if ( !$this->handle ) {
-			throw new MWException( 'Unable to open DB file "' . $fileName . '"' );
+			throw new MWException( 'Unable to open CDB file "' . $fileName . '"' );
 		}
 	}
 
 	function close() {
-		if( isset($this->handle) )
+		if ( isset( $this->handle ) ) {
 			dba_close( $this->handle );
+		}
 		unset( $this->handle );
 	}
 
@@ -107,7 +143,6 @@ class CdbReader_DBA {
 		return dba_fetch( $key, $this->handle );
 	}
 }
-
 
 /**
  * Writer class which uses the DBA extension
@@ -120,7 +155,7 @@ class CdbWriter_DBA {
 		$this->tmpFileName = $fileName . '.tmp.' . mt_rand( 0, 0x7fffffff );
 		$this->handle = dba_open( $this->tmpFileName, 'n', 'cdb_make' );
 		if ( !$this->handle ) {
-			throw new MWException( 'Unable to open DB file for write "' . $fileName . '"' );
+			throw new MWException( 'Unable to open CDB file for write "' . $fileName . '"' );
 		}
 	}
 
@@ -129,8 +164,9 @@ class CdbWriter_DBA {
 	}
 
 	function close() {
-		if( isset($this->handle) )
+		if ( isset( $this->handle ) ) {
 			dba_close( $this->handle );
+		}
 		if ( wfIsWindows() ) {
 			unlink( $this->realFileName );
 		}
@@ -146,4 +182,3 @@ class CdbWriter_DBA {
 		}
 	}
 }
-

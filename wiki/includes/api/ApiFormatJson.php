@@ -1,11 +1,10 @@
 <?php
-
-/*
+/**
+ *
+ *
  * Created on Sep 19, 2006
  *
- * API for MediaWiki 1.8+
- *
- * Copyright (C) 2006 Yuri Astrakhan <Firstname><Lastname>@gmail.com
+ * Copyright © 2006 Yuri Astrakhan "<Firstname><Lastname>@gmail.com"
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,16 +18,14 @@
  *
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, write to the Free Software Foundation, Inc.,
- * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  * http://www.gnu.org/copyleft/gpl.html
+ *
+ * @file
  */
 
-if ( !defined( 'MEDIAWIKI' ) ) {
-	// Eclipse helper - will be ignored in production
-	require_once ( 'ApiFormatBase.php' );
-}
-
 /**
+ * API JSON output formatter
  * @ingroup API
  */
 class ApiFormatJson extends ApiFormatBase {
@@ -36,7 +33,7 @@ class ApiFormatJson extends ApiFormatBase {
 	private $mIsRaw;
 
 	public function __construct( $main, $format ) {
-		parent :: __construct( $main, $format );
+		parent::__construct( $main, $format );
 		$this->mIsRaw = ( $format === 'rawfm' );
 	}
 
@@ -59,40 +56,40 @@ class ApiFormatJson extends ApiFormatBase {
 	}
 
 	public function execute() {
-		$prefix = $suffix = "";
-
 		$params = $this->extractRequestParams();
+		$json = FormatJson::encode(
+			$this->getResultData(),
+			$this->getIsHtml(),
+			$params['utf8'] ? FormatJson::ALL_OK : FormatJson::XMLMETA_OK
+		);
 		$callback = $params['callback'];
-		if ( !is_null( $callback ) ) {
-			$prefix = preg_replace( "/[^][.\\'\\\"_A-Za-z0-9]/", "", $callback ) . "(";
-			$suffix = ")";
+		if ( $callback !== null ) {
+			$callback = preg_replace( "/[^][.\\'\\\"_A-Za-z0-9]/", '', $callback );
+			$this->printText( "$callback($json)" );
+		} else {
+			$this->printText( $json );
 		}
-		$this->printText(
-			$prefix .
-			FormatJson::encode( $this->getResultData(),	$this->getIsHtml() ) .
-			$suffix );
 	}
 
 	public function getAllowedParams() {
-		return array (
-			'callback'  => null,
+		return array(
+			'callback' => null,
+			'utf8' => false,
 		);
 	}
 
 	public function getParamDescription() {
-		return array (
+		return array(
 			'callback' => 'If specified, wraps the output into a given function call. For safety, all user-specific data will be restricted.',
+			'utf8' => 'If specified, encodes most (but not all) non-ASCII characters as UTF-8 instead of replacing them with hexadecimal escape sequences.',
 		);
 	}
 
 	public function getDescription() {
-		if ( $this->mIsRaw )
-			return 'Output data with the debuging elements in JSON format' . parent :: getDescription();
-		else
-			return 'Output data in JSON format' . parent :: getDescription();
-	}
-
-	public function getVersion() {
-		return __CLASS__ . ': $Id: ApiFormatJson.php 62354 2010-02-12 06:44:16Z mah $';
+		if ( $this->mIsRaw ) {
+			return 'Output data with the debugging elements in JSON format' . parent::getDescription();
+		} else {
+			return 'Output data in JSON format' . parent::getDescription();
+		}
 	}
 }

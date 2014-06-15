@@ -18,12 +18,18 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  * http://www.gnu.org/copyleft/gpl.html
  *
+ * @file
  * @ingroup Maintenance
  * @author Rob Church <robchur@gmail.com>
  */
 
-require_once( dirname(__FILE__) . '/Maintenance.php' );
+require_once __DIR__ . '/Maintenance.php';
 
+/**
+ * Maintenance script that erases a page record from the database.
+ *
+ * @ingroup Maintenance
+ */
 class NukePage extends Maintenance {
 	public function __construct() {
 		parent::__construct();
@@ -38,7 +44,7 @@ class NukePage extends Maintenance {
 		$delete = $this->getOption( 'delete', false );
 
 		$dbw = wfGetDB( DB_MASTER );
-		$dbw->begin();
+		$dbw->begin( __METHOD__ );
 
 		$tbl_pag = $dbw->tableName( 'page' );
 		$tbl_rec = $dbw->tableName( 'recentchanges' );
@@ -47,8 +53,8 @@ class NukePage extends Maintenance {
 		# Get page ID
 		$this->output( "Searching for \"$name\"..." );
 		$title = Title::newFromText( $name );
-		if( $title ) {
-			$id   = $title->getArticleID();
+		if ( $title ) {
+			$id = $title->getArticleID();
 			$real = $title->getPrefixedText();
 			$isGoodArticle = $title->isContentPage();
 			$this->output( "found \"$real\" with ID $id.\n" );
@@ -56,14 +62,15 @@ class NukePage extends Maintenance {
 			# Get corresponding revisions
 			$this->output( "Searching for revisions..." );
 			$res = $dbw->query( "SELECT rev_id FROM $tbl_rev WHERE rev_page = $id" );
-			foreach( $res as $row ) {
+			$revs = array();
+			foreach ( $res as $row ) {
 				$revs[] = $row->rev_id;
 			}
 			$count = count( $revs );
 			$this->output( "found $count.\n" );
 
 			# Delete the page record and associated recent changes entries
-			if( $delete ) {
+			if ( $delete ) {
 				$this->output( "Deleting page record..." );
 				$dbw->query( "DELETE FROM $tbl_pag WHERE page_id = $id" );
 				$this->output( "done.\n" );
@@ -72,10 +79,10 @@ class NukePage extends Maintenance {
 				$this->output( "done.\n" );
 			}
 
-			$dbw->commit();
+			$dbw->commit( __METHOD__ );
 
 			# Delete revisions as appropriate
-			if( $delete && $count ) {
+			if ( $delete && $count ) {
 				$this->output( "Deleting revisions..." );
 				$this->deleteRevisions( $revs );
 				$this->output( "done.\n" );
@@ -92,22 +99,22 @@ class NukePage extends Maintenance {
 			}
 		} else {
 			$this->output( "not found in database.\n" );
-			$dbw->commit();
+			$dbw->commit( __METHOD__ );
 		}
 	}
 
 	public function deleteRevisions( $ids ) {
 		$dbw = wfGetDB( DB_MASTER );
-		$dbw->begin();
+		$dbw->begin( __METHOD__ );
 
 		$tbl_rev = $dbw->tableName( 'revision' );
 
 		$set = implode( ', ', $ids );
 		$dbw->query( "DELETE FROM $tbl_rev WHERE rev_id IN ( $set )" );
 
-		$dbw->commit();	
+		$dbw->commit( __METHOD__ );
 	}
 }
 
 $maintClass = "NukePage";
-require_once( DO_MAINTENANCE );
+require_once RUN_MAINTENANCE_IF_MAIN;

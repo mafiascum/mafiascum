@@ -3,110 +3,70 @@
 # Loader for spam blacklist feature
 # Include this from LocalSettings.php
 
-if ( defined( 'MEDIAWIKI' ) ) {
-
-global $wgFilterCallback, $wgPreSpamFilterCallback;
-global $wgSpamBlacklistFiles;
-global $wgSpamBlacklistSettings;
-
-$wgSpamBlacklistFiles = false;
-$wgSpamBlacklistSettings = array();
-
-if ( $wgFilterCallback ) {
-	$wgPreSpamFilterCallback = $wgFilterCallback;
-} else {
-	$wgPreSpamFilterCallback = false;
+if ( !defined( 'MEDIAWIKI' ) ) {
+	exit;
 }
 
-$wgFilterCallback = 'wfSpamBlacklistLoader';
-$wgExtensionCredits['other'][] = array(
-	'name' => 'SpamBlacklist',
-	'author' => 'Tim Starling',
-	'url' => 'http://www.mediawiki.org/wiki/Extension:SpamBlacklist',
-	'description' => 'Regex based anti spam tool',
+$wgExtensionCredits['antispam'][] = array(
+	'path'           => __FILE__,
+	'name'           => 'SpamBlacklist',
+	'author'         => array( 'Tim Starling', 'John Du Hart', 'Daniel Kinzler' ),
+	'url'            => 'https://www.mediawiki.org/wiki/Extension:SpamBlacklist',
+	'descriptionmsg' => 'spam-blacklist-desc',
 );
 
-$wgExtensionFunctions[] = 'wfSpamBlacklistMessageLoader';
-
-$wgHooks['EditFilter'][] = 'wfSpamBlacklistValidate';
-$wgHooks['ArticleSaveComplete'][] = 'wfSpamBlacklistClearCache';
-
-function wfSpamBlacklistMessageLoader() {
-	global $wgMessageCache;
-	require_once( 'SpamBlacklist.i18n.php' );
-	foreach( efSpamBlacklistMessages() as $lang => $messages ) {
-		$wgMessageCache->addMessages( $messages, $lang );
-	}
-}
-
-function wfSpamBlacklistLoader( &$title, $text, $section ) {
-	static $spamObj = false;
-
-	if ( $spamObj === false ) {
-		$spamObj = wfSpamBlacklistObject();
-	}
-
-	return $spamObj->filter( $title, $text, $section );
-}
-
-function wfSpamBlacklistObject() {
-	require_once( "SpamBlacklist_body.php" );
-	global $wgSpamBlacklistFiles, $wgSpamBlacklistSettings, $wgPreSpamFilterCallback;
-	$spamObj = new SpamBlacklist( $wgSpamBlacklistSettings );
-	if( $wgSpamBlacklistFiles ) {
-		$spamObj->files = $wgSpamBlacklistFiles;
-	}
-	$spamObj->previousFilter = $wgPreSpamFilterCallback;
-	return $spamObj;
-}
+$dir = __DIR__ . '/';
+$wgExtensionMessagesFiles['SpamBlackList'] = $dir . 'SpamBlacklist.i18n.php';
 
 /**
- * Confirm that a local blacklist page being saved is valid,
- * and toss back a warning to the user if it isn't.
+ * Array of settings for blacklist classes
  */
-function wfSpamBlacklistValidate( $editPage, $text, $section, &$hookError ) {
-	$thisPageName = $editPage->mTitle->getPrefixedDBkey();
-	
-	$spamObj = wfSpamBlacklistObject();
-	if( !$spamObj->isLocalSource( $editPage->mTitle ) ) {
-		wfDebug( "Spam blacklist validator: [[$thisPageName]] not a local blacklist\n" );
-		return true;
-	}
-
-	$lines = explode( "\n", $text );
-
-	$badLines = SpamRegexBatch::getBadLines( $lines );
-	if( $badLines ) {
-		wfDebug( "Spam blacklist validator: [[$thisPageName]] given invalid input lines: " .
-			implode( ', ', $badLines ) . "\n" );
-
-		$badList = "*<tt>" .
-			implode( "</tt>\n*<tt>",
-				array_map( 'wfEscapeWikiText', $badLines ) ) .
-			"</tt>\n";
-		$hookError =
-			"<div class='errorbox'>" .
-			wfMsgExt( 'spam-invalid-lines', array( 'parsemag' ), count( $badLines ) ) .
-			$badList .
-			"</div>\n" .
-			"<br clear='all' />\n";
-		return true;
-	} else {
-		wfDebug( "Spam blacklist validator: [[$thisPageName]] ok or empty blacklist\n" );
-		return true;
-	}
-}
+$wgBlacklistSettings = array(
+	'spam' => array(
+		'files' => array( "http://meta.wikimedia.org/w/index.php?title=Spam_blacklist&action=raw&sb_ver=1" )
+	)
+);
 
 /**
- * Clear local spam blacklist caches on page save.
+ * Log blacklist hits to Special:Log
  */
-function wfSpamBlacklistClearCache( &$article, &$user, $text, $summary, $isminor, $iswatch, $section ) {
-	$spamObj = wfSpamBlacklistObject();
-	if( $spamObj->isLocalSource( $article->getTitle() ) ) {
-		$spamObj->clearCache();
-	}
-	return true;
+$wgLogSpamBlacklistHits = false;
+
+/**
+ * @deprecated
+ */
+$wgSpamBlacklistFiles =& $wgBlacklistSettings['spam']['files'];
+
+/**
+ * @deprecated
+ */
+$wgSpamBlacklistSettings =& $wgBlacklistSettings['spam'];
+
+if ( !defined( 'MW_SUPPORTS_CONTENTHANDLER' ) ) {
+	die( "This version of SpamBlacklist requires a version of MediaWiki that supports the ContentHandler facility (supported since MW 1.21)." );
 }
 
+// filter pages on save
+$wgHooks['EditFilterMergedContent'][] = 'SpamBlacklistHooks::filterMergedContent';
+$wgHooks['APIEditBeforeSave'][] = 'SpamBlacklistHooks::filterAPIEditBeforeSave';
 
-} # End invocation guard
+// editing filter rules
+$wgHooks['EditFilter'][] = 'SpamBlacklistHooks::validate';
+$wgHooks['PageContentSaveComplete'][] = 'SpamBlacklistHooks::pageSaveContent';
+
+// email filters
+$wgHooks['UserCanSendEmail'][] = 'SpamBlacklistHooks::userCanSendEmail';
+$wgHooks['AbortNewAccount'][] = 'SpamBlacklistHooks::abortNewAccount';
+
+$wgAutoloadClasses['BaseBlacklist'] = $dir . 'BaseBlacklist.php';
+$wgAutoloadClasses['EmailBlacklist'] = $dir . 'EmailBlacklist.php';
+$wgAutoloadClasses['SpamBlacklistHooks'] = $dir . 'SpamBlacklistHooks.php';
+$wgAutoloadClasses['SpamBlacklist'] = $dir . 'SpamBlacklist_body.php';
+$wgAutoloadClasses['SpamRegexBatch'] = $dir . 'SpamRegexBatch.php';
+
+$wgLogTypes[] = 'spamblacklist';
+$wgLogActionsHandlers['spamblacklist/*'] = 'LogFormatter';
+$wgLogRestrictions['spamblacklist'] = 'spamblacklistlog';
+$wgGroupPermissions['sysop']['spamblacklistlog'] = true;
+
+$wgAvailableRights[] = 'spamblacklistlog';
