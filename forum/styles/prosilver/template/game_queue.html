@@ -1,0 +1,67 @@
+<!-- INCLUDE overall_header.html -->
+<!-- IF U_MCP --><p>[&nbsp;<a href="{U_MCP}">{L_MCP}</a>&nbsp;]</p><!-- ENDIF -->
+	<h2>{L_QUEUES}</h2>
+	<div id="gameContainer">
+		<div class="leftColumn">
+			<div id="queuesContainer">
+				<h3 class="forumbg">Queue List</h3>
+				<ul class="queuesList">
+					<!-- BEGIN queues -->
+					<li class="row <!-- IF queues.IS_ACTIVE -->bg2<!-- ELSE -->bg1<!-- ENDIF -->"><a href="queues.php?mode=view&amp;q={queues.QUEUE_ID}">{queues.QUEUE_NAME}</a></li>
+					<!-- END queues -->
+				</ul>
+			</div>
+		</div>
+		<div class="rightColumn">
+			<div class="forabg">
+				<div class="inner"><span class="corners-top"><span></span></span>
+				<ul class="topiclist">
+					<li class="header">
+						<dl class="icon">
+							<dt>{L_RECENTLY_APPROVED}</dt>
+							<dd class="topics">{L_GAME_TYPE}</dd>
+							<dd class="posts">{L_GAME_STATUS}</dd>
+							<dd class="lastpost"><span>{L_MAIN_MOD}</span></dd>
+						</dl>
+					</li>
+				</ul>
+				<ul class="topiclist forums">
+					<!-- BEGIN recent_games -->
+					<li class="row">
+					<dl class="icon" style="background-image: url(./styles/prosilver/imageset/forum_unread_subforum.png); background-repeat: no-repeat;">
+						<dt title="{forumrow.FORUM_FOLDER_IMG_ALT}">
+							<a href="queues.php?mode=view&amp;g={recent_games.GAME_ID}" class="forumtitle">{recent_games.GAME_NAME}</a><br />
+							{recent_games.GAME_DESCRIPTION}
+						</dt>
+						<dd class="topics">{recent_games.GAME_TYPE}</dd>
+						<dd class="posts">{recent_games.STATUS}</dd>
+						<dd class="lastpost"><span> {L_RUN_BY}&nbsp;{recent_games.MAIN_MODERATOR}<br />Put alive/dead player count here</span></dd>
+					</dl>
+					</li>
+					<!-- END recent_games -->
+				</ul>
+			
+				<span class="corners-bottom"><span></span></span></div>
+			</div>
+			<form method="post" action="{S_SORT_ACTION}">
+				<fieldset class="display-options">
+					<label>{L_GAME_STATUS}:
+						<select name="sta">
+							<option value="0">{L_ALL_STATUSES}</option>
+							{S_STATUS_OPTIONS}
+						</select>
+					</label>
+					<label>{L_GAME_APPROVAL}:
+						<select name="appr">
+							<option value="1">{L_APPROVED}</option>
+							<option value="0" <!-- IF not APPROVAL_STATUS -->selected="selected"<!-- ENDIF -->>{L_NOT_APPROVED}</option>
+						</select></label>
+					<input type="submit" name="sort" value="{L_GO}" class="button2" /></label>
+				</fieldset>
+			</form>
+			<ul class="linklist">
+				<li class="rightside pagination">{TOTAL_GAMES} Games &bull; <!-- IF PAGINATION --><a href="#" onclick="jumpto(); return false;" title="{L_JUMP_TO_PAGE}">{PAGE_NUMBER}</a> &bull; <span>{PAGINATION}</span><!-- ELSE -->{PAGE_NUMBER}<!-- ENDIF --></li>
+			</ul>
+		</div>
+	</div>
+<!-- INCLUDE overall_footer.html -->

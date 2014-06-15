@@ -29,7 +29,7 @@ a.signature_hideshow:hover{
 	cursor: text;
 }
 .private {
-	background: #000000;
+	background: #362819;
 }
 .private a {
 	color: white;
@@ -84,4 +84,65 @@ a.signature_hideshow:hover{
 font-weight: bold; 
 background:#FFFFFF;
 padding: 0px 2px;
+}
+
+/* following */
+.group_tab{
+	display: inline-block;
+	padding: 5px 10px;
+	margin: 0px;
+	font-weight: bold;
+	color: white;
+	background-color: #0098e4;
+	cursor: pointer;
+	min-width: 130px;
+}
+.group_add{
+	display: inline-block;
+	padding: 5px 10px;
+	margin: 0px;
+	font-weight: bold;
+	color: white;
+	background-color: #0076B1;
+	cursor: pointer;
+}
+#following_widget{
+	padding: 10px;
+}
+#following_groups .topiclist .header{
+	background-color: #0076B1;
+}
+#following_groups .topiclist .header .lastpost{
+	padding-left: 5px;
+}
+.follow_form_element{
+	cursor: text;
+}
+.active_follow_tab{
+	background-color: #0076B1;
+}
+#following_widget fieldset {
+	border-width: 1px;
+	border-color: #999999;
+	border-style: solid;
+	padding: 5px;
+}
+#following_widget dd.email_follow {
+	padding-left: 5px;
+	width: 50px;
+}
+.follow_unread_indicator {
+	min-width: 20px;
+	margin-right: 10px;
+	float: right;
+	display: inline-block;
+	border-radius: 5px;
+	font-weight: bold;
+	text-align: center;
+}
+.processing{
+	cursor: progress;
+}
+.hidden{
+	display: none;
 }

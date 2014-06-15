@@ -1,0 +1,67 @@
+<!-- INCLUDE overall_header.html -->
+<!-- IF U_MCP --><p>[&nbsp;<a href="{U_MCP}">{L_MCP}</a>&nbsp;]</p><!-- ENDIF -->
+
+	<h2>{GAME_NAME}</h2>
+	<div id="gameContainer">
+		<form action="{S_SUBMIT_EDIT_ACTION}" method="post">
+		<!-- BEGIN players -->
+		<div class="panel">
+			<div class="inner">
+				<span class="corners-top"><span></span></span>
+				<h3>Slot #{players.SLOT_ID}: {players.USER}</h3>
+				<fieldset>
+				<dl>
+				<dt><label>Role:</label></dt>
+					<dd>
+						<label for="editFlavour[{players.SLOT_ID}">Flavour Name:</label>
+					</dd>
+					<dd>
+						<input name="editFlavour[{players.SLOT_ID}]" type="text" class="inputbox" maxlength="20" value="{players.FLAVOUR_NAME}" size="20"/>
+					</dd>
+					<dd>
+						<label for="editRole[{players.SLOT_ID}">Basic Role:</label>
+					</dd>
+					<dd>
+						<select name="editRole[{players.SLOT_ID}]">
+						{players.ROLE_OPTIONS}
+						</select>
+					</dd>
+					<dd>
+						<label for="editModifiers[{players.SLOT_ID}">Modifiers:</label>
+					</dd>
+					<dd>
+						<select name="editModifiers[{players.SLOT_ID}][]" multiple="multiple">
+						{players.MODIFIER_OPTIONS}
+						</select>
+					</dd>
+				</dl>
+				<dl>
+				<dt><label for="editStatus[{players.SLOT_ID}">Slot Status:</label></dt>
+					<dd>
+						<select name="editStatus[{players.SLOT_ID}]">
+						{players.STATUS_OPTIONS}
+						</select>
+					</dd>
+				</dl>
+				<dl>
+					<dt><label for="editOutcome[{players.SLOT_ID}">Slot Outcome:</label></dt>
+					<dd>
+						<select name="editOutcome[{players.SLOT_ID}]">
+						{players.OUTCOME_OPTIONS}
+						</select>
+					</dd>
+				</dl>
+				</fieldset>
+				<input type="hidden" value="{players.SLOT_ID}" name="slot_id[]" />
+				<span class="corners-bottom"><span></span></span>
+			</div>
+		</div>
+		<!-- END players -->
+		
+		<fieldset class="submit-buttons">
+			<input type="submit" name="submitPlayerEdit" value="Save Changes" class="button1" />&nbsp; 
+			<input type="button" value="{L_CANCEL}" name="cancel" class="button2" />
+		</fieldset>
+		</form>
+	</div>
+<!-- INCLUDE overall_footer.html -->
