@@ -3,15 +3,15 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <title>Replacement Request Generator</title>
-<link rel="stylesheet" type="text/css" href="./reset.css" />
+<link rel="stylesheet" type="text/css" href="../forum/styles/prosilver/theme/stylesheet.css" />
+
 <style type="text/css">
+
 body, select, input {
-	font-family:Verdana, Geneva, sans-serif;
+	font-family:sans-serif;
 	font-size:13px;
 }
-body{
-	margin-top:20px;
-}
+
 .blankerror {
 	display: none;
 	position: absolute;
@@ -29,45 +29,41 @@ body{
 .blankmessage {
 	display: none;
 	position: absolute;
-	top: 25%;
-	left: 25%;
-	width: 50%;
-	height: 50%;
+	top: 0;
+	left: 0;
+	width: 0;
+	height: 0;
 	background-color: white;
 	z-index:1002;
 	overflow: auto;
 	vertical-align: middle;
 }
 .col1{
-width: 20%;
+width: 170px;
 float:left;
 margin-top:3px;
 }
+
 .col2{
-width: 20%;
+width: 170px;
 float:left;
 }
+
 .col3{
-width: 55%;
+width: auto;
 float:left;
+font-style: italic;
 }
+
+form {
+	min-width:500px;
+}
+
 .panel{
 margin:10px 20px 0px 20px;
 padding:20px 20px;
+}
 
-}
-.bg1{
-	background-color:#FFFFFF;
-}
-.bg2{
-	background-color:#D6E7F7;
-}
-.bg3{
-	background-color:#ECF1F3;
-}
-.bg4{
-	background-color:#CFDDE3;
-}
 .clear{
 	clear:both;
 }
@@ -79,13 +75,21 @@ padding:20px 20px;
 }
 h1 {
 	margin-left:20px;
+	color: #115098;
 	font-size: 2.1em;
-	color:#105289;
 }
 h2 {
 	font-weight:bold;
-	color:#105289;
 	margin:8px 0px;
+}
+
+h3 {
+	margin-left: 60px;
+}
+
+h4 {
+	margin:14px 70px;
+	font-style: italic;
 }
 #bbcode{
 	width:66%;
@@ -93,6 +97,7 @@ h2 {
 #output{
 	margin-top:0px;
 	padding:20px 5px;
+	display:none; /* changes when they click the generate button */
 }
 .inneroutput{
 	border-top:2px;
@@ -100,25 +105,48 @@ h2 {
 	border-style:solid;
 	padding:0px 15px;
 }
+
+#preview{
+	font-size:13px;
+	line-height:135%;
+	margin-left:55px;
+	width:66%;
+}
+
 strong {
 	font-weight:bold;
 }
 em{
 	font-style:italic;
 }
+
+select{
+	width:158px;
+}
+
+label {
+	font-weight :bold;
+	margin: 4px 0;
+}
+
+#submit{
+	font-weight:bold;
+	font-size:133%;
+	margin-top:10px;
+}
+
 </style>
 </head>
 
 <body>
-<h1>Replacement Form</h1>
-<form name="postgen" method="post">
+<h1><a href="http://forum.mafiascum.net">mafiascum.net</a> Replacement Form</h1>
+
+<form name="postgen" method="post" defaultbutton="submit">
+<h3><em>All fields are required.</em></h3>
 	<div class="panel bg2">
-		<div class="col1">
-			Month:
-		</div>
+		<label class="col1" for="month">Month:</label>
 		<div class="col2">
-			<p>
-				<select name="month">
+				<select id="month">
 					<option id="January" value="January">January</option>
 					<option id="February" value="February">February</option>
 					<option id="March" value="March">March</option>
@@ -132,167 +160,131 @@ em{
 					<option id="November" value="November">November</option>
 					<option id="December" value="December">December</option>
 				</select>
-			</p>
 		</div>
 		<div class="col3">
 			<span class="error" id="montherror">You must select a month.</span>
 		</div>
 		<div class="clear"></div>
-		<div class="col1">
-			Date:
-		</div>
+		
+		<label class="col1" for="day">Date:</label>
 		<div class="col2">
-			<p><input type="text" id="day" name="day" maxlength="2"/></p>
+			<input type="text" id="day" name="day" maxlength="2"/>
 		</div>
 		<div class="col3">
 			<span class="error" id="dateerror">You must enter a numerical date.</span>
 		</div>
 		<div class="clear"></div>
-		<div class="col1">
-			Game Type:
-		</div>
-		<div class="col2">	
-		<p>
-			<select name="gametype" onchange="large_check(this);">
-			<option value=""></option>
-			<option value="Open">Open</option>
-			<option value="Micro">Micro</option>
-			<option value="Mini">Mini Normal</option>
-			<option value="Mini Theme">Mini Theme</option>
-			<option value="New York">Large Normal</option>
-			<option value="LT">Large Theme</option>
-			</select>
-			</p>
-		</div>
-		<div class="col3">
-			<span class="error" id="gametypeerror">You must select a game type.</span>
-		</div>
-		<div class="clear"></div>
-		<div class="col1">
-			Game Number:
-		</div>
-		<div class="col2">
-			<p>
-				<input id="gamenum" type="text" name="gamenum" maxlength="4" />
-			</p>
-		</div>
-		<div class="col3">
-			<span class="error" id="gamenumerror">You must enter a numerical game number.</span>
-		</div>
-		<div class="clear"></div>
-		<div class="col1">
-			Game Title:
-		</div>
-		<div class="col2">
-			<p>
-				<input type="text" name="gamename"/>
-			</p>
-		</div>
-		<div class="col3">
-			<span class="error" id="gamenameerror">You must enter a game name.</span>
-		</div>
-		<div class="clear"></div>
-		<div class="col1">
-			Link to Game:
-		</div>
-		<div class="col2">
-			<p>
-				<input type="text" name="gamelink"/>
-			</p>
-		</div>
-		<div class="col3">
-			<span class="error" id="gamelinkerror">You must enter a game link.</span>
-		</div>
-		<div class="clear"></div>
-		<div class="col1">
-			Moderator:
-		</div>
-		<div class="col2">
-			<p>
-				<input type="text" name="modname"/>
-			</p>
-		</div>
-		<div class="col3">
-			<span class="error" id="modnameerror">You must enter the moderators name.</span>
-		</div>
-		<div class="clear"></div>
-		<div class="col1">
-			Phase:
-		</div>
-		<div class="col2">
-			<p>
-				<select name="phase" onchange="pregame_check(this);">
-					<option value=""></option>
-					<option value="Day">Day</option>
-					<option value="Night">Night</option>
-					<option value="Pregame">Pregame</option>
+		
+		<label class="col1" for="gametype">Game Type:</label>
+		<div class="col2">		
+				  <select name="gametype" onchange="large_check(this);">
+					  <option value=""></option>
+					  <option value="Open">Open</option>
+					  <option value="Micro">Micro</option>
+					  <option value="Mini">Mini Normal</option>
+					  <option value="Mini Theme">Mini Theme</option>
+					  <option value="New York">Large Normal</option>
+				    <option value="LT">Large Theme</option>
 				  </select>
-			</p>
 		</div>
 		<div class="col3">
-			<span class="error" id="phaseerror">You must enter the game phase.</span>
+				  <span class="error" id="gametypeerror">You must select a game type.</span>
 		</div>
 		<div class="clear"></div>
-		<div class="col1">
-			Phase Number:
-		</div>
+		
+		<label class="col1" for="gamenum">Game Number:</label>
 		<div class="col2">
-			<p>
-				<input type="text" id="phasenum" name="phasenum" maxlength="2"/>
-			</p>
+				  <input id="gamenum" type="text" name="gamenum" maxlength="4" />
 		</div>
 		<div class="col3">
-			<span class="error" id="phasenumerror">You must enter the phase number.</span>
+				  <span class="error" id="gamenumerror">You must enter a numerical game number.</span>
 		</div>
 		<div class="clear"></div>
-		<div class="col1">
-			Number of Pages:
-		</div>
+		
+		<label class="col1" for="gamename">Game Title:</label>
 		<div class="col2">
-			<p>
-				<input type="text" id="pagenum" name="pagenum" maxlength="3"/>
-			</p>
+				  <input type="text" name="gamename"/>
 		</div>
 		<div class="col3">
-			<span class="error" id="pagenumerror">You must enter the page number.</span>
+				  <span class="error" id="gamenameerror">You must enter a game name.</span>
 		</div>
 		<div class="clear"></div>
-		<div class="col1">
-			Departing Player:
-		</div>
+		
+		<label class="col1" for="gamelink">Link to Game:</label>
 		<div class="col2">
-			<p>
-				<input type="text" name="repname"/>
-			</p>
+				  <input type="text" name="gamelink"/>
 		</div>
 		<div class="col3">
-			<span class="error" id="repnameerror">You must enter the name of the person getting replaced.</span>
+				  <span class="error" id="gamelinkerror">You must enter a game link.</span>
 		</div>
 		<div class="clear"></div>
-		<div class="col1">
-			Link to Moderator's Profile:
-		</div>
+		
+		<label class="col1" for="modname">Moderator:</label>
 		<div class="col2">
-			<p>
-				<input type="text" name="modlink"/>
-			</p>
+				  <input type="text" name="modname"/>
 		</div>
 		<div class="col3">
-			<span class="error" id="modlinkerror">You must enter a link to the moderators profile.</span>
+				  <span class="error" id="modnameerror">You must enter the moderator's exact username.</span>
 		</div>
 		<div class="clear"></div>
-		<input type="button" value="Generate" id="generate" onclick="generate_bbc()">
+		
+		<label class="col1" for="phase">Phase:</label>
+		<div class="col2">
+				  <select name="phase" onchange="pregame_check(this);">
+					  <option value=""></option>
+					  <option value="Day">Day</option>
+					  <option value="Night">Night</option>
+					  <option value="Pregame">Pregame</option>
+				  </select>
+		</div>
+		<div class="col3">
+				  <span class="error" id="phaseerror">You must enter the game phase.</span>
+		</div>
+		<div class="clear"></div>
+		
+		<label class="col1" for="phasenum">Phase Number:</label>
+		<div class="col2">
+				  <input type="text" id="phasenum" name="phasenum" maxlength="2"/>
+		</div>
+		<div class="col3">
+				  <span class="error" id="phasenumerror">You must enter the phase number.</span>
+		</div>
+		<div class="clear"></div>
+		
+		<label class="col1" for="pagenum">Number of Pages:</label>
+		<div class="col2">
+				  <input type="text" id="pagenum" name="pagenum" maxlength="3"/>
+		</div>
+		<div class="col3">
+				  <span class="error" id="pagenumerror">You must enter the page number.</span>
+		</div>
+		<div class="clear"></div>
+		
+		<label class="col1" for="repname">Departing Player:</label>
+		<div class="col2">
+				  <input type="text" name="repname"/>
+		</div>
+		<div class="col3">
+				  <span class="error" id="repnameerror">You must enter the username of the person getting replaced.</span>
+		</div>
+		<div class="clear"></div>
+		
+		<input type="button" value="Generate" id="submit" onclick="generate_bbc()">
 		<div class="clear"></div>
 	</div>
 </form>
 <div id="output" class="panel bg2">
 	<div class="inneroutput">
-		<h2>Preview:</h2>
-		<div id="preview"></br></br></div>
-		<h2>BBCode:</h2>
-		<textarea name="textarea" id="bbcode" rows="4"></textarea>
+		<h3>Preview:</h2>
+		<div id="preview"></div>
+		
+		<h3>BBCode:</h2>
+		<textarea name="textarea" id="bbcode" rows="4" columns="80" onClick="this.select();"></textarea>
 	</div>
+<h4><a href="http://forum.mafiascum.net/posting.php?mode=reply&f=4&t=31533">Return to Replacement Thread <em>(reply screen)</em></a></h4>
+
 </div>
+
 <script type="text/javascript">
 // Set default value for the month field.
 // Create all the months.
@@ -311,70 +303,15 @@ var dropDecember = document.getElementById('December');
 
 // Find the current month.
 var currentTime = new Date();
-var month = currentTime.getMonth() + 1;
+var month = currentTime.getMonth();
 
-// Select the entry based on the month.
-if (month == '1'){
+var monthNames = [ "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December" ];
+    
+// console.log(month+', '+monthNames[month]+', '+currentTime.getDate(),document.getElementById('month'))
 
-dropJanuary.selected=true;
-
-}
-else if (month == '2'){
-
-dropFebruary.selected=true;
-
-}
-else if (month == '3'){
-
-dropMarch.selected=true;
-
-}
-else if (month == '4'){
-
-dropApril.selected=true;
-
-}
-else if (month == '5'){
-
-dropMay.selected=true;
-
-}
-else if (month == '6'){
-
-dropJune.selected=true;
-
-}
-else if (month == '7'){
-
-dropJuly.selected=true;
-
-}
-else if (month == '8'){
-
-dropAugust.selected=true;
-
-}
-else if (month == '9'){
-
-dropSeptember.selected=true;
-
-}
-else if (month == '10'){
-
-dropOctober.selected=true;
-
-}
-else if (month == '11'){
-
-dropNovember.selected=true;
-
-}
-else if (month == '12'){
-
-dropDecember.selected=true;
-
-}
-
+var fieldMonth = document.getElementById('month')
+fieldMonth.value = monthNames[month]
 
 // Find and set the default value for the day field.
 var fieldDay = document.getElementById('day');
@@ -408,7 +345,6 @@ function validateForm()
 	var phasenumfield = oForm.elements['phasenum'].value;
 	var pagenumfield = oForm.elements['pagenum'].value;
 	var repnamefield = oForm.elements['repname'].value;
-	var modlinkfield = oForm.elements['modlink'].value;
 	var gamelinkfield = oForm.elements['gamelink'].value;
 
 	noerrors += validateField(monthlist, document.getElementById('montherror'), false);
@@ -431,18 +367,17 @@ function validateForm()
 	noerrors += validateField(modnamefield, document.getElementById('modnameerror'), false);
 	noerrors += validateField(phaselist, document.getElementById('phaseerror'), false);
 	noerrors += validateField(repnamefield, document.getElementById('repnameerror'), false);
-	noerrors += validateField(modlinkfield, document.getElementById('modlinkerror'), false);
 	noerrors += validateField(gamelinkfield, document.getElementById('gamelinkerror'), false);
 	
 	return noerrors == 0;
 }
 
-// Hide unnecessary elements for requests in Pregame.
+// Disable unnecessary elements for requests in Pregame.
 function pregame_check(type){
 	// Find the game phase.
 	var gamephase = type.value;
 
-	// Find the elements to be hidden.
+	// Find the elements to be disabled.
 	var phasenum = document.getElementById('phasenum');
 	var pagenum = document.getElementById('pagenum');
 
@@ -456,12 +391,12 @@ function pregame_check(type){
 	}
 }
 
-// Hide unnecessary elements for Large Theme requests.
+// Disable unnecessary elements for Large Theme requests.
 function large_check(type){
 	// Find the type of game.
 	var gametype = type.value;
 
-	// Find the elements to be hidden.
+	// Find the elements to be disabled.
 	var gamenum = document.getElementById('gamenum');
 
 	if (gametype == 'LT'){
@@ -490,27 +425,33 @@ var phaselist = oForm.elements['phase'].value;
 var phasenumfield = oForm.elements['phasenum'].value;
 var pagenumfield = oForm.elements['pagenum'].value;
 var repnamefield = oForm.elements['repname'].value;
-var modlinkfield = oForm.elements['modlink'].value;
 var gamelinkfield = oForm.elements['gamelink'].value;
 var themegame = gametypelist + ' ' + gamenumfield + ': ';
-var phasestuff = ' ' + phasenumfield + ', ' + pagenumfield + ' pages';
+
+var phasestuff = phaselist + ' ' + phasenumfield + ', ' + pagenumfield + ' page';
+
+if (pagenumfield > '1'){
+	var phasestuff = phasestuff + 's';
+}
+
+if (phaselist == 'Pregame'){
+	var phasestuff = "Pregame";
+}
+
 
 if (gametypelist == 'LT'){
 	var themegame = "";
 }
 
-if (phaselist == 'Pregame'){
-	var phasestuff = "";
+// console.log(phasestuff + '('+phaselist + ' ' + phasenumfield + ', ' + pagenumfield + ' page(s))');
+
+document.getElementById('output').style.display="block";
+
+document.getElementById('preview').innerHTML=monthlist + ' ' + dayfield + ' - <strong><em><a href="' + gamelinkfield + '">' + themegame + gamenamefield + '<\/a><\/em><\/strong><br \/><strong>Moderator:<\/strong> <a href="http://forum.mafiascum.net/memberlist.php?mode=viewprofile&un=' + modnamefield + '">' + modnamefield + '<\/a><\/span> <span style="padding-left:30px;"><strong>Status: <\/strong>' + phasestuff + '<\/span><span style="padding-left:30px;"><strong>Replacing: <\/strong>' + repnamefield;
+
+document.getElementById('bbcode').innerHTML= monthlist + ' ' + dayfield + ' - [i][url=' + gamelinkfield + ']' + themegame + gamenamefield + '[\/url][\/i]\u000D[b]Moderator:[\/b] [user]' + modnamefield + '[\/user] [tab]3[\/tab][b]Status:[\/b] ' + phasestuff + '[tab]3[\/tab][b]Replacing:[\/b] ' + repnamefield + '\u000A'
 }
 
-if (pagenumfield == '1'){
-	var phasestuff = ' ' + phasenumfield + ', ' + pagenumfield + ' page';
-}
-
-document.getElementById('preview').innerHTML='<span style="font-family:Verdana, Geneva, sans-serif; font-size:13px;">' + monthlist + ' ' + dayfield + ' - <em><a href="' + gamelinkfield + '">' + themegame + gamenamefield + '<\/a><\/em><br \/><strong>Moderator: <\/strong><a href="' + modlinkfield + '">' + modnamefield + '<\/a><\/span><span style="padding-left:30px;"><strong>Status: <\/strong>' + phaselist + phasestuff + '<\/span><span style="padding-left:30px;"><strong>Replacing: <\/strong>' + repnamefield + '<\/span>';
-
-document.getElementById('bbcode').innerHTML= monthlist + ' ' + dayfield + ' - [i][url=' + gamelinkfield + ']' + themegame + gamenamefield + '[\/url][\/i]\u000D[b]Moderator: [\/b] [url=' + modlinkfield + ']' + modnamefield + '[\/url] [tab]3[\/tab][b]Status: [\/b]' + phaselist + ' ' + phasenumfield + ', ' + pagenumfield + ' pages[tab]3[\/tab][b]Replacing: [\/b]' + repnamefield + '\u000A'
-}
 </script>
 </body>
 </html>

@@ -1,0 +1,459 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   version="1.1"
+   width="900"
+   height="900"
+   id="svg3032">
+  <defs
+     id="defs3034">
+    <marker
+       refX="0"
+       refY="0"
+       orient="auto"
+       id="Arrow1Mend"
+       style="overflow:visible">
+      <path
+         d="M 0,0 5,-5 -12.5,0 5,5 0,0 z"
+         transform="matrix(-0.4,0,0,-0.4,-4,0)"
+         id="path3912"
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt" />
+    </marker>
+    <marker
+       refX="0"
+       refY="0"
+       orient="auto"
+       id="Arrow1Mendm"
+       style="overflow:visible">
+      <path
+         d="M 0,0 5,-5 -12.5,0 5,5 0,0 z"
+         transform="matrix(-0.4,0,0,-0.4,-4,0)"
+         id="path4408"
+         style="fill:#ed1c24;fill-rule:evenodd;stroke:#ed1c24;stroke-width:1pt" />
+    </marker>
+    <marker
+       refX="0"
+       refY="0"
+       orient="auto"
+       id="Arrow1Mendmc"
+       style="overflow:visible">
+      <path
+         d="M 0,0 5,-5 -12.5,0 5,5 0,0 z"
+         transform="matrix(-0.4,0,0,-0.4,-4,0)"
+         id="path4574"
+         style="fill:#ed1c24;fill-rule:evenodd;stroke:#ed1c24;stroke-width:1pt" />
+    </marker>
+  </defs>
+  <metadata
+     id="metadata3037">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <rect
+     width="900"
+     height="900"
+     x="0"
+     y="0"
+     id="rect3221"
+     style="color:#000000;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.69999999;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate" />
+  <g
+     transform="translate(0,-152.36218)"
+     id="layer1">
+    <a
+       xlink:href="http://mafiascum.net/"
+       transform="matrix(1.3549788,0,0,1.3549788,-7.4122941,-469.06307)"
+       id="a4350">
+      <image
+         xlink:href="http://mafiascum.net/howto/logosmall.png"
+         x="9.1334887"
+         y="461.81769"
+         width="135.09535"
+         height="39.402809"
+         id="image3048" />
+    </a>
+    <image
+       xlink:href="http://mafiascum.net/howto/queue.png"
+       x="245.21344"
+       y="227.9184"
+       width="232"
+       height="129"
+       id="image3097" />
+    <image
+       xlink:href="http://mafiascum.net/howto/threads.png"
+       x="245.21344"
+       y="394.04016"
+       width="344"
+       height="357"
+       id="image5066" />
+    <image
+       xlink:href="http://mafiascum.net/howto/s1.png"
+       x="245.21344"
+       y="791.54327"
+       width="207"
+       height="59"
+       id="image5107" />
+    <image
+       xlink:href="http://mafiascum.net/howto/s2.png"
+       x="475.45395"
+       y="821.29871"
+       width="116"
+       height="91"
+       id="image5184"
+       style="display:inline" />
+    <image
+       xlink:href="http://mafiascum.net/howto/s3.png"
+       x="658.89252"
+       y="888.05408"
+       width="112"
+       height="49"
+       id="image5199" />
+    <image
+       xlink:href="http://mafiascum.net/howto/inbox.png"
+       x="245.21344"
+       y="548.06091"
+       width="213"
+       height="28"
+       transform="translate(0,452.36218)"
+       id="image3172"
+       style="display:inline" />
+  </g>
+  <g
+     transform="translate(0,300)"
+     id="layer2"
+     style="display:inline">
+    <text
+       x="226.24748"
+       y="-260.97781"
+       id="text3051"
+       xml:space="preserve"
+       style="font-size:20px;font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#ed1c24;fill-opacity:1;stroke:none;font-family:Century Schoolbook L;-inkscape-font-specification:Century Schoolbook L Medium"><tspan
+         x="226.24748"
+         y="-260.97781"
+         id="tspan3053"
+         style="font-size:20px;font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:#ed1c24;fill-opacity:1;font-family:Century Schoolbook L;-inkscape-font-specification:Century Schoolbook L Medium">How to sign up for a game on our forums</tspan></text>
+    <text
+       x="224.78722"
+       y="-231.14752"
+       id="text3055"
+       xml:space="preserve"
+       style="font-size:16px;font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;text-indent:0;text-align:start;text-decoration:none;line-height:125%;letter-spacing:0px;word-spacing:0px;text-transform:none;direction:ltr;block-progression:tb;writing-mode:lr-tb;text-anchor:start;baseline-shift:baseline;color:#000000;fill:#fafafc;fill-opacity:1;fill-rule:nonzero;stroke:none;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate;font-family:Century Schoolbook L;-inkscape-font-specification:Century Schoolbook L Medium"><tspan
+         x="224.78722"
+         y="-231.14752"
+         id="tspan3057">1. Enter the Queue subforum</tspan></text>
+    <text
+       x="224.78722"
+       y="-67.147522"
+       id="text4343"
+       xml:space="preserve"
+       style="font-size:16px;font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;text-indent:0;text-align:start;text-decoration:none;line-height:125%;letter-spacing:0px;word-spacing:0px;text-transform:none;direction:ltr;block-progression:tb;writing-mode:lr-tb;text-anchor:start;baseline-shift:baseline;color:#000000;fill:#fafafc;fill-opacity:1;fill-rule:nonzero;stroke:none;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate;font-family:Century Schoolbook L;-inkscape-font-specification:Century Schoolbook L Medium"><tspan
+         x="224.78722"
+         y="-67.147522"
+         id="tspan4345">2. Pick a signup thread <tspan
+   id="tspan4356"
+   style="font-size:16px;font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Century Schoolbook L;-inkscape-font-specification:Century Schoolbook L Medium">(based on size and type)</tspan></tspan></text>
+    <text
+       x="44.30471"
+       y="-44.740128"
+       id="text3055-0"
+       xml:space="preserve"
+       style="font-size:14px;font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;text-indent:0;text-align:start;text-decoration:none;line-height:110.00000238%;letter-spacing:0px;word-spacing:0px;text-transform:none;direction:ltr;block-progression:tb;writing-mode:lr-tb;text-anchor:start;baseline-shift:baseline;color:#000000;fill:#fafafc;fill-opacity:1;fill-rule:nonzero;stroke:none;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate;font-family:Century Schoolbook L;-inkscape-font-specification:Century Schoolbook L Medium"><tspan
+         x="44.30471"
+         y="-44.740128"
+         id="tspan3057-9">9-player games with a known</tspan><tspan
+         x="44.30471"
+         y="-29.340128"
+         id="tspan4977">setup; recommended for </tspan><tspan
+         x="44.30471"
+         y="-13.940126"
+         id="tspan4983">players new to the game, </tspan><tspan
+         x="44.30471"
+         y="1.4598734"
+         id="tspan4652">and/or new to this site</tspan></text>
+    <text
+       x="-281.03043"
+       y="-146.60422"
+       transform="translate(0,-400)"
+       id="text4654"
+       xml:space="preserve"
+       style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"><tspan
+         x="-281.03043"
+         y="-146.60422"
+         id="tspan4656" /></text>
+    <text
+       x="44.192711"
+       y="43.605171"
+       id="text3055-0-5"
+       xml:space="preserve"
+       style="font-size:14px;font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;text-indent:0;text-align:start;text-decoration:none;line-height:110.00000238%;letter-spacing:0px;word-spacing:0px;text-transform:none;direction:ltr;block-progression:tb;writing-mode:lr-tb;text-anchor:start;baseline-shift:baseline;color:#000000;fill:#fafafc;fill-opacity:1;fill-rule:nonzero;stroke:none;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate;font-family:Century Schoolbook L;-inkscape-font-specification:Century Schoolbook L Medium"><tspan
+         x="44.192711"
+         y="43.605171"
+         id="tspan4652-4">Games of 13 or fewer players,</tspan><tspan
+         x="44.192711"
+         y="59.005173"
+         id="tspan4736">either from source material</tspan><tspan
+         x="44.192711"
+         y="74.405174"
+         id="tspan4740">or having special mechanics</tspan><tspan
+         x="44.192711"
+         y="89.805176"
+         id="tspan4738" /></text>
+    <text
+       x="44.45871"
+       y="208.84369"
+       id="text4757"
+       xml:space="preserve"
+       style="font-size:14px;font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;text-indent:0;text-align:start;text-decoration:none;line-height:110.00000238%;letter-spacing:0px;word-spacing:0px;text-transform:none;direction:ltr;block-progression:tb;writing-mode:lr-tb;text-anchor:start;baseline-shift:baseline;color:#000000;fill:#fafafc;fill-opacity:1;fill-rule:nonzero;stroke:none;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate;font-family:Century Schoolbook L;-inkscape-font-specification:Century Schoolbook L Medium"><tspan
+         x="44.45871"
+         y="208.84369"
+         id="tspan4759">Games of 13 or fewer players,</tspan><tspan
+         x="44.45871"
+         y="224.24368"
+         id="tspan4763">with a standardized selection</tspan><tspan
+         x="44.45871"
+         y="239.64369"
+         id="tspan4769">of roles and mechanics</tspan><tspan
+         x="44.45871"
+         y="255.04369"
+         id="tspan4765" /></text>
+    <text
+       x="640.77716"
+       y="158.84705"
+       id="text4757-6"
+       xml:space="preserve"
+       style="font-size:14px;font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;text-indent:0;text-align:start;text-decoration:none;line-height:110.00000238%;letter-spacing:0px;word-spacing:0px;text-transform:none;direction:ltr;block-progression:tb;writing-mode:lr-tb;text-anchor:start;baseline-shift:baseline;color:#000000;fill:#fafafc;fill-opacity:1;fill-rule:nonzero;stroke:none;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate;font-family:Century Schoolbook L;-inkscape-font-specification:Century Schoolbook L Medium"><tspan
+         x="640.77716"
+         y="158.84705"
+         id="tspan4765-0">Games of 14 or more players, </tspan><tspan
+         x="640.77716"
+         y="174.24704"
+         id="tspan4852">which have their own signup </tspan><tspan
+         x="640.77716"
+         y="189.64705"
+         id="tspan4854">threads below the 'stuck' threads </tspan><tspan
+         x="640.77716"
+         y="205.04704"
+         id="tspan4856">for other games; look for the ones</tspan><tspan
+         x="640.77716"
+         y="220.44705"
+         id="tspan5093">that are not FULL or OVER!</tspan></text>
+    <path
+       d="M 636.24085,14.875801 439.5652,54.529329"
+       id="path4400-7-5-0"
+       style="fill:#ed1c24;fill-opacity:0.83529412;stroke:#ed1c24;stroke-width:3.29999995;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:0.83529412;stroke-dasharray:none;marker-end:url(#Arrow1Mendmc);display:inline" />
+    <path
+       d="m 637.18215,178.08876 -126.73171,85.2761"
+       id="path4400-7-5-0-0"
+       style="fill:#ed1c24;fill-opacity:0.83529412;stroke:#ed1c24;stroke-width:3.29999995;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:0.83529412;stroke-dasharray:none;marker-end:url(#Arrow1Mendmc);display:inline" />
+    <text
+       x="640.77716"
+       y="84.592773"
+       id="text4757-6-1"
+       xml:space="preserve"
+       style="font-size:14px;font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;text-indent:0;text-align:start;text-decoration:none;line-height:110.00000238%;letter-spacing:0px;word-spacing:0px;text-transform:none;direction:ltr;block-progression:tb;writing-mode:lr-tb;text-anchor:start;baseline-shift:baseline;color:#000000;fill:#fafafc;fill-opacity:1;fill-rule:nonzero;stroke:none;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate;font-family:Century Schoolbook L;-inkscape-font-specification:Century Schoolbook L Medium"><tspan
+         x="640.77716"
+         y="84.592773"
+         id="tspan4856-4">Games of any size,</tspan><tspan
+         x="640.77716"
+         y="99.992775"
+         id="tspan4930">with a published </tspan><tspan
+         x="640.77716"
+         y="115.39278"
+         id="tspan4932">setup and roles</tspan></text>
+    <path
+       d="m 634.31919,96.068032 -78.57965,9.021528"
+       id="path4400-7-5-0-4"
+       style="fill:#ed1c24;fill-opacity:0.83529412;stroke:#ed1c24;stroke-width:3.29999995;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:0.83529412;stroke-dasharray:none;marker-end:url(#Arrow1Mendmc);display:inline" />
+    <text
+       x="44.45871"
+       y="125.57339"
+       id="text4757-0"
+       xml:space="preserve"
+       style="font-size:14px;font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;text-indent:0;text-align:start;text-decoration:none;line-height:110.00000238%;letter-spacing:0px;word-spacing:0px;text-transform:none;direction:ltr;block-progression:tb;writing-mode:lr-tb;text-anchor:start;baseline-shift:baseline;color:#000000;fill:#fafafc;fill-opacity:1;fill-rule:nonzero;stroke:none;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate;font-family:Century Schoolbook L;-inkscape-font-specification:Century Schoolbook L Medium"><tspan
+         x="44.45871"
+         y="125.57339"
+         id="tspan4759-0">Games of 9 or fewer players,</tspan><tspan
+         x="44.45871"
+         y="140.97339"
+         id="tspan4769-1">with variable setups and </tspan><tspan
+         x="44.45871"
+         y="156.37338"
+         id="tspan4975">quick deadlines</tspan><tspan
+         x="44.45871"
+         y="171.77339"
+         id="tspan4765-4" /></text>
+    <path
+       d="M 209.26668,135.91452 322.2244,149.3666"
+       id="path4400-7-5-5"
+       style="fill:#ed1c24;fill-opacity:0.83529412;stroke:#ed1c24;stroke-width:3.29999995;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:0.83529412;stroke-dasharray:none;marker-end:url(#Arrow1Mendmc);display:inline" />
+    <text
+       x="640.73517"
+       y="2.6244888"
+       id="text4757-6-5"
+       xml:space="preserve"
+       style="font-size:14px;font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;text-indent:0;text-align:start;text-decoration:none;line-height:110.00000238%;letter-spacing:0px;word-spacing:0px;text-transform:none;direction:ltr;block-progression:tb;writing-mode:lr-tb;text-anchor:start;baseline-shift:baseline;color:#000000;fill:#fafafc;fill-opacity:1;fill-rule:nonzero;stroke:none;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate;font-family:Century Schoolbook L;-inkscape-font-specification:Century Schoolbook L Medium"><tspan
+         x="640.73517"
+         y="2.6244888"
+         id="tspan4856-6">Immediate opportunities</tspan><tspan
+         x="640.73517"
+         y="18.024488"
+         id="tspan5030">to replace a player</tspan><tspan
+         x="640.73517"
+         y="33.424488"
+         id="tspan5032">in an ongoing game</tspan></text>
+    <path
+       d="M 637.10787,178.11992 483.17104,219.14385"
+       id="path4400-7-5-0-8"
+       style="fill:#ed1c24;fill-opacity:0.83529412;stroke:#ed1c24;stroke-width:3.29999995;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:0.83529412;stroke-dasharray:none;marker-end:url(#Arrow1Mendmc);display:inline" />
+    <text
+       x="224.78722"
+       y="329.34402"
+       id="text4343-0"
+       xml:space="preserve"
+       style="font-size:16px;font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;text-indent:0;text-align:start;text-decoration:none;line-height:125%;letter-spacing:0px;word-spacing:0px;text-transform:none;direction:ltr;block-progression:tb;writing-mode:lr-tb;text-anchor:start;baseline-shift:baseline;color:#000000;fill:#fafafc;fill-opacity:1;fill-rule:nonzero;stroke:none;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate;font-family:Century Schoolbook L;-inkscape-font-specification:Century Schoolbook L Medium"><tspan
+         x="224.78722"
+         y="329.34402"
+         id="tspan4345-4">3. Reply to the thread, saying &quot;/in&quot; or &quot;I want to play&quot; or something similar</tspan></text>
+    <text
+       x="1259.9532"
+       y="311.4754"
+       transform="translate(0,-400)"
+       id="text5095"
+       xml:space="preserve"
+       style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"><tspan
+         x="1259.9532"
+         y="311.4754"
+         id="tspan5097" /></text>
+    <text
+       x="641.65918"
+       y="380.14594"
+       id="text4757-6-2"
+       xml:space="preserve"
+       style="font-size:14px;font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;text-indent:0;text-align:start;text-decoration:none;line-height:110.00000238%;letter-spacing:0px;word-spacing:0px;text-transform:none;direction:ltr;block-progression:tb;writing-mode:lr-tb;text-anchor:start;baseline-shift:baseline;color:#000000;fill:#fafafc;fill-opacity:1;fill-rule:nonzero;stroke:none;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate;font-family:Century Schoolbook L;-inkscape-font-specification:Century Schoolbook L Medium"><tspan
+         x="641.65918"
+         y="380.14594"
+         id="tspan5093-4"
+         style="font-style:italic;fill:#ed1c24;fill-opacity:1">Note: Theme games and Larges </tspan><tspan
+         x="641.65918"
+         y="395.54593"
+         id="tspan5273"
+         style="font-style:italic;fill:#ed1c24;fill-opacity:1">may require a game or two of </tspan><tspan
+         x="641.65918"
+         y="410.94592"
+         id="tspan5277"
+         style="font-style:italic;fill:#ed1c24;fill-opacity:1">experience before signing up!</tspan></text>
+    <text
+       x="245.55144"
+       y="432.254"
+       id="text4757-6-0"
+       xml:space="preserve"
+       style="font-size:13px;font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;text-indent:0;text-align:start;text-decoration:none;line-height:110.00000238%;letter-spacing:0px;word-spacing:0px;text-transform:none;direction:ltr;block-progression:tb;writing-mode:lr-tb;text-anchor:start;baseline-shift:baseline;color:#000000;fill:#fafafc;fill-opacity:1;fill-rule:nonzero;stroke:none;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate;font-family:Century Schoolbook L;-inkscape-font-specification:Century Schoolbook L Italic"><tspan
+         x="245.55144"
+         y="432.254"
+         id="tspan3131">Micros, Opens, and Mini Themes </tspan><tspan
+         x="245.55144"
+         y="446.55399"
+         id="tspan3133">usually have more than one game</tspan><tspan
+         x="245.55144"
+         y="460.854"
+         id="tspan3135">in signups at once; please </tspan><tspan
+         x="245.55144"
+         y="475.15399"
+         id="tspan3137">specify your preference.</tspan></text>
+    <text
+       x="224.78722"
+       y="536.24799"
+       id="text4343-0-9"
+       xml:space="preserve"
+       style="font-size:16px;font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;text-indent:0;text-align:start;text-decoration:none;line-height:125%;letter-spacing:0px;word-spacing:0px;text-transform:none;direction:ltr;block-progression:tb;writing-mode:lr-tb;text-anchor:start;baseline-shift:baseline;color:#000000;fill:#fafafc;fill-opacity:1;fill-rule:nonzero;stroke:none;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate;font-family:Century Schoolbook L;-inkscape-font-specification:Century Schoolbook L Medium"><tspan
+         x="224.78722"
+         y="536.24799"
+         id="tspan3162">4. Now just wait for the game to fill and a role PM to appear in your Inbox!</tspan></text>
+  </g>
+  <g
+     transform="translate(0,300)"
+     id="layer3"
+     style="display:inline">
+    <a
+       xlink:href="http://forum.mafiascum.net/viewforum.php?f=4"
+       transform="translate(21.754431,-300.21546)"
+       id="a4353">
+      <path
+         d="m 360.42154,170.726 a 47.42389,22.482435 0 1 1 -94.84778,0 47.42389,22.482435 0 1 1 94.84778,0 z"
+         transform="matrix(0.58469732,0,0,0.48895146,129.0999,86.58566)"
+         id="path3100"
+         style="color:#000000;fill:#ff0000;fill-opacity:0.21568627;fill-rule:nonzero;stroke:#ed1c24;stroke-width:5.61077452;stroke-miterlimit:4;stroke-opacity:0.83428572;stroke-dasharray:none;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate" />
+    </a>
+    <g
+       id="layer4"
+       style="display:inline" />
+    <path
+       d="M 390.84519,70.878604 330.99871,149.6175"
+       id="path3897"
+       style="fill:#ed1c24;fill-opacity:1;stroke:#ed1c24;stroke-width:3.29999995;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:0.83529412;stroke-dasharray:none;marker-end:url(#Arrow1Mend);display:none" />
+    <path
+       d="m 409.3701,-223.5406 -61.83063,76.82268"
+       id="path4400"
+       style="fill:#ed1c24;fill-opacity:0.83529412;stroke:#ed1c24;stroke-width:3.29999995;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:0.83529412;stroke-dasharray:none;marker-end:url(#Arrow1Mendm);display:inline" />
+    <path
+       d="m 204.45338,-24.40483 120.31223,9.48193"
+       id="path4400-7"
+       style="fill:#ed1c24;fill-opacity:0.83529412;stroke:#ed1c24;stroke-width:3.29999995;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:0.83529412;stroke-dasharray:none;marker-end:url(#Arrow1Mendmc);display:inline" />
+    <path
+       d="m 227.42448,55.512682 86.02614,-26.28842"
+       id="path4400-7-8"
+       style="fill:#ed1c24;fill-opacity:0.83529412;stroke:#ed1c24;stroke-width:3.29999995;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:0.83529412;stroke-dasharray:none;marker-end:url(#Arrow1Mendmc);display:inline" />
+    <path
+       d="m 238.87389,218.47907 84.45439,-24.62993"
+       id="path4400-7-5"
+       style="fill:#ed1c24;fill-opacity:0.83529412;stroke:#ed1c24;stroke-width:3.29999995;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:0.83529412;stroke-dasharray:none;marker-end:url(#Arrow1Mendmc);display:inline" />
+    <rect
+       width="73.22908"
+       height="32.62682"
+       x="249.95476"
+       y="367.23102"
+       id="rect5131"
+       style="color:#000000;fill:#ff0000;fill-opacity:0.21568627;fill-rule:nonzero;stroke:#ed1c24;stroke-width:3;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:0.83428572;stroke-dasharray:none;stroke-dashoffset:0;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate" />
+    <path
+       d="m 323.91679,384.30952 159.2439,50.21927"
+       id="path4400-4"
+       style="fill:#ed1c24;fill-opacity:0.83529412;stroke:#ed1c24;stroke-width:3.29999995;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:0.83529412;stroke-dasharray:none;marker-end:url(#Arrow1Mendm);display:inline" />
+    <path
+       d="m 592.20077,460.50818 70.41563,-0.34451"
+       id="path4400-4-9"
+       style="fill:#ed1c24;fill-opacity:0.83529412;stroke:#ed1c24;stroke-width:3.29999995;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:0.83529412;stroke-dasharray:none;marker-end:url(#Arrow1Mendm);display:inline" />
+    <rect
+       width="53.022507"
+       height="27.885612"
+       x="661.13257"
+       y="446.27267"
+       id="rect5131-3"
+       style="color:#000000;fill:#ff0000;fill-opacity:0.21568627;fill-rule:nonzero;stroke:#ed1c24;stroke-width:3;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:0.83428572;stroke-dasharray:none;stroke-dashoffset:0;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate" />
+    <path
+       d="m 640.98724,397.3153 28.24233,-0.34451"
+       id="path4400-4-9-8"
+       style="fill:#ed1c24;fill-opacity:0.83529412;stroke:#ed1c24;stroke-width:0.70000005;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:0.83529412;stroke-dasharray:none;marker-start:none;marker-mid:none;marker-end:none;display:inline" />
+    <a
+       xlink:href="http://forum.mafiascum.net/ucp.php?i=pm&amp;folder=inbox"
+       id="a3223">
+      <path
+         d="m 360.42154,170.726 a 47.42389,22.482435 0 1 1 -94.84778,0 47.42389,22.482435 0 1 1 94.84778,0 z"
+         transform="matrix(1.0845686,0,0,0.71548658,66.602637,439.82286)"
+         id="path3100-9"
+         style="color:#000000;fill:#ff0000;fill-opacity:0.21568627;fill-rule:nonzero;stroke:#ed1c24;stroke-width:3.40558696;stroke-miterlimit:4;stroke-opacity:0.83428572;stroke-dasharray:none;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate" />
+    </a>
+  </g>
+</svg>
