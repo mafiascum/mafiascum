@@ -35,7 +35,7 @@
 	<target name="svn-checkout">
 		<echo>SVN Checkout. Root: ${checkout-root} SRC: ${checkout-src}</echo>
 		<exec dir="." executable="svn">
-			<arg line="export http://199.217.116.144/svn/mafiascum/${branch}/java/SiteChatServer${revision} ./SiteChatServer/ --force --username=mmason --password='W@qsablast'" />
+			<arg line="export svn://localhost/mafiascum/${branch}/java/SiteChatServer${revision} ./SiteChatServer/ --force --username=mmason" />
 		</exec>
 	</target>
 	
