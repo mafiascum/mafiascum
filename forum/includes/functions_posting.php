@@ -1703,6 +1703,12 @@ function submit_post($mode, $subject, $username, $topic_type, &$poll, &$data, $u
 		$post_approval = ($data['force_approved_state']) ? 1 : 0;
 	}
 
+	if(!$post_approval && sfs_check($user->ip))
+	{
+		trigger_error("Your IP has been flagged as spam associated. Please send an email address to an administrator, register an account, or use a different network to submit your post.");
+		return false;
+	}
+
 	// Start the transaction here
 	$db->sql_transaction('begin');
 
