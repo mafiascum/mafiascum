@@ -1705,7 +1705,7 @@ function submit_post($mode, $subject, $username, $topic_type, &$poll, &$data, $u
 
 	if(!$post_approval && sfs_check($user->ip))
 	{
-		trigger_error("Your IP has been flagged as spam associated. Please send an email address to an administrator, register an account, or use a different network to submit your post.");
+		trigger_error("Your IP has been flagged as spam associated. Please send an email to an administrator, register an account, or use a different network to submit your post.");
 		return false;
 	}
 
