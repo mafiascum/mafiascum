@@ -653,3 +653,9 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#fafafa', end
 	display: none !important;
 }
 
+.joinroom
+{
+	float: right;
+	font-size: 9px;
+	display: inline-block;
+}
