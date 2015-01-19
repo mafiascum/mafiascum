@@ -861,7 +861,7 @@ public class SiteChatServer extends Server implements SignalHandler {
         SiteChatOutboundConnectPacket siteChatOutboundConnectPacket = new SiteChatOutboundConnectPacket();
         siteChatOutboundConnectPacket.setWasSuccessful(true);
         siteChatOutboundConnectPacket.setSiteChatConversationId(siteChatConversationWithUserList.getSiteChatConversation().getId());
-        siteChatOutboundConnectPacket.setTitleText(StringUtil.escapeHTMLCharacters(siteChatConversation.getName()));
+        siteChatOutboundConnectPacket.setTitleText(siteChatConversation.getName());
         siteChatOutboundConnectPacket.setCreatedByUserId(siteChatConversationWithUserList.getSiteChatConversation().getCreatedByUserId());
         
         if(siteChatConversation.getPassword() != null) {
