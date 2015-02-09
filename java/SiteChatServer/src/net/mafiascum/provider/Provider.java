@@ -2,7 +2,10 @@ package net.mafiascum.provider;
 
 import java.sql.Connection;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import net.mafiascum.environment.Environment;
 import net.mafiascum.jdbc.ConnectionPool;
 import net.mafiascum.util.MiscUtil;
 import net.mafiascum.util.StringUtil;
@@ -13,12 +16,19 @@ public class Provider {
   protected String mysqlUsername;
   protected String mysqlPassword;
   protected String docRoot;
-  protected boolean isWindows;
+  protected Environment environment;
   protected int maxConnections;
   
   protected ConnectionPool connectionPool = null;
+  protected MiscUtil miscUtil;
+  protected StringUtil stringUtil;
   
   protected final long MILLIS_BETWEEN_CONNECTION_RENEWAL = 300000;
+  
+  public Provider() {
+    setMiscUtil(MiscUtil.get());
+    setStringUtil(StringUtil.get());
+  }
   
   public Connection getConnection() throws Exception {
 
@@ -33,13 +43,20 @@ public class Provider {
   
   public void loadConfiguration(String configurationFilePath) throws Exception {
     
-    Properties properties = MiscUtil.loadPropertiesResource(configurationFilePath);
+    Properties properties = miscUtil.loadPropertiesResource(configurationFilePath);
     
     mysqlUrl = properties.getProperty("Mysql.Main.Url");
     mysqlUsername = properties.getProperty("Mysql.Main.Username");
     mysqlPassword = properties.getProperty("Mysql.Main.Password");
-    isWindows = StringUtil.removeNull(properties.getProperty("IsWindows")).equals("true");
     maxConnections = Integer.valueOf(properties.getProperty("Mysql.Main.MaxConnections"));
+    environment = Environment.getEnumByAbbreviatedName(properties.getProperty("Environment"));
+    
+    if(environment == null)
+      environment = Environment.prod;
+  }
+  
+  public void shutdownConnectionPool() {
+    connectionPool.shutdown();
   }
   
   public String getDocRoot() {
@@ -52,16 +69,6 @@ public class Provider {
     this.docRoot = docRoot;
   }
   
-  public boolean getIsWindows() {
-    
-    return isWindows;
-  }
-  
-  public void setIsWindows(boolean isWindows) {
-    
-    this.isWindows = isWindows;
-  }
-  
   public int getMaxConnections() {
     
     return maxConnections;
@@ -70,5 +77,49 @@ public class Provider {
   public void setMaxConnections(int maxConnections) {
     
     this.maxConnections = maxConnections;
+  }
+
+  public MiscUtil getMiscUtil() {
+    return miscUtil;
+  }
+
+  public void setMiscUtil(MiscUtil miscUtil) {
+    this.miscUtil = miscUtil;
+  }
+
+  public StringUtil getStringUtil() {
+    return stringUtil;
+  }
+
+  public void setStringUtil(StringUtil stringUtil) {
+    this.stringUtil = stringUtil;
+  }
+
+  public Environment getEnvironment() {
+    return environment;
+  }
+
+  public void setEnvironment(Environment environment) {
+    this.environment = environment;
+  }
+
+  public String getMysqlUrl() {
+    return mysqlUrl;
+  }
+
+  public void setMysqlUrl(String mysqlUrl) {
+    this.mysqlUrl = mysqlUrl;
+  }
+  
+  public String getDatabaseName() {
+    
+    Pattern pattern = Pattern.compile("://.*?/([^?]*).*$");
+    Matcher matcher = pattern.matcher(mysqlUrl);
+    
+    if(matcher.find()) {
+      return matcher.group(1);
+    }
+    
+    return null;
   }
 }

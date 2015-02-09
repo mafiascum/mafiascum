@@ -4,23 +4,38 @@ import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
-import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 
 import net.mafiascum.enumerator.VEnum;
 
 /** SQL / JDBC utility methods. */
-public abstract class SQLUtil {
+public class SQLUtil extends MSUtil {
+  
+  private static SQLUtil INSTANCE;
+  
+  private SQLUtil() {
+    
+  }
+  
+  public static synchronized SQLUtil get() {
+    
+    if(INSTANCE == null) {
+      INSTANCE = new SQLUtil();
+      INSTANCE.init();
+    }
+    
+    return INSTANCE;
+  }
   
   /** SQL representing the true boolean-int value. */
-  public static final String TRUE_BOOLINTSQL = "1";
+  public final String TRUE_BOOLINTSQL = "1";
 
   /** SQL representing the false boolean-int value. */
-  public static final String FALSE_BOOLINTSQL = "0";
+  public final String FALSE_BOOLINTSQL = "0";
 
   /** Escapes a string for use in an SQL statement. */
-  public static String escapeString (String text) {
+  public String escapeString (String text) {
     return text.replaceAll("'", "''").replaceAll("\\\\", "\\\\\\\\");
   }
 
@@ -28,38 +43,38 @@ public abstract class SQLUtil {
    * Escapes and quotes a string for use in an SQL statement.
    * If the string is null, "NULL" is returned instead.
    */
-  public static String escapeQuoteString (String text) {
+  public String escapeQuoteString (String text) {
     return (text != null) ? "'" + escapeString(text) + "'" : "NULL";
   }
 
   /** Encodes and quotes the timestamp for use in an SQL statement. */
-  public static String encodeQuoteTimestamp (java.util.Date timestamp) {
+  public String encodeQuoteTimestamp (java.util.Date timestamp) {
     return encodeQuoteDate(timestamp);
   }
 
   /** Encodes and quotes the timestamp for use in an SQL statement. */
-  public static String encodeQuoteDate (java.util.Date timestamp) {
+  public String encodeQuoteDate (java.util.Date timestamp) {
     return (timestamp != null)
                 ? new SimpleDateFormat("''yyyyMMddHHmmss''").format(timestamp)
                 : "NULL";
   }
   
   /** Encodes and quotes the timestamp for use in an SQL statement. */
-  public static String encodeQuoteTime (java.util.Date timestamp) {
+  public String encodeQuoteTime (java.util.Date timestamp) {
     return (timestamp != null)
                 ? new SimpleDateFormat("''HH:mm:ss''").format(timestamp)
                 : "NULL";
   }
 
   /** Encodes and quotes the day portion only of a date for use in an SQL statement. */
-  public static String encodeQuoteDate_DayPortionOnly (java.util.Date timestamp) {
+  public String encodeQuoteDate_DayPortionOnly (java.util.Date timestamp) {
     return (timestamp != null)
                 ? new SimpleDateFormat("''yyyyMMdd''").format(timestamp)
                 : "NULL";
   }
 
   /** Encodes a boolean value as an SQL integer value. */
-  public static String encodeBooleanInt (boolean value) {
+  public String encodeBooleanInt (boolean value) {
     return value ? TRUE_BOOLINTSQL : FALSE_BOOLINTSQL;
   }
 
@@ -67,14 +82,14 @@ public abstract class SQLUtil {
    * Encodes a boolean value as an SQL integer value.
    * If value is null then NULL is returned.
    */
-  public static String encodeBooleanInt (Boolean value) {
+  public String encodeBooleanInt (Boolean value) {
     if (value == null)
       return "NULL";
 
     return encodeBooleanInt(value.booleanValue());
   }
   
-  public static String putFixedIntegerBigDecimal (BigDecimal value) {
+  public String putFixedIntegerBigDecimal (BigDecimal value) {
     if (value == null)
       return "NULL";
 
@@ -82,14 +97,14 @@ public abstract class SQLUtil {
   }
 
   /** Encodes and quotes the enum for use in an SQL statement. */
-  public static String encodeQuoteEnum (Enum value) {
+  public String encodeQuoteEnum (Enum value) {
     return (value != null)
              ? "'" + value + "'"
              : "NULL";
   }
 
   /** Encodes the venum for use in an SQL statement. */
-  public static String encodeVEnum (VEnum vEnum) {
+  public String encodeVEnum (VEnum vEnum) {
     return (vEnum != null)
              ? String.valueOf(vEnum.value())
              : "NULL";
@@ -102,7 +117,7 @@ public abstract class SQLUtil {
    * 
    * @return SQL representing the date criteria.
    */
-  public static String getTimeSpanCriteriaSQL (String dateField, TimeSpan timeSpan) {
+  public String getTimeSpanCriteriaSQL (String dateField, TimeSpan timeSpan) {
 
     String startDataCriteria = (timeSpan != null && timeSpan.startTime != null)
                                   ? encodeQuoteTimestamp(timeSpan.startTime) + " <= " + dateField
@@ -133,7 +148,7 @@ public abstract class SQLUtil {
    * Builds an SQL expression representing date-criteria that limits selection 
    * entries with dates occurring today
    */
-  public static String getTodayTimeSpanCriteriaSQL (String dateField) {
+  public String getTodayTimeSpanCriteriaSQL (String dateField) {
     TimeSpan timeSpan = TimeSpan.getTimeSpanForToday();
     return getTimeSpanCriteriaSQL(dateField, timeSpan);
   }
@@ -142,7 +157,7 @@ public abstract class SQLUtil {
    * Builds an SQL expression representing date-criteria that limits selection 
    * entries with dates occuring between now and the end of today.
    */
-  public static String getRestOfTodayTimeSpanCriteriaSQL (String dateField) {
+  public String getRestOfTodayTimeSpanCriteriaSQL (String dateField) {
     TimeSpan timeSpan = TimeSpan.getTimeSpanForRestOfToday();
     return getTimeSpanCriteriaSQL(dateField, timeSpan);
   }
@@ -156,12 +171,12 @@ public abstract class SQLUtil {
    * 
    * @return An SQL list representing the source item list. 
    */
-  public static String buildListSQL (Collection set, boolean quoteElements, boolean onEmptyAddNull) {
+  public <T> String buildListSQL (Collection<T> set, boolean quoteElements, boolean onEmptyAddNull) {
     if (onEmptyAddNull && set.isEmpty())
       return "(null)";
 
     StringBuilder strBuf = new StringBuilder("(");
-    Iterator iter = set.iterator();
+    Iterator<T> iter = set.iterator();
     boolean firstPass = true;
     while (iter.hasNext()) {
       if (firstPass)
@@ -186,9 +201,9 @@ public abstract class SQLUtil {
    * address spec.  The IP address spec can be a full IP address or one set with
    * a component replaced by '*' (ex: "141.238.30.*"; ex: "141.*").
    */
-  public static String buildIPAddressCriteria (String ipField, String ipMatchSpec) {
+  public String buildIPAddressCriteria (String ipField, String ipMatchSpec) {
 
-    Short[] ipComponents = MiscUtil.parseIPAddress(ipMatchSpec, true);
+    Short[] ipComponents = miscUtil.parseIPAddress(ipMatchSpec, true);
 
     if (ipComponents == null)
       return "1 = 1";
@@ -208,46 +223,15 @@ public abstract class SQLUtil {
     }
 
     return exactMatch
-             ? ipField + " = " + SQLUtil.escapeQuoteString(ipValue)
-             : ipField + " LIKE " + SQLUtil.escapeQuoteString(ipValue);
-  }
-
-  /**
-   * Builds a column spec (for using in a CREATE/ALTER TABLE statements).
-   * 
-   * @param enumClass The enum class for which to create the spec.
-   * 
-   * @return A enum column type spec.
-   */
-  public static String buildEnumFieldSpec (Class<? extends Enum> enumClass) {
-
-    @SuppressWarnings("unchecked") EnumSet<? extends Enum> enumValueSet = EnumSet.allOf(enumClass);
-
-    StringBuilder enumSetSpec = new StringBuilder("ENUM (");
-
-    boolean firstValue = true;
-    for (Enum value : enumValueSet) {
-
-      if (firstValue)
-        firstValue = false;
-      else
-        enumSetSpec.append(',');
-
-      enumSetSpec.append('\'');
-      enumSetSpec.append(value);
-      enumSetSpec.append('\'');
-    }
-
-    enumSetSpec.append(')');
-    
-    return enumSetSpec.toString();
+             ? ipField + " = " + escapeQuoteString(ipValue)
+             : ipField + " LIKE " + escapeQuoteString(ipValue);
   }
   
-  public static String buildStringFromList (List<String> values) {
-    return StringUtil.buildStringFromList(values, StringUtil.MYSQL_STORAGE_SEPERATOR_SEQUENCE);
+  public String buildStringFromList (List<String> values) {
+    return stringUtil.buildStringFromList(values, stringUtil.MYSQL_STORAGE_SEPERATOR_SEQUENCE);
   }
   
-  public static Timestamp getTimestamp(java.util.Date date) {
+  public Timestamp getTimestamp(java.util.Date date) {
     return new Timestamp(date.getTime());
   }
 }

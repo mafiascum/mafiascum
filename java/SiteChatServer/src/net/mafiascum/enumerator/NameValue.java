@@ -6,9 +6,8 @@ import net.mafiascum.util.MiscUtil;
 
 
 public class NameValue implements Serializable {
-
-  private static final long serialVersionUID = 1L;
-
+  
+  private static final long serialVersionUID = -3911204910393452049L;
   public String name;
   public Object value;
  
@@ -42,8 +41,8 @@ public class NameValue implements Serializable {
       return false;
 
     NameValue compareNameValue = (NameValue) compareObject;
-    return MiscUtil.equals(name, compareNameValue.name)
-           && MiscUtil.equals(value, compareNameValue.value);
+    return MiscUtil.get().equals(name, compareNameValue.name)
+           && MiscUtil.get().equals(value, compareNameValue.value);
   }
 
   public int hashCode() {

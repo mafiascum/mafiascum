@@ -1,8 +1,45 @@
 package net.mafiascum.web.sitechat.server.inboundpacket.operator;
 
+import net.mafiascum.util.MiscUtil;
+import net.mafiascum.util.StringUtil;
 import net.mafiascum.web.sitechat.server.SiteChatServer;
+import net.mafiascum.web.sitechat.server.SiteChatUtil;
 
-public interface SiteChatInboundPacketOperator {
+public abstract class SiteChatInboundPacketOperator {
 
-  public void process(SiteChatServer siteChatServer, SiteChatServer.SiteChatWebSocket siteChatWebSocket, String siteChatInboundPacketJson) throws Exception;
+  protected StringUtil stringUtil;
+  protected MiscUtil miscUtil;
+  protected SiteChatUtil siteChatUtil;
+  
+  public abstract void process(SiteChatServer siteChatServer, SiteChatServer.SiteChatWebSocket siteChatWebSocket, String siteChatInboundPacketJson) throws Exception;
+  
+  public SiteChatInboundPacketOperator() {
+    setStringUtil(StringUtil.get());
+    setMiscUtil(MiscUtil.get());
+    setSiteChatUtil(SiteChatUtil.get());
+  }
+  
+  public SiteChatUtil getSiteChatUtil() {
+    return siteChatUtil;
+  }
+  
+  public void setSiteChatUtil(SiteChatUtil siteChatUtil) {
+    this.siteChatUtil = siteChatUtil;
+  }
+
+  public StringUtil getStringUtil() {
+    return stringUtil;
+  }
+
+  public void setStringUtil(StringUtil stringUtil) {
+    this.stringUtil = stringUtil;
+  }
+
+  public MiscUtil getMiscUtil() {
+    return miscUtil;
+  }
+
+  public void setMiscUtil(MiscUtil miscUtil) {
+    this.miscUtil = miscUtil;
+  }
 }

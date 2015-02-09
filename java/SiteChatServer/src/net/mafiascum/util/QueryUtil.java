@@ -5,20 +5,47 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
 
-import net.mafiascum.enumerator.VEnum;
-import net.mafiascum.enumerator.VEnumSet;
+import net.mafiascum.functional.ConsumerWithException;
+import net.mafiascum.jdbc.ConnectionExecutor;
+import net.mafiascum.jdbc.DataObject;
+import net.mafiascum.jdbc.StatementExecutor;
+import net.mafiascum.jdbc.Table;
+import net.mafiascum.provider.Provider;
 
 /** Utility methods for working with database queries. */
-public abstract class QueryUtil {
+public class QueryUtil extends MSUtil {
+  
+  private static QueryUtil INSTANCE;
+  
+  private QueryUtil() {
+    
+  }
+  
+  public static synchronized QueryUtil get() {
+    
+    if(INSTANCE == null) {
+      INSTANCE = new QueryUtil();
+      INSTANCE.init();
+    }
+    
+    return INSTANCE;
+  }
 
   /**
    * Closes a connection hiding any SQLException thrown.  Use with caution.
    * Null connections are ignored.
    */
-  public static void closeNoThrow (Connection connection) {
+  public void closeNoThrow (Connection connection) {
     if (connection == null)
       return;
 
@@ -35,7 +62,7 @@ public abstract class QueryUtil {
    * If an exception is thrown, the method tries to call closeNoThrow on the connection.  
    * Null connections are ignored.
    */
-  public static void rollbackNoThrow (Connection connection) {
+  public void rollbackNoThrow (Connection connection) {
     if (connection == null)
       return;
 
@@ -52,7 +79,7 @@ public abstract class QueryUtil {
    * Closes a statement hiding any SQLException thrown.  Use with extreme caution.
    * Null statement are ignored.
    */
-  public static void closeNoThrow (Statement statement) {
+  public void closeNoThrow (Statement statement) {
     if (statement == null)
       return;
 
@@ -64,7 +91,7 @@ public abstract class QueryUtil {
     }
   }
   
-  public static void closeNoThrow (ResultSet resultSet) {
+  public void closeNoThrow (ResultSet resultSet) {
     
     if(resultSet == null)
       return;
@@ -85,7 +112,7 @@ public abstract class QueryUtil {
    * NOTE: This should not be used in situations where multiple SQL calls could
    * be made with a single Statement instance.
    */
-  public static int executeUpdate (Connection connection, String sql) throws SQLException {
+  public int executeUpdate (Connection connection, String sql) throws SQLException {
     Statement statement = connection.createStatement();
     int result = statement.executeUpdate(sql);
     statement.close();
@@ -100,7 +127,7 @@ public abstract class QueryUtil {
    * <br>
    * NOTE: This method throws an exception if more than one rows exist.
    */
-  public static boolean hasSingleResultRow (Statement statement, String sql) throws SQLException {
+  public boolean hasSingleResultRow (Statement statement, String sql) throws SQLException {
     ResultSet rs = statement.executeQuery(sql);
 
     boolean hasResultRow = rs.next();
@@ -117,7 +144,7 @@ public abstract class QueryUtil {
    * like 'SELECT 1 FROM table WHERE id = value' to see if the row with an
    * id that matches the specified value exists.<br>
    */
-  public static boolean hasAtLeastOneRow (Statement statement, String sql) throws SQLException {
+  public boolean hasAtLeastOneRow (Statement statement, String sql) throws SQLException {
     ResultSet resultSet = null;
     
     try {
@@ -131,7 +158,7 @@ public abstract class QueryUtil {
     }
     finally {
       
-      QueryUtil.closeNoThrow(resultSet);
+      closeNoThrow(resultSet);
     }
   }
 
@@ -140,7 +167,7 @@ public abstract class QueryUtil {
    * produce a single row containing a single integer value.  If the value
    * is null, zero will be returned.
    */
-  public static int getSingleIntValueResult (Statement statement, String sql) throws SQLException {
+  public int getSingleIntValueResult (Statement statement, String sql) throws SQLException {
     ResultSet rs = statement.executeQuery(sql);
 
     if (!rs.next())
@@ -155,13 +182,17 @@ public abstract class QueryUtil {
 
     return value;
   }
+  
+  public int getSingleIntValueResult(Connection connection, String sql) throws SQLException {
+    return executeStatement(connection, statement -> getSingleIntValueResult(statement, sql));
+  }
 
   /**
    * Performs the specified query and returns the result.  The query should
    * produce a single row containing a single long integer value.  If the value
    * is null, zero will be returned.
    */
-  public static long getSingleLongValueResult (Statement statement, String sql) throws SQLException {
+  public long getSingleLongValueResult (Statement statement, String sql) throws SQLException {
     ResultSet rs = statement.executeQuery(sql);
 
     if (!rs.next())
@@ -182,7 +213,7 @@ public abstract class QueryUtil {
    * produce a single row containing a single integer-boolean value.  If the
    * value is null, false will be returned.
    */
-  public static boolean getSingleIntBooleanValueResult (Statement statement, String sql) throws SQLException {
+  public boolean getSingleIntBooleanValueResult (Statement statement, String sql) throws SQLException {
     ResultSet rs = statement.executeQuery(sql);
 
     if (!rs.next())
@@ -199,7 +230,7 @@ public abstract class QueryUtil {
   }
 
   /** Retrieves the last inserted auto-increment id created within the current transaction. */
-  public static int getLastInsertedID (Connection connection) throws SQLException {
+  public int getLastInsertedID (Connection connection) throws SQLException {
     Statement statement = null;
     try {
       statement = connection.createStatement();
@@ -212,23 +243,23 @@ public abstract class QueryUtil {
       return id;
     }
     finally {
-      QueryUtil.closeNoThrow(statement);
+      closeNoThrow(statement);
     }
   }
 
 
   /** Retrieves the last inserted auto-increment id created within the current transaction. */
-  public static int getLastInsertedID (Statement statement) throws SQLException {
+  public int getLastInsertedID (Statement statement) throws SQLException {
     return getSingleIntValueResult(statement, "SELECT LAST_INSERT_ID()");
   }
 
   /** Retrieves the last inserted auto-increment id created within the current transaction. */
-  public static long getLastInsertedLongID (Statement statement) throws SQLException {
+  public long getLastInsertedLongID (Statement statement) throws SQLException {
     return getSingleLongValueResult(statement, "SELECT LAST_INSERT_ID()");
   }
 
   /** Retrieves the last inserted auto-increment id created within the current transaction. */
-  public static int getCheckLastInsertedLongIDAsInt (Statement statement) throws SQLException {
+  public int getCheckLastInsertedLongIDAsInt (Statement statement) throws SQLException {
     long longValue = getLastInsertedLongID(statement);
 
     int intValue = (int) longValue;
@@ -239,7 +270,7 @@ public abstract class QueryUtil {
   }
 
   /** Retrieves the current date-time according to the database. */
-  public static Date getCurrentDatabaseDateTime (Connection connection) throws SQLException {
+  public Date getCurrentDatabaseDateTime (Connection connection) throws SQLException {
     Statement statement = connection.createStatement();
     Date date = getCurrentDatabaseDateTime(statement);
     statement.close();
@@ -247,7 +278,7 @@ public abstract class QueryUtil {
   }
 
   /** Retrieves the current date-time according to the database. */
-  public static Date getCurrentDatabaseDateTime (Statement statement) throws SQLException {
+  public Date getCurrentDatabaseDateTime (Statement statement) throws SQLException {
     ResultSet resultSet = statement.executeQuery(
       "SELECT NOW()"
     );
@@ -257,7 +288,7 @@ public abstract class QueryUtil {
     return date;
   }
 
-  public static int getCheckLongIDAsInt (ResultSet rs, String fieldName) throws SQLException {
+  public int getCheckLongIDAsInt (ResultSet rs, String fieldName) throws SQLException {
     long longValue = rs.getLong(fieldName);
 
     int intValue = (int) longValue;
@@ -268,50 +299,50 @@ public abstract class QueryUtil {
   }
 
   /** Retrieves a possibly null integer values. */
-  public static Integer getInteger (ResultSet rs, String fieldName) throws SQLException {
+  public Integer getInteger (ResultSet rs, String fieldName) throws SQLException {
     int value = rs.getInt(fieldName);
     return rs.wasNull() ? null : new Integer(value);
   }
 
   /** Retrieves a possibly null integer values. */
-  public static Integer getInteger (ResultSet rs, int fieldIndex) throws SQLException {
+  public Integer getInteger (ResultSet rs, int fieldIndex) throws SQLException {
     int value = rs.getInt(fieldIndex);
     return rs.wasNull() ? null : new Integer(value);
   }
 
   /** Retrieves a possibly null short values. */
-  public static Short getShort (ResultSet rs, String fieldName) throws SQLException {
+  public Short getShort (ResultSet rs, String fieldName) throws SQLException {
     short value = rs.getShort(fieldName);
     return rs.wasNull() ? null : new Short(value);
   }
 
   /** Retrieves a possibly null short values. */
-  public static Short getShort (ResultSet rs, int fieldIndex) throws SQLException {
+  public Short getShort (ResultSet rs, int fieldIndex) throws SQLException {
     short value = rs.getShort(fieldIndex);
     return rs.wasNull() ? null : new Short(value);
   }
 
   /** Retrieves a possibly null long values. */
-  public static Long getLong (ResultSet rs, String fieldName) throws SQLException {
+  public Long getLong (ResultSet rs, String fieldName) throws SQLException {
     long value = rs.getLong(fieldName);
     return rs.wasNull() ? null : new Long(value);
   }
 
   /** Retrieves a possibly null long values. */
-  public static Long getLong (ResultSet rs, int fieldIndex) throws SQLException {
+  public Long getLong (ResultSet rs, int fieldIndex) throws SQLException {
     long value = rs.getLong(fieldIndex);
     return rs.wasNull() ? null : new Long(value);
   }
 
   /** Retrieves a BigDecimal value from a fixed (scale = 2) int field. */
-  public static BigDecimal getFixedIntBigDecimal (ResultSet rs, String fieldName) throws SQLException {
+  public BigDecimal getFixedIntBigDecimal (ResultSet rs, String fieldName) throws SQLException {
     int value = rs.getInt(fieldName);
     return BigDecimal.valueOf(value, 2);
   }
 
   /** Retrieves a BigDecimal value from a fixed (scale = 2) int field. */
-  public static BigDecimal getFixedIntegerBigDecimal (ResultSet rs, String fieldName) throws SQLException {
-    Integer value = QueryUtil.getInteger(rs, fieldName);
+  public BigDecimal getFixedIntegerBigDecimal (ResultSet rs, String fieldName) throws SQLException {
+    Integer value = getInteger(rs, fieldName);
     if(value != null) {
       return BigDecimal.valueOf(value, 2);
     }
@@ -321,41 +352,41 @@ public abstract class QueryUtil {
   }
 
   /** Retrieves a possibly null double values. */
-  public static Double getDouble (ResultSet rs, String fieldName) throws SQLException {
+  public Double getDouble (ResultSet rs, String fieldName) throws SQLException {
     double value = rs.getDouble(fieldName);
     return rs.wasNull() ? null : new Double(value);
   }
 
   /** Retrieves a possibly null boolean interpreted integer value. */
-  public static Boolean getPossiblyNullIntBoolean (ResultSet rs, String fieldName) throws SQLException {
+  public Boolean getPossiblyNullIntBoolean (ResultSet rs, String fieldName) throws SQLException {
     int value = rs.getInt(fieldName);
     return (rs.wasNull() ? null : value != 0);
   }
 
   /** Retrieves a possibly null boolean interpreted integer value. */
-  public static Boolean getPossiblyNullIntBoolean (ResultSet rs, int fieldIndex) throws SQLException {
+  public Boolean getPossiblyNullIntBoolean (ResultSet rs, int fieldIndex) throws SQLException {
     int value = rs.getInt(fieldIndex);
     return (rs.wasNull() ? null : value != 0);
   }
   
   /** Retrieves a boolean interpreted integer value. */
-  public static boolean getIntBoolean (ResultSet rs, String fieldName) throws SQLException {
+  public boolean getIntBoolean (ResultSet rs, String fieldName) throws SQLException {
     return (rs.getInt(fieldName) != 0);
   }
 
   /** Retrieves a boolean interpreted integer value. */
-  public static boolean getIntBoolean (ResultSet rs, int fieldIndex) throws SQLException {
+  public boolean getIntBoolean (ResultSet rs, int fieldIndex) throws SQLException {
     return (rs.getInt(fieldIndex) != 0);
   }
 
   /** Retrieves a possibly null boolean interpreted integer value. */
-  public static Boolean getIntBooleanObj (ResultSet rs, String fieldName) throws SQLException {
+  public Boolean getIntBooleanObj (ResultSet rs, String fieldName) throws SQLException {
     boolean value = (rs.getInt(fieldName) != 0);
     return rs.wasNull() ? null : Boolean.valueOf(value);
   }
 
   /** Retrieves a possibly null enum calue. */
-  public static <Type extends Enum<Type>> Type getEnum (ResultSet rs, String fieldName, Class<Type> enumClass, boolean upperCaseStr) throws SQLException {
+  public <Type extends Enum<Type>> Type getEnum (ResultSet rs, String fieldName, Class<Type> enumClass, boolean upperCaseStr) throws SQLException {
     String value = rs.getString(fieldName);
 
     if(upperCaseStr && value != null) {
@@ -373,19 +404,14 @@ public abstract class QueryUtil {
       throw sqle;
     }
   }
-
-  public static <EnumType extends VEnum> EnumType getVEnum (ResultSet resultSet, String fieldName, VEnumSet vEnumSet) throws SQLException {
-    Integer id = QueryUtil.getInteger(resultSet, fieldName);
-    return (EnumType) ((id != null) ? vEnumSet.get(id) : null);
-  }
-
+  
   /** Performs the update, then checks to make sure the specified number of rows were affected. */
-  public static void updateCheckRowCount (Statement statement, String sql, int expectedRowCow) throws SQLException {
+  public void updateCheckRowCount (Statement statement, String sql, int expectedRowCow) throws SQLException {
     executeUpdateCheckRowCount(statement, sql, expectedRowCow);
   }
 
   /** Performs the update, then checks to make sure the specified number of rows were affected. */
-  public static void executeUpdateCheckRowCount (Statement statement, String sql, int expectedRowCow) throws SQLException {
+  public void executeUpdateCheckRowCount (Statement statement, String sql, int expectedRowCow) throws SQLException {
     int rowCount = statement.executeUpdate(sql);
     if (rowCount != expectedRowCow)
       throw new SQLException("Update row count does not match expected row count (" + rowCount + " != " + expectedRowCow + ")");
@@ -395,7 +421,7 @@ public abstract class QueryUtil {
    * Executes the SQL, checks that one-and-only-one row was inserted, then
    * retrieves and returns the last inserted ID.
    */
-  public static int executeInsertGetLastInsertedIntID (Statement statement, String sql) throws SQLException {
+  public int executeInsertGetLastInsertedIntID (Statement statement, String sql) throws SQLException {
     updateCheckRowCount(statement, sql, 1);
     return getLastInsertedID(statement);
   }
@@ -409,7 +435,7 @@ public abstract class QueryUtil {
    * @param deleteSQL The sql to use to perform the deletes - note: must allow a limit to be attached.
    * @param chunkSize The number of rows to delete at a time.
    */
-  public static void deleteChunkCommitLoop (Connection connection, String deleteSQL, int chunkSize) throws SQLException {
+  public void deleteChunkCommitLoop (Connection connection, String deleteSQL, int chunkSize) throws SQLException {
     while (true) {
       
       // Delete a chunk of rows and commit
@@ -430,11 +456,11 @@ public abstract class QueryUtil {
     }
   }
 
-  public static void insertSelectChunkCommitLoop (Connection connection, String insertPortion, String selectPortion, String fromAndWherePortion, int chunkSize) throws SQLException {
+  public void insertSelectChunkCommitLoop (Connection connection, String insertPortion, String selectPortion, String fromAndWherePortion, int chunkSize) throws SQLException {
     insertSelectChunkCommitLoop(connection, insertPortion, selectPortion, fromAndWherePortion, chunkSize, true);
   }
 
-  public static void insertSelectChunkCommitLoop (Connection connection, String insertPortion, String selectPortion, String fromAndWherePortion, int chunkSize, boolean commit) throws SQLException {
+  public void insertSelectChunkCommitLoop (Connection connection, String insertPortion, String selectPortion, String fromAndWherePortion, int chunkSize, boolean commit) throws SQLException {
 
     Statement statement = connection.createStatement();
     int totalRows = getSingleIntValueResult(statement, "SELECT COUNT(*) " + fromAndWherePortion);
@@ -467,7 +493,7 @@ public abstract class QueryUtil {
     }
   }
 
-  public static void keyedInsertSelectChunkCommitLoop (
+  public void keyedInsertSelectChunkCommitLoop (
     Connection connection,
     String keySelectKeyField, String keySelectTableList, String keySelectJoins, String keySelectWhereCriteria,
     String insertPortion, String selectPortion, String selectTables, String selectJoins, String whereCriteria, String selectKeyField, int chunkSize, String tempTableName) throws SQLException
@@ -492,7 +518,7 @@ public abstract class QueryUtil {
       + ((keySelectWhereCriteria != null) ? " WHERE " + keySelectWhereCriteria : "")
     );
 
-    int totalRows = QueryUtil.getSingleIntValueResult(statement, "SELECT @KeyRowIndex") + 1;
+    int totalRows = getSingleIntValueResult(statement, "SELECT @KeyRowIndex") + 1;
 
     statement.executeUpdate(
       "CREATE INDEX orderIndex ON " + tempTableName + " (tempInsertSelectKeyIndex_index)"
@@ -534,7 +560,7 @@ public abstract class QueryUtil {
     connection.commit();
   }
 
-  public static void deleteChunkCommitLoop (Connection connection, String deleteTableList, String usingTableList, String whereCriteria, String keyField, int chunkSize, String tempTableName) throws SQLException {
+  public void deleteChunkCommitLoop (Connection connection, String deleteTableList, String usingTableList, String whereCriteria, String keyField, int chunkSize, String tempTableName) throws SQLException {
     performUpdateChunkCommitLoop(
       connection, usingTableList, whereCriteria, keyField, chunkSize, tempTableName,
       "DELETE FROM " + deleteTableList
@@ -542,7 +568,7 @@ public abstract class QueryUtil {
     );
   }
 
-  public static int updateChunkCommitLoop (Connection connection, String tableList, String whereCriteria, String keyField, String updateAssignments, int chunkSize, String tempTableName) throws SQLException {
+  public int updateChunkCommitLoop (Connection connection, String tableList, String whereCriteria, String keyField, String updateAssignments, int chunkSize, String tempTableName) throws SQLException {
     return performUpdateChunkCommitLoop(
       connection, tableList, whereCriteria, keyField, chunkSize, tempTableName,
       "UPDATE " + tempTableName + ", " + tableList
@@ -550,7 +576,7 @@ public abstract class QueryUtil {
     );
   }
 
-  private static int performUpdateChunkCommitLoop (Connection connection, String tableList, String whereCriteria, String keyField, int chunkSize, String tempTableName, String updatePrefixSQL) throws SQLException {
+  private int performUpdateChunkCommitLoop (Connection connection, String tableList, String whereCriteria, String keyField, int chunkSize, String tempTableName, String updatePrefixSQL) throws SQLException {
 
     // Setup an index table to drive the delete
 
@@ -571,7 +597,7 @@ public abstract class QueryUtil {
       + " WHERE " + whereCriteria
     );
 
-    int totalRows = QueryUtil.getSingleIntValueResult(statement, "SELECT @RowIndex") + 1;
+    int totalRows = getSingleIntValueResult(statement, "SELECT @RowIndex") + 1;
 
     statement.executeUpdate(
       "CREATE INDEX row_id ON " + tempTableName + " (tempUpdateIndex_index)"
@@ -620,7 +646,7 @@ public abstract class QueryUtil {
 
   /** Checks if the specified exception represents a duplicate key error. */
   // NOTE: THIS METHOD MUST BE KEPT IN SYNC WITH THE JDBC DRIVER VERSION!
-  public static boolean isDuplicateKeyException (SQLException sqle) {
+  public boolean isDuplicateKeyException (SQLException sqle) {
     String message = sqle.getMessage();
     return message.indexOf("Duplicate entry") >= 0
         && message.indexOf("for key") >= 0;
@@ -628,7 +654,7 @@ public abstract class QueryUtil {
 
   /** Checks if the specified exception represents a table exists error. */
   // NOTE: THIS METHOD MUST BE KEPT IN SYNC WITH THE JDBC DRIVER VERSION!
-  public static boolean isTableExistsException (SQLException sqle) {
+  public boolean isTableExistsException (SQLException sqle) {
     String message = sqle.getMessage();
     return message.indexOf("Table ") >= 0
            && message.indexOf(" already exists") >= 0;
@@ -636,16 +662,267 @@ public abstract class QueryUtil {
 
   /** Checks if the specified exception represents a lock-wait timeout. */
   // NOTE: THIS METHOD MUST BE KEPT IN SYNC WITH THE JDBC DRIVER VERSION!
-  public static boolean isLockWaitTimeoutException (SQLException sqle) {
+  public boolean isLockWaitTimeoutException (SQLException sqle) {
     return sqle.getErrorCode() == 1205
         && sqle.getMessage().indexOf("Lock wait timeout") >= 0;
   }
 
-  public static List<String> buildListFromString (String value) {
-    return StringUtil.buildListFromString(value, StringUtil.MYSQL_SEPERATOR_SEQUENCE_ESCAPED);
+  public List<String> buildListFromString (String value) {
+    return stringUtil.buildListFromString(value, stringUtil.MYSQL_SEPERATOR_SEQUENCE_ESCAPED);
   }
   
-  public static String buildStringFromList(List<String> list) {
-    return StringUtil.buildStringFromList(list, StringUtil.MYSQL_STORAGE_SEPERATOR_SEQUENCE);
+  public String buildStringFromList(List<String> list) {
+    return stringUtil.buildStringFromList(list, stringUtil.MYSQL_STORAGE_SEPERATOR_SEQUENCE);
+  }
+  
+  public Set<Integer> getIntegerSet(Statement statement, String sql, String columnName) throws SQLException {
+    
+    Set<Integer> integerSet = new HashSet<Integer>();
+    
+    return getIntegerCollection(statement, sql, columnName, integerSet);
+  }
+  
+  public Set<Integer> getIntegerSet(Connection connection, String sql, String columnName) throws SQLException {
+    
+    Set<Integer> integerSet = new HashSet<Integer>();
+    
+    return executeStatement(connection, statement -> getIntegerCollection(statement, sql, columnName, integerSet));
+  }
+  
+  public ArrayList<Integer> getIntegerArrayList(Statement statement, String sql, String columnName) throws SQLException {
+    
+    ArrayList<Integer> integerSet = new ArrayList<Integer>();
+    
+    return getIntegerCollection(statement, sql, columnName, integerSet);
+  }
+  
+  public <CollectionType extends Collection<Integer>> CollectionType getIntegerCollection(Statement statement, String sql, String columnName, CollectionType collection) throws SQLException {
+    
+    ResultSet resultSet = statement.executeQuery(sql);
+    
+    while(resultSet.next()) {
+      
+      collection.add(resultSet.getInt(columnName));
+    }
+    
+    resultSet.close();
+    
+    return collection;
+  }
+  
+  public <T extends DataObject> List<T> retrieveDataObjectList(Statement statement, String criteria, Class<T> dbObjectClass) throws SQLException {
+    
+    return retrieveDataObjectList(statement, criteria, null, dbObjectClass);
+  }
+  
+  public <T extends DataObject> List<T> retrieveDataObjectList(Statement statement, String criteria, String orderBy, Class<T> dbObjectClass) throws SQLException {
+    
+    String tableName = getTableName(dbObjectClass);
+    
+    if(tableName == null) {
+      
+      throw new SQLException("No table name found for class `" + dbObjectClass.getName() + "`");
+    }
+    
+    String sql = " SELECT *"
+               + " FROM `" + tableName.replace("`", "") + "`"
+               + " WHERE " + (criteria == null ? "1" : criteria)
+               + (orderBy == null ? "" : (" ORDER BY " + orderBy));
+    
+    return retrieveDataObjectListBySql(statement, sql, dbObjectClass);
+  }
+  
+  public <T extends DataObject> List<T> retrieveDataObjectListBySql(Statement statement, String sql, Class<T> dbObjectClass) throws SQLException {
+    
+    ResultSet resultSet = statement.executeQuery(sql);
+    return retrieveDataObjectList(statement, resultSet, dbObjectClass);
+  }
+  
+  public <T extends DataObject> List<T> retrieveDataObjectList(Statement statement, ResultSet resultSet, Class<T> dbObjectClass) throws SQLException {
+    
+    List<T> dbObjectList = new ArrayList<T>();
+    
+    while(resultSet.next()) {
+      
+      dbObjectList.add(retrieveDataObject(resultSet, dbObjectClass));
+    }
+    
+    resultSet.close();
+    
+    return dbObjectList;
+  }
+  
+  public <KeyType, PassingType extends DataObject> Map<KeyType, PassingType> retrieveDataObjectMap(Statement statement, String criteria, Class<PassingType> passingTypeClass, Function<PassingType, KeyType> keyAccessor) throws SQLException {
+    
+    String tableName = getTableName(passingTypeClass);
+    
+    if(tableName == null) {
+      
+      throw new SQLException("No table name found for class `" + passingTypeClass.getName() + "`");
+    }
+    
+    String sql = " SELECT *"
+               + " FROM `" + tableName.replace("`", "") + "`"
+               + " WHERE " + (criteria == null ? "1" : criteria);
+
+    ResultSet resultSet = statement.executeQuery(sql);
+    return retrieveDataObjectMap(statement, resultSet, passingTypeClass, keyAccessor);
+  }
+  
+  public <KeyType, PassingType extends DataObject> Map<KeyType, PassingType> retrieveDataObjectMap(Statement statement, ResultSet resultSet, Class<PassingType> passingTypeClass, Function<PassingType, KeyType> keyAccessor) throws SQLException {
+    
+    Map<KeyType, PassingType> map = new HashMap<KeyType, PassingType>();
+    
+    while(resultSet.next()) {
+    
+      PassingType passingType = retrieveDataObject(resultSet, passingTypeClass);
+      map.put(keyAccessor.apply(passingType), passingType);
+    }
+    
+    resultSet.close();
+  
+    return map;
+  }
+
+  public <T extends DataObject> T retrieveDataObject(Statement statement, String criteria, Class<T> dbObjectClass) throws SQLException {
+    
+    String tableName = getTableName(dbObjectClass);
+    
+    if(tableName == null) {
+      throw new SQLException("No table name found for class `" + dbObjectClass.getName() + "`");
+    }
+    
+    String sql = " SELECT *"
+               + " FROM `" + tableName.replace("`", "") + "`"
+               + " WHERE " + (criteria == null ? "1" : criteria);
+    
+    return retrieveDataObjectWithSql(statement, sql, dbObjectClass);
+  }
+  
+  public <T extends DataObject> T retrieveDataObjectWithSql(Statement statement, String sql, Class<T> dbObjectClass) throws SQLException {
+    
+    ResultSet resultSet = statement.executeQuery(sql);
+    T dataObject = null;
+    
+    if(resultSet.next()) {
+      
+      dataObject = retrieveDataObject(resultSet, dbObjectClass);
+    }
+    
+    resultSet.close();
+    
+    return dataObject;
+  }
+  
+  public <T extends DataObject> T retrieveDataObject(ResultSet resultSet, Class<T> dbObjectClass) throws SQLException {
+    
+    try {
+      T dbObject = dbObjectClass.newInstance();
+    
+      dbObject.loadFromResultSet(resultSet);
+
+      return dbObject;
+    }
+    catch(Exception exception) {
+      
+      if(exception instanceof SQLException) {
+        
+        throw (SQLException)exception;
+      }
+      
+      throw new SQLException(exception);
+    }
+  }
+  
+  public <T> T executeStatement(Provider provider, StatementExecutor<T> statementExecutor) throws SQLException {
+    
+    Connection connection = null;
+    
+    try {
+      
+      connection = provider.getConnection();
+      
+      T result = executeStatement(connection, statementExecutor);
+      
+      connection.commit();
+      connection.close();
+      connection = null;
+      
+      return result;
+    }
+    catch(Exception exception) {
+      
+      rollbackNoThrow(connection);
+      throw exception instanceof SQLException ? (SQLException)exception : new SQLException(exception);
+    }
+    finally {
+      
+      closeNoThrow(connection);
+    }
+  }
+  
+  public <T> T executeConnection(Provider provider, ConnectionExecutor<T> connectionExecutor) throws SQLException {
+    
+    Connection connection = null;
+    
+    try {
+      
+      connection = provider.getConnection();
+      
+      T result = connectionExecutor.execute(connection);
+      
+      connection.commit();
+      connection.close();
+      connection = null;
+      
+      return result;
+    }
+    catch(Exception exception) {
+      rollbackNoThrow(connection);
+      throw exception instanceof SQLException ? (SQLException)exception : new SQLException(exception);
+    }
+    finally {
+      
+      closeNoThrow(connection);
+    }
+  }
+  
+  public void executeConnectionNoReturn(Provider provider, ConsumerWithException<Connection> consumer) throws SQLException {
+    
+    executeConnection(provider, connection -> {
+      
+      consumer.accept(connection);
+      return null;
+    });
+  }
+  
+  public <T> T executeStatement(Connection connection, StatementExecutor<T> statementExecutor) throws SQLException {
+    
+    Statement statement = null;
+    
+    try {
+      
+      statement = connection.createStatement();
+      
+      T result = statementExecutor.execute(statement);
+      
+      statement.close();
+      statement = null;
+      
+      return result;
+    }
+    catch(Exception exception) {
+      throw exception instanceof SQLException ? (SQLException)exception : new SQLException(exception);
+    }
+    finally {
+      
+      closeNoThrow(statement);
+    }
+  }
+  
+  public <T> String getTableName(Class<T> dbObjectClass) {
+    
+    Table table = dbObjectClass.getAnnotation(Table.class);
+    return table == null ? null : table.tableName();    
   }
 }

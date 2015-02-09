@@ -4,7 +4,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class SiteChatInboundLogInPacket extends SiteChatInboundPacket {
-
+  
   protected int userId;
   protected String sessionId;
   protected Set<String> conversationKeySet;

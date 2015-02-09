@@ -2,33 +2,49 @@ package net.mafiascum.util;
 
 import java.lang.reflect.Method;
 
-public abstract class ThreadUtil {
+public class ThreadUtil extends MSUtil {
+  
+  private static ThreadUtil INSTANCE;
+  
+  private ThreadUtil() {
+    
+  }
+  
+  public static synchronized ThreadUtil get() {
+    
+    if(INSTANCE == null) {
+      INSTANCE = new ThreadUtil();
+      INSTANCE.init();
+    }
+    
+    return INSTANCE;
+  }
 
-  public static Thread asyncCall (Object onObject, String name, String methodName) {
+  public Thread asyncCall (Object onObject, String name, String methodName) {
     return startThread(onObject, name, methodName, null, false, null);
   }
 
-  public static Thread asyncCall (Object onObject, String name, String methodName, Object[] parameters) {
+  public Thread asyncCall (Object onObject, String name, String methodName, Object[] parameters) {
     return startThread(onObject, name, methodName, parameters, false, null);
   }
 
-  public static Thread asyncCall (Object onObject, String name, Method method, Object[] parameters) {
+  public Thread asyncCall (Object onObject, String name, Method method, Object[] parameters) {
     return startThread(onObject, name, method, parameters, false, null);
   }
 
-  public static Thread startThread (Object onObject, String name, String methodName, boolean usingDaemonThread) {
+  public Thread startThread (Object onObject, String name, String methodName, boolean usingDaemonThread) {
     return startThread(onObject, name, methodName, null, usingDaemonThread, null);
   }
 
-  public static Thread startThread (Object onObject, String name, String methodName, boolean usingDaemonThread, ThreadGroup threadGroup) {
+  public Thread startThread (Object onObject, String name, String methodName, boolean usingDaemonThread, ThreadGroup threadGroup) {
     return startThread(onObject, name, methodName, null, usingDaemonThread, threadGroup);
   }
 
-  public static Thread startThread (Object onObject, String name, String methodName, Object[] parameters, boolean usingDaemonThread) {
+  public Thread startThread (Object onObject, String name, String methodName, Object[] parameters, boolean usingDaemonThread) {
     return startThread(onObject, name, methodName, parameters, usingDaemonThread, null);
   }
 
-  public static Thread startThread (Object onObject, String name, String methodName, Object[] parameters, boolean usingDaemonThread, ThreadGroup threadGroup) {
+  public Thread startThread (Object onObject, String name, String methodName, Object[] parameters, boolean usingDaemonThread, ThreadGroup threadGroup) {
     try {
       Class[] parameterTypes = null;
       if (parameters != null) {
@@ -48,11 +64,11 @@ public abstract class ThreadUtil {
     }
   }
 
-  public static Thread startThread (Object onObject, String name, Method method, Object[] parameters, boolean usingDaemonThread) {
+  public Thread startThread (Object onObject, String name, Method method, Object[] parameters, boolean usingDaemonThread) {
     return startThread(onObject, name, method, parameters, usingDaemonThread, null);
   }
 
-  public static Thread startThread (final Object onObject, String name, final Method method, final Object[] parameters, boolean usingDaemonThread, ThreadGroup threadGroup) {
+  public Thread startThread (final Object onObject, String name, final Method method, final Object[] parameters, boolean usingDaemonThread, ThreadGroup threadGroup) {
     Runnable runnable = new Runnable() {
       public void run () {
         try {
@@ -72,7 +88,7 @@ public abstract class ThreadUtil {
     return thread;
   }
 
-  public static void clearInterruptFlag () {
+  public void clearInterruptFlag () {
 
     if (!Thread.currentThread().isInterrupted())
       return;

@@ -152,7 +152,7 @@ public class BatchInsertStatement {
     
     return last_inserted_id;
   }
-
+  
   public Integer flush () throws SQLException {
 
     Integer last_inserted_id = null;
@@ -163,7 +163,7 @@ public class BatchInsertStatement {
     if (numRowsLoaded != 0) {
       rows_inserted = statement.executeUpdate(sql.toString());
       
-      last_inserted_id = QueryUtil.getLastInsertedID(statement);
+      last_inserted_id = QueryUtil.get().getLastInsertedID(statement);
       
       numRowsLoaded = 0;
 
@@ -241,20 +241,16 @@ public class BatchInsertStatement {
     addFieldValue((venum != null) ? String.valueOf(venum.value()) : "NULL");
   }
 
-  public void putEnum (Enum value) throws SQLException {
-    addFieldValue(SQLUtil.encodeQuoteEnum(value));
-  }
-
   public void putString (String value) throws SQLException {
-    addFieldValue((value != null) ? SQLUtil.escapeQuoteString(value) : "NULL");
+    addFieldValue((value != null) ? SQLUtil.get().escapeQuoteString(value) : "NULL");
   }
 
   public void putDate (Date value) throws SQLException {
-    addFieldValue((value != null) ? SQLUtil.encodeQuoteTimestamp(value) : "NULL");
+    addFieldValue((value != null) ? SQLUtil.get().encodeQuoteTimestamp(value) : "NULL");
   }
   
   public void putDate (java.util.Date value) throws SQLException {
-    addFieldValue((value != null) ? SQLUtil.encodeQuoteDate(value) : "NULL");
+    addFieldValue((value != null) ? SQLUtil.get().encodeQuoteDate(value) : "NULL");
   }
 
   public void putMoney (BigDecimal value) throws SQLException {

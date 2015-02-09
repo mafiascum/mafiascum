@@ -1,13 +1,12 @@
 package net.mafiascum.web.misc;
 
-import java.io.Serializable;
 
-public class DataObjectWithIntId implements Serializable {
+public class DataObjectWithIntID {
   
   protected int id;
   protected static int NEW = -1;
   
-  public DataObjectWithIntId() {
+  public DataObjectWithIntID() {
     
     id = NEW;
   }

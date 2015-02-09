@@ -1,7 +1,7 @@
 package net.mafiascum.web.sitechat.server.inboundpacket;
 
 public class SiteChatInboundConnectPacket extends SiteChatInboundPacket {
-
+  
   protected String siteChatConversationName;
   protected String password;
   

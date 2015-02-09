@@ -2,10 +2,10 @@ package net.mafiascum.web.sitechat.server.conversation;
 
 import java.util.Set;
 
-import net.mafiascum.web.misc.DataObjectWithIntId;
+import net.mafiascum.web.misc.DataObjectWithIntID;
 
-public class SiteChatBarebonesConversation extends DataObjectWithIntId {
-
+public class SiteChatBarebonesConversation extends DataObjectWithIntID {
+  
   protected String name;
   protected Set<Integer> userIdSet;
   protected int createdByUserId;

@@ -1,6 +1,5 @@
 package net.mafiascum.web.sitechat.server.outboundpacket;
 
-import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationMessage;
 
 public class SiteChatOutboundIncorrectPasswordPacket extends SiteChatOutboundPacket {
 

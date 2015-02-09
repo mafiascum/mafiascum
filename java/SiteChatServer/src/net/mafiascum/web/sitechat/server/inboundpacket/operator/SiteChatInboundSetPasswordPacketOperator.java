@@ -1,6 +1,5 @@
 package net.mafiascum.web.sitechat.server.inboundpacket.operator;
 
-import net.mafiascum.util.MiscUtil;
 import net.mafiascum.web.sitechat.server.SiteChatException;
 import net.mafiascum.web.sitechat.server.SiteChatServer;
 import net.mafiascum.web.sitechat.server.SiteChatServer.SiteChatWebSocket;
@@ -12,9 +11,14 @@ import org.apache.log4j.Logger;
 
 import com.google.gson.Gson;
 
-public class SiteChatInboundSetPasswordPacketOperator implements SiteChatInboundPacketOperator {
+public class SiteChatInboundSetPasswordPacketOperator extends SiteChatInboundPacketOperator {
 
-  protected Logger logger = Logger.getLogger(SiteChatInboundSetPasswordPacketOperator.class.getName());
+  private static final Logger logger = Logger.getLogger(SiteChatInboundSetPasswordPacketOperator.class.getName());
+  
+  public SiteChatInboundSetPasswordPacketOperator() {
+    super();
+  }
+  
   public void process(SiteChatServer siteChatServer, SiteChatWebSocket siteChatWebSocket, String siteChatInboundPacketJson) throws Exception {
     
     SiteChatInboundSetPasswordPacket packet = new Gson().fromJson(siteChatInboundPacketJson, SiteChatInboundSetPasswordPacket.class);

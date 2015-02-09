@@ -10,9 +10,14 @@ import org.apache.log4j.Logger;
 
 import com.google.gson.Gson;
 
-public class SiteChatInboundLookupUserPacketOperator implements SiteChatInboundPacketOperator {
+public class SiteChatInboundLookupUserPacketOperator extends SiteChatInboundPacketOperator {
 
-  protected Logger logger = Logger.getLogger(SiteChatInboundLookupUserPacketOperator.class.getName());
+  private static final Logger logger = Logger.getLogger(SiteChatInboundLookupUserPacketOperator.class.getName());
+  
+  public SiteChatInboundLookupUserPacketOperator() {
+    super();
+  }
+  
   public void process(SiteChatServer siteChatServer, SiteChatWebSocket siteChatWebSocket, String siteChatInboundPacketJson) throws Exception {
     
     SiteChatInboundLookupUserPacket siteChatInboundLookupUserPacket = new Gson().fromJson(siteChatInboundPacketJson, SiteChatInboundLookupUserPacket.class);

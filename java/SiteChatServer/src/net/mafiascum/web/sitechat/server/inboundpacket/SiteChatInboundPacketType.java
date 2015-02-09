@@ -6,6 +6,14 @@ import net.mafiascum.enumerator.J5EnumSet;
 import net.mafiascum.enumerator.NameValueItemSet;
 import net.mafiascum.enumerator.VEnum;
 import net.mafiascum.enumerator.VEnumSet;
+import net.mafiascum.web.sitechat.server.inboundpacket.operator.SiteChatInboundConnectPacketOperator;
+import net.mafiascum.web.sitechat.server.inboundpacket.operator.SiteChatInboundHeartbeatPacketOperator;
+import net.mafiascum.web.sitechat.server.inboundpacket.operator.SiteChatInboundLeaveConversationPacketOperator;
+import net.mafiascum.web.sitechat.server.inboundpacket.operator.SiteChatInboundLogInPacketOperator;
+import net.mafiascum.web.sitechat.server.inboundpacket.operator.SiteChatInboundLookupUserPacketOperator;
+import net.mafiascum.web.sitechat.server.inboundpacket.operator.SiteChatInboundPacketOperator;
+import net.mafiascum.web.sitechat.server.inboundpacket.operator.SiteChatInboundSendMessagePacketOperator;
+import net.mafiascum.web.sitechat.server.inboundpacket.operator.SiteChatInboundSetPasswordPacketOperator;
 
 abstract class SiteChatDataPacketTypeStatic {
 
@@ -21,19 +29,21 @@ abstract class SiteChatDataPacketTypeStatic {
 
 public enum SiteChatInboundPacketType implements VEnum {
 
-  connect(0, "Connect"),
-  login(1, "LogIn"),
-  sendMessage(2, "SendMessage"),
-  leaveConversation(3, "LeaveConversation"),
-  lookupUser(4, "LookupUser"),
-  heartbeat(5, "Heartbeat"),
-  setPassword(6, "SetPassword");
+  connect(0, "Connect", SiteChatInboundConnectPacketOperator.class),
+  login(1, "LogIn", SiteChatInboundLogInPacketOperator.class),
+  sendMessage(2, "SendMessage", SiteChatInboundSendMessagePacketOperator.class),
+  leaveConversation(3, "LeaveConversation", SiteChatInboundLeaveConversationPacketOperator.class),
+  lookupUser(4, "LookupUser", SiteChatInboundLookupUserPacketOperator.class),
+  heartbeat(5, "Heartbeat", SiteChatInboundHeartbeatPacketOperator.class),
+  setPassword(6, "SetPassword", SiteChatInboundSetPasswordPacketOperator.class);
   
 
   private String standardName;
+  private Class<?extends SiteChatInboundPacketOperator> operatorClass;
 
-  private SiteChatInboundPacketType (int id, String standardName) {
+  private SiteChatInboundPacketType (int id, String standardName, Class<?extends SiteChatInboundPacketOperator> operatorClass) {
     this.standardName = standardName;
+    this.operatorClass = operatorClass;
     SiteChatDataPacketTypeStatic.addEnum(this, id, standardName);
   }
 
@@ -41,6 +51,7 @@ public enum SiteChatInboundPacketType implements VEnum {
   public String toString () { return SiteChatDataPacketTypeStatic.enumSet.toString(this); }
 
   public String getStandardName () { return standardName; }
+  public Class<?extends SiteChatInboundPacketOperator> getOperatorClass() { return operatorClass; }
 
   public static SiteChatInboundPacketType getEnum(int value) throws IndexOutOfBoundsException { return SiteChatDataPacketTypeStatic.enumSet.getEnum(value); }
   public static SiteChatInboundPacketType getEnumByStandardName(String standardName) {

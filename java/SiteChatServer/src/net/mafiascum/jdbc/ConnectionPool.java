@@ -11,7 +11,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import net.mafiascum.util.MiscUtil;
+import net.mafiascum.util.QueryUtil;
 import net.mafiascum.util.ThreadUtil;
 
 import org.apache.log4j.Logger;
@@ -31,6 +31,8 @@ public class ConnectionPool {
   protected String mysqlUsername;
   protected String mysqlPassword;
   
+  protected ThreadUtil threadUtil;
+  
   public ConnectionPool(int maxConnections, String mysqlUrl, String mysqlUsername, String mysqlPassword) {
 
     this.maxConnections = maxConnections;
@@ -38,6 +40,30 @@ public class ConnectionPool {
     this.mysqlUrl = mysqlUrl;
     this.mysqlUsername = mysqlUsername;
     this.totalConnections = 0;
+    
+    setThreadUtil(ThreadUtil.get());
+  }
+  
+  public void shutdown() {
+    
+    if (!running)
+      throw new Error("Operation not allowed unless pooling is active");
+
+    QueryUtil queryUtil = QueryUtil.get();
+    running = false;
+    
+    allocatorThread.interrupt();
+    allocatorThread = null;
+    
+    for(ConnectionInvocationHandler connectionInvocationHandler : availableConnections) {
+      queryUtil.closeNoThrow(connectionInvocationHandler.getConnectionSource());
+    }
+    availableConnections = null;
+    
+    for(ConnectionInvocationHandler connectionInvocationHandler : openConnections) {
+      queryUtil.closeNoThrow(connectionInvocationHandler.getConnectionSource());
+    }
+    openConnections = null;
   }
   
   public void setup() {
@@ -46,7 +72,7 @@ public class ConnectionPool {
     openConnections = new HashSet<ConnectionInvocationHandler>();
     running = true;
     
-    allocatorThread = ThreadUtil.startThread(this, "Connection Pool Allocator", "AllocatorThreadMain", true);
+    allocatorThread = threadUtil.startThread(this, "Connection Pool Allocator", "AllocatorThreadMain", true);
   }
   
   public synchronized Connection openConnection() throws InterruptedException {
@@ -104,15 +130,6 @@ public class ConnectionPool {
     
     logger.debug("Releasing Connection.");
     connectionInvocationHandler.setLastClosedDatetime(new Date());
-    /***
-    long timeOpen = System.currentTimeMillis() - connectionInvocationHandler.getLastOpenedDatetime().getTime();
-    
-    if(timeOpen >= 1000) {
-      
-      logger.error("Connection held for " + timeOpen + " ms:");
-      logger.error(MiscUtil.getPrintableStackTrace(Thread.currentThread().getStackTrace()));
-    }
-    ***/
     
     openConnections.remove(connectionInvocationHandler);
     availableConnections.add(connectionInvocationHandler);
@@ -171,8 +188,16 @@ public class ConnectionPool {
         Thread.sleep(5000);
       }
       catch (InterruptedException interruptedException) {
-        logger.error("AllocatorThreadMain:", interruptedException);
+        //logger.error("AllocatorThreadMain:", interruptedException);
       }
     }
+  }
+
+  public ThreadUtil getThreadUtil() {
+    return threadUtil;
+  }
+
+  public void setThreadUtil(ThreadUtil threadUtil) {
+    this.threadUtil = threadUtil;
   }
 }

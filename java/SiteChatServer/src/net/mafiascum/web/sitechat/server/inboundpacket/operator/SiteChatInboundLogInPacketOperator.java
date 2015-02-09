@@ -10,7 +10,6 @@ import java.util.Map;
 import net.mafiascum.web.sitechat.server.SiteChatServer;
 import net.mafiascum.web.sitechat.server.SiteChatServer.SiteChatWebSocket;
 import net.mafiascum.web.sitechat.server.SiteChatUser;
-import net.mafiascum.web.sitechat.server.SiteChatUtil;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationMessage;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationType;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationWithUserList;
@@ -21,9 +20,14 @@ import org.apache.log4j.Logger;
 
 import com.google.gson.Gson;
 
-public class SiteChatInboundLogInPacketOperator implements SiteChatInboundPacketOperator {
+public class SiteChatInboundLogInPacketOperator extends SiteChatInboundPacketOperator {
 
-  protected Logger logger = Logger.getLogger(SiteChatInboundLogInPacketOperator.class.getName());
+  private static final Logger logger = Logger.getLogger(SiteChatInboundLogInPacketOperator.class.getName());
+  
+  public SiteChatInboundLogInPacketOperator() {
+    super();
+  }
+  
   public void process(SiteChatServer siteChatServer, SiteChatWebSocket siteChatWebSocket, String siteChatInboundPacketJson) throws Exception {
     
     SiteChatInboundLogInPacket siteChatInboundLogInPacket = new Gson().fromJson(siteChatInboundPacketJson, SiteChatInboundLogInPacket.class);
@@ -76,24 +80,24 @@ public class SiteChatInboundLogInPacketOperator implements SiteChatInboundPacket
     //Reconnect to conversations the user has been removed from.
     for(String siteChatConversationKey : siteChatInboundLogInPacket.getConversationKeySet()) {
 
-      char symbol = SiteChatUtil.getConversationSymbol(siteChatConversationKey);
-      SiteChatConversationType siteChatConversationType = SiteChatUtil.getSiteChatConversationTypeBySymbol(symbol);
+      char symbol = siteChatUtil.getConversationSymbol(siteChatConversationKey);
+      SiteChatConversationType siteChatConversationType = siteChatUtil.getSiteChatConversationTypeBySymbol(symbol);
       
       if(!siteChatConversationType.equals(SiteChatConversationType.Conversation)) {
         
         continue;
       }
 
-      int siteChatConversationId = SiteChatUtil.getConversationUniqueIdentifier(siteChatConversationKey);
+      int siteChatConversationId = siteChatUtil.getConversationUniqueIdentifier(siteChatConversationKey);
       
       SiteChatConversationWithUserList siteChatConversationWithUserList = siteChatServer.getSiteChatConversationWithUserList(siteChatConversationId);
       
-      synchronized(siteChatConversationWithUserList) {
-        if(siteChatConversationWithUserList == null) {
-          
-          logger.error("User sent conversation ID that does not exist in system: " + siteChatConversationId);
-        }
-        else {
+      if(siteChatConversationWithUserList == null) {
+        
+        logger.error("User sent conversation ID that does not exist in system: " + siteChatConversationId);
+      }
+      else {
+        synchronized(siteChatConversationWithUserList) {
           
           if(!siteChatConversationWithUserList.getUserIdSet().contains(siteChatUser.getId())) {
             
@@ -109,10 +113,10 @@ public class SiteChatInboundLogInPacketOperator implements SiteChatInboundPacket
     if(siteChatInboundLogInPacket.getConversationKeyToMostRecentMessageIdMap() != null) {
       for(String siteChatConversationKey : siteChatInboundLogInPacket.getConversationKeyToMostRecentMessageIdMap().keySet()) {
         
-        char symbol = SiteChatUtil.getConversationSymbol(siteChatConversationKey);
-        int uniqueIdentifier = SiteChatUtil.getConversationUniqueIdentifier(siteChatConversationKey);
+        char symbol = siteChatUtil.getConversationSymbol(siteChatConversationKey);
+        int uniqueIdentifier = siteChatUtil.getConversationUniqueIdentifier(siteChatConversationKey);
         int mostRecentSiteChatConversationMessageId = siteChatInboundLogInPacket.getConversationKeyToMostRecentMessageIdMap().get(siteChatConversationKey);
-        SiteChatConversationType siteChatConversationType = SiteChatUtil.getSiteChatConversationTypeBySymbol(symbol);
+        SiteChatConversationType siteChatConversationType = siteChatUtil.getSiteChatConversationTypeBySymbol(symbol);
         
         logger.trace("Conversation " + siteChatConversationKey + ", Last Message ID: " + mostRecentSiteChatConversationMessageId);
         

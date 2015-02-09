@@ -2,9 +2,8 @@ package net.mafiascum.web.sitechat.server;
 
 import java.util.Date;
 
-import net.mafiascum.util.MiscUtil;
-
 import org.apache.log4j.Logger;
+
 
 public class SiteChatServerServiceThread extends Thread {
 

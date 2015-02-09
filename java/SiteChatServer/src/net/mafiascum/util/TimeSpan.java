@@ -7,20 +7,23 @@ import java.util.GregorianCalendar;
 
 /** Represents a span of time (possibly crossing multiple days). */
 public class TimeSpan implements Serializable {
-
+  
+  private static final long serialVersionUID = -5514308729128181756L;
   public Date startTime; // If not null, returned entries will occur at or after this time (inclusive).
   public Date endTime; // If not null, returned entries will occur before this time (exclusive).
-
-  public TimeSpan () { }
+  
+  public TimeSpan () {
+  }
 
   public TimeSpan (Date startTime, Date endTime) {
+    this();
     this.startTime = startTime;
     this.endTime = endTime;
   }
 
   public static TimeSpan getTimeSpanForDay (Date date) {
-    Calendar startOfDay = DateUtil.getCalendar(date);
-    DateUtil.setToStartOfDay(startOfDay);
+    Calendar startOfDay = DateUtil.get().getCalendar(date);
+    DateUtil.get().setToStartOfDay(startOfDay);
 
     Calendar startOfNextDay = (Calendar) startOfDay.clone();
     startOfNextDay.add(Calendar.DATE, 1);
@@ -34,9 +37,9 @@ public class TimeSpan implements Serializable {
   }
 
   public static TimeSpan getTimeSpanForMonth (Date date) {
-    Calendar startOfMonth = DateUtil.getCalendar(date);
+    Calendar startOfMonth = DateUtil.get().getCalendar(date);
     startOfMonth.set(startOfMonth.get(Calendar.YEAR), startOfMonth.get(Calendar.MONTH), 1);
-    DateUtil.setToStartOfDay(startOfMonth);
+    DateUtil.get().setToStartOfDay(startOfMonth);
 
     Calendar startOfNextMonth = (Calendar) startOfMonth.clone();
     startOfNextMonth.add(Calendar.MONTH, 1);
@@ -47,7 +50,7 @@ public class TimeSpan implements Serializable {
   public static TimeSpan getTimeSpanForPastSoManyMonths (Date date, int number_of_months) {
     Calendar end_date = new GregorianCalendar();
     end_date.setTime(date);
-    DateUtil.setToEndOfDay(end_date);
+    DateUtil.get().setToEndOfDay(end_date);
 
     Calendar start_date = (Calendar) end_date.clone();
     start_date.add(Calendar.MONTH, -number_of_months);
@@ -56,9 +59,9 @@ public class TimeSpan implements Serializable {
   }
 
   public static TimeSpan getTimeSpanForYear (Date date) {
-    Calendar startOfYear = DateUtil.getCalendar(date);
+    Calendar startOfYear = DateUtil.get().getCalendar(date);
     startOfYear.set(startOfYear.get(Calendar.YEAR), 0, 1);
-    DateUtil.setToStartOfDay(startOfYear);
+    DateUtil.get().setToStartOfDay(startOfYear);
 
     Calendar startOfNextYear = (Calendar) startOfYear.clone();
     startOfNextYear.add(Calendar.YEAR, 1);
@@ -76,24 +79,24 @@ public class TimeSpan implements Serializable {
 
     Calendar startOfTomarrow = (Calendar) now.clone();
     startOfTomarrow.add(Calendar.DATE, 1);
-    DateUtil.setToStartOfDay(startOfTomarrow);
+    DateUtil.get().setToStartOfDay(startOfTomarrow);
 
     return new TimeSpan(now.getTime(), startOfTomarrow.getTime());
   }
 
   public static TimeSpan getTimeSpanForTomorrow () {
-    Calendar tomorrow = DateUtil.getTomorrow();
+    Calendar tomorrow = DateUtil.get().getTomorrow();
     return getTimeSpanForDay(tomorrow.getTime());
   }
 
   public static TimeSpan getTimeSpanForYesterday () {
-    Calendar yesterday = DateUtil.getYesterday();
+    Calendar yesterday = DateUtil.get().getYesterday();
     return getTimeSpanForDay(yesterday.getTime());
   }
 
   public static TimeSpan getTimeSpanForWeek (Date startDate) {
-    Calendar startOfWeek = DateUtil.getCalendar(startDate);
-    DateUtil.setToStartOfDay(startOfWeek);
+    Calendar startOfWeek = DateUtil.get().getCalendar(startDate);
+    DateUtil.get().setToStartOfDay(startOfWeek);
 
     Calendar endOfWeek = (Calendar) startOfWeek.clone();
     endOfWeek.add(Calendar.DATE, 7);
@@ -107,7 +110,7 @@ public class TimeSpan implements Serializable {
 
   public static TimeSpan getTimeSpanForThisWeek () {
     Calendar startOfWeek = new GregorianCalendar();
-    DateUtil.setToStartOfWeek(startOfWeek);
+    DateUtil.get().setToStartOfWeek(startOfWeek);
 
     Calendar endOfWeek = (Calendar) startOfWeek.clone();
     endOfWeek.add(Calendar.DATE, 7);
@@ -130,7 +133,7 @@ public class TimeSpan implements Serializable {
   public static TimeSpan getTimeSpanForPastSoManyDays (int numDays) {
     Calendar endOfWeek = new GregorianCalendar();
     endOfWeek.add(Calendar.DATE, 1);
-    DateUtil.clearTime(endOfWeek);
+    DateUtil.get().clearTime(endOfWeek);
 
     Calendar startOfWeek = (Calendar) endOfWeek.clone();
     startOfWeek.add(Calendar.DATE, -numDays + 1);

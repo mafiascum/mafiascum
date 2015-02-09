@@ -4,11 +4,9 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
-import net.mafiascum.util.StringUtil;
 import net.mafiascum.web.sitechat.server.SiteChatServer;
 import net.mafiascum.web.sitechat.server.SiteChatServer.SiteChatWebSocket;
 import net.mafiascum.web.sitechat.server.SiteChatUser;
-import net.mafiascum.web.sitechat.server.SiteChatUtil;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationMessage;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationWithUserList;
 import net.mafiascum.web.sitechat.server.inboundpacket.SiteChatInboundSendMessagePacket;
@@ -18,9 +16,14 @@ import org.apache.log4j.Logger;
 
 import com.google.gson.Gson;
 
-public class SiteChatInboundSendMessagePacketOperator implements SiteChatInboundPacketOperator {
+public class SiteChatInboundSendMessagePacketOperator extends SiteChatInboundPacketOperator {
   
-  protected Logger logger = Logger.getLogger(SiteChatInboundSendMessagePacketOperator.class.getName());
+  private static final Logger logger = Logger.getLogger(SiteChatInboundSendMessagePacketOperator.class.getName());
+
+  public SiteChatInboundSendMessagePacketOperator() {
+    super();
+  }
+  
   public void process(SiteChatServer siteChatServer, SiteChatWebSocket siteChatWebSocket, String siteChatInboundPacketJson) throws Exception {
 
     logger.trace("Processing SendChat Message...");
@@ -70,14 +73,14 @@ public class SiteChatInboundSendMessagePacketOperator implements SiteChatInbound
     }
 
     //Truncate long messages.
-    if(siteChatInboundSendMessagePacket.getMessage().length() > SiteChatUtil.MAX_SITE_CHAT_CONVERSATION_MESSAGE_LENGTH) {
+    if(siteChatInboundSendMessagePacket.getMessage().length() > siteChatUtil.MAX_SITE_CHAT_CONVERSATION_MESSAGE_LENGTH) {
       
-      siteChatInboundSendMessagePacket.setMessage(siteChatInboundSendMessagePacket.getMessage().substring(0, SiteChatUtil.MAX_SITE_CHAT_CONVERSATION_MESSAGE_LENGTH));
+      siteChatInboundSendMessagePacket.setMessage(siteChatInboundSendMessagePacket.getMessage().substring(0, siteChatUtil.MAX_SITE_CHAT_CONVERSATION_MESSAGE_LENGTH));
     }
     
     SiteChatConversationMessage siteChatConversationMessage = siteChatServer.recordSiteChatConversationMessage(siteChatUser.getId(), siteChatInboundSendMessagePacket.getSiteChatConversationId(), siteChatInboundSendMessagePacket.getRecipientUserId(), siteChatInboundSendMessagePacket.getMessage());
     siteChatConversationMessage = siteChatConversationMessage.clone();
-    siteChatConversationMessage.setMessage(StringUtil.escapeHTMLCharacters(siteChatConversationMessage.getMessage()));
+    siteChatConversationMessage.setMessage(stringUtil.escapeHTMLCharacters(siteChatConversationMessage.getMessage()));
     
     //Send the message to all users in the conversation(including the user who sent it).
     SiteChatOutboundNewMessagePacket siteChatOutboundNewMessagePacket = new SiteChatOutboundNewMessagePacket();

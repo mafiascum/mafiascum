@@ -93,7 +93,7 @@ public class NameValueItemSet implements Cloneable {
     removeItem(item);
   }
 
-  public synchronized List getItemList () {
+  public synchronized List<Object> getItemList () {
     return new ArrayList<Object>(itemList);
   }
 
