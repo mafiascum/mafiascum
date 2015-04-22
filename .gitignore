@@ -1,0 +1,23 @@
+
+# /forum/
+/forum/backup.php
+/forum/backup_report.php
+/forum/config.php
+/forum/files
+
+# /forum/cache/
+/forum/cache/*.*
+
+# /forum/images/avatars/
+/forum/images/avatars/upload
+
+# /forum/styles/prosilver/theme/
+/forum/styles/prosilver/theme/test.html
+
+# /java/SiteChatServer/
+/java/SiteChatServer/lag.out
+/java/SiteChatServer/.metadata
+
+# /wiki/
+/wiki/LocalSettings.php
+/wiki/images
