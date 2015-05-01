@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Set;
 
 import net.mafiascum.jdbc.BatchInsertStatement;
+import net.mafiascum.phpbb.usergroup.UserGroup;
 import net.mafiascum.util.MSUtil;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversation;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationMessage;
@@ -41,28 +42,39 @@ public class SiteChatUtil extends MSUtil {
   
   protected Logger logger = Logger.getLogger(SiteChatUtil.class.getName());
   
-  public Map<Integer, SiteChatUser> loadSiteChatUserMap(Connection connection) throws SQLException {
+  public UserGroup getUserGroup(Connection connection, int userId, int groupId) throws SQLException {
+    return queryUtil.executeStatement(connection, statement -> queryUtil.retrieveDataObject(statement, "user_id=" + userId + " AND group_id=" + groupId, UserGroup.class));
+  }
+  
+  public void deleteUserGroup(Connection connection, int userId, int groupId) throws SQLException {
+    String sql = " DELETE FROM " + queryUtil.getTableName(UserGroup.class)
+               + " WHERE user_id=" + userId
+               + " AND group_id=" + groupId;
     
+    queryUtil.executeStatement(connection, statement -> statement.executeUpdate(sql));
+  }
+  
+  public void putUserGroup(Connection connection, UserGroup userGroup) throws SQLException {
+    userGroup.store(connection);
+  }
+  
+  public Map<Integer, SiteChatUser> loadSiteChatUserMap(Connection connection) throws SQLException {
     return queryUtil.executeStatement(connection, statement -> queryUtil.retrieveDataObjectMap(statement, "1", SiteChatUser.class, SiteChatUser::getId));
   }
   
   public List<SiteChatConversation> getSiteChatConversations(Connection connection) throws SQLException {
-    
     return queryUtil.executeStatement(connection, statement -> queryUtil.retrieveDataObjectList(statement, "1", SiteChatConversation.class));
   }
   
   public SiteChatConversation getSiteChatConversation(Connection connection, int siteChatConversationId) throws SQLException {
-    
     return queryUtil.executeStatement(connection, statement -> queryUtil.retrieveDataObject(statement, "id=" + siteChatConversationId, SiteChatConversation.class));
   }
   
   public SiteChatConversation getSiteChatConversation(Connection connection, String siteChatConversationName) throws SQLException {
-    
     return queryUtil.executeStatement(connection, statement -> queryUtil.retrieveDataObject(statement, "name=" + sqlUtil.escapeQuoteString(siteChatConversationName), SiteChatConversation.class));
   }
   
   public void putSiteChatConversation(Connection connection, SiteChatConversation siteChatConversation) throws SQLException {
-    
     siteChatConversation.store(connection);
   }
   
@@ -131,6 +143,23 @@ public class SiteChatUtil extends MSUtil {
                  + " AND group_leader = " + sqlUtil.encodeBooleanInt(false);
       
       return queryUtil.getIntegerSet(connection, sql, "user_id");
+  }
+  
+  public List<SiteChatConversationMessage> loadSiteChatConversationMessagesForConversation(Connection connection, int siteChatConversationId, int numberToLoad, Integer oldestMessageId) throws SQLException {
+    
+    String criteria = " site_chat_conversation_id=" + siteChatConversationId
+                    + (oldestMessageId == null ? "" : (" AND id < " + oldestMessageId));
+  
+    return queryUtil.executeStatement(connection, statement -> queryUtil.retrieveDataObjectList(connection.createStatement(), criteria, "id DESC", null, numberToLoad, SiteChatConversationMessage.class));
+  }
+
+  public List<SiteChatConversationMessage> loadSiteChatConversationMessagesForPrivateConversation(Connection connection, int userId1, int userId2, int numberToLoad, Integer oldestMessageId) throws SQLException {
+    
+    String criteria =     "((recipient_user_id=" + userId1 + " AND user_id=" + userId2 + ")"
+                    + " OR (recipient_user_id=" + userId2 + " AND user_id=" + userId1 + "))"
+                    + (oldestMessageId == null ? "" : (" AND id < " + oldestMessageId));
+    
+    return queryUtil.executeStatement(connection, statement -> queryUtil.retrieveDataObjectList(connection.createStatement(), criteria, "id+0 DESC", null, numberToLoad, SiteChatConversationMessage.class));
   }
   
   public int getConversationUniqueIdentifier(String conversationUniqueKey) {

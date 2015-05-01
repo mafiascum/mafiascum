@@ -234,4 +234,15 @@ public class SQLUtil extends MSUtil {
   public Timestamp getTimestamp(java.util.Date date) {
     return new Timestamp(date.getTime());
   }
+  
+  public String generateLimitClause(Integer offset, Integer fetchSize, boolean preceedingSpace) {
+    
+    if(offset == null && fetchSize == null)
+      return "";
+    if(offset == null)
+      return (preceedingSpace ? " " : "") + "LIMIT " + String.valueOf(fetchSize);
+    if(fetchSize == null)
+      return (preceedingSpace ? " " : "") + "LIMIT " + offset + "," + Integer.MAX_VALUE;
+    return (preceedingSpace ? " " : "") + "LIMIT " + offset + "," + fetchSize;
+  }
 }

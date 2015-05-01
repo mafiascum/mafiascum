@@ -10,7 +10,7 @@ import org.apache.log4j.Logger;
 
 import com.google.gson.Gson;
 
-public class SiteChatInboundLookupUserPacketOperator extends SiteChatInboundPacketOperator {
+public class SiteChatInboundLookupUserPacketOperator extends SiteChatInboundSignedInPacketOperator {
 
   private static final Logger logger = Logger.getLogger(SiteChatInboundLookupUserPacketOperator.class.getName());
   
@@ -18,18 +18,11 @@ public class SiteChatInboundLookupUserPacketOperator extends SiteChatInboundPack
     super();
   }
   
-  public void process(SiteChatServer siteChatServer, SiteChatWebSocket siteChatWebSocket, String siteChatInboundPacketJson) throws Exception {
+  public void process(SiteChatServer siteChatServer, SiteChatUser siteChatUser, SiteChatWebSocket siteChatWebSocket, String siteChatInboundPacketJson) throws Exception {
     
     SiteChatInboundLookupUserPacket siteChatInboundLookupUserPacket = new Gson().fromJson(siteChatInboundPacketJson, SiteChatInboundLookupUserPacket.class);
-    SiteChatUser siteChatUser = siteChatWebSocket.getSiteChatUser();
     logger.debug("LookupUser Packet. User ID: " + siteChatInboundLookupUserPacket.getUserId());
     
-    if(siteChatUser == null) {
-      //Not Logged In.
-      
-      logger.error("User not logged in, looking up user. Target User ID: " + siteChatInboundLookupUserPacket.getUserId());
-      return;
-    }
     siteChatServer.updateUserActivity(siteChatUser.getId());
     
     //Create the response

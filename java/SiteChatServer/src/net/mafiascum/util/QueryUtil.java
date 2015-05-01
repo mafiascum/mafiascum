@@ -16,6 +16,8 @@ import java.util.Set;
 import java.util.function.Function;
 
 import net.mafiascum.functional.ConsumerWithException;
+import net.mafiascum.jdbc.BatchInsertStatement;
+import net.mafiascum.jdbc.BatchInsertable;
 import net.mafiascum.jdbc.ConnectionExecutor;
 import net.mafiascum.jdbc.DataObject;
 import net.mafiascum.jdbc.StatementExecutor;
@@ -712,10 +714,10 @@ public class QueryUtil extends MSUtil {
   
   public <T extends DataObject> List<T> retrieveDataObjectList(Statement statement, String criteria, Class<T> dbObjectClass) throws SQLException {
     
-    return retrieveDataObjectList(statement, criteria, null, dbObjectClass);
+    return retrieveDataObjectList(statement, criteria, null, null, null, dbObjectClass);
   }
   
-  public <T extends DataObject> List<T> retrieveDataObjectList(Statement statement, String criteria, String orderBy, Class<T> dbObjectClass) throws SQLException {
+  public <T extends DataObject> List<T> retrieveDataObjectList(Statement statement, String criteria, String orderBy, Integer offset, Integer fetchSize, Class<T> dbObjectClass) throws SQLException {
     
     String tableName = getTableName(dbObjectClass);
     
@@ -727,7 +729,8 @@ public class QueryUtil extends MSUtil {
     String sql = " SELECT *"
                + " FROM `" + tableName.replace("`", "") + "`"
                + " WHERE " + (criteria == null ? "1" : criteria)
-               + (orderBy == null ? "" : (" ORDER BY " + orderBy));
+               + (orderBy == null ? "" : (" ORDER BY " + orderBy))
+               + sqlUtil.generateLimitClause(offset, fetchSize, true);
     
     return retrieveDataObjectListBySql(statement, sql, dbObjectClass);
   }
@@ -924,5 +927,23 @@ public class QueryUtil extends MSUtil {
     
     Table table = dbObjectClass.getAnnotation(Table.class);
     return table == null ? null : table.tableName();    
+  }
+  
+  public void batchInsert(Connection connection, Collection<?extends BatchInsertable> batchInsertableCollection, String tableName, int batchSize, boolean insertIgnore) throws SQLException {
+    
+    if(batchInsertableCollection.isEmpty())
+      return;
+    
+    BatchInsertStatement batchInsertStatement = new BatchInsertStatement(connection, tableName, batchSize, insertIgnore);
+    
+    batchInsertableCollection.iterator().next().setBatchInsertStatementColumns(batchInsertStatement);
+    batchInsertStatement.start();
+    
+    for(BatchInsertable batchInsertable : batchInsertableCollection) {
+      
+      batchInsertable.addToBatchInsertStatement(batchInsertStatement);
+    }
+    
+    batchInsertStatement.finish();
   }
 }

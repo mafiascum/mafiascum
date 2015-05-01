@@ -17,13 +17,7 @@ public class StoreDataObjectSQLBuilder extends StoreSQLBuilder {
   
   public void execute(Statement statement, IsNewDataObject dataObject) throws SQLException {
     
-    if(dataObject.isNew()) {
-      statement.executeUpdate(generateInsert());
-    }
-    else {
-      
-      statement.executeUpdate(generateUpdate());
-    }
+    statement.executeUpdate(dataObject.isNew() ? generateInsert() : generateUpdate());
   }
   
   public int execute(Statement statement, DataObjectWithShortID dataObject) throws SQLException {
@@ -31,13 +25,10 @@ public class StoreDataObjectSQLBuilder extends StoreSQLBuilder {
     if(dataObject.isNew()) {
       
       statement.executeUpdate(generateInsert());
-      
       dataObject.setId((short)QueryUtil.get().getLastInsertedID(statement));
     }
-    else {
-      
+    else
       statement.executeUpdate(generateUpdate());
-    }
     
     return dataObject.getId();
   }
@@ -47,12 +38,10 @@ public class StoreDataObjectSQLBuilder extends StoreSQLBuilder {
     if(dataObject.isNew()) {
       
       statement.executeUpdate(generateInsert());
-      
       dataObject.setId(QueryUtil.get().getLastInsertedID(statement));
     }
-    else {
+    else
       statement.executeUpdate(generateUpdate());
-    }
     
     return dataObject.getId();
   }
@@ -62,13 +51,10 @@ public class StoreDataObjectSQLBuilder extends StoreSQLBuilder {
     if(dataObject.isNew()) {
       
       statement.executeUpdate(generateInsert());
-      
       dataObject.setId(QueryUtil.get().getLastInsertedLongID(statement));
     }
-    else {
-      
+    else
       statement.executeUpdate(generateUpdate());
-    }
     
     return dataObject.getId();
   }

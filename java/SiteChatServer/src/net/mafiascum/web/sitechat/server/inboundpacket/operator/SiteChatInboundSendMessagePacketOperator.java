@@ -16,7 +16,7 @@ import org.apache.log4j.Logger;
 
 import com.google.gson.Gson;
 
-public class SiteChatInboundSendMessagePacketOperator extends SiteChatInboundPacketOperator {
+public class SiteChatInboundSendMessagePacketOperator extends SiteChatInboundSignedInPacketOperator {
   
   private static final Logger logger = Logger.getLogger(SiteChatInboundSendMessagePacketOperator.class.getName());
 
@@ -24,20 +24,14 @@ public class SiteChatInboundSendMessagePacketOperator extends SiteChatInboundPac
     super();
   }
   
-  public void process(SiteChatServer siteChatServer, SiteChatWebSocket siteChatWebSocket, String siteChatInboundPacketJson) throws Exception {
+  public void process(SiteChatServer siteChatServer, SiteChatUser siteChatUser, SiteChatWebSocket siteChatWebSocket, String siteChatInboundPacketJson) throws Exception {
 
     logger.trace("Processing SendChat Message...");
     SiteChatInboundSendMessagePacket siteChatInboundSendMessagePacket = new Gson().fromJson(siteChatInboundPacketJson, SiteChatInboundSendMessagePacket.class);
-    SiteChatUser siteChatUser = siteChatWebSocket.getSiteChatUser();
     Set<Integer> sendToUserIdSet;
     SiteChatConversationWithUserList siteChatConversationWithUserList = null;
     SiteChatUser siteChatRecipientUser = null;
     
-    if(siteChatUser == null) {
-      
-      logger.error("User not logged in.");
-      return;//User is not logged in.
-    }
     siteChatServer.updateUserActivity(siteChatUser.getId());
     
     synchronized(siteChatUser) {

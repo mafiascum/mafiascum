@@ -104,6 +104,7 @@
 <!-- IF S_CHAT -->
 <link href="{T_THEME_PATH}/jquery.fancybox.css?v=01" rel="stylesheet" type="text/css" media="screen" />
 <script type="text/javascript" src="{T_TEMPLATE_PATH}/jquery.fancybox.js?v=10"></script>
+<script type="text/javascript" src="./styles/prosilver/template/handlebars-v2.0.0.js?v=13"></script>
 
 <link href="{T_THEME_PATH}/sitechat.css?v=05" rel="stylesheet" type="text/css" media="screen" />
 <script type="text/javascript" src="./styles/prosilver/template/sitechat.js?v=13"></script>
@@ -122,7 +123,7 @@ var templatepath = "{T_THEME_PATH}";
 <!-- IF SCRIPT_NAME eq 'posting' -->
 	var private_id_count = {HAS_PRIVATE_USERS};
 <!-- ENDIF -->
-
+/***
 window.onerror = function(msg, url, lineNo)  {
 
 	$.ajax({
@@ -136,6 +137,7 @@ window.onerror = function(msg, url, lineNo)  {
 
 	return true;
 }
+	***/
 </script>
 
 <!-- IF not S_IS_BOT and S_USER_LOGGED_IN and S_CHAT -->
@@ -143,8 +145,8 @@ window.onerror = function(msg, url, lineNo)  {
 <script>
 
 $(document).ready(function(){
-	client = new Client();
-	client.setup("{SESSION_ID}", {S_USER_ID}, <!-- IF S_LOBBY -->true<!-- ELSE -->false<!-- ENDIF -->, "{SITE_CHAT_URL}", "{SITE_CHAT_PROTOCOL}");
+	siteChat.setup("{SESSION_ID}", {S_USER_ID}, <!-- IF S_LOBBY -->true<!-- ELSE -->false<!-- ENDIF -->,
+			"{SITE_CHAT_URL}", "{SITE_CHAT_PROTOCOL}");
 });
 </script>
 <!-- ENDIF -->

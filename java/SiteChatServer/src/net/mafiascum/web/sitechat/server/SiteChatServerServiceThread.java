@@ -79,7 +79,7 @@ public class SiteChatServerServiceThread extends Thread {
           try {
             
             logger.debug("Refreshing ban user list.");
-            siteChatServer.refreshBanUserList();
+            siteChatServer.refreshBannedUserList();
             logger.debug("Ban user list refreshed.");
           }
           catch(Throwable throwable) {

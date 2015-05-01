@@ -152,7 +152,7 @@ public class ConnectionPool {
           try {
             
             while(totalConnections < maxConnections) {
-              logger.info("Allocating Connection...");
+              //logger.info("Allocating Connection...");
               Connection connectionSource, connectionProxy;
               connectionSource = DriverManager.getConnection
               (

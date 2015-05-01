@@ -51,7 +51,7 @@ public class SiteChatInboundLogInPacketOperator extends SiteChatInboundPacketOpe
     logger.trace("Log In Packet. User ID: " + siteChatInboundLogInPacket.getUserId() + ", Session: " + siteChatInboundLogInPacket.getSessionId());
     
     //Before even authenticating, perform the cheaper check to see if the user is banned.
-    if(siteChatServer.isUseBanned(siteChatUser.getId())) {
+    if(siteChatServer.isUserBanned(siteChatUser.getId())) {
       
       logger.debug("Banned user #" + siteChatUser.getId() + " attempting to log in. Denied.");
       siteChatWebSocket.getConnection().close();

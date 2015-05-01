@@ -25,6 +25,7 @@ import net.mafiascum.web.sitechat.server.conversation.SiteChatConversation;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationMessage;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationType;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationWithUserList;
+import net.mafiascum.web.sitechat.server.inboundpacket.SiteChatInboundPacketSkeleton;
 import net.mafiascum.web.sitechat.server.inboundpacket.SiteChatInboundPacketType;
 import net.mafiascum.web.sitechat.server.inboundpacket.operator.SiteChatInboundPacketOperator;
 import net.mafiascum.web.sitechat.server.outboundpacket.SiteChatOutboundConnectPacket;
@@ -82,20 +83,17 @@ public class SiteChatServer extends Server implements SignalHandler {
   protected SiteChatUtil siteChatUtil;
   protected QueryUtil queryUtil;
   protected StringUtil stringUtil;
-  
-  public static class SiteChatInboundPacketSkeleton {
 
-    public String command;
-  }
-
-  public SiteChatServer(int port, Provider provider) throws Exception {
+  public SiteChatServer(Provider provider) {
 
     this.provider = provider;
 
     setSiteChatUtil(SiteChatUtil.get());
     setQueryUtil(QueryUtil.get());
     setStringUtil(StringUtil.get());
-
+  }
+  
+  public void setup(int port) throws Exception {
     queryUtil.executeConnectionNoReturn(provider, connection -> {
       //Add handler for interruption signal.
       Signal.handle(new Signal("INT"), this);
@@ -148,16 +146,16 @@ public class SiteChatServer extends Server implements SignalHandler {
       topSiteChatConversationMessageId = siteChatUtil.getTopSiteChatConversationMessageId(connection);
 
       logger.info("Loading Banned User ID Set...");
-      refreshBanUserList();
+      refreshBannedUserList();
     });
   }
 
-  public boolean isUseBanned(int userId) throws Exception {
+  public boolean isUserBanned(int userId) throws Exception {
 
     return bannedUserIdSet.contains(userId);
   }
 
-  public void refreshBanUserList() throws Exception {
+  public void refreshBannedUserList() throws Exception {
 
     Set<Integer> newBannedUserIdSet;
 
@@ -697,6 +695,32 @@ public class SiteChatServer extends Server implements SignalHandler {
     }
   }
 
+  public List<SiteChatConversationMessage> loadHistoricalMessages(int siteChatUserId, SiteChatConversationType conversationType, int uniqueIdentifier, Integer oldestMessageId) throws Exception {
+    
+    if(conversationType.equals(SiteChatConversationType.Conversation)) {
+      
+      SiteChatConversationWithUserList conversationWithUserList;
+      synchronized(this.siteChatConversationWithMemberListMap) {
+        
+        conversationWithUserList = siteChatConversationWithMemberListMap.get(uniqueIdentifier);
+        
+        if(conversationWithUserList == null)
+          throw new SiteChatException("Conversation does not exist.");
+      }
+      
+      synchronized(conversationWithUserList) {
+        
+        //Tell them the conversation doesn't exist. We do not want them to sniff by ID.
+        if(!conversationWithUserList.getUserIdSet().contains(siteChatUserId))
+          throw new SiteChatException("Conversation does not exist.");
+      }
+      
+      return queryUtil.executeConnection(provider, connection -> siteChatUtil.loadSiteChatConversationMessagesForConversation(connection, uniqueIdentifier, 25, oldestMessageId));
+    }
+    
+    return queryUtil.executeConnection(provider, connection -> siteChatUtil.loadSiteChatConversationMessagesForPrivateConversation(connection, siteChatUserId, uniqueIdentifier, 25, oldestMessageId));
+  }
+  
   public void attemptJoinConversation(SiteChatWebSocket siteChatWebSocket, int siteChatUserId, int siteChatConversationId, boolean notifyUser, boolean notifyConversationMembers, String password, String authCode) throws IOException {
 
     synchronized(this.siteChatUserMap) {
@@ -822,7 +846,8 @@ public class SiteChatServer extends Server implements SignalHandler {
       provider.setupConnectionPool();
 
       logger.info("Setting Up Site Chat Server.");
-      SiteChatServer server = new SiteChatServer(port, provider);
+      SiteChatServer server = new SiteChatServer(provider);
+      server.setup(port);
 
       //server.setResourceBase("-");
       logger.info("Starting Site Chat Server.");
@@ -967,5 +992,14 @@ public class SiteChatServer extends Server implements SignalHandler {
 
   public void setStringUtil(StringUtil stringUtil) {
     this.stringUtil = stringUtil;
+  }
+
+  public Map<Integer, SiteChatConversationWithUserList> getSiteChatConversationWithMemberListMap() {
+    return siteChatConversationWithMemberListMap;
+  }
+
+  public void setSiteChatConversationWithMemberListMap(
+      Map<Integer, SiteChatConversationWithUserList> siteChatConversationWithMemberListMap) {
+    this.siteChatConversationWithMemberListMap = siteChatConversationWithMemberListMap;
   }
 }

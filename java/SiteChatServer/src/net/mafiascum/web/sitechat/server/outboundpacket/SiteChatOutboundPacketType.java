@@ -30,7 +30,8 @@ public enum SiteChatOutboundPacketType implements VEnum {
   userList(6, "UserList"),
   passwordRequired(7, "PasswordRequired"),
   incorrectPassword(8, "IncorrectPassword"),
-  setPassword(9, "SetPassword");
+  setPassword(9, "SetPassword"),
+  loadMessages(10, "LoadMessages");
 
   private String standardName;
 

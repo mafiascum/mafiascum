@@ -64,6 +64,19 @@
 	-o-transition: background 0.2s linear;
 }
 
+.chatWindow .title.blink
+{
+	transition: background 0.7s linear !important;
+	-webkit-transition: background 0.7s linear !important;
+	-moz-transition: background 0.7s linear !important;
+	-o-transition: background 0.7s linear !important;
+}
+
+.chatWindow .title.blink.blinkEnd
+{
+	background-color: #F09B3C;
+}
+
 .chatWindow.expanded .title
 {
 	background-color: #477D9E;
@@ -143,6 +156,7 @@
 	right: 0;
 	top: 28px;
 	width: 175px;
+	z-index: 1000;
 }
 .chatWindow .menu.expanded ul
 {
@@ -222,16 +236,25 @@
 .chatWindow.expanded .outputBuffer
 {
 	display: block;
-	padding: 0 5px 0 5px;
 	height: 300px;
 	background: #FFF;
 	overflow: auto;
+	position: relative;
+}
+
+.chatWindow.expanded .outputBuffer .loadMore
+{
+	padding:5px 0 5px 0;
+	display: block;
+	background-color: #EEE;
+	text-align: center;
+	font-size: 11px;
 }
 
 .chatWindow.expanded .outputBuffer .message
 {
-	width: 100%;
 	padding: 0 0 5px 0;
+	margin: 0 5px 0 5px;
 	clear:both;
 	min-height: 40px;
 }

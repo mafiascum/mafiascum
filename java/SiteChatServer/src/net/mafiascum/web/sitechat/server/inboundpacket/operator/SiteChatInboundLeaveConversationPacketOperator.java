@@ -13,7 +13,7 @@ import org.apache.log4j.Logger;
 
 import com.google.gson.Gson;
 
-public class SiteChatInboundLeaveConversationPacketOperator extends SiteChatInboundPacketOperator {
+public class SiteChatInboundLeaveConversationPacketOperator extends SiteChatInboundSignedInPacketOperator {
 
   private static final Logger logger = Logger.getLogger(SiteChatInboundLeaveConversationPacketOperator.class.getName());
   
@@ -21,18 +21,11 @@ public class SiteChatInboundLeaveConversationPacketOperator extends SiteChatInbo
     super();
   }
   
-  public void process(SiteChatServer siteChatServer, SiteChatWebSocket siteChatWebSocket, String siteChatInboundPacketJson) throws Exception {
+  public void process(SiteChatServer siteChatServer, SiteChatUser siteChatUser, SiteChatWebSocket siteChatWebSocket, String siteChatInboundPacketJson) throws Exception {
     
     SiteChatInboundLeaveConversationPacket siteChatInboundLeaveConversationPacket = new Gson().fromJson(siteChatInboundPacketJson, SiteChatInboundLeaveConversationPacket.class);
     SiteChatConversationWithUserList siteChatConversationWithUserList;
-    SiteChatUser siteChatUser = siteChatWebSocket.getSiteChatUser();
     
-    if(siteChatUser == null) {
-      //Not logged in.
-      
-      logger.error("User trying to leave conversation without first logging in.");
-      return;
-    }
     siteChatServer.updateUserActivity(siteChatUser.getId());
     
     synchronized(siteChatUser) {

@@ -11,7 +11,7 @@ import org.apache.log4j.Logger;
 
 import com.google.gson.Gson;
 
-public class SiteChatInboundSetPasswordPacketOperator extends SiteChatInboundPacketOperator {
+public class SiteChatInboundSetPasswordPacketOperator extends SiteChatInboundSignedInPacketOperator {
 
   private static final Logger logger = Logger.getLogger(SiteChatInboundSetPasswordPacketOperator.class.getName());
   
@@ -19,17 +19,9 @@ public class SiteChatInboundSetPasswordPacketOperator extends SiteChatInboundPac
     super();
   }
   
-  public void process(SiteChatServer siteChatServer, SiteChatWebSocket siteChatWebSocket, String siteChatInboundPacketJson) throws Exception {
+  public void process(SiteChatServer siteChatServer, SiteChatUser siteChatUser, SiteChatWebSocket siteChatWebSocket, String siteChatInboundPacketJson) throws Exception {
     
     SiteChatInboundSetPasswordPacket packet = new Gson().fromJson(siteChatInboundPacketJson, SiteChatInboundSetPasswordPacket.class);
-    SiteChatUser siteChatUser = siteChatWebSocket.getSiteChatUser();
-    
-    if(siteChatUser == null) {
-      //Not logged in.
-      
-      logger.error("User trying to connect to chat without first logging in.");
-      return;
-    }
     
     siteChatServer.updateUserActivity(siteChatUser.getId());
     String error = null;

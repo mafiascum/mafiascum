@@ -12,7 +12,7 @@ import org.apache.log4j.Logger;
 
 import com.google.gson.Gson;
 
-public class SiteChatInboundConnectPacketOperator extends SiteChatInboundPacketOperator {
+public class SiteChatInboundConnectPacketOperator extends SiteChatInboundSignedInPacketOperator {
 
   private static final Logger logger = Logger.getLogger(SiteChatInboundConnectPacketOperator.class.getName());
   
@@ -20,18 +20,11 @@ public class SiteChatInboundConnectPacketOperator extends SiteChatInboundPacketO
     super();
   }
   
-  public void process(SiteChatServer siteChatServer, SiteChatWebSocket siteChatWebSocket, String siteChatInboundPacketJson) throws Exception {
+  public void process(SiteChatServer siteChatServer, SiteChatUser siteChatUser, SiteChatWebSocket siteChatWebSocket, String siteChatInboundPacketJson) throws Exception {
     
     SiteChatInboundConnectPacket siteChatInboundConnectPacket = new Gson().fromJson(siteChatInboundPacketJson, SiteChatInboundConnectPacket.class);
     SiteChatConversationWithUserList siteChatConversationWithUserList;
-    SiteChatUser siteChatUser = siteChatWebSocket.getSiteChatUser();
     
-    if(siteChatUser == null) {
-      //Not logged in.
-      
-      logger.error("User trying to connect to chat without first logging in.");
-      return;
-    }
     siteChatServer.updateUserActivity(siteChatUser.getId());
     
     synchronized(siteChatUser) {
