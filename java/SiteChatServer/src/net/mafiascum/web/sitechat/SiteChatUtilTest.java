@@ -69,11 +69,11 @@ public class SiteChatUtilTest {
     SiteChatUtil mockedSiteChatUtil = Mockito.spy(siteChatUtil);
     List<SiteChatConversationMessage> messages = new ArrayList<SiteChatConversationMessage>();
     
-    Mockito.doNothing().when(mockedSiteChatUtil).putNewSiteChatConversationMessages(Mockito.any(), Mockito.any());
+    Mockito.doNothing().when(mockedSiteChatUtil).putNewSiteChatConversationMessages((List<SiteChatConversationMessage>) Mockito.any(), (BatchInsertStatement)Mockito.any());
     
     mockedSiteChatUtil.putNewSiteChatConversationMessages(connection, messages);
     
-    Mockito.verify(mockedSiteChatUtil, Mockito.times(1)).putNewSiteChatConversationMessages(Mockito.any(), Mockito.any());
+    Mockito.verify(mockedSiteChatUtil, Mockito.times(1)).putNewSiteChatConversationMessages((List<SiteChatConversationMessage>) Mockito.any(), (BatchInsertStatement)Mockito.any());
     
     //Verify works with empty list.
     siteChatUtil.putNewSiteChatConversationMessages(messages, batchInsertStatement);
