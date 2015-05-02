@@ -10,6 +10,8 @@ import net.mafiascum.jdbc.ConnectionPool;
 import net.mafiascum.util.MiscUtil;
 import net.mafiascum.util.StringUtil;
 
+import org.apache.log4j.Logger;
+
 public class Provider {
 
   protected String mysqlUrl;
@@ -40,9 +42,10 @@ public class Provider {
     connectionPool = new ConnectionPool(getMaxConnections(), mysqlUrl, mysqlUsername, mysqlPassword);
     connectionPool.setup();
   }
-  
+  private static final Logger logger = Logger.getLogger(Provider.class.getName());
   public void loadConfiguration(String configurationFilePath) throws Exception {
     
+    logger.info("CONFIG PATH: " + configurationFilePath);
     Properties properties = miscUtil.loadPropertiesResource(configurationFilePath);
     
     mysqlUrl = properties.getProperty("Mysql.Main.Url");

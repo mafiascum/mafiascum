@@ -58,10 +58,23 @@
 
 .chatWindow .title.backgroundColorTransition
 {
-	transition: background 0.2s linear;
-	-webkit-transition: background 0.2s linear;
-	-moz-transition: background 0.2s linear;
-	-o-transition: background 0.2s linear;
+        transition: background 0.2s linear;
+        -webkit-transition: background 0.2s linear;
+        -moz-transition: background 0.2s linear;
+        -o-transition: background 0.2s linear;
+}
+
+.chatWindow .title.blink
+{
+        transition: background 0.7s linear !important;
+        -webkit-transition: background 0.7s linear !important;
+        -moz-transition: background 0.7s linear !important;
+        -o-transition: background 0.7s linear !important;
+}
+
+.chatWindow .title.blink.blinkEnd
+{
+        background-color: #F09B3C;
 }
 
 .chatWindow.expanded .title
@@ -663,3 +676,11 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#888888', end
 	display: none !important;
 }
 
+.chatWindow.expanded .outputBuffer .loadMore
+{
+	padding:5px 0 5px 0;
+	display: block;
+	background-color: #6E6E6E;
+	text-align: center;
+	font-size: 11px;
+}
