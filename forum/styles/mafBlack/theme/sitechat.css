@@ -1,4 +1,3 @@
-
 .chatPanel
 {
 	position: fixed;
@@ -240,15 +239,6 @@
 	background: #575757;
 	overflow: auto;
 	position: relative;
-}
-
-.chatWindow.expanded .outputBuffer .loadMore
-{
-	padding:5px 0 5px 0;
-	display: block;
-	background-color: #EEE;
-	text-align: center;
-	font-size: 11px;
 }
 
 .chatWindow.expanded .outputBuffer .message
