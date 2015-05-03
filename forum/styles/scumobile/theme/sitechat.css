@@ -64,6 +64,19 @@
 	-o-transition: background 0.2s linear;
 }
 
+.chatWindow .title.blink
+{
+	transition: background 0.7s linear !important;
+	-webkit-transition: background 0.7s linear !important;
+	-moz-transition: background 0.7s linear !important;
+	-o-transition: background 0.7s linear !important;
+}
+
+.chatWindow .title.blink.blinkEnd
+{
+	background-color: #F09B3C;
+}
+
 .chatWindow.expanded .title
 {
 	background-color: #477D9E;

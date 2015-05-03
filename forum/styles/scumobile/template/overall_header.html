@@ -98,7 +98,7 @@
 <!-- ENDIF -->
 <!-- IF S_CHAT -->
 <link href="{T_THEME_PATH}/sitechat.css?v=04" rel="stylesheet" type="text/css" media="screen" />
-<script type="text/javascript" src="./styles/prosilver/template/handlebars-v2.0.0.js"/>
+<script type="text/javascript" src="./styles/prosilver/template/handlebars-v2.0.0.js"></script>
 <script type="text/javascript" src="./styles/prosilver/template/sitechat.js?v=10"></script>
 
 <link href="{T_THEME_PATH}/jquery.fancybox.css?v=01" rel="stylesheet" type="text/css" media="screen" />
@@ -127,8 +127,8 @@ window.onerror = function(msg, url, lineNo)  {
 
 <script>
 $(document).ready(function(){
-	client = new Client();
-	client.setup("{SESSION_ID}", {S_USER_ID}, <!-- IF S_LOBBY -->true<!-- ELSE -->false<!-- ENDIF -->, "{SITE_CHAT_URL}", "{SITE_CHAT_PROTOCOL}");
+	siteChat.setup("{SESSION_ID}", {S_USER_ID}, <!-- IF S_LOBBY -->true<!-- ELSE -->false<!-- ENDIF -->,
+			"{SITE_CHAT_URL}", "{SITE_CHAT_PROTOCOL}");
 });
 </script>
 <!-- ENDIF -->
