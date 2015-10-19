@@ -1,49 +1,52 @@
+	function rgbToHsl(r, g, b){
+    r /= 255, g /= 255, b /= 255;
+    var max = Math.max(r, g, b), min = Math.min(r, g, b);
+    var h, s, l = (max + min) / 2;
+
+    if(max == min){
+        h = s = 0; // achromatic
+    }else{
+        var d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch(max){
+            case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+            case g: h = (b - r) / d + 2; break;
+            case b: h = (r - g) / d + 4; break;
+        }
+        h /= 6;
+    }
+
+    return [h, s, l];
+}
+function hslToRgb(h, s, l){
+    var r, g, b;
+
+    if(s == 0){
+        r = g = b = l; // achromatic
+    }else{
+        function hue2rgb(p, q, t){
+            if(t < 0) t += 1;
+            if(t > 1) t -= 1;
+            if(t < 1/6) return p + (q - p) * 6 * t;
+            if(t < 1/2) return q;
+            if(t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+            return p;
+        }
+
+        var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        var p = 2 * l - q;
+        r = hue2rgb(p, q, h + 1/3);
+        g = hue2rgb(p, q, h);
+        b = hue2rgb(p, q, h - 1/3);
+    }
+
+    return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+}
 	function getLightestShade(r,g,b){
-		var percent = 0.0;
-		var yiq = ((r*299)+(g*587)+(b*114));
-		if (yiq < 100000){
-			if (r > g && r > b){
-				percent = 255.0/r;
-			} else if (b > g) {
-				console.log(b + ', ' + g);
-				percent = 255.0/b;
-			} else {
-				percent = 255.0/g;
-			}
-			r = Math.round(r*percent);
-			g = Math.round(g*percent);
-			b = Math.round(b*percent);
-			
-			yiq = ((r*299)+(g*587)+(b*114));
-			
-			if (yiq < 100000 && b >= 254){
-			 var target = 100000 - yiq;
-			 var r_g_ratio = 0.0;
-			 var newg = 0;
-			 var newr = 0;
-			 if (g > 0){
-				 r_g_ratio = (r/1.0)/g;
-				 newg = target/(r_g_ratio*299 + 589);
-				 newr = r_g_ratio*newg;
-			 } else if (r > 0) {
-				 r_g_ratio = (g/1.0)/r;
-				 newr = target/(r_g_ratio*589 + 299);
-				 newg = r_g_ratio*newr;
-			 } else {
-				r_g_ratio = 1.0;
-				 newg = target/(r_g_ratio*299 + 589);
-				 newr = r_g_ratio*newg;
-			 }
-			 r = r + Math.round(newr);
-			 g = g + Math.round(newg);
-			}
-			return 'rgb(' + r + ', ' + g + ', ' + b + ')';
-		}
-	}
-	function getContrastYIQ(r,g,b){
-		var yiq = ((r*299)+(g*587)+(b*114))/1000;
-	//	return (yiq >= 100) ? 'black' : ('rgb(' + Math.round((255-r)/1.4 - (0-r)) + ', ' + Math.round((255-g)/1.4 - (0-g)) + ', ' + Math.round((255-b)/1.4 - (0-b)) + ')');
-		return (yiq >= 128) ? 'black' : 'white';
+		var hsl = rgbToHsl(r,g,b);
+		hsl[2] = hsl[2] x 1.1;
+		var rgb = hslToRgb(hsl[0],hsl[1],hsl[2]);
+		return 'rgb(' + rgb[0] + ', ' + rgb[1] + ', ' + rgb[2] + ')';
 	}
 $(document).ready(function(){
 	if (templatepath.search("mafBlack") > 0){
@@ -54,8 +57,6 @@ $(document).ready(function(){
 			var g = parseInt(components[1]);
 			var b = parseInt(components[2]);
 			if ((r != 238 && r != 221) || (g != 238 && g != 221) || (b != 238 && b != 221)){
-				var contrast = getContrastYIQ(r, g, b);
-				//console.log('contrast: ' + contrast + ' colour: ' + colour);
 				$(this).css("color", getLightestShade(r,g,b));
 			}
 		});

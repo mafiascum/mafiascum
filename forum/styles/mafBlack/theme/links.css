@@ -98,7 +98,6 @@ a.topictitle:active {
 }
 
 .postlink:hover {
-	background-color: #f6f6f6;
 	text-decoration: none;
 	color: #404040;
 }
@@ -143,7 +142,7 @@ a.topictitle:active {
 	clear: both;
 	height: 30px;
 	text-align: right;
-	border-top: 1px solid #000000;
+	border-top: 1px solid #880000;
 }
 
 a.top {

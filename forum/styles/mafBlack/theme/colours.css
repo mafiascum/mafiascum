@@ -4,8 +4,8 @@ Colours and backgrounds for common.css
 -------------------------------------------------------------- */
 
 html, body {
-	color: #EEEEEE;
-	background-color: #000000;
+	color: #FFCC66;
+	background-color: #1a1a1a;
 }
 
 h1 {
@@ -17,8 +17,9 @@ h2 {
 }
 
 h3 {
-	border-bottom-color: #FFFFFF;
-	color: #FFFFFF;
+	border-bottom-color: #880000;
+	border-width: 2px;
+	color: #FFCC66;
 }
 
 hr {
@@ -48,23 +49,23 @@ hr.dashed {
 /* Round cornered boxes and backgrounds
 ---------------------------------------- */
 .headerbar {
-	background-color: #333333;
+	background-color: #1a1a1a;
 	background-image: url("{T_THEME_PATH}/images/bg_header.gif");
 	color: #EFEDE8;
 }
 
 .navbar {
-	background-color: #333333;
+	background-color: #1a1a1a;
 }
 
 .forabg {
-	background-color: #222222;
+	background-color: #000000;
 	background-image: url("{T_THEME_PATH}/images/bg_list.gif");
 }
 
 .forumbg {
-	background-color: #333333;
-	background-image: url("{T_THEME_PATH}/images/bg_header.gif");
+	background-color: #000000;
+	background-image: url("{T_THEME_PATH}/images/bg_list.gif");
 }
 
 .panel {
@@ -80,9 +81,9 @@ hr.dashed {
 	color: #FFFFFF;
 }
 
-.bg1	{ background-color: #575757; }
-.bg2	{ background-color: #434343;  }
-.bg3	{ background-color: #333333; }
+.bg1	{ background-color: #313131; }
+.bg2	{ background-color: #272727;  }
+.bg3	{ background-color: #202020; }
 
 .ucprowbg {
 	background-color: #E0D3BE;
@@ -96,7 +97,8 @@ hr.dashed {
 ----------------------------------------*/
 
 ul.navlinks {
-	border-bottom-color: #EFEDE8;
+	border-bottom-color: #880000;
+	border-width: 2px;
 }
 
 /* Table styles
@@ -285,7 +287,7 @@ a.topictitle:active {
 }
 
 .postlink:hover {
-	background-color: #FFFFFF;
+
 	color: #BA2D2A;
 }
 
@@ -350,7 +352,7 @@ Colours and backgrounds for content.css
 }
 
 ul.forums {
-	background-color: #4c4c4c;
+	background-color: #303030;
 	background-image: url("{T_THEME_PATH}/images/gradient.png");
 }
 
@@ -377,7 +379,9 @@ ul.topiclist li.row dt a.subforum.unread {
 
 li.row {
 	border-top-color:  #000000;
+	border-top-width: 1px;
 	border-bottom-color: #000000;
+	border-bottom-width: 1px;
 }
 
 li.row strong {
@@ -385,7 +389,7 @@ li.row strong {
 }
 
 li.row:hover {
-	background-color: #656565;
+	background-color: #454545;
 }
 
 li.row:hover dd {
@@ -446,7 +450,7 @@ dl.faq dt {
 ----------------------------------------*/
 /* Quote block */
 blockquote {
-	background-color: #777777;
+	background-color: #404040;
 	background-image: url("{T_THEME_PATH}/images/quote.png");
 	border-color:#000000;
 }
@@ -457,27 +461,27 @@ blockquote {
 
 blockquote blockquote {
 	/* Nested quotes */
-	background-color:#666666;
+	background-color:#303030;
 }
 
 blockquote blockquote blockquote {
 	/* Nested quotes */
-	background-color: #777777;
+	background-color: #404040;
 }
 
 blockquote blockquote blockquote blockquote {
 	/* Nested quotes */
-	background-color:#666666;
+	background-color:#303030;
 }
 
 blockquote blockquote blockquote blockquote blockquote {
 	/* Nested quotes */
-	background-color: #777777;
+	background-color: #404040;
 }
 
 blockquote blockquote blockquote blockquote blockquote blockquote {
 	/* Nested quotes */
-	background-color:#666666;
+	background-color:#303030;
 }
 
 /* Code block */
@@ -644,7 +648,7 @@ fieldset.polls dd div {
 }
 
 .postprofile strong {
-	color: #BDBDBD;
+	color: #FFCC66;
 }
 
 .online {
@@ -735,7 +739,9 @@ Colours and backgrounds for cp.css
 
 #cp-main .panel li.row {
 	border-bottom-color: #000000;
+	border-bottom-width: 1px;
 	border-top-color: #000000;
+	border-top-width: 1px;
 }
 
 ul.cplist {
@@ -743,7 +749,7 @@ ul.cplist {
 }
 
 #cp-main .panel li.header dd, #cp-main .panel li.header dt {
-	color: #FFFFFF;
+	color: #FFCC66;
 }
 
 #cp-main table.table1 thead th {
@@ -803,7 +809,7 @@ ul.cplist {
 /* Link styles for the sub-section links */
 #navigation a {
 	color: #333;
-	background-color: #8d8d8d;
+	background-color: #636363;
 	background-image: url("{T_THEME_PATH}/images/bg_menu.png");
 }
 
@@ -814,18 +820,18 @@ ul.cplist {
 
 #navigation a:hover {
 	background-image: none;
-	background-color: #555555;
+	background-color: #353535;
 	color: #FFFFFF;
 }
 
 #navigation #active-subsection a {
 	color: #FFFFFF;
-	background-color: #555555;
+	background-color: #353535;
 	background-image: none;
 }
 
 #navigation #active-subsection a:hover {
-	color: #B72724;
+	color: #b72424;
 }
 
 /* Preferences pane layout
@@ -835,11 +841,11 @@ ul.cplist {
 }
 
 #cp-main .panel {
-	background-color: #555555;
+	background-color: #353535;
 }
 
 #cp-main .pm {
-	background-color: #555555;
+	background-color: #353535;
 }
 
 /* Friends list */
@@ -904,8 +910,8 @@ Colours and backgrounds for forms.css
 /* General form styles
 ----------------------------------------*/
 select {
-	border-color: #703B16;
-	background-color: #F4F0ED;
+	border-color: #880000;
+	background-color: #EEEEEE;
 	color: #000000;
 }
 

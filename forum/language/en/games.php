@@ -48,7 +48,7 @@ $lang = array_merge($lang, array(
 	
 	'RETURN_MAIN_QUEUE'			=> '%sReturn to the Queue list',
 	'RETURN_SINGLE_QUEUE'		=> 'Return to %s Queue',
-	'RETURN_GAME_VIEW'			=> 'Return to game page',
+	'RETURN_GAME_VIEW'			=> '%sReturn to game page',
 	
 	'QUEUE_MOD_LIMIT_REACHED'	=> 'You have reached your modding limits for this queue.',
 	'QUEUE_PLAYER_LIMIT_REACHED'=> 'You have reached your playing limits for this queue.',
@@ -132,7 +132,7 @@ $lang = array_merge($lang, array(
 	'GAME_ADDITION_FAILED'		=> 'There was an incorrect or missing value from your submission.',
 	'GAME_ADDITION_SUCCESSFUL'	=> 'The game was added successfully.',
 	'BAD_MODERATOR_NAME'		=> 'The moderator you selected is nonexistent or incorrect.',
-	'LATER_DETAILS_EXPLAIN'		=> 'Certain details about your game may be editted after approval.',
+	'LATER_DETAILS_EXPLAIN'		=> 'Certain details about your game may be edited after approval.',
 	'MOD_THIS_ACCOUNT'			=> 'Mod with this account',
 	'REQUESTED_SLOTS'			=> 'Requested Slots',
 	'REQUESTED_SLOTS_EXPLAIN'	=> 'How many slots you would like alloted for your game.',

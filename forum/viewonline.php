@@ -30,15 +30,12 @@ $sort_dir	= request_var('sd', 'd');
 $show_guests= ($config['load_online_guests']) ? request_var('sg', 0) : 0;
 
 // Can this user view profiles/memberlist?
-if (!$auth->acl_gets('u_viewprofile', 'a_user', 'a_useradd', 'a_userdel'))
-{
 	if ($user->data['user_id'] != ANONYMOUS)
 	{
 		trigger_error('NO_VIEW_USERS');
 	}
-
 	login_box('', $user->lang['LOGIN_EXPLAIN_VIEWONLINE']);
-}
+
 
 $sort_key_text = array('a' => $user->lang['SORT_USERNAME'], 'b' => $user->lang['SORT_JOINED'], 'c' => $user->lang['SORT_LOCATION']);
 $sort_key_sql = array('a' => 'u.username_clean', 'b' => 's.session_time', 'c' => 's.session_page');

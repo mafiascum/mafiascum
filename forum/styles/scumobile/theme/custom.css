@@ -29,7 +29,7 @@ a.signature_hideshow:hover{
 	cursor: text;
 }
 .private {
-	background: #362819;
+	background: #000000;
 }
 .private a {
 	color: white;
@@ -52,17 +52,17 @@ a.signature_hideshow:hover{
 	border-color: black;
 }
 .private .bg1 {
-	background: #279F36;
+	background: #606098;
 }
 .private .headerbar {
 	background-image: none;
-	background-color: #74BF5B;
+	background-color: #70709f;
 }
 .private .bg2 {
-	background: #74BF5B;
+	background: #70709f;
 }
 .private .panel, .private .navbar{
-	background: #528C42;
+	background: #2f2f64;
 }
 .private .corners-top, .private .corners-bottom {
  background-image: none;

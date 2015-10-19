@@ -1660,7 +1660,7 @@ function utf8_case_fold_nfkc($text, $option = 'full')
 	}
 
 	// convert to NFKC
-	(new utf_normalizer())->nfkc($text);
+	utf_normalizer::nfkc($text);
 
 	// FC_NFKC_Closure, http://www.unicode.org/Public/5.0.0/ucd/DerivedNormalizationProps.txt
 	$text = strtr($text, $fc_nfkc_closure);
@@ -1778,7 +1778,7 @@ function utf8_normalize_nfc($strings)
 
 	if (!is_array($strings))
 	{
-		(new utf_normalizer())->nfc($strings);
+		utf_normalizer::nfc($strings);
 	}
 	else if (is_array($strings))
 	{
@@ -1793,7 +1793,7 @@ function utf8_normalize_nfc($strings)
 			}
 			else
 			{
-				(new utf_normalizer())->nfc($strings[$key]);
+				utf_normalizer::nfc($strings[$key]);
 			}
 		}
 	}

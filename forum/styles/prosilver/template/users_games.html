@@ -1,0 +1,59 @@
+<!-- INCLUDE overall_header.html -->
+<!-- IF U_MCP --><p>[&nbsp;<a href="{U_MCP}">{L_MCP}</a>&nbsp;]</p><!-- ENDIF -->
+	<h2>Your Games</h2>
+	<div id="gameContainer">
+		<div class="forabg">
+			<ul class="topiclist">
+				<li class="header">
+						<dl class="icon">
+							<dt>Mod Games</dt>
+							<dd class="topics">{L_GAME_TYPE}</dd>
+							<dd class="posts">{L_GAME_STATUS}</dd>
+							<dd class="lastpost"><span>{L_MAIN_MOD}</span></dd>
+						</dl>
+					</li>
+			</ul>
+			<ul class="topiclist forums">
+					<!-- BEGIN mod_games -->
+					
+					<li class="row bg2">
+					<dl class="icon" style="background-image: url(./styles/prosilver/imageset/forum_unread_subforum.png); background-repeat: no-repeat;">
+						<dt title="{forumrow.FORUM_FOLDER_IMG_ALT}">
+							<a href="{mod_games.GAME_LINK}">{mod_games.GAME_NAME}</a><br />
+						</dt>
+						<dd class="topics">{mod_games.GAME_TYPE}</dd>
+						<dd class="posts">{mod_games.STATUS}</dd>
+						<dd class="lastpost"><span> {L_RUN_BY}&nbsp;{mod_games.MAIN_MODERATOR}<br />{mod_games.GAME_PROGRESS}</span></dd>
+					</dl>
+					</li>
+					<!-- END mod_games -->
+			</ul>
+		</div>
+		<div class="forabg">
+			<ul class="topiclist">
+				<li class="header">
+						<dl class="icon">
+							<dt>Player Games</dt>
+							<dd class="topics">{L_GAME_TYPE}</dd>
+							<dd class="posts">{L_GAME_STATUS}</dd>
+							<dd class="lastpost"><span>{L_MAIN_MOD}</span></dd>
+						</dl>
+					</li>
+			</ul>
+			<ul class="topiclist forums">
+					<!-- BEGIN player_games -->
+					<li class="row bg2">
+					<dl class="icon" style="background-image: url(./styles/prosilver/imageset/forum_unread_subforum.png); background-repeat: no-repeat;">
+						<dt title="{forumrow.FORUM_FOLDER_IMG_ALT}">
+							<a href="{player_games.GAME_LINK}">{player_games.GAME_NAME}</a><br />
+						</dt>
+						<dd class="topics">{player_games.GAME_TYPE}</dd>
+						<dd class="posts">{player_games.STATUS}</dd>
+						<dd class="lastpost"><span> {L_RUN_BY}&nbsp;{player_games.MAIN_MODERATOR}<br />{player_games.GAME_PROGRESS}</span></dd>
+					</dl>
+					</li>
+					<!-- END player_games -->
+			</ul>
+		</div>
+	</div>
+<!-- INCLUDE overall_footer.html -->

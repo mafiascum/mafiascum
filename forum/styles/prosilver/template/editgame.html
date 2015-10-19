@@ -1,0 +1,56 @@
+<!-- INCLUDE overall_header.html -->
+
+
+	<h2>{GAME_NAME}</h2>
+<form id="postform" method="post" action="{S_POST_ACTION}"{S_FORM_ENCTYPE}>
+ <div class="panel" id="postingbox">
+	<div class="inner">
+	
+	<h3>{L_POST_A}</h3>
+	<!-- DEFINE $EXTRA_POSTING_OPTIONS = 1 -->
+	<div id="gameInfoLeft">
+		<div id='gameInfotLeft_inner'>
+	   <div class="gameFieldNameLabel">Name:</div>
+	   <!-- IF IS_APPROVED and not LISTMOD -->
+		<span class="gameFieldValue">{GAME_NAME}</span>
+	   <!-- ELSE -->
+		<input type="text" id="gameInfoGameNameInputField" name="gameInfoGameName" class="gameInfoLabel inputbox" value="{GAME_NAME}" />
+	   <!-- ENDIF -->
+		<br/>
+	   <div class="gameFieldNameLabel">Type:</div>
+	   <!-- IF IS_APPROVED -->
+		<span class="gameFieldValue">{GAME_TYPE}</span>
+	   <!-- ELSE -->
+	   {TYPE_SELECT}
+	   <!-- ENDIF -->
+		<br/>
+	  <div class="gameFieldNameLabel">Status:</div>
+	   <!-- IF IS_STARTED or LISTMOD -->
+	   {STATUS_SELECT}
+	   <!-- ELSE -->
+	   <span class="gameFieldValue">{STATUS}</span>
+	   <!-- ENDIF -->
+	  <br/>
+
+	  <div class="gameFieldNameLabel">Players:</div>
+	   <span id="gameInfoGamePlayersField" class="gameFieldValue">{ENTERED_PLAYER_TOTAL}</span><br/>
+	  <div class="gameFieldNameLabel">Game Size:</div>
+	  <!-- IF IS_APPROVED and not LISTMOD-->
+		<span class="gameFieldValue">{MAXIMUM_PLAYER_TOTAL}</span>
+	   <!-- ELSE -->
+	  <input type="text" id="gameInfoGameSizeInputField" name="gameInfoGameSize" class="gameInfoLabel inputbox" value="{MAXIMUM_PLAYER_TOTAL}"/>
+		<!-- ENDIF -->
+		
+		<br/>
+
+	  <div class="gameFieldNameLabel">Completed:</div>
+		<span class="gameFieldValue">{COMPLETED_TIME}</span>
+		<div class="error">{DETAIL_EDIT_ERROR}</div><br/>
+	</div>
+	</div>
+	<div id="gameInfoRight">
+	<!-- INCLUDE posting_editor.html -->
+	{S_FORM_TOKEN}
+	<div class='clear'></div>
+</form>
+<!-- INCLUDE overall_footer.html -->

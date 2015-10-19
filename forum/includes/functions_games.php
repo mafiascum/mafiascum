@@ -45,16 +45,21 @@ function assembleMods($mods)
 function createGame($gameName, $gameType, $main_mod, $requested_slots, $game_description = '', $altMods = '') {
 
 	global $db, $auth, $user, $config, $phpEx;
+	$message = $game_description;
+	$allow_bbcode = $allow_smilies = $allow_urls = true;
+	generate_text_for_storage($message, $uid, $bitfield, $options, $allow_bbcode, $allow_urls, $allow_smilies);
 	$insertArray = array
 	(
 		"name"					=> $gameName,
-		"description"			=> $game_description,
+		"description"			=> $message,
 		"game_type"				=> $gameType,
 		"status"				=> 1, //Pending should ALWAYS default to 1.//TODO
 		"maximum_players" 	=> $requested_slots,
 		"created_time"			=> time(),
 		"main_mod_id"		=> $main_mod,
-		"created_by_user_id"	=> $user->data['user_id']
+		"created_by_user_id"	=> $user->data['user_id'],
+		"bbcode_uid"			=> $uid,
+		"bbcode_bitfield"		=> $bitfield
 	);
 	
 	$sql = 'INSERT INTO ' . MAFIA_GAMES_TABLE . ' ' . $db->sql_build_array('INSERT', $insertArray);
@@ -73,8 +78,7 @@ function createGame($gameName, $gameType, $main_mod, $requested_slots, $game_des
 }
 /**
  * Creates a series of <option> HTML elements for game types.
- * @return string A string of HTML elements.
- */
+ * @return string A string of HTML elements. */
 function createGameTypeSelect($gtype = 0)
 {
 	global $db;
@@ -103,7 +107,7 @@ function createStatusOptions($status = 0, $available = false)
 	$select .= '<option value="' . GAME_PROGRESS_SIGNUPS . '"' . (($status == GAME_PROGRESS_SIGNUPS) ? ' selected="selected"' : '') . '>Signups</option>';
 	$select .= '<option value="' . GAME_PROGRESS_SETUP . '"' . (($status == GAME_PROGRESS_SETUP) ? ' selected="selected"' : '') . '>Setup</option>';
 	$select .= '<option value="' . GAME_PROGRESS_ONGOING . '"' . (($status == GAME_PROGRESS_ONGOING) ? ' selected="selected"' : '') . '>Ongoing</option>';
-	$select .= '<option value="' . GAME_PROGRESS_COMPLETED . '"' . (($status == GAME_PROGRESS_COMPLETED) ? ' selected="selected"' : '') . '>Completed/option>';
+	$select .= '<option value="' . GAME_PROGRESS_COMPLETED . '"' . (($status == GAME_PROGRESS_COMPLETED) ? ' selected="selected"' : '') . '>Completed</option>';
 	return $select;
 }
 
@@ -187,7 +191,7 @@ function createModifierOptions($modifierList = array())
 	return $html;
 }
 
-/** REMOVE - Maybe?
+
 function getGameTypeName($id)
 {
 	global $db;
@@ -202,7 +206,7 @@ function getGameTypeName($id)
 
 	$db->sql_freeresult($result);
 	return $name;
-}*/
+}
 
 
 /**
@@ -222,10 +226,8 @@ function getAlignmentName($alignment_id) {
 	switch($alignment_id)
 	{
 	case MAFIA_ALIGNMENT_TOWN: return "Town";
-	case MAFIA_ALIGNMENT_CULT: return "Cult";
 	case MAFIA_ALIGNMENT_MAFIA: return "Mafia";
 	case MAFIA_ALIGNMENT_THIRD_PARTY: return "Third Party";
-	case MAFIA_ALIGNMENT_NEUTRAL: return "Neutral";
 	return "Other";
 	}
 }
@@ -236,7 +238,7 @@ function getAlignmentName($alignment_id) {
  */
 function generateQueueList($template_block = 'queues', $activeID = 0)
 {
-	global $template, $db;
+	global $template, $db, $phpEx;
 	
 	$sql = 'SELECT * FROM '.MAFIA_GAME_TYPES_TABLE;
 	$result = $db->sql_query($sql);
@@ -245,16 +247,20 @@ function generateQueueList($template_block = 'queues', $activeID = 0)
 		$template->assign_block_vars($template_block, array(
 			'QUEUE_NAME' 	=> $queues['type_name'],
 			'QUEUE_ID'		=> $queues['type_id'],
+			'QUEUE_LINK' 	=> append_sid('viewqueue.' . $phpEx . '?q=' . $queues['type_id']),
 			'IS_ACTIVE'		=> ($activeID == $queues['type_id']) ? true : false,
 		));
 	}
+	$template->assign_vars(array(
+		'REPLACEMENT_LINK' => append_sid('viewqueue.' . $phpEx . '?mode=replacement'),
+	));
 	$db->sql_freeresult($result);
 }
 
 /**
  * Load a game from the game database. Returns the game information.
  * @param int $queue	A queue to select the game from.
- * @param int $gameID	A specific game id to search for.
+ * @param int $game_id	A specific game id to search for.
  * @param int $moderator A specific mod to match against.
  * @param int $approval An approval state to match against.
  * @param int $status	A game status to match against.
@@ -264,7 +270,7 @@ function generateQueueList($template_block = 'queues', $activeID = 0)
  * @param bool $moderate Whether to display moderation actions.
  * @return mixed[] The game information.
  */
-function load_game($queue = 0, $gameID = 0, $moderator = 0, $approval = 0, $status = 0, $start = 0, $limit = 25, $template_block = '', $moderate = false)
+function load_game($queue = 0, $game_id = 0, $moderator = 0, $approval = 0, $status = 0, $start = 0, $limit = 25, $template_block = '', $moderate = false, $game_ids = array(), $allqueues = false)
 {
 	global $db, $template, $phpEx;
 	// no result rows greater than 100 per page
@@ -272,27 +278,41 @@ function load_game($queue = 0, $gameID = 0, $moderator = 0, $approval = 0, $stat
 
 	//Build WHERE clause and parameters for pagination.
 	$where = $params = '';
-	
-	if($queue)
-	{
+	if($game_id) {
+		$where .= (empty($where)) ? 'g.game_id = '.$db->sql_escape($game_id) : ' AND g.game_id = '.$db->sql_escape($game_id);
+		
+	} else if($queue){
 		$where .= 'game_type = '.$queue;
 		$params .= 'q='.$queue;
-	}
-	if($gameID)
-	{
-		$where .= (empty($where)) ? 'g.game_id = '.$db->sql_escape($gameID) : ' AND g.game_id = '.$db->sql_escape($gameID);
-		
+	} else if (sizeOf($game_ids)) {
+		$ids = join(',',$game_ids);
+		$where .= (empty($where)) ? 'g.game_id IN (' . $ids . ')' : ' AND g.game_id IN (' . $ids . ')' ;
+	} else if (!$allqueues) {
+		$where .= (empty($where)) ? '1=0' : ' AND 1=0' ;
 	}
 	
 	if($approval)
 	{
 		$where .= (empty($where)) ? 'approved_time IS NOT NULL' : ' AND approved_time IS NOT NULL';
+	} else {
 		$params .= (empty($params)) ? 'appr='.$approval : '&amp;appr='.$approval;
 	}
 	
 	if($status)
 	{
-		$where .= (empty($where)) ? 'status = '.$db->sql_escape($status) : ' AND status = '.$db->sql_escape($status);
+		if (is_array($status)){
+			$statuslist = '(' . $db->sql_escape($status[0]);
+			for ($i =1; $i < sizeOf($status); $i++){
+				$statuslist .= ',' . $db->sql_escape($status[$i]);
+			}
+			$statuslist .= ')';
+			 $where .= (empty($where)) ? 'status IN '. $statuslist : ' AND status IN '. $statuslist ;
+			 $params .= (empty($params)) ? 'sta='.$status : '&amp;sta='.$status;
+		} else {
+			$where .= (empty($where)) ? 'status = '.$db->sql_escape($status) : ' AND status = '.$db->sql_escape($status);
+			$params .= (empty($params)) ? 'sta='.$status : '&amp;sta='.$status;
+		}
+	} else {
 		$params .= (empty($params)) ? 'sta='.$status : '&amp;sta='.$status;
 	}
 	if($moderator)
@@ -306,7 +326,7 @@ function load_game($queue = 0, $gameID = 0, $moderator = 0, $approval = 0, $stat
 	
 	// Build a SQL Query...
 	$sql_ary = array(
-		'SELECT'    =>  'g.*, u.user_id as mod_user_id, u.username as mod_username, a.user_id as app_user_id, a.username as app_username, s.status_id, s.status_name, t.*',
+		'SELECT'    =>  'g.* , c.username as game_creator_name, u.user_id as mod_user_id, u.username as mod_username, a.user_id as app_user_id, a.username as app_username, s.status_id, s.status_name, t.* ',
 		'FROM'      => array(MAFIA_GAMES_TABLE => 'g'),
 		'LEFT_JOIN'	=> array(
 			array(
@@ -320,13 +340,17 @@ function load_game($queue = 0, $gameID = 0, $moderator = 0, $approval = 0, $stat
 				'ON'	=> 's.status_id = g.status'),
 			array(
 				'FROM'	=> array(MAFIA_GAME_TYPES_TABLE => 't'), //Type info.
-				'ON'	=> 't.type_id = g.game_type')
+				'ON'	=> 't.type_id = g.game_type'),
+			array(
+				'FROM'	=> array(USERS_TABLE => 'c'), //creator user info
+				'ON'	=> 'c.user_id = g.created_by_user_id'),
 				),
 		'WHERE'		=> $where,	
 	);
-
+	
 	
 	$sql = $db->sql_build_query('SELECT', $sql_ary);
+	$sql .= ' ORDER BY game_type ASC, approved_time ASC';
 	$result = $db->sql_query_limit($sql, $limit, $start);
 	//Assign all necessary template variables.
 	$blockt = ($template_block) ? true : false;
@@ -337,25 +361,26 @@ function load_game($queue = 0, $gameID = 0, $moderator = 0, $approval = 0, $stat
 	}
 	foreach($data as $game)
 	{
+		$sql = 'SELECT COUNT(slot_id) AS slots_alive FROM ' . MAFIA_SLOTS_TABLE . ' WHERE game_id=' . $game['game_id'] . ' AND slot_status=' . SLOT_ALIVE;
+		$result = $db->sql_query_limit($sql, 1);
+		$temp_var = $db->sql_fetchrow($result);
+		$game['slots_alive'] = $temp_var['slots_alive']; 
 		assignGameVars($game, $blockt, $template_block);
 	}
-	
 	$db->sql_freeresult($result);
 	
-	$sql = 'SELECT COUNT(game_id) as num_games FROM '. MAFIA_GAMES_TABLE . (($queue) ? ' WHERE game_type = '.$db->sql_escape($queue) : ''); 
-	$result = $db->sql_query($sql);
-	$count = (int) $db->sql_fetchfield('num_games');
-	$db->sql_freeresult($result);
+		$sql = 'SELECT count(game_id) as num_games FROM ' . MAFIA_GAMES_TABLE . ' g ' . (empty($where) ? '' : ('WHERE ' . $where));
+		$result = $db->sql_query($sql);
+		$data2 = $db->sql_fetchrow($result);
 
-	$pagination_url = append_sid($phpbb_root_path . 'queues.' . $phpEx, $params);
-	// Assign the pagination variables to the template.
-	$template->assign_vars(array(
-		'PAGINATION'        => generate_pagination($pagination_url, $count, $limit, $start),
-		'PAGE_NUMBER'       => on_page($count, $limit, $start),
-		'TOTAL_GAMES'		=> $count,
-	));
-	
-	
+		$count = $data2['num_games'];
+		$pagination_url = append_sid($phpbb_root_path . 'viewqueue.' . $phpEx, $params);
+		// Assign the pagination variables to the template.
+		$template->assign_vars(array(
+			'PAGINATION'        => generate_pagination($pagination_url, $count, $limit, $start),
+			'PAGE_NUMBER'       => on_page($count, $limit, $start),
+			'TOTAL_GAMES'		=> $count,
+		));
 	
 	
 	//Return the game dataset for other uses.
@@ -374,7 +399,7 @@ function load_game($queue = 0, $gameID = 0, $moderator = 0, $approval = 0, $stat
  * Load moderators for a specific game.
  * @return SQL dataset of relevant moderators.
  */
-function grabModInfo($gameID)
+function grabModInfo($game_id)
 {
 	global $db, $template, $phpEx;
 	
@@ -386,7 +411,7 @@ function grabModInfo($gameID)
 			'FROM'	=> array(USERS_TABLE => 'u'),
 			'ON'	=> 'm.user_id = u.user_id')
 		),
-	'WHERE'		=> 'm.game_id = '.(int)$db->sql_escape($gameID),
+	'WHERE'		=> 'm.game_id = '.(int)$db->sql_escape($game_id),
 	'ORDER_BY'	=> 'm.type',
 	);
 	
@@ -401,7 +426,7 @@ function grabModInfo($gameID)
 		'USER_ID'		=> $mod['user_id'],
 		'MOD_TYPE'		=> getModTypeName($mod['type']),
 		'MOD_TYPE_OPTIONS'	=> createModTypeOptions($mod['type']),
-		'U_REMOVE_MOD' => "{$phpbb_root_path}viewgame.$phpEx?g=$gameID&deletemod=true&mod_id=" . $mod['user_id'],
+		'U_REMOVE_MOD' => append_sid("{$phpbb_root_path}viewgame.$phpEx?g=$game_id&deletemod=true&mod_id=" . $mod['user_id']),
 		));
 	}
 	$db->sql_freeresult($res);
@@ -409,13 +434,13 @@ function grabModInfo($gameID)
 
 /**
  * Provide moderator template variables.
- * @param int $gameID Game to display mods for.
+ * @param int $game_id Game to display mods for.
  * @param SQL $prev_data Previously loaded mod data.
  */
-function display_moderators($gameID, $prev_data = false)
+function display_moderators($game_id, $prev_data = false)
 {
 	global $db, $template;
-	$db_result = ($prev_data) ? $prev_data : load_moderators($gameID);
+	$db_result = ($prev_data) ? $prev_data : load_moderators($game_id);
 	while($moderator_row = $db->sql_fetchrow($db_result))
 		{
 			$moderatorId = $moderator_row['moderator_id'];
@@ -436,11 +461,11 @@ function display_moderators($gameID, $prev_data = false)
  */
 function assignGameVars($game, $block = false, $block_name = 'games')
 {
-	global $template, $user, $db, $phpEx;
+	global $template, $user, $db, $phpEx, $auth;
 	if(!$block){
 	//build game type select element
-		$gameType = $game_data['game_type'];
-		$typeSelect = '<select id="gameInfoGameTypeInputField" name="gameInfoGameType" class="gameInfoLabel hidden" ';
+		$gameType = $game['game_type'];
+		$typeSelect = '<select id="gameInfoGameTypeInputField" name="gameInfoGameType" class="gameInfoLaben"';
 		$typeSelect .='>';
 
 		$sql = " SELECT *"
@@ -467,54 +492,77 @@ function assignGameVars($game, $block = false, $block_name = 'games')
 
 		//build game status select element
 		$gameStatusVal = $game_data['status'];
-		if ($gameStatusVal < 4){
-			$statusSelect ='';
-		}
-		if ($gameStatusVal > 3 || empty($gameStatusVal)){
-			$statusSelect = '<select id="gameInfoGameStatusInputField" name="gameInfoGameStatus" class="gameInfoLabel hidden" ';
+		
+			$statusSelect = '<select id="gameInfoGameStatusInputField" name="gameInfoGameStatus" class="gameInfoLabel"';
 			$statusSelect .='>';
-		}
 			$sql = " SELECT *"
 				 . " FROM " . MAFIA_GAME_STATUS_TABLE;
 
 			$result = $db->sql_query($sql);
-
+			$statusOptions = $auth->acl_get('u_queue_'.$game['game_type']) ? 0 : 3;
 			while($row = $db->sql_fetchrow($result)){
-				if ($row['status_id'] >3 &&($gameStatusVal > 3 || empty($gameStatusVal))){
+				if ($row['status_id'] >$statusOptions){
 					$statusSelect .= '<option value="';
 					$statusSelect .= $row['status_id'];
 					$statusSelect .= '"';
 				}
-				if ($row['status_id'] >3 && ($row['status_id'] == $gameStatusVal)|| empty($gameStatusVal)){
-					if ($gameStatusVal > 3 || empty($gameStatusVal)){
+				if ($row['status_id'] == $game['status'] ){
 						$statusSelect .= ' selected ';
-					}
-					$gameStatus= $row['status_name'];
 				}
-				if ($row['status_id'] >3 && ($gameStatusVal > 3 || empty($gameStatusVal))){
+				if ($row['status_id'] >$statusOptions){
 					$statusSelect .= '>';
 					$statusSelect .= $row['status_name'];
 					$statusSelect .= '</option>';
 				}
 			}
 			$db->sql_freeresult($result);
-		if ($gameStatusVal > 3 || empty($gameStatusVal)){
 			$statusSelect .= '</select>';
+	}
+	if (!class_exists('bbcode'))
+		{
+			global $phpbb_root_path, $phpEx;
+			include($phpbb_root_path . 'includes/bbcode.' . $phpEx);
 		}
+	$bbcode_bitfield = $bbcode_bitfield | base64_decode($game['bbcode_bitfield']);
+	
+	// Instantiate BBCode if need be
+	if ($bbcode_bitfield !== '')
+	{
+		$bbcode = new bbcode(base64_encode($bbcode_bitfield));
+	}
+	$message = censor_text($game['description']);
+
+	// Second parse bbcode here
+	if ($game['bbcode_bitfield'])
+	{
+		$bbcode->bbcode_second_pass($message, $game['bbcode_uid'], $game['bbcode_bitfield']);
+	}
+
+	$message = bbcode_nl2br($message);
+	$message = smiley_text($message);
+	
+	$sql = 'SELECT s.slot_id FROM ' . MAFIA_SLOTS_TABLE . ' s LEFT JOIN ' . MAFIA_PLAYERS_TABLE . ' p ON p.slot_id = s.slot_id AND p.game_id = s.game_id AND p.type<>5 WHERE p.player_id IS NULL AND s.game_id=' . $game['game_id'] .' LIMIT 1';
+	$result = $db->sql_query($sql);
+	$slot = $db->sql_fetchrow($result);
+	if ($slot['slot_id']){
+		$replace = true;
 	}
 	$gamevars = array(
 		'GAME_NAME'		=> $game['name'],
 		'GAME_TYPE'	=> $game['type_name'],
 		'GAME_ID'	=> $game['game_id'],
+		'CREATOR_NAME' 	=> get_username_string('full', $game['created_by_user_id'], $game['game_creator_name']),
+		'GAME_LINK' => append_sid('viewgame.' . $phpEx . '?g=' . $game['game_id']),
 		'PREIN_TOTAL'	=> $game['requested_players'],
 		'ENTERED_PLAYER_TOTAL'	=> $game['entered_players'],
 		'MAXIMUM_PLAYER_TOTAL'	=> $game['maximum_players'],
 		'MAXIMUM_LIMIT'			=> $game['max_players'], //Maximum players available for this game type.
+		'GAME_PROGRESS'			=> $game['status_id'] != 1 ? (($game['status_id'] == 2 || $game['status_id'] == 3) ? 'Signup progress: ' .$game['entered_players'] . '/' . $game['maximum_players'] : 'Game progress: ' . $game['slots_alive'] . '/' . $game['maximum_players']) : '',
 		'AVAILABLE_REPLACEMENT_TOTAL'	=> $game['replacements'],
 		'STATUS'	=> $game['status_name'],
 		'STATUS_ID'	=> $game['status_id'],
 		'STATUS_ALTERNATE'	=> $game['status_alternate'],
-		'GAME_DESCRIPTION'	=> $game['description'],
+		'GAME_DESCRIPTION'	=> $message,
 		'APPROVAL_USER'		=> get_username_string('full', $game['app_user_id'], $game['app_username']),
 		'MAIN_MODERATOR'	=> get_username_string('full', $game['mod_user_id'], $game['mod_username']),
 		'SUBMISSION_USER'	=> 'ADD_THIS',
@@ -523,15 +571,16 @@ function assignGameVars($game, $block = false, $block_name = 'games')
 		'STARTED_TIME'		=> !empty($game['started_time'])? strftime("%Y-%m-%d",$game['started_time']) : "", //TODO - Nicely format datetime.
 		'COMPLETED_TIME'	=> !empty($game['completed_time'])? strftime("%Y-%m-%d",$game['completed_time']) : "", //TODO - Nicely format datetime.
 		'IS_APPROVED'		=> ($game['approved_time']) ? true : false,
-		'APPROVAL_LINK'		=> ($game['approved_time']) ? '' : '<a href="queues.'.$phpEx.'?mode=approve&amp;g='.$game['game_id'],
+		'IS_STARTED'		=> ($game['started_time']) ? true : false,
+		'APPROVAL_LINK'		=> ($game['approved_time']) ? '' : '<a href="'. append_sid("viewqueue." .$phpEx. '?mode=approve&amp;g=' .$game['game_id']) . '">',
 		'STATUS_IMG'		=> $user->img('forum_unread_locked', '', false, '', 'src'),
 		'IS_ONGOING'		=> ($game['status'] == GAME_PROGRESS_ONGOING) ? true : false,
-		'GAME_NAME_ESCAPED'		=> addcslashes($game['name'],"\'\"&\n\r<>"),
 		'STATUS_VAL'		=> $gameStatusVal,
-		'GAME_DESCRIPTION_ESCAPED'	=> addcslashes(empty($game['description'])? "" : $game['description'],"\\\'\"&\n\r<>"),
-		'U_EDITFORM'			=> "{$phpbb_root_path}viewgame.$phpEx?g=" . $game['game_id'],
+		'IN_GAME' 				=> alreadyEntered($game['game_id'], $user->data['user_id'], 0),
+		'U_EDITFORM'			=> append_sid("{$phpbb_root_path}viewgame.$phpEx?g=" . $game['game_id']),
 		'TYPE_SELECT'			=> $typeSelect,
 		'STATUS_SELECT'			=> $statusSelect,
+		'REPLACE'				=> $replace,
 		'GAME_TOPIC'			=> empty($game['topic_id']) ? "" : $phpbb_root_path . "viewtopic.$phpEx?t=" . $game['topic_id'],
 	);
 	if($block)
@@ -570,6 +619,7 @@ function overPlayerLimits($queue)
  */
 function errorsInGameData($data)
 {
+	global $db;
 	$errors = array(); 
 	
 	//Check moderator and their limits.
@@ -600,19 +650,24 @@ function errorsInGameData($data)
 	if(!$data['game_type'])
 	{
 		$errors[] = 'MISSING_GAME_TYPE';
-	}
-	if(!$data['requested_slots'])
-	{
-		$errors[] = 'MISSING_REQUESTED_SLOTS';
-	}
-	else
-	{
-		if($data['requested_slots'] < 1)
+	} else {
+		if(!$data['requested_slots'])
 		{
-			$errors[] = 'NOT_ENOUGH_REQUESTED_SLOTS';
+			$errors[] = 'MISSING_REQUESTED_SLOTS';
+		}
+		else
+		{
+			$sql = 'SELECT * FROM phpbb_mafia_game_types WHERE type_id=' . $data['game_type'];
+			$res = $db->sql_query($sql);
+			$game_type_data = $db->sql_fetchrow($res);
+			if($data['requested_slots'] < $game_type_data['min_players'])
+			{
+				$errors[] = 'NOT_ENOUGH_REQUESTED_SLOTS';
+			} else if ($data['requested_slots'] > $game_type_data['max_players']){
+				$errors[] = 'Too Many Slots.';
+			}
 		}
 	}
-	
 	
 	return $errors;
 	
@@ -648,19 +703,18 @@ function checkModerator($modName, $getID = false)
 function insertPlayer($game_id, $user_id, $type = 0, $replacement_start = null)
 {
 	global $db;
-	
-	//Insert the player into the table.
-	$player_ary = array(
-		'game_id'	=> (int) $game_id,
-		'user_id'	=> (int) $user_id,
-		'type'		=> (int) $type,
-		'replacement_start'	=> $replacement_start,
-	);
-	
-	$sql = 'INSERT INTO ' . MAFIA_PLAYERS_TABLE . ' ' . $db->sql_build_array('INSERT', $player_ary);
-	$db->sql_query($sql);
-	$db->sql_freeresult($result);
-	
+	if ($type == 1 || $type == 2 || $type == 0){
+		//Insert the player into the table.
+		$player_ary = array(
+			'game_id'	=> (int) $game_id,
+			'user_id'	=> (int) $user_id,
+			'type'		=> (int) $type,
+			'replacement_start'	=> $replacement_start,
+		);
+		
+		$sql = 'INSERT INTO ' . MAFIA_PLAYERS_TABLE . ' ' . $db->sql_build_array('INSERT', $player_ary);
+		$db->sql_query($sql);
+		$db->sql_freeresult($result);
 	//Update game player counts if we have successfully added a player.
 	switch($type)
 	{
@@ -671,7 +725,7 @@ function insertPlayer($game_id, $user_id, $type = 0, $replacement_start = null)
 			$ptype = 'requested_players';
 			break;
 		case REPLACEMENT:
-		$ptype = 'replacements';
+			$ptype = 'replacements';
 			break;
 	}
 	
@@ -679,6 +733,19 @@ function insertPlayer($game_id, $user_id, $type = 0, $replacement_start = null)
 			SET ' .$db->sql_escape($ptype). ' = '.$db->sql_escape($ptype).' + 1
 			WHERE game_id = ' . (int)$db->sql_escape($game_id);
 	$db->sql_query($sql);
+	} else if ($type == 3) {
+		//update player table
+		$sql = 'UPDATE phpbb_mafia_players p
+			SET p.type=' . APPROVED_IN . '
+			WHERE p.user_id = '.$db->sql_escape($user_id).'
+			AND p.game_id = '.$db->sql_escape($game_id);
+		$db->sql_query($sql);
+		//update game table
+		$sql = 'UPDATE phpbb_mafia_games g
+			SET g.entered_players = g.entered_players + 1
+			WHERE g.game_id = '.$db->sql_escape($game_id);
+		$db->sql_query($sql);
+	}
 }
 
 /**
@@ -687,63 +754,71 @@ function insertPlayer($game_id, $user_id, $type = 0, $replacement_start = null)
  * @param int $slot_id The slot number of the game.
  * @param int $game_id The game this slot is for.
  */
-function insertSlot($player_id, $slot_id, $game_id, $manual = false)
+function insertSlot($player_id, $slot_id, $game_id, $manual = false, $replace = false)
 {
 	global $db;
 	//Insert the slot.
-	$slot_ary = array(
-		'slot_id'	=> $db->sql_escape($slot_id),
-		'game_id'	=> $db->sql_escape($game_id),
-	);
-		
-	$sql = 'INSERT INTO ' . MAFIA_SLOTS_TABLE . ' ' . $db->sql_build_array('INSERT', $slot_ary);
-	$db->sql_query($sql);
-	$user_id = $db->sql_nextid();
-	$db->sql_freeresult($result);
+	$sql = 'SELECT * FROM ' . MAFIA_SLOTS_TABLE . ' WHERE slot_id=' . $slot_id . ' AND game_id=' . $game_id;
+	$result = $db->sql_query($sql);
+	$slot = $db->sql_fetchrow($result);
+	if (sizeOf($slot)){
 	
+	} else {
+		$slot_ary = array(
+			'game_id'	=> (int)$db->sql_escape($game_id),
+			'slot_id' 	=> (int)$db->sql_escape($slot_id)
+		);
+			
+		$sql = 'INSERT INTO ' . MAFIA_SLOTS_TABLE . ' ' . $db->sql_build_array('INSERT', $slot_ary);
+		$db->sql_query($sql);
+		$db->sql_freeresult($result);
+	}
+	$player_ary = array(
+			'slot_id'	=> $slot_id,
+		);
 	//Update game player counts.
 	$sql = 'UPDATE ' . MAFIA_GAMES_TABLE . '
-			SET '.($manual) ? '' : 'requested_players = requested_players - 1,'.'
+			SET '.(($manual) ? '' : 'requested_players = requested_players - 1,') .'
 			entered_players = entered_players + 1 
 			WHERE game_id = ' . (int)$db->sql_escape($game_id);
 	$db->sql_query($sql);
 	//Update the player table with the proper slot id.
-	$player_ary = array(
-		'slot_id'	=> $db->sql_escape($slot_id),
-	);
+	
 	
 	$sql = 'UPDATE ' . MAFIA_PLAYERS_TABLE . ' SET ' . $db->sql_build_array('UPDATE', $player_ary)
 		. ' WHERE player_id = '. $db->sql_escape($player_id);
 	$db->sql_query($sql);
 	$db->sql_freeresult($result);
-	
-	//Check to see if signups are complete, move into setup status.
-	//Then bump up any approved games to make sure that the max amount are in signups.
-	$com_ary = array(
-		'SELECT'	=> 'g.maximum_players, g.entered_players, g.game_type',
-		'FROM'		=> array(MAFIA_GAMES_TABLE => 'g'),
-		'WHERE'		=> 'g.game_id = '.(int)$db->sql_escape($game_id),
-		);
-	
-	$sql = $db->sql_build_query('SELECT', $com_ary);
-	$res = $db->sql_query($sql);
-	if($ga = $db->sql_fetchrow($res))
-	{
-		if($ga['entered_players'] >= $ga['maximum_players'])
+	if (!$replace){
+		//Check to see if signups are complete, move into setup status.
+		//Then bump up any approved games to make sure that the max amount are in signups.
+		$com_ary = array(
+			'SELECT'	=> 'g.maximum_players, g.entered_players, g.game_type',
+			'FROM'		=> array(MAFIA_GAMES_TABLE => 'g'),
+			'WHERE'		=> 'g.game_id = '.(int)$db->sql_escape($game_id),
+			);
+		
+		$sql = $db->sql_build_query('SELECT', $com_ary);
+		$res = $db->sql_query($sql);
+		if($ga = $db->sql_fetchrow($res))
 		{
-			
-			//Delete any orphaned unapproved player signups.
-			$del = 'DELETE FROM '.MAFIA_PLAYERS_TABLE.' WHERE slot_id = 0 AND game_id = '.$db->sql_escape($game_id);
-			$db->sql_query($del);	
+			if($ga['entered_players'] >= $ga['maximum_players'])
+			{
 				
-			bumpIntoSignups($ga['game_type']);
-			$sql = 'UPDATE ' . MAFIA_GAMES_TABLE . '
-					SET status = '.GAME_PROGRESS_SETUP.'
-					WHERE game_id = ' . (int)$db->sql_escape($game_id);
-			$db->sql_query($sql);
+				//Delete any orphaned unapproved player signups.
+				$del = 'DELETE FROM '.MAFIA_PLAYERS_TABLE.' WHERE slot_id = 0 AND game_id = '.$db->sql_escape($game_id);
+				$db->sql_query($del);	
+					
+				bumpIntoSignups($ga['game_type']);
+				$sql = 'UPDATE ' . MAFIA_GAMES_TABLE . '
+						SET status = '.GAME_PROGRESS_SETUP.'
+						WHERE game_id = ' . (int)$db->sql_escape($game_id);
+				$db->sql_query($sql);
+			}
 		}
+		$db->sql_freeresult($res);
+		startGame($game_id);
 	}
-	$db->sql_freeresult($res);
 }
 
 /**
@@ -780,45 +855,39 @@ function bumpintoSignups($queue_id)
 		$total = ($info['signup_limit'] - $co['count']);
 		if($total > 0)
 		{
-			//Find the games that we will be moving in next.
+			//Find the game that we will be moving in next.
 			$move_ary = array(
 				'SELECT'	=> 'g.*',
 				'FROM'		=> array(MAFIA_GAMES_TABLE => 'g'),
-				'WHERE'		=> 'g.approved_time is NOT NULL AND status = '.GAME_PROGRESS_QUEUED,
+				'WHERE'		=> 'g.approved_time is NOT NULL AND g.game_type=' . (int)$db->sql_escape($queue_id) . ' AND status = '.GAME_PROGRESS_QUEUED,
 				'ORDER_BY'	=> 'g.approved_time ASC',
 			);
 			$sql = $db->sql_build_query('SELECT', $move_ary);
 
-			$movres = $db->sql_query_limit($sql, $total);
-			
-			$id_ary = array(); //game_id of the games we are editing.
-			while($moves = $db->sql_fetchrow($movres))
-			{
-				$id_ary[] = $moves['game_id'];
-			}
-
+			$result = $db->sql_query_limit($sql, 1);
 			//Make sure we actually have a game to bump.
-			if(sizeof($id_ary) > 0)
+			if($game = $db->sql_fetchrow($result))
 			{
 				//Move preins to entered players.
 				$p_ary = array('type' => STANDARD_IN);
 				
 				$sql = 'UPDATE ' . MAFIA_PLAYERS_TABLE . '
 				SET ' . $db->sql_build_array('UPDATE', $p_ary) . '
-				WHERE ' . $db->sql_in_set('game_id', $id_ary).'
+				WHERE game_id=' . $game['game_id'] .'
 				AND type = 1';		
 			
 				$db->sql_query($sql);
-		
+				
 				//Finally update the games.
 				$sql = 'UPDATE ' . MAFIA_GAMES_TABLE . ' SET
 					entered_players = requested_players,
 					requested_players = 0,
-					status = '.GAME_PROGRESS_SIGNUPS.'
-					WHERE ' . $db->sql_in_set('game_id', $id_ary);
+					status = '. GAME_PROGRESS_SIGNUPS.'
+					WHERE game_id=' . $game['game_id'];
 
 					$db->sql_query($sql);
 			}
+			$db->sql_freeresult($result);
 		}
 	}
 }
@@ -834,7 +903,7 @@ function alreadyEntered($game_id, $user_id, $type = 0)
 	global $db;
 	$asPlayer = false;
 	$asMod = false;
-	
+	$row = array();
 	if($type == 0 || $type == 1)
 	{
 		$sql = 'SELECT m.game_id, m.user_id
@@ -847,12 +916,13 @@ function alreadyEntered($game_id, $user_id, $type = 0)
 	}
 	if($type == 0 || $type == 2)
 	{
-		$sql = 'SELECT p.game_id, p.user_id
+		$sql = 'SELECT p.game_id, p.user_id, p.type
 			FROM phpbb_mafia_players p
 			WHERE p.user_id = '.$db->sql_escape($user_id).'
 			AND p.game_id = '.$db->sql_escape($game_id);
 		$result = $db->sql_query($sql);
-		$asPlayer = ($row = $db->sql_fetchrow($result)) ? true : false;
+		$row = $db->sql_fetchrow($result);
+		$asPlayer = ($row) ? true : false;
 		$db->sql_freeresult($result);
 	}
 	switch($type)
@@ -988,9 +1058,16 @@ function removeSignup($game_id, $user_id)
 	{
 	
 		//First, make sure game isn't already started, otherwise this shouldn't happen.
-		if($game['started_time'] && $row['type'] != 2)
-		{
-			trigger_error('GAME_ALREADY_STARTED');
+		if($game['started_time']){
+			$del = 'UPDATE '.MAFIA_PLAYERS_TABLE.' SET type=' . REPLACED_OUT . ' WHERE user_id = '.$db->sql_escape($user_id).' AND game_id = '.$db->sql_escape($game_id);
+			$db->sql_query($del);
+		} else {
+			$del = 'DELETE FROM '.MAFIA_PLAYERS_TABLE.' WHERE user_id = '.$db->sql_escape($user_id).' AND game_id = '.$db->sql_escape($game_id);
+			$db->sql_query($del);
+			if($row['slot_id']){
+				$del = 'DELETE FROM '.MAFIA_SLOTS_TABLE.' WHERE slot_id = '. $row['slot_id'] .' AND game_id = '.$db->sql_escape($game_id);
+				$db->sql_query($del);
+			}
 		}
 	
 		//Check what type of signup it is so we can change proper totals.
@@ -999,8 +1076,6 @@ function removeSignup($game_id, $user_id)
 			case 0:
 			case 1:
 				//Delete player entry.
-				$del = 'DELETE FROM '.MAFIA_PLAYERS_TABLE.' WHERE user_id = '.$db->sql_escape($user_id).' AND game_id = '.$db->sql_escape($game_id);
-				$db->sql_query($del);
 				//Update player totals for the game.
 				if($row['slot_id'] == 0)
 				{
@@ -1017,8 +1092,6 @@ function removeSignup($game_id, $user_id)
 				break;
 			case 2:
 				//Delete player entry.
-				$del = 'DELETE FROM '.MAFIA_PLAYERS_TABLE.' WHERE user_id = '.$db->sql_escape($user_id).' AND game_id = '.$db->sql_escape($game_id);
-				$db->sql_query($del);
 				//Update player totals for the game.
 				$upd = 'UPDATE '.MAFIA_GAMES_TABLE.' SET replacements = ('.((int)($game['replacements']) - 1).')
 						WHERE game_id = '.$db->sql_escape($game['game_id']);
@@ -1045,7 +1118,7 @@ function assembleGameTopic($queue_forum)
 $uid = $bitfield = $options = ''; // will be modified by generate_text_for_storage
 	$allow_bbcode = $allow_smilies = $allow_urls = true;
 	$message = 'bonus2!';
-	generate_text_for_storage($msg, $uid, $bitfield, $options, $allow_bbcode, $allow_urls, $allow_smilies);
+	generate_text_for_storage($message, $uid, $bitfield, $options, $allow_bbcode, $allow_urls, $allow_smilies);
 					
 // New Topic Example
 	$data = array( 
@@ -1196,7 +1269,7 @@ function buildQueueBreadcrumbs($game_id, $queue_id)
 	// Set up the initial breadcrumb
 	$template->assign_block_vars('navlinks', array(
 				'FORUM_NAME'         => $user->lang['QUEUES'],
-				'U_VIEW_FORUM'      => append_sid("{$phpbb_root_path}queues.$phpEx"))
+				'U_VIEW_FORUM'      => append_sid("{$phpbb_root_path}viewqueue.$phpEx"))
 	);
 	
 	if($game_id)
@@ -1218,12 +1291,12 @@ function buildQueueBreadcrumbs($game_id, $queue_id)
 		//Assign queue breadcrumb.
 		$template->assign_block_vars('navlinks', array(
 					'FORUM_NAME'         => sprintf($user->lang['SINGLE_QUEUE'], $game['type_name']),
-					'U_VIEW_FORUM'      => append_sid($phpbb_root_path.'queues.'.$phpEx.'?q='.$game['type_id']))
+					'U_VIEW_FORUM'      => append_sid($phpbb_root_path.'viewqueue.'.$phpEx.'?q='.$game['type_id']))
 		);
 		//Assign game breadcrumb.
 		$template->assign_block_vars('navlinks', array(
 					'FORUM_NAME'         => $game['name'],
-					'U_VIEW_FORUM'      => append_sid($phpbb_root_path.'queues.'.$phpEx.'?g='.$game['game_id']))
+					'U_VIEW_FORUM'      => append_sid($phpbb_root_path.'viewgame.'.$phpEx.'?g='.$game['game_id']))
 		);
 	}
 	else if($queue_id)
@@ -1241,7 +1314,7 @@ function buildQueueBreadcrumbs($game_id, $queue_id)
 		//Assign queue breadcrumb.
 		$template->assign_block_vars('navlinks', array(
 					'FORUM_NAME'         => sprintf($user->lang['SINGLE_QUEUE'], $queue['type_name']),
-					'U_VIEW_FORUM'      => append_sid($phpbb_root_path.'queues.'.$phpEx.'?q='.$queue['type_id']))
+					'U_VIEW_FORUM'      => append_sid($phpbb_root_path.'viewqueue.'.$phpEx.'?q='.$queue['type_id']))
 		);
 	}
 }
@@ -1250,8 +1323,7 @@ function buildQueueBreadcrumbs($game_id, $queue_id)
  * Grab all information about a game's players from the database.
  * @param int $game_id The game to grab information for.
  */
-function grabPlayerInfo($game_id, $approved_only = false)
-{
+function grabPlayerInfo ($game_id, $approved_only = false, $exclude_rejected = true){
 	global $template, $db, $user, $phpEx;
 	$sql_ary = array(
 	'SELECT'	=> 'p.*, s.*, r.*, f.*, m.*, u.user_id, u.username, g.status',
@@ -1259,24 +1331,24 @@ function grabPlayerInfo($game_id, $approved_only = false)
 	'LEFT_JOIN'	=> array(
 		array(
 			'FROM'	=> array(MAFIA_SLOTS_TABLE => 's'),
-			'ON'	=> 'p.slot_id = s.slot_id'),
+			'ON'	=> 'p.slot_id = s.slot_id AND s.game_id =' .$game_id),
 		array(
 			'FROM'	=> array(MAFIA_GAMES_TABLE => 'g'),
 			'ON'	=> 'p.game_id = g.game_id'),
 		array(
 			'FROM'	=> array(MAFIA_ROLES_TABLE => 'r'),
-			'ON'	=> 's.role_id = r.role_id'),
+			'ON'	=> 's.slot_role_id = r.role_id' ),
 		array(
 			'FROM'	=> array(USERS_TABLE => 'u'),
 			'ON'	=> 'p.user_id = u.user_id'),
 		array(
 			'FROM'	=> array(MAFIA_FACTIONS_TABLE => 'f'),
-			'ON'	=> 's.faction_id = f.faction_id'),
+			'ON'	=> 's.faction_id = f.id'),
 		array(
 			'FROM'	=> array(MAFIA_MODIFIERS_TABLE => 'm'),
-			'ON'	=> 'm.modifier_id = s.modifier_id')),
-	'WHERE'		=> 'p.game_id = '.$db->sql_escape($game_id),
-	'ORDER_BY'	=> 'p.slot_id ASC',
+			'ON'	=> 'm.modifier_id = r.role_modifier')),
+	'WHERE'		=> 'p.game_id = '.$db->sql_escape($game_id) . ' AND ' . ($approved_only ? 'NOT s.slot_id = 0 ': '1=1') . ' AND ' . ($exclude_rejected ? 'NOT p.type =' . REJECTED_IN : '1=1'),
+	'ORDER_BY'	=> 'p.slot_id DESC',
 	);
 	
 	//Specifically select only players that have associated slots.
@@ -1285,7 +1357,6 @@ function grabPlayerInfo($game_id, $approved_only = false)
 		$sql_ary['WHERE'] = 'p.game_id = '.$db->sql_escape($game_id).' AND p.slot_id != 0';
 	}
 	$sql = $db->sql_build_query('SELECT', $sql_ary);
-
 	$res = $db->sql_query($sql);
 		//setup for faction select element
 		$factionSelectStart = '<select id="editPlayerFaction" name="editPlayerFaction"  class="addPlayerInput">';
@@ -1300,13 +1371,13 @@ function grabPlayerInfo($game_id, $approved_only = false)
 		$result = $db->sql_query($sql);
 		$count = 0;
 		while($row = $db->sql_fetchrow($result)){
-			$factions[$count] = $row['faction_id'];
-			$factionOptionStart[$row['faction_id']] = '<option value="';
-			$factionOptionStart[$row['faction_id']] .= $row['faction_id'];
-			$factionOptionStart[$row['faction_id']] .= '"';
-			$factionOptionEnd[$row['faction_id']] = '>';
-			$factionOptionEnd[$row['faction_id']] .= $row['faction_name'] . "(" . getAlignmentName($row['alignment_id']) . ")";
-			$factionOptionEnd[$row['faction_id']] .= '</option>';
+			$factions[$count] = $row['id'];
+			$factionOptionStart[$row['id']] = '<option value="';
+			$factionOptionStart[$row['id']] .= $row['id'];
+			$factionOptionStart[$row['id']] .= '"';
+			$factionOptionEnd[$row['id']] = '>';
+			$factionOptionEnd[$row['id']] .= $row['name'] . "(" . getAlignmentName($row['alignment_id']) . ")";
+			$factionOptionEnd[$row['id']] .= '</option>';
 			$count++;
 		}
 		$db->sql_freeresult($result);
@@ -1374,7 +1445,7 @@ function grabPlayerInfo($game_id, $approved_only = false)
 			$factionSelect = $factionSelectStart;
 			for ($i = 0; $i< sizeof($factions); $i++){
 				$factionSelect .= $factionOptionStart[$factions[$i]];
-				if ($factions[$i] == $player['faction_id']){
+				if ($factions[$i] == $player['id']){
 					$factionSelect .= 'selected="selected"';
 				}
 				$factionSelect .= $factionOptionEnd[$factions[$i]];
@@ -1421,18 +1492,20 @@ function grabPlayerInfo($game_id, $approved_only = false)
 			'PRESENTED_ROLE' => ($player['g.slot_status'] == SLOT_DEAD) ? $player['role_flavour_name'] . '('.$player['role_name'] . ')' : $user->lang['PENDING'], //Role name to show regular players.
 			'FULL_ROLE'	=> generateFullRoleName($player['role_name'], $player['role_flavour_name'], $player['modifiers']),
 			'FLAVOUR_NAME'	=> $player['role_flavour_name'],
-			'STATUS'	=> getSlotStatusName($player['slot_status']),
+			'STATUS'	=>  $player['type']== REPLACED_OUT ? 'Replaced' : getSlotStatusName($player['slot_status']),
 			'STATUS_OPTIONS'	=> createPlayerStatusOptions($player['slot_status']),
 			'ROLE_OPTIONS'	=> createRoleOptions($player['role_id']),
 			'MODIFIER_OPTIONS'		=> createModifierOptions(explode(',', $player['modifier_name'])),
-			'SLOT_ID'	=> $player['slot_id'],
-			'FACTION_NAME' => generateFullFactionName($player['faction_name'], $player['alignment_id']), //Actual Factional name. //TODO -- Add faction name.
-			'PRESENTED_FACTION' => ($player['g.slot_status'] == SLOT_DEAD) ? 'ROLE_NAME' : $user->lang['PENDING'], //Faction to show regular players.
+			'SLOT_ID'	=> $player['slot_id'] ? $player['slot_id'] : 'Pending Approval' ,
+			'FACTION_NAME' => generateFullFactionName($player['name'], $player['alignment_id']), //Actual Factional name. //TODO -- Add faction name.
+			/*'PRESENTED_FACTION' => ($player['g.slot_status'] == SLOT_DEAD) ? 'ROLE_NAME' : $user->lang['PENDING'],*/ //For now only add faction on slot reveal -- Faction to show regular players.
 			'OUTCOME'	=> getSlotOutcomeName($player['slot_outcome']),
 			'OUTCOME_OPTIONS'	=> createOutcomeOptions($player['slot_outcome']),
-			'IS_ACCEPTED'	=> ($player['slot_id'] == null) ? false : true,
-			'APPROVAL_LINK'	=> append_sid($phpbb_root_path.'queues.'.$phpEx.'?mode=edit&amp;info=app&amp;g='.$game_id.'&amp;pid='.$player['player_id']),
-			'REJECT_LINK'	=> append_sid($phpbb_root_path.'queues.'.$phpEx.'?mode=edit&amp;info=rej&amp;g='.$game_id.'&amp;pid='.$player['player_id']),
+			'IS_ACCEPTED'	=> ($player['slot_id'] == 0) ? false : true,
+			'IS_REJECTED' 	=> ($player['type'] == 4) ? true : false,
+			'APPROVAL_LINK'	=> append_sid($phpbb_root_path.'viewgame.'.$phpEx.'?mode=approve_player&amp;g='.$game_id.'&amp;pid='.$player['player_id']),
+			'REMOVE_LINK'	=> append_sid($phpbb_root_path.'viewgame.'.$phpEx.'?mode=remove_player&amp;g='.$game_id.'&amp;u='.$player['user_id']),
+			'REJECT_LINK'	=> append_sid($phpbb_root_path.'viewgame.'.$phpEx.'?mode=disapprove_player&amp;g='.$game_id.'&amp;pid='.$player['player_id']),
 			'FACTION_SELECT'		=> $factionSelect,
 			'MODIFIER_SELECT'		=> $modifierSelect,
 			'BASICROLES_SELECT'		=> $basicRoleSelect,
@@ -1441,22 +1514,31 @@ function grabPlayerInfo($game_id, $approved_only = false)
 	}
 	$db->sql_freeresult($res);
 }
+
 function generateFullFactionName($factionName, $alignment_id){
-	return $factionName . "(" .  getAlignmentName($alignment_id) . ")";
+	if($alignment_id) { 
+		return $factionName . "(" .  getAlignmentName($alignment_id) . ")";
+	}
+	return $factionName;
 }
+
 function generateFullRoleName($name, $flavour, $modifiers)
 {
+	
 	global $db;
 	$html = '';
-	/*$sql = 'SELECT * FROM '. MAFIA_MODIFIERS_TABLE .'
-	WHERE modifier_id IN ('.$db->sql_escape($modifiers).')';
-	$result = $db->sql_query($sql);
+	if ($name && $flavour && $modifiers){
+		/*$sql = 'SELECT * FROM '. MAFIA_MODIFIERS_TABLE .'
+		WHERE modifier_id IN ('.$db->sql_escape($modifiers).')';
+		$result = $db->sql_query($sql);
 
-	while($row = $db->sql_fetchrow($result)){
-		$html .= $row['modifier_name'].'&nbsp;';
-		}*/
-	$html .= $name . ' ('. $modifiers. ' ' . $flavour.')';
+		while($row = $db->sql_fetchrow($result)){
+			$html .= $row['modifier_name'].'&nbsp;';
+			}*/
+		$html .= $flavour . ' ('. $modifiers. ' ' . $name .')';
+	}
 	return $html;
+	
 }
 /**
  * Get the proper language string for a slot's status.
@@ -1561,5 +1643,46 @@ function isStatus($status_name = '', $status_id = 0, $return = 0)
 	{
 		return ($row = $db->sql_fetchrow($result)) ? true : false;
 	}
+}
+/**
+ * Check to see if this status is a specific status.
+ * If both parameters are defined it defaults to id. 
+ * @param int $game_id Status name to compare against.
+ * @return bool false if the game doesn't exist.
+ */
+function startGame($game_id)
+{
+	global $db, $game;
+	// make sure the game exists
+	if($game){
+		//Create the game topic for the moderator.
+		//TODO - Review permission scheme.
+		$que = 'SELECT * FROM '.MAFIA_GAME_TYPES_TABLE.' WHERE
+		type_id = '. $game['game_type'];
+		$res = $db->sql_query($que);
+		$forum = $db->sql_fetchrow($res);
+		$db->sql_freeresult($res);
+		
+		//Create subject line.
+		$subject = $game['type_name'] . ' ' . ($nu['numbering'] + 1) . ' - ' . $game['name'];
+		$data = assembleGameTopic($forum['forum_id']);
+		submit_post('post',  $subject,  'mith',  POST_NORMAL,  $poll,  $data);
+		//Correct all the discrepancies in thread poster.
+		correctThreadPoster($data['post_id'],$game['main_mod_id']);
+		//Add them to the proper group so they have permissions.
+		group_user_add($forum['group_id'], $game['main_mod_id']); 
+		
+		//update the status, started_time and game topic
+		$sql = 'UPDATE ' . MAFIA_GAMES_TABLE . '
+			SET started_time = '. time() .',
+				status=4 ,
+				topic_id = ' . $data['topic_id'] . '
+			WHERE game_id = ' . (int)$db->sql_escape($game_id);
+		$db->sql_query($sql);
+		return true;
+	} else { 
+		return false;
+	}
+	
 }
 ?>

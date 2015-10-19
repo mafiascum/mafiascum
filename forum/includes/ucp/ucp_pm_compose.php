@@ -161,10 +161,9 @@ function compose_pm($id, $mode, $action, $user_folders = array())
 			{
 				trigger_error('NO_AUTH_SEND_MESSAGE');
 			}
-
 			if ($action == 'quotepost')
 			{
-				$sql = 'SELECT p.post_id as msg_id, p.forum_id, p.post_text as message_text, p.poster_id as author_id, p.post_time as message_time, p.bbcode_bitfield, p.bbcode_uid, p.enable_sig, p.enable_smilies, p.enable_magic_url, t.topic_title as message_subject, u.username as quote_username
+				$sql = 'SELECT p.post_id as msg_id, p.forum_id, p.post_text as message_text, p.poster_id as author_id, p.post_time as message_time, p.bbcode_bitfield, p.bbcode_uid, p.enable_sig, p.enable_smilies, p.enable_magic_url,t.is_private, t.topic_id, t.topic_title as message_subject, u.username as quote_username
 					FROM ' . POSTS_TABLE . ' p, ' . TOPICS_TABLE . ' t, ' . USERS_TABLE . " u
 					WHERE p.post_id = $msg_id
 						AND t.topic_id = p.topic_id
@@ -267,7 +266,19 @@ function compose_pm($id, $mode, $action, $user_folders = array())
 			{
 				trigger_error('NOT_AUTHORISED');
 			}
-
+			if ($post['is_private']){
+				$sql = 'SELECT user_id FROM phpbb_private_topic_users WHERE topic_id = ' . $post['topic_id'];
+				$notauthorized = true;
+				$result = $db->sql_query($sql);
+				while ($private_user_id = $db->sql_fetchrow()){
+					if ($private_user_id['user_id'] == $user->data['user_id']){
+						$notauthorized = false;
+					}
+				}
+				if($notauthorized){
+					trigger_error('NOT_AUTHORISED');
+				}
+			}
 			// Passworded forum?
 			if ($post['forum_id'])
 			{

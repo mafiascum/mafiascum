@@ -327,8 +327,8 @@ ul.navlinks {
 
 ul.navlinks-footer {
 	padding-top: 1px;
-	margin-top: 1px;
-	border-top: 1px solid #FFFFFF;
+	margin-top: -5px;
+	border-top: 2px solid #880000;
 	font-weight: bold;
 }
 

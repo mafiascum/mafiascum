@@ -11,18 +11,29 @@
 		<div class="inner"><span class="corners-top"><span></span></span>
 
 		<div class="postbody">
-
-	<!-- BEGIN reportrow -->
-			<h3>{L_REPORT_REASON}: {reportrow.REPORT_REASON_TITLE}</h3>
-			<p class="author">{L_REPORTED} {L_POST_BY_AUTHOR} {reportrow.REPORTER_FULL} &laquo; {reportrow.REPORT_DATE}</p>
-			<div class="content">
-			<!-- IF reportrow.REPORT_TEXT -->
-				{reportrow.REPORT_TEXT}
-			<!-- ELSE -->
-				{reportrow.REPORT_REASON_DESCRIPTION}
-			<!-- ENDIF -->
-			</div>
-	<!-- END reportrow -->
+	<!-- IF S_PM -->
+		<h3>{L_REPORT_REASON}: {REPORT_REASON_TITLE}</h3>
+				<p class="author">{L_REPORTED} {L_POST_BY_AUTHOR} {REPORTER_FULL} &laquo; {REPORT_DATE}</p>
+				<div class="content">
+				<!-- IF REPORT_TEXT -->
+					{REPORT_TEXT}
+				<!-- ELSE -->
+					{REPORT_REASON_DESCRIPTION}
+				<!-- ENDIF -->
+				</div>
+	<!-- ELSE -->
+		<!-- BEGIN reportrow -->
+				<h3>{L_REPORT_REASON}: {reportrow.REPORT_REASON_TITLE}</h3>
+				<p class="author">{L_REPORTED} {L_POST_BY_AUTHOR} {reportrow.REPORTER_FULL} &laquo; {reportrow.REPORT_DATE}</p>
+				<div class="content">
+				<!-- IF reportrow.REPORT_TEXT -->
+					{reportrow.REPORT_TEXT}
+				<!-- ELSE -->
+					{reportrow.REPORT_REASON_DESCRIPTION}
+				<!-- ENDIF -->
+				</div>
+		<!-- END reportrow -->
+	<!-- ENDIF -->
 			<!-- IF not S_POST_REPORTED -->
 			<p class="rules">{L_REPORT_CLOSED}</p>
 			<!-- ENDIF -->

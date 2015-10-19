@@ -7,18 +7,23 @@
 				<h3 class="forumbg">Queue List</h3>
 				<ul class="queuesList">
 					<!-- BEGIN queues -->
-					<li class="row <!-- IF queues.IS_ACTIVE -->bg2<!-- ELSE -->bg1<!-- ENDIF -->"><a href="queues.php?mode=view&amp;q={queues.QUEUE_ID}">{queues.QUEUE_NAME}</a></li>
+					<li class="row <!-- IF queues.IS_ACTIVE -->bg2<!-- ELSE -->bg1<!-- ENDIF -->"><a href="{queues.QUEUE_LINK}">{queues.QUEUE_NAME}</a></li>
 					<!-- END queues -->
+					<li class="row bg2"><a href="{REPLACEMENT_LINK}">Games Seeking Replacements</a></li>
 				</ul>
 			</div>
+			<a class="create-game" href='viewqueue.php?mode=submit'>Create a New Game</a>
 		</div>
 		<div class="rightColumn">
+			<!-- IF REPLACEMENT -->
+				<div class='old_replacements'><p> Please also check older games seeking replacement <a href='http://forum.mafiascum.net/viewtopic.php?f=4&t=31533'>Here</a></p></div>
+			<!-- ENDIF -->
 			<div class="forabg">
 				<div class="inner"><span class="corners-top"><span></span></span>
 				<ul class="topiclist">
 					<li class="header">
 						<dl class="icon">
-							<dt>{L_RECENTLY_APPROVED}</dt>
+							<dt>Game</dt>
 							<dd class="topics">{L_GAME_TYPE}</dd>
 							<dd class="posts">{L_GAME_STATUS}</dd>
 							<dd class="lastpost"><span>{L_MAIN_MOD}</span></dd>
@@ -30,12 +35,11 @@
 					<li class="row">
 					<dl class="icon" style="background-image: url(./styles/prosilver/imageset/forum_unread_subforum.png); background-repeat: no-repeat;">
 						<dt title="{forumrow.FORUM_FOLDER_IMG_ALT}">
-							<a href="queues.php?mode=view&amp;g={recent_games.GAME_ID}" class="forumtitle">{recent_games.GAME_NAME}</a><br />
-							{recent_games.GAME_DESCRIPTION}
+							<a href="{recent_games.GAME_LINK}" class="forumtitle">{recent_games.GAME_NAME}</a><br />
 						</dt>
 						<dd class="topics">{recent_games.GAME_TYPE}</dd>
 						<dd class="posts">{recent_games.STATUS}</dd>
-						<dd class="lastpost"><span> {L_RUN_BY}&nbsp;{recent_games.MAIN_MODERATOR}<br />Put alive/dead player count here</span></dd>
+						<dd class="lastpost"><span> {L_RUN_BY}&nbsp;{recent_games.MAIN_MODERATOR}<br />{recent_games.GAME_PROGRESS}</span></dd>
 					</dl>
 					</li>
 					<!-- END recent_games -->

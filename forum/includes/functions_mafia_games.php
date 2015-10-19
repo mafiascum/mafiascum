@@ -40,10 +40,10 @@ function getMafiaGameStatusName($mafiaGameStatus) {
 
 	switch($mafiaGameStatus)
 	{
-	case MAFIA_GAME_STATUS_PENDING: return 'Pending';
-	case MAFIA_GAME_STATUS_SIGNUPS: return 'Signups';
-	case MAFIA_GAME_STATUS_ONGOING: return 'Ongoing';
-	case MAFIA_GAME_STATUS_COMPLETE: return 'Complete';
+	case MAFIA_GAME_PROGRESS_PENDING: return 'Pending';
+	case MAFIA_GAME_PROGRESS_SIGNUPS: return 'Signups';
+	case MAFIA_GAME_PROGRESS_ONGOING: return 'Ongoing';
+	case MAFIA_GAME_PROGRESS_COMPLETE: return 'Complete';
 	}
 }
 
@@ -117,7 +117,7 @@ function createMafiaGame($gameName) {
 		"name"			=> $gameName,
 		"description"		=> "",
 		"game_type"		=> MAFIA_GAME_TYPE_LARGE_NORMAL,
-		"status"		=> MAFIA_GAME_STATUS_PENDING,
+		"status"		=> MAFIA_GAME_PROGRESS_PENDING,
 		"created_time"		=> time(),
 		"created_by_user_id"	=> $user->data['user_id']
 	);
