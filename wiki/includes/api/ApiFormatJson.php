@@ -32,7 +32,7 @@ class ApiFormatJson extends ApiFormatBase {
 
 	private $mIsRaw;
 
-	public function __construct( $main, $format ) {
+	public function __construct( ApiMain $main, $format ) {
 		parent::__construct( $main, $format );
 		$this->mIsRaw = ( $format === 'rawfm' );
 	}
@@ -43,6 +43,7 @@ class ApiFormatJson extends ApiFormatBase {
 		if ( $params['callback'] ) {
 			return 'text/javascript';
 		}
+
 		return 'application/json';
 	}
 
@@ -62,10 +63,22 @@ class ApiFormatJson extends ApiFormatBase {
 			$this->getIsHtml(),
 			$params['utf8'] ? FormatJson::ALL_OK : FormatJson::XMLMETA_OK
 		);
+
+		// Bug 66776: wfMangleFlashPolicy() is needed to avoid a nasty bug in
+		// Flash, but what it does isn't friendly for the API, so we need to
+		// work around it.
+		if ( preg_match( '/\<\s*cross-domain-policy\s*\>/i', $json ) ) {
+			$json = preg_replace(
+				'/\<(\s*cross-domain-policy\s*)\>/i', '\\u003C$1\\u003E', $json
+			);
+		}
+
 		$callback = $params['callback'];
 		if ( $callback !== null ) {
 			$callback = preg_replace( "/[^][.\\'\\\"_A-Za-z0-9]/", '', $callback );
-			$this->printText( "$callback($json)" );
+			# Prepend a comment to try to avoid attacks against content
+			# sniffers, such as bug 68187.
+			$this->printText( "/**/$callback($json)" );
 		} else {
 			$this->printText( $json );
 		}
@@ -80,16 +93,18 @@ class ApiFormatJson extends ApiFormatBase {
 
 	public function getParamDescription() {
 		return array(
-			'callback' => 'If specified, wraps the output into a given function call. For safety, all user-specific data will be restricted.',
-			'utf8' => 'If specified, encodes most (but not all) non-ASCII characters as UTF-8 instead of replacing them with hexadecimal escape sequences.',
+			'callback' => 'If specified, wraps the output into a given function ' .
+				'call. For safety, all user-specific data will be restricted.',
+			'utf8' => 'If specified, encodes most (but not all) non-ASCII ' .
+				'characters as UTF-8 instead of replacing them with hexadecimal escape sequences.',
 		);
 	}
 
 	public function getDescription() {
 		if ( $this->mIsRaw ) {
 			return 'Output data with the debugging elements in JSON format' . parent::getDescription();
-		} else {
-			return 'Output data in JSON format' . parent::getDescription();
 		}
+
+		return 'Output data in JSON format' . parent::getDescription();
 	}
 }
