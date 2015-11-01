@@ -93,20 +93,75 @@
 ?>
 <html>
 	<head>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
 	</head>
-	<body style='background-color: #1a1a1a; color: white;'>
+	<body style='background-color: #1a1a1a; color: white; font-size: 90%; font-family: Verdana,Helvetica,Arial,sans-serif;'>
 <?php
 if ($submit){
 	echo 'Question submtted successfully';
 } else if (empty($error)){
 ?>
-		<p style='text-align: center;'> This is a form for submitting anonymous questions to the speakeasy.</p>
-		<p style='text-align: center;'><b>Your account will be logged in case of abuse</b></p>
+		<a href="http://forum.mafiascum.net/index.php"><img src=http://forum.mafiascum.net/styles/mafblack/imageset/site_logo.png /></a>
+		<div style="background-color: #3F3F3F; border: #800 1px solid; padding: 2px; margin: 30px 3% 5px;">
+		<p style='text-align: center; padding-top: 8px;'>This is a form for submitting anonymous questions and comments to the Speakeasy.</p>
+		
+		<p style='text-align: center; text-transform: uppercase; color: #fc6;'>Your account will be logged in case of abuse.</p>
+		<div style="border-top: #800 2px solid; padding: 20px 0px 0px; margin: 0px 14px;">
 		<form method='post' action='anon_questions.php'>
-			<textarea name='message' style='width: 84%; margin-left: 8%; margin-right: 8%;' rows='7'>Put your message here</textarea>
+			<textarea name='message' class='placeholder' style='color: #919191; border: #666 1px solid; width: 84%; padding: 4px; margin-left: 8%; margin-right: 8%;' rows='7'></textarea>
 			<br/>
-			<input style='margin-left: 8%;' type='submit' name='submit' value='submit'/>
+		
+			<input class="button" style='width: 60px; margin: 20px auto 10px auto; padding-top: 3px; padding-bottom: 3px; border: 1px solid #666; vertical-align: middle; text-align: center;
+			cursor: pointer; font-weight: bold; background-image: url("http://forum.mafiascum.net/styles/mafBlack/theme/images/bg_button.png");' type='submit' name='submit' value='Submit'/>
 		</form>
+		</div>
+		</div>
+		<p style='text-align: center; font-size: 80%'><a href="http://forum.mafiascum.net/viewforum.php?f=86">Back to the Speakeasy</a></p>
+		<style>
+		a:link{
+			color: white;
+			text-decoration: none;
+			}
+		a:visited{
+			color: white;
+			text-decoration: none;
+			}
+		a:hover{
+			color: #fc6;
+			text-decoration: strong;
+		}
+		</style>
+		<script>
+
+$(document).ready(function(){
+	var place = $('.placeholder');
+	if ( place.val()==="" ) {
+		place.val("Enter your message here.");
+		};
+	if ( place.val()!=="Enter your message here.") {
+		place.css("color","black");
+		}
+    $('textarea').focus(function(){
+		if (place.val()=="Enter your message here.") {
+			place.val("");
+		}
+		place.css({"border": "#fc6 1px solid", "color":"black"});
+		});
+	$('textarea').focusout(function(){
+		if ( place.val()==="" ){
+			place.val("Enter your message here.");
+			place.css("color", "#919191");
+		};
+		place.css("border", "#666 1px solid");
+		});
+	$('.button').mouseenter(function(){
+		$(this).css("border", "red 1px solid");
+		});
+	$('.button').mouseleave(function(){
+		$(this).css("border", "#666 1px solid");
+	});
+});
+	</script>
 <?php
 } else {
 	echo '<p>"You don\'t have speakeasy access"</p>';
