@@ -172,7 +172,7 @@ parse_css_file = {PARSE_CSS_FILE}
 				}
 			break;
 
-			case 'edit':
+			/**case 'edit':
 				if ($style_id)
 				{
 					switch ($mode)
@@ -185,7 +185,7 @@ parse_css_file = {PARSE_CSS_FILE}
 							return $this->edit_theme($style_id);
 					}
 				}
-			break;
+			break;*/
 
 			case 'cache':
 				if ($style_id)
@@ -700,7 +700,7 @@ parse_css_file = {PARSE_CSS_FILE}
 	* Provides a template editor which allows saving changes to template files on the filesystem or in the database.
 	*
 	* @param int $template_id specifies which template set is being edited
-	*/
+	
 	function edit_template($template_id)
 	{
 		global $phpbb_root_path, $phpEx, $config, $db, $cache, $user, $template, $safe_mode;
@@ -937,7 +937,7 @@ parse_css_file = {PARSE_CSS_FILE}
 			'TEXT_ROWS'			=> $text_rows)
 		);
 	}
-
+	*/
 	/**
 	* Allows the admin to view cached versions of template files and clear single template cache files
 	*
@@ -1121,7 +1121,7 @@ parse_css_file = {PARSE_CSS_FILE}
 	* Provides a css editor and a basic easier to use stylesheet editing tool for less experienced (or lazy) users
 	*
 	* @param int $theme_id specifies which theme is being edited
-	*/
+	
 	function edit_theme($theme_id)
 	{
 		global $phpbb_root_path, $phpEx, $config, $db, $cache, $user, $template, $safe_mode;
@@ -1299,12 +1299,12 @@ parse_css_file = {PARSE_CSS_FILE}
 			'TEXT_ROWS'			=> $text_rows)
 		);
 	}
-
+	*/
 	/**
 	* Edit imagesets
 	*
 	* @param int $imageset_id specifies which imageset is being edited
-	*/
+	
 	function edit_imageset($imageset_id)
 	{
 		global $db, $user, $phpbb_root_path, $cache, $template;
@@ -1576,7 +1576,7 @@ parse_css_file = {PARSE_CSS_FILE}
 			'IMAGE_SELECT'		=> $image_found
 		));
 	}
-
+	*/
 	/**
 	* Remove style/template/theme/imageset
 	*/
