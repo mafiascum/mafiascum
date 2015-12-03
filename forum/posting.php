@@ -859,10 +859,8 @@ if ($submit || $preview || $refresh)
 			$query = 'INSERT INTO page_top_grabber_topics(`topic_id`, `is_active`) VALUES (' . $topic_id . ', ' . true . ') ON DUPLICATE KEY UPDATE is_active=' . true;
 		}
 		$db->sql_query($query);
-	} elseif ($allow_page_top_grabber) {
-		$post_data['page_top_grabber'] = $is_topic_grabber;
 	} else {
-		$post_data['page_top_grabber'] = false;
+		$post_data['page_top_grabber'] = $is_topic_grabber;
 	}
 	//End Page Top Grabber
 	//Private Topics
@@ -1441,7 +1439,7 @@ if ($submit || $preview || $refresh)
 			}
 **/
 //			top of page grabber start
-			if($allow_page_top_grabber && $mode == 'reply' && $post_data['topic_replies']%25==23 && $post_data['page_top_grabber'])
+			if($mode == 'reply' && $post_data['topic_replies']%25==23 && $post_data['page_top_grabber'])
 			{
 				$tempMode = "reply";
 				$tempSubject = $post_data['post_subject'];
