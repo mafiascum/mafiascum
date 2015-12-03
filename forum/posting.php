@@ -745,7 +745,6 @@ if ($load && ($mode == 'reply' || $mode == 'quote' || $mode == 'multi' || $mode 
 	}
 //
 //Page Top Grabber
-	if ($allow_page_top_grabber){
 		$query = 'SELECT * FROM page_top_grabber_topics WHERE topic_id=' . $topic_id;
 		$result = $db->sql_query($query);
 		$is_topic_grabber = false;
@@ -755,7 +754,6 @@ if ($load && ($mode == 'reply' || $mode == 'quote' || $mode == 'multi' || $mode 
 				$is_topic_grabber = true;
 			}
 		}
-	}
 	$post_data['page_top_grabber'] = $is_topic_grabber;
 //end Page top grabber
 if ($submit || $preview || $refresh)
