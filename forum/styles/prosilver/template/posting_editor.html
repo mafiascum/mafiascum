@@ -246,7 +246,12 @@
 				<dd><!-- BEGIN topic_type --><label for="topic_type-{topic_type.VALUE}"><input type="radio" name="topic_type" id="topic_type-{topic_type.VALUE}" value="{topic_type.VALUE}"{topic_type.S_CHECKED} />{topic_type.L_TOPIC_TYPE}</label> <!-- END topic_type --></dd>	
 			</dl>
 			<!-- ENDIF -->
-
+			<!-- IF S_ALLOW_PAGE_TOP_GRABBER -->
+			<dl>
+				<dt><label for="page_top_grabber1"><!-- IF S_EDIT_POST -->Change page top grabber to<!-- ELSE -->Set page top grabber as<!-- ENDIF -->:</label></dt>
+				<dd><label for="page_top_grabber1"><input type="radio" name="page_top_grabber" id="page_top_grabber1" value="0" <!-- IF not S_PAGE_TOP_GRABBER --> checked='checked'<!-- ENDIF -->/>Off</label><label for="page_top_grabber2"><input type="radio" name="page_top_grabber" id="page_top_grabber2" value="1" <!-- IF S_PAGE_TOP_GRABBER --> checked='checked'<!-- ENDIF -->/>On</label></dd>	
+			</dl>
+			<!-- ENDIF -->
 			<!-- IF S_ALLOW_PRIVATE -->
 			<dl>
 				<dt><label for="topic_type-0"><!-- IF S_EDIT_POST -->Change topic privacy to<!-- ELSE -->Post topic privacy as<!-- ENDIF -->:</label></dt>
