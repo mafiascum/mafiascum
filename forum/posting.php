@@ -1437,7 +1437,7 @@ if ($submit || $preview || $refresh)
 			}
 **/
 //			top of page grabber start
-			if($mode == 'reply' && $post_data['topic_replies']%25==23 && $post_data['page_top_grabber'])
+			if($mode == 'reply' || $mode == 'quote' || $mode='multi' && $post_data['topic_replies']%25==23 && $post_data['page_top_grabber'])
 			{
 				$tempMode = "reply";
 				$tempSubject = $post_data['post_subject'];
