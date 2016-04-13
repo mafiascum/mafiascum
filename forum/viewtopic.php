@@ -897,7 +897,7 @@ $sql = ' SELECT topic_posters.poster_id, phpbb_users.username
 		 AND topic_posters.number_of_posts > 0
 		 ORDER BY phpbb_users.username_clean';
 $result = $db->sql_query($sql);
-$user_ary = array();
+$user_ary = $user_ary2 = $user_ary3 = array();
 
 $isolationUserArrayLength = count($isolationUserArray);
 while($urow = $db->sql_fetchrow($result))
