@@ -1,0 +1,616 @@
+/*Main Styles*/
+div#gameInfoMaster {
+
+	width: 100%;
+	font-size: 13px;
+	margin-bottom: 30px;
+	float: left;
+}
+
+#gameModeratorTable {
+
+	font-size: 10px;
+	border-bottom: none;
+	float: left;
+}
+
+
+
+#gamePlayerTable {
+	float: left;
+	font-size: 10px;
+}
+
+#gameModeratorTableContainer {
+	
+}
+
+#gamePlayerTableContainer {
+	margin-top: 15px;
+}
+
+.gamePlayerHeader {
+	font-weight: bold;
+	border: none;
+	color: #EFEDE8;
+}
+
+#gameInfoButtonRow {
+	margin-top: 7px;
+}
+
+.gameInfoUnorderedListButtonIcon
+{
+	float: right;
+	width: auto;
+	padding: 0;
+}
+
+ul.gameInfoUnorderedListButtonIcon li
+{
+	float: left;
+	list-style: none;
+}
+
+ul.gameInfoUnorderedListButtonIcon li.removeIcon
+{
+	width: 17px;
+	height: 20px;
+	background-image: url("./styles/prosilver/imageset/icon_post_delete.png");
+}
+
+ul.gameInfoUnorderedListButtonIcon li.removeIcon:hover
+{
+	background-position: 0px -20px !important;
+}
+
+ul.gameInfoUnorderedListButtonIcon li.editIcon
+{
+	width: 53px;
+	height: 20px;
+	background-image: url("./styles/prosilver/imageset/en/icon_post_edit.png");
+}
+
+ul.gameInfoUnorderedListButtonIcon li.editIcon:hover
+{
+	background-position: 0px -20px !important;
+}
+
+ul.gameInfoUnorderedListButtonIcon li.removeIcon
+{
+	width: 17px;
+	height: 20px;
+	background-image: url("./styles/prosilver/imageset/icon_post_delete.png");
+}
+
+ul.gameInfoUnorderedListButtonIcon li.removeIcon:hover
+{
+	background-position: 0px -20px !important;
+}
+
+ul.gameInfoUnorderedListButtonIcon li a
+{
+	display: block;
+	background-position: 0 0;
+	width: 100%;
+	height: 100%;
+}
+
+input.gameInfoLabel {
+	width: 125px;
+	font-weight:bold;
+}
+
+.hidden {
+	display:none;
+}
+
+div#addModeratorContainer .label
+{
+	display: inline-block;
+	width: 150px;
+	height: 27px;
+}
+
+div#addModeratorContainer .addModeratorInput
+{
+	width: 200px;
+	display: inline-block;
+}
+
+div#addPlayerContainer .label
+{
+	display: inline-block;
+	width: 150px;
+	height: 27px;
+}
+
+div#addPlayerContainer .addPlayerInput
+{
+	width: 200px;
+	display: inline-block;
+}
+
+
+div#gameInfoMaster {
+
+	font-size: 13px;
+	margin-bottom: 30px;
+}
+
+div.gameFieldNameLabel {
+
+	width: 90px;
+	display: inline-block;
+}
+
+span.gameFieldValue {
+
+	font-weight: bold;
+}
+
+#gameInfoLeft {
+
+	float: left;
+	width: 300px;
+}
+
+#gameInfoRight {
+	margin-left: 310px;
+	width: auto;
+}
+
+.hidden{
+	display:none;
+}
+
+#gameInfoModeratorTable {
+
+	width: 300px;
+	border: 1px solid #000000;
+	border-bottom: none;
+	float: left;
+	background-image: url("./styles/mafsepia/theme/images/bg_header.png");
+}
+
+.gameInfoModeratorRow {
+
+	width: 300px;
+	float: left;
+	border-bottom: 1px solid #000000;
+}
+
+.gameInfoModeratorUsername {
+	width: 200px;
+	float: left;
+	text-align: center;
+	border-right: 1px solid #000000;
+}
+
+.gameInfoModeratorType {
+	width: 99px;
+	float: left;
+	text-align: center;
+}
+
+.gameInfoModeratorHeader {
+	font-weight: bold;
+	border: none;
+	color: #EFEDE8;
+}
+
+#gameInfoPlayerTable {
+
+	width: 825px;
+	border: 1px solid #000000;
+	border-bottom: none;
+	float: left;
+	clear: left;
+	margin-top: 15px;
+	background-image: url("./styles/mafsepia/theme/images/bg_header.png");
+}
+
+.gameInfoPlayerRow {
+
+	width: 825px;
+	float: left;
+	border-bottom: 1px solid #000000;
+}
+
+.gameInfoPlayerUsername {
+	width: 200px;
+	float: left;
+	text-align: center;
+	border-right: 1px solid #000000;
+}
+
+.gameInfoPlayerSlotNumber {
+	width: 99px;
+	float: left;
+	text-align: center;
+	border-right: 1px solid #000000;
+}
+
+.gameInfoPlayerAlignment {
+
+	width: 99px;
+	float: left;
+	text-align: center;
+	border-right: 1px solid #000000;
+}
+.in-table-icons{
+	float: left;
+}
+.in-table-username{
+	float: left;
+}
+
+.gameInfoPlayerFaction {
+
+	width: 149px;
+	float: left;
+	text-align: center;
+	border-right: 1px solid #000000;
+}
+
+.gameInfoPlayerRole {
+
+	width: 124px;
+	float: left;
+	text-align: center;
+	border-right: 1px solid #000000;
+}
+
+.gameInfoPlayerStartDate {
+	width: 149px;
+	float: left;
+	text-align: center;
+}
+
+.gameInfoPlayerHeader {
+	font-weight: bold;
+	border: none;
+	color: #EFEDE8;
+}
+.gamePanel{
+	padding: 5px 10px;
+	margin-bottom: 35px;
+}
+
+#gameContainer{
+	min-width:640px;
+	margin-bottom:20px;
+	position:relative;
+}
+.leftColumn{
+	float:left;
+	width: 19%;
+	margin-right:1%;
+}
+
+.rightColumn
+{
+	float: left;
+	width: 80%;
+}
+
+/*Main Queue Page*/
+#queuesContainer{
+	background: #CFDDE3;
+	margin-bottom:5px;
+	border: 1px solid #000000;
+}
+
+#queuesContainer h3{
+	border-bottom: 1px solid #000000;
+	background-color:#cfdde3;
+	padding:5px 0 5px 5px;
+	margin:0;
+	color:#eee;
+	font-size:1.2em;
+	
+}
+.queuesList{
+	list-style-type:none;
+	padding:0;
+	margin:0;
+}
+
+.queuesList li{
+	list-style-type:none;
+	padding: 5px 0 5px 5px;
+}
+
+.queuesList a{
+	display:block;
+	text-decoration:none;
+}
+
+.games{
+	border-radius: 5px;
+	border:1px solid #00608F;
+}
+
+.games  thead{
+	padding-top:15px;
+	color: #000;
+}
+#gamePlayers{
+	position:relative;
+	width:100%;
+	float:left;
+}
+#gameMods{
+	position:relative;
+	width:100%;
+	float:left;
+}
+	
+.leftslot{
+	margin-bottom:30px;
+}
+.gameField{
+	width:90px;
+	display:inline-block;
+}
+.gameValue{
+	font-weight:bold;
+}
+.infoField{
+	margin-bottom:5px;
+	line-height:20px;
+}
+
+#gamelist{
+	width:100%;
+}
+#gamelist thead{
+	width:100%;
+	position:relative;
+	height:40px;
+	background-color:#cfdde3;
+}
+
+#gamelist tr{
+	width:100%;
+}
+
+div#gameInfoMaster {
+
+	width: 100%;
+	font-size: 13px;
+	margin-bottom: 30px;
+	float: left;
+}
+
+div.gameFieldNameLabel {
+
+	width: 90px;
+	line-height: 27px;
+	display: inline-block;
+	vertical-align:top;
+	margin-bottom: 
+}
+
+span.gameFieldValueEditable {
+	width: 175px;
+	display: inline-block;
+	line-height: 27px;
+	font-weight: bold;
+}
+span#gameInfoGameDescriptionField{
+	line-height: 15px;
+}
+div.gameFieldNameDescription{
+min-height:27px;
+line-height: 15px;
+}
+span.gameFieldValue {
+	width: 175px;
+	display: inline-block;
+	line-height: 27px;
+	font-weight: bold;
+}
+a.gameFieldValue {
+	width: 200px;
+	display: inline-block;
+	line-height: 27px;
+	font-weight: bold;
+}
+
+#gameModeratorTable {
+
+	font-size: 10px;
+	border-bottom: none;
+	float: left;
+}
+
+
+
+#gamePlayerTable {
+	float: left;
+	font-size: 10px;
+}
+
+#gameModeratorTableContainer {
+	
+}
+
+#gamePlayerTableContainer {
+	margin-top: 15px;
+}
+
+.gamePlayerHeader {
+	font-weight: bold;
+	border: none;
+	color: #EFEDE8;
+}
+
+#gameInfoButtonRow {
+	margin-top: 7px;
+}
+
+input.gameInfoLabel {
+	width: 190px;
+	line-height:27px;
+	height:21px;
+	font-weight:bold;
+}
+select.gameInfoLabel {
+	width: 190px;
+	line-height:27px;
+	height:27px;
+	font-weight:bold;
+}
+textarea.gameInfoLabel {
+	width: 190px;
+	font-weight:bold;
+}
+
+.hidden {
+	display:none;
+}
+
+div#addModeratorContainer .label
+{
+	display: inline-block;
+	width: 150px;
+	height: 27px;
+}
+
+div#addModeratorContainer .addModeratorInput
+{
+	width: 200px;
+	display: inline-block;
+}
+
+div .label
+{
+	display: inline-block;
+	width: 175px;
+	height: 27px;
+}
+
+div .addPlayerInput
+{
+	width: 200px;
+	display: inline-block;
+}
+div#addFactionPane .addPlayerInput{
+	width: 200px;
+	display: inline-block;
+}
+div#addFactionPane .label {
+	display: inline-block;
+	width: 175px;
+	height: 27px;
+}
+div#addRolePane .addPlayerInput{
+	width: 200px;
+	display: inline-block;
+}
+div#addRolePane .label {
+	display: inline-block;
+	width: 175px;
+	height: 27px;
+}
+div#internalAddFactionPane{
+	margin-left: 10px;
+}
+div#internalAddRolePane{
+	margin-left: 10px;
+}
+ul.profile-icons li.gameicon{
+	display: inline-block;
+	padding:0;
+	margin: 0px 4px 2px 0px;
+}
+td.username a{
+	float:left;
+}
+td.username ul{
+	float:right;
+	padding:0px;
+}
+.create-game{
+border:px solid #616261; -webkit-border-radius: 2px; -moz-border-radius: 2px;border-radius: 2px;width:px;font-size:9px;font-family:verdana, sans-serif; padding: 12px 12px 12px 12px; text-decoration:none; display:inline-block;font-weight:bold; color: #FFFFFF;
+ background-color: #7d7e7d; background-image: -webkit-gradient(linear, left top, left bottom, from(#7d7e7d), to(#0e0e0e));
+ background-image: -webkit-linear-gradient(top, #7d7e7d, #0e0e0e);
+ background-image: -moz-linear-gradient(top, #7d7e7d, #0e0e0e);
+ background-image: -ms-linear-gradient(top, #7d7e7d, #0e0e0e);
+ background-image: -o-linear-gradient(top, #7d7e7d, #0e0e0e);
+ background-image: linear-gradient(to bottom, #7d7e7d, #0e0e0e);filter:progid:DXImageTransform.Microsoft.gradient(GradientType=0,startColorstr=#7d7e7d, endColorstr=#0e0e0e);
+ margin: 10px 0px 10px 0px ;
+}
+
+.create-game:hover{
+ border:px solid #FFFFFF;
+ text-decoration:none;
+ background-color: #646464; background-image: -webkit-gradient(linear, left top, left bottom, from(#646464), to(#282828));
+ background-image: -webkit-linear-gradient(top, #646464, #282828);
+ background-image: -moz-linear-gradient(top, #646464, #282828);
+ background-image: -ms-linear-gradient(top, #646464, #282828);
+ background-image: -o-linear-gradient(top, #646464, #282828);
+ background-image: linear-gradient(to bottom, #646464, #282828);filter:progid:DXImageTransform.Microsoft.gradient(GradientType=0,startColorstr=#646464, endColorstr=#282828);
+}
+tr .create-game{
+	margin: 0px 3px 0px 3px;
+}
+#findusernamediv{
+	margin-left: 160px;
+	margin-bottom: 5px;
+	display: inline-block;
+}
+#detailed_description{
+	display: inline-block;
+	width: 100%;
+}
+#detailed_description_inner{
+	padding: 10px;
+	font-size: 12px;
+}
+#addModeratorContainer{
+	background-color: #333333;
+	margin-left: 10px;
+	margin-bottom: 10px;
+	padding: 10px;
+	padding-top: 0px;
+}
+.playerEditPanel{
+	background-color: #333333;
+	margin-left: 10px;
+	margin-bottom: 10px;
+	padding: 10px;
+	padding-top: 0px;
+}
+
+#addFactionPane{
+	background-color: #333333;
+	margin-left: 10px;
+	margin-bottom: 10px;
+	padding: 10px;
+	padding-top: 0px;
+}
+
+
+@media screen and (max-width:700px)
+{
+	#gameInfoLeft{
+		width: 100%;
+		float: none;
+		display:block;
+	}
+	#gameInfoRight{
+		width: 100%;
+		margin-left: 0px;
+	}
+}
+.old_replacements{
+	padding: 10px;
+	color: red;
+	border: 1px solid #880000;
+	margin-bottom: 10px;
+}
+.old_replacements p {
+	margin: 0px;
+}
