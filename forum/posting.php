@@ -589,6 +589,7 @@ $img_status		= ($bbcode_status && $auth->acl_get('f_img', $forum_id)) ? true : f
 $url_status		= ($config['allow_post_links']) ? true : false;
 $flash_status	= ($bbcode_status && $auth->acl_get('f_flash', $forum_id) && $config['allow_post_flash']) ? true : false;
 $quote_status	= true;
+$post_autolock_arr = get_autolock_arr($post_data["autolock_input"]);
 
 // Save Draft
 if ($save && $user->data['is_registered'] && $auth->acl_get('u_savedrafts') && ($mode == 'reply' || $mode == 'post' || $mode == 'quote' || $mode == 'select' || $mode == 'multi'))
@@ -833,7 +834,7 @@ if ($submit || $preview || $refresh)
 	}
 	exit;
 	***/
-	$autolock_arr					= get_autlock_arr(request_var('autolock_time', ''));
+	$autolock_arr					= get_autolock_arr(request_var('autolock_time', ''));
 	$post_data['username']			= utf8_normalize_nfc(request_var('username', $post_data['username'], true));
 	$post_data['post_edit_reason']	= (!empty($_POST['edit_reason']) && $mode == 'edit' && $auth->acl_get('m_edit', $forum_id)) ? utf8_normalize_nfc(request_var('edit_reason', '', true)) : '';
 
@@ -1876,10 +1877,11 @@ $count = 0;
 			$count++;
 	}
 }
-
 //END PRIVATE USERS
-//print_r($post_data['private_users']);
-//print_r(sizeof($post_data['private_users']));
+//echo "Post Autolock Arr Is Null: " . ($post_autolock_arr === null ? "YES" : "NO") . "<br/>";
+//echo "Post Autolock Timezone Offset Is Null: " . ($post_autolock_arr["timezone_offset"] === null ? "YES" : "NO") . "<br/>";
+//echo "Post Autolock Timezone Offset: " . ($post_autolock_arr["timezone_offset"]) . "<br/>";
+//exit;
 // Start assigning vars for main posting page ...
 $template->assign_vars(array(
 	'L_POST_A'					=> $page_title,
@@ -1910,6 +1912,7 @@ $template->assign_vars(array(
 	'UA_PROGRESS_BAR'		=> addslashes(append_sid("{$phpbb_root_path}posting.$phpEx", "f=$forum_id&amp;mode=popup")),
 	'AUTOLOCK_TIME_VALUE'	=> $autolock_arr == null ? $post_data['autolock_input'] : $autolock_arr['input'],
 	'AUTOLOCK_REMAINING'	=> get_autolock_remaining_text($autolock_arr == null ? $post_data['autolock_time'] : $autolock_arr['unix_timestamp']),
+	'USER_TIMEZONE_OFFSET'	=> ($post_autolock_arr !== null && $post_autolock_arr["timezone_offset"] !== null) ? $post_autolock_arr["timezone_offset"] : number_format(($user->timezone + $user->dst) / 60 / 60, 2),
 	
 	'HAS_PRIVATE_USERS'			=> sizeof($post_data['private_users']),
 	'S_ALLOW_PRIVATE'			=> $forum_allow_private,
@@ -2028,24 +2031,29 @@ function upload_popup($forum_style = 0)
 	exit_handler();
 }
 
-function get_autlock_arr($input_string)
+function get_autolock_arr($input_string)
 {
-	$autolock_time = get_autolock_unix_timestamp($input_string);
-	return array('unix_timestamp' => $autolock_time, 'input' => $input_string);
-}
-
-function get_autolock_unix_timestamp($input_string)
-{
+	$timezone_offset = null;
+	$autolock_time = 0;
+	
 	if(preg_match_all('/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})(?::(\d{2}))? ?(-?\d{1,2}\.\d{1,2})?/', $input_string, $matches, PREG_SET_ORDER)) {
 		
 		$match = $matches[0];
 		$time_autolock = gmmktime($match[4], $match[5], 0, $match[2], $match[3], $match[1]);
 		if(count($match) >= 7)
+		{
+			$timezone_offset = $match[7];
 			$time_autolock -= ((float)$match[7]) * 60 * 60;
-		return $time_autolock;
+		}
 	}
-	return 0;
+	
+	return array(
+		"unix_timestamp"	=> $time_autolock,
+		"timezone_offset"	=> $timezone_offset,
+		"input" 			=> $input_string
+	);
 }
+
 
 function get_autolock_remaining_text($autolock_time)
 {

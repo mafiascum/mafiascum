@@ -1,4 +1,16 @@
 <script type="text/javascript">
+document.addEventListener("DOMContentLoaded", function() {
+	var $autolockTime = $("#autolock_time");
+	var timezoneOffset = $autolockTime.data("time-zone");
+	var picker = new Pikaday({
+		showSeconds: true,
+		field: $autolockTime[0],
+		format: "YYYY-MM-DD HH:mm:ss " + timezoneOffset
+	});
+});
+//$("#autlock_time").
+</script>
+<script type="text/javascript">
 // <![CDATA[
 	onload_functions.push('apply_onkeypress_event()');
 // ]]>
@@ -305,6 +317,18 @@
 				<dt><label for="edit_reason">{L_EDIT_REASON}:</label></dt>
 				<dd><input type="text" name="edit_reason" id="edit_reason" value="{EDIT_REASON}" class="inputbox" /></dd>
 			</dl>
+			<!-- ENDIF -->
+
+			<!-- IF S_AUTOLOCK_ALLOWED -->
+				<dt><label for="autolock_time">{L_AUTOLOCK_LABEL}:</label></dt>
+				<dd>
+					<input size="32" data-time-zone="{USER_TIMEZONE_OFFSET}" placeholder="{L_AUTOLOCK_PLACEHOLDER}" type="text" name="autolock_time" id="autolock_time" value="{AUTOLOCK_TIME_VALUE}" class="inputbox autowidth" />
+					<!-- IF S_AUTOLOCK_SET -->
+					<span>{L_AUTOLOCK_REMAINING_LABEL} {AUTOLOCK_REMAINING}.</span>
+					<!-- ENDIF -->
+				</dd>
+				<dd>{L_AUTOLOCK_FORMAT}</dd>
+
 			<!-- ENDIF -->
 		</fieldset>
 		<!-- ENDIF -->
