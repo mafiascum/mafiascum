@@ -527,8 +527,13 @@ var siteChat = (function() {
 			$inputBuffer.focus();
 			chatWindow.save();
 		}
-		else
-			$outputBuffer.scrollTop($outputBuffer.scrollHeight);
+		else {
+			$outputBuffer.scrollTop($outputBuffer[0].scrollHeight);
+
+			$outputBuffer.find("img").on("load", function(e) {
+				$outputBuffer.scrollTop($outputBuffer[0].scrollHeight);
+			});
+		}
 	};
 
 	siteChat.getMessageMapKeyUserId = function(siteChatConversationMessage) {
@@ -589,7 +594,7 @@ var siteChat = (function() {
 
 		if(isScrolledToBottom)
 			$outputBuffer.get(0).scrollTop = $outputBuffer.get(0).scrollHeight;
-
+		
 		if(save)
 			chatWindow.save();
 	};
