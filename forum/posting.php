@@ -19,7 +19,6 @@ include($phpbb_root_path . 'includes/functions_posting.' . $phpEx);
 include($phpbb_root_path . 'includes/functions_display.' . $phpEx);
 include($phpbb_root_path . 'includes/message_parser.' . $phpEx);
 
-
 // Start session management
 $user->session_begin();
 $auth->acl($user->data);
@@ -51,6 +50,13 @@ $multipostdata= array();
 $topic_moderators = array();
 $current_time = time();
 
+//Page top grabber
+$allowed_page_top_users = array();
+$allowed_page_top_users[] = 1637;
+$allowed_page_top_users[] = 3439;
+
+$allow_page_top_grabber = in_array($user->data['user_id'], $allowed_page_top_users);
+// End page top grabber
 $root = $config['server_protocol'] . $config['server_name'] . $config['script_path'];
 
 if ($mode == 'multi' && ((!$preview && !$refresh && !$submit) || $QR)){
@@ -738,7 +744,18 @@ if ($load && ($mode == 'reply' || $mode == 'quote' || $mode == 'multi' || $mode 
 		$post_data['is_private'] = 1;
 	}
 //
-
+//Page Top Grabber
+		$query = 'SELECT * FROM page_top_grabber_topics WHERE topic_id=' . $topic_id;
+		$result = $db->sql_query($query);
+		$is_topic_grabber = false;
+		if ($result->num_rows > 0){
+			$row = $db->sql_fetchrow($result);
+			if ($row['is_active']){
+				$is_topic_grabber = true;
+			}
+		}
+	$post_data['page_top_grabber'] = $is_topic_grabber;
+//end Page top grabber
 if ($submit || $preview || $refresh)
 {
 	$post_data['topic_cur_post_id']	= request_var('topic_cur_post_id', 0);
@@ -831,6 +848,19 @@ if ($submit || $preview || $refresh)
 			}
 		}
 	}
+	//Page Top Grabber
+	if ($allow_page_top_grabber && (($mode == 'edit' && $first_post_id == $post_id) || ($mode == 'post' && $first_post_id == 0))){
+		$post_data['page_top_grabber'] = (int)request_var('page_top_grabber', (($mode != 'post') ? $is_topic_grabber : 0));
+		if (!$post_data['page_top_grabber'] && $is_topic_grabber){
+			$query = 'UPDATE page_top_grabber_topics SET is_active=' . 0 . ' WHERE topic_id=' . $topic_id;
+		} elseif ($post_data['page_top_grabber'] && !$is_topic_grabber) {
+			$query = 'INSERT INTO page_top_grabber_topics(`topic_id`, `is_active`) VALUES (' . $topic_id . ', ' . true . ') ON DUPLICATE KEY UPDATE is_active=' . true;
+		}
+		$db->sql_query($query);
+	} else {
+		$post_data['page_top_grabber'] = $is_topic_grabber;
+	}
+	//End Page Top Grabber
 	//Private Topics
 	if ($forum_id ==PRIVATE_FORUM && (($mode == 'edit' && $first_post_id == $post_id) || ($mode == 'post' && $first_post_id == 0))){
 		$post_data['is_private_old']	= $post_data['is_private'];
@@ -1326,9 +1356,10 @@ if ($submit || $preview || $refresh)
 			}
 
 			// The last parameter tells submit_post if search indexer has to be run
-			$redirect_url = submit_post($mode, $post_data['post_subject'], $post_data['username'], $post_data['topic_type'], $poll, $data, $update_message, ($update_message || $update_subject) ? true : false, !$post_data['is_private']);
 
-			$tempAprilFoolsThreadID = 44722;
+			$redirect_url = submit_post($mode, $post_data['post_subject'], $post_data['username'], $post_data['topic_type'], $poll, $data, $update_message, ($update_message || $update_subject) ? true : false, !$post_data['is_private']);
+/** April fools 2014(I think)
+//			$tempAprilFoolsThreadID = 44722;
 //			$tempAprilFoolsThreadID = 44741;
 			if($user->data['user_id'] != ANONYMOUS && $user->data['user_id'] != 23830 && $data['topic_id'] == $tempAprilFoolsThreadID && $mode == 'reply')
 			{
@@ -1404,7 +1435,61 @@ if ($submit || $preview || $refresh)
 				$user->data['user_colour'] = $tempOldUserColor;
 				$user->data['username'] = $tempOldUserName;
 			}
+**/
+//			top of page grabber start
+			if($mode == 'reply' && $post_data['topic_replies']%25==23 && $post_data['page_top_grabber'])
+			{
+				$tempMode = "reply";
+				$tempSubject = $post_data['post_subject'];
+				$tempUsername = $post_data['topic_first_poster_name'];
+				$tempTopicType = $post_data['topic_type'];
+				$tempPoll = $poll;
+				$tempData = array();
+				$tempUpdateMessage = true;
+				$tempUpdateSearchIndex = true;
+				$tempPrivate = false;
+				$tempMessageParser = new parse_message();
+				$tempMessageParser->message = "[vote count]";
+				$tempMessageParser->bbcode_uid;
+				$tempMessageParser->parse(true, true, true, true, true, true, true);
+			
+				$tempData["poster_id"] = $post_data['topic_poster']; 
+				$tempData["forum_id"] = $data["forum_id"];
+				$tempData["topic_id"] = $data["topic_id"];
+				$tempData["post_approved"] = true;
+				$tempData["force_approved_state"] = true;
+				$tempData["icon_id"] = 0;
+				$tempData["enable_bbcode"] = true;
 
+				$tempData["enable_smilies"] = true;
+				$tempData["enable_urls"] = true;
+				$tempData["enable_sig"] = true;
+				$tempData["message"] = $tempMessageParser->message;
+				$tempData["message_md5"] = md5($tempMessageParser->message);
+				$tempData["bbcode_bitfield"] = $message_parser->bbcode_bitfield;
+				$tempData["bbcode_uid"] = $message_parser->bbcode_uid;
+				$tempData["post_edit_locked"] = false;
+				$tempData["topic_title"] = $post_data["topic_title"];
+				
+				$tempOldUserId = $user->data['user_id'];
+				$tempOldUserIp = $user->ip;
+				$tempOldUserColor = $user->data['user_colour'];
+				$tempOldUserName = $user->data['username'];
+				
+				$user->data['user_id'] = $post_data['topic_poster'];
+				$user->ip = '127.0.0.1';
+				$user->data['user_colour'] = $post_dat['topic_first_poster_color'];
+				$user->data['username'] = $tempUsername;
+				submit_post($tempMode, $tempSubject, $tempUsername, $tempTopicType, $tempPoll, $tempData, $tempUpdateMessage, $tempUpdateSearchIndex, $tempPrivate);
+				
+				$user->data['user_id'] = $tempOldUserId;
+				$user->ip = $tempOldUserIp;
+				$user->data['user_colour'] = $tempOldUserColor;
+				$user->data['username'] = $tempOldUserName;
+			}
+			// top of page grabber end
+			
+			
 			if ($config['enable_post_confirm'] && !$user->data['is_registered'] && (isset($captcha) && $captcha->is_solved() === true) && ($mode == 'post' || $mode == 'reply' || $mode == 'quote' || $mode == 'select' || $mode == 'multi'))
 			{
 				$captcha->reset();
@@ -1877,8 +1962,6 @@ $count = 0;
 	}
 }
 //END PRIVATE USERS
-//print_r($post_data['private_users']);
-//print_r(sizeof($post_data['private_users']));
 // Start assigning vars for main posting page ...
 $template->assign_vars(array(
 	'L_POST_A'					=> $page_title,
@@ -1911,7 +1994,10 @@ $template->assign_vars(array(
 	'HAS_PRIVATE_USERS'			=> sizeof($post_data['private_users']),
 	'S_ALLOW_PRIVATE'			=> $forum_allow_private,
 	'S_PUBLIC'					=> ($post_data['is_private']),
-	'IS_PRIVATE'					=> ($post_data['is_private']),
+	'IS_PRIVATE'				=> ($post_data['is_private']),
+	
+	'S_ALLOW_PAGE_TOP_GRABBER'	=> $allow_page_top_grabber,
+	'S_PAGE_TOP_GRABBER'		=> $allow_page_top_grabber ? $post_data['page_top_grabber'] : false,
 	
 	'S_PRIVMSGS'				=> false,
 	'S_CLOSE_PROGRESS_WINDOW'	=> (isset($_POST['add_file'])) ? true : false,
