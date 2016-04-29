@@ -17,6 +17,7 @@ $phpEx = substr(strrchr(__FILE__, '.'), 1);
 include($phpbb_root_path . 'common.' . $phpEx);
 include($phpbb_root_path . 'includes/functions_posting.' . $phpEx);
 include($phpbb_root_path . 'includes/functions_display.' . $phpEx);
+include($phpbb_root_path . 'includes/functions_sfs.' . $phpEx);
 include($phpbb_root_path . 'includes/message_parser.' . $phpEx);
 
 
@@ -493,7 +494,7 @@ if ($mode =='multi'){
 }
 
 // Set some default variables
-$uninit = array('post_attachment' => 0, 'poster_id' => $user->data['user_id'], 'enable_magic_url' => 0, 'topic_status' => 0, 'topic_type' => POST_NORMAL, 'post_subject' => '', 'topic_title' => '', 'post_time' => 0, 'post_edit_reason' => '', 'notify_set' => 0);
+$uninit = array('post_attachment' => 0, 'poster_id' => $user->data['user_id'], 'enable_magic_url' => 0, 'topic_status' => 0, 'topic_type' => POST_NORMAL, 'post_subject' => '', 'topic_title' => '', 'post_time' => 0, 'post_edit_reason' => '', 'notify_set' => 0, 'autolock_topic' => '');
 
 foreach ($uninit as $var_name => $default_value)
 {
@@ -588,6 +589,7 @@ $img_status		= ($bbcode_status && $auth->acl_get('f_img', $forum_id)) ? true : f
 $url_status		= ($config['allow_post_links']) ? true : false;
 $flash_status	= ($bbcode_status && $auth->acl_get('f_flash', $forum_id) && $config['allow_post_flash']) ? true : false;
 $quote_status	= true;
+$post_autolock_arr = get_autolock_arr($post_data["autolock_input"]);
 
 // Save Draft
 if ($save && $user->data['is_registered'] && $auth->acl_get('u_savedrafts') && ($mode == 'reply' || $mode == 'post' || $mode == 'quote' || $mode == 'select' || $mode == 'multi'))
@@ -739,26 +741,14 @@ if ($load && ($mode == 'reply' || $mode == 'quote' || $mode == 'multi' || $mode 
 	}
 //
 
+$perm_lock_unlock = ($auth->acl_get('m_lock', $forum_id) || ($auth->acl_get('f_user_lock', $forum_id) && $user->data['is_registered'] && !empty($post_data['topic_poster']) && $user->data['user_id'] == $post_data['topic_poster'] && $post_data['topic_status'] == ITEM_UNLOCKED)) ? true : false;
+
 if ($submit || $preview || $refresh)
 {
 	$post_data['topic_cur_post_id']	= request_var('topic_cur_post_id', 0);
 	$post_data['post_subject']		= utf8_normalize_nfc(request_var('subject', '', true));
 	$message_parser->message		= utf8_normalize_nfc(request_var('message', '', true));
 	
-	/***
-	$str = ".";
-	$str = htmlentities($str);
-	echo(strlen($str));
-	exit;
-	***/
-	
-	/**
-	$str = "[quote=&quot;In [url=http://www.mafiascum.net/forum/viewtopic.php?p=3859328#p3859328]post 5[/url], Kison&quot;][quote=&quot;In [url=http&#58;//www&#46;mafiascum&#46;net/forum/viewtopic&#46;php?p=3859323#p3859323]post 0[/url], Kison&quot;]test[/quote][/quote]";
-	echo("Str Len: " . strlen($str) . " " . $str . "<br/>");
-	$str = str_replace('&#46;', '.' , str_replace('&#58;', ':', $message_parser->message));
-	echo("Str Len: " . strlen($str) . " " . $str . "<br/>");
-	exit;
-	**/
 	if ($mode == 'multi' && $QR){
 		$message_parser->message = decode_bbcodes_non_preview(str_replace('&#46;', '.' , str_replace('&#58;', ':', $message_parser->message)));
 		if ($mode == 'multi'){
@@ -844,12 +834,12 @@ if ($submit || $preview || $refresh)
 	}
 	exit;
 	***/
+	$autolock_arr					= get_autolock_arr(request_var('autolock_time', ''));
 	$post_data['username']			= utf8_normalize_nfc(request_var('username', $post_data['username'], true));
 	$post_data['post_edit_reason']	= (!empty($_POST['edit_reason']) && $mode == 'edit' && $auth->acl_get('m_edit', $forum_id)) ? utf8_normalize_nfc(request_var('edit_reason', '', true)) : '';
 
 	$post_data['orig_topic_type']	= $post_data['topic_type'];
 	$post_data['topic_type']		= request_var('topic_type', (($mode != 'post') ? (int) $post_data['topic_type'] : POST_NORMAL));
-	
 	
 	$post_data['topic_time_limit']	= request_var('topic_time_limit', (($mode != 'post') ? (int) $post_data['topic_time_limit'] : 0));
 
@@ -1245,7 +1235,6 @@ if ($submit || $preview || $refresh)
 		{
 			// Lock/Unlock Topic
 			$change_topic_status = $post_data['topic_status'];
-			$perm_lock_unlock = ($auth->acl_get('m_lock', $forum_id) || ($auth->acl_get('f_user_lock', $forum_id) && $user->data['is_registered'] && !empty($post_data['topic_poster']) && $user->data['user_id'] == $post_data['topic_poster'] && $post_data['topic_status'] == ITEM_UNLOCKED)) ? true : false;
 
 			if($isTopicModerator && !$perm_lock_unlock)
 				$perm_lock_unlock = true;
@@ -1280,6 +1269,13 @@ if ($submit || $preview || $refresh)
 			else if ($mode == 'edit' && $post_data['post_edit_locked'] == ITEM_UNLOCKED && $post_lock && $auth->acl_get('m_edit', $forum_id))
 			{
 				$post_data['post_edit_locked'] = ITEM_LOCKED;
+			}
+
+			//Autolock time.
+			if($mode == 'post' || ($mode == 'edit' && $post_data['topic_first_post_id'] == $post_id) && $perm_lock_unlock)
+			{
+				$post_data['autolock_time'] = $autolock_arr['unix_timestamp'];
+				$post_data['autolock_input'] = $autolock_arr['unix_timestamp'] == 0 ? "" : $autolock_arr['input'];
 			}
 
 			$data = array(
@@ -1317,6 +1313,8 @@ if ($submit || $preview || $refresh)
 				'is_private'			=> !$post_data['is_private_old'],
 				'topic_approved'		=> (isset($post_data['topic_approved'])) ? $post_data['topic_approved'] : false,
 				'post_approved'			=> (isset($post_data['post_approved'])) ? $post_data['post_approved'] : false,
+				'autolock_time'			=> (int) $post_data['autolock_time'],
+				'autolock_input'		=> (string) $post_data['autolock_input']
 			);
 
 			if ($mode == 'edit')
@@ -1772,6 +1770,7 @@ posting_gen_inline_attachments($attachment_data);
 
 // Do show topic type selection only in first post.
 $topic_type_toggle = false;
+$topic_autolock_allowed = false;
 $forum_allow_private = false;
 if ($mode == 'post' || ($mode == 'edit' && $post_id == $post_data['topic_first_post_id']))
 {
@@ -1779,6 +1778,8 @@ if ($mode == 'post' || ($mode == 'edit' && $post_id == $post_data['topic_first_p
 	if ($forum_id==PRIVATE_FORUM){
 		$forum_allow_private = true;
 	}
+
+	$topic_autolock_allowed = $perm_lock_unlock;
 }
 
 $s_topic_icons = false;
@@ -1877,8 +1878,10 @@ $count = 0;
 	}
 }
 //END PRIVATE USERS
-//print_r($post_data['private_users']);
-//print_r(sizeof($post_data['private_users']));
+//echo "Post Autolock Arr Is Null: " . ($post_autolock_arr === null ? "YES" : "NO") . "<br/>";
+//echo "Post Autolock Timezone Offset Is Null: " . ($post_autolock_arr["timezone_offset"] === null ? "YES" : "NO") . "<br/>";
+//echo "Post Autolock Timezone Offset: " . ($post_autolock_arr["timezone_offset"]) . "<br/>";
+//exit;
 // Start assigning vars for main posting page ...
 $template->assign_vars(array(
 	'L_POST_A'					=> $page_title,
@@ -1907,6 +1910,9 @@ $template->assign_vars(array(
 	'U_VIEW_TOPIC'			=> ($mode != 'post') ? append_sid("{$phpbb_root_path}viewtopic.$phpEx", "f=$forum_id&amp;t=$topic_id") : '',
 	'U_PROGRESS_BAR'		=> append_sid("{$phpbb_root_path}posting.$phpEx", "f=$forum_id&amp;mode=popup"),
 	'UA_PROGRESS_BAR'		=> addslashes(append_sid("{$phpbb_root_path}posting.$phpEx", "f=$forum_id&amp;mode=popup")),
+	'AUTOLOCK_TIME_VALUE'	=> $autolock_arr == null ? $post_data['autolock_input'] : $autolock_arr['input'],
+	'AUTOLOCK_REMAINING'	=> get_autolock_remaining_text($autolock_arr == null ? $post_data['autolock_time'] : $autolock_arr['unix_timestamp']),
+	'USER_TIMEZONE_OFFSET'	=> ($post_autolock_arr !== null && $post_autolock_arr["timezone_offset"] !== null) ? $post_autolock_arr["timezone_offset"] : number_format(($user->timezone + $user->dst) / 60 / 60, 2),
 	
 	'HAS_PRIVATE_USERS'			=> sizeof($post_data['private_users']),
 	'S_ALLOW_PRIVATE'			=> $forum_allow_private,
@@ -1935,6 +1941,8 @@ $template->assign_vars(array(
 	'S_LINKS_ALLOWED'			=> $url_status,
 	'S_MAGIC_URL_CHECKED'		=> ($urls_checked) ? ' checked="checked"' : '',
 	'S_TYPE_TOGGLE'				=> $topic_type_toggle,
+	'S_AUTOLOCK_ALLOWED'		=> $topic_autolock_allowed,
+	'S_AUTOLOCK_SET'			=> (($autolock_arr == null ? $post_data['autolock_time'] : $autolock_arr['unix_timestamp']) != 0),
 	'S_SAVE_ALLOWED'			=> ($auth->acl_get('u_savedrafts') && $user->data['is_registered'] && $mode != 'edit') ? true : false,
 	'S_HAS_DRAFTS'				=> ($auth->acl_get('u_savedrafts') && $user->data['is_registered'] && $post_data['drafts']) ? true : false,
 	'S_FORM_ENCTYPE'			=> $form_enctype,
@@ -2021,6 +2029,51 @@ function upload_popup($forum_style = 0)
 
 	garbage_collection();
 	exit_handler();
+}
+
+function get_autolock_arr($input_string)
+{
+	$timezone_offset = null;
+	$autolock_time = 0;
+	
+	if(preg_match_all('/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})(?::(\d{2}))? ?(-?\d{1,2}\.\d{1,2})?/', $input_string, $matches, PREG_SET_ORDER)) {
+		
+		$match = $matches[0];
+		$time_autolock = gmmktime($match[4], $match[5], 0, $match[2], $match[3], $match[1]);
+		if(count($match) >= 7)
+		{
+			$timezone_offset = $match[7];
+			$time_autolock -= ((float)$match[7]) * 60 * 60;
+		}
+	}
+	
+	return array(
+		"unix_timestamp"	=> $time_autolock,
+		"timezone_offset"	=> $timezone_offset,
+		"input" 			=> $input_string
+	);
+}
+
+
+function get_autolock_remaining_text($autolock_time)
+{
+	$seconds_remaining = $autolock_time - time();
+
+	if($seconds_remaining < 60)
+		return "under a minute";
+	$minutes = (int) ($seconds_remaining / 60) % 60;
+	$hours = (int) ($seconds_remaining / 3600) % 24;
+	$days = (int) ($seconds_remaining / 86400);
+
+	$buffer_arr = array();
+
+	if($days > 0)
+		array_push($buffer_arr, $days . " day" . ($days == 1 ? "" : "s"));
+	if($hours > 0)
+		array_push($buffer_arr, $hours . " hour" . ($hours == 1 ? "" : "s"));
+	if($minutes > 0)
+		array_push($buffer_arr, $minutes . " minute" . ($minutes == 1 ? "" : "s"));
+	return join(", ", $buffer_arr);
 }
 
 /**

@@ -98,6 +98,11 @@ $lang = array_merge($lang, array(
 	'EMPTY_MESSAGE'				=> 'You must enter a message when posting.',
 	'EMPTY_REMOTE_DATA'			=> 'File could not be uploaded, please try uploading the file manually.',
 
+	'AUTOLOCK_LABEL'			=> 'Auto-lock topic at',
+	'AUTOLOCK_REMAINING_LABEL'		=> 'Topic will auto-lock in approximately',
+	'AUTOLOCK_PLACEHOLDER'			=> 'Ex: 2015-09-30 15:30 -5.00',
+	'AUTOLOCK_FORMAT'			=> 'Valid format is: YYYY-MM-DD HH:MM 00.00 (ex: 2015-09-30 15:30 -5.00 will lock Sep 30 2015 at 3:30PM EST(GMT-5))',
+
 	'FLASH_IS_OFF'				=> '[flash] is <em>OFF</em>',
 	'FLASH_IS_ON'				=> '[flash] is <em>ON</em>',
 	'FLOOD_ERROR'				=> 'You cannot make another post so soon after your last.',

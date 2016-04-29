@@ -1832,6 +1832,8 @@ function submit_post($mode, $subject, $username, $topic_type, &$poll, &$data, $u
 				'is_private'				=> !$topic_privacy,
 				'topic_time_limit'			=> ($topic_type == POST_STICKY || $topic_type == POST_ANNOUNCE) ? ($data['topic_time_limit'] * 86400) : 0,
 				'topic_attachment'			=> (!empty($data['attachment_data'])) ? 1 : 0,
+				'autolock_time'				=> $data['autolock_time'],
+				'autolock_input'			=> $data['autolock_input']
 			);
 
 			if (isset($poll['poll_options']) && !empty($poll['poll_options']))
@@ -1926,8 +1928,9 @@ function submit_post($mode, $subject, $username, $topic_type, &$poll, &$data, $u
 				'poll_length'				=> (isset($poll['poll_options'])) ? $poll_length : 0,
 				'poll_vote_change'			=> (isset($poll['poll_vote_change'])) ? $poll['poll_vote_change'] : 0,
 				'topic_last_view_time'		=> $current_time,
-
 				'topic_attachment'			=> (!empty($data['attachment_data'])) ? 1 : (isset($data['topic_attachment']) ? $data['topic_attachment'] : 0),
+				'autolock_time'				=> $data['autolock_time'],
+				'autolock_input'			=> $data['autolock_input']
 			);
 
 			// Correctly set back the topic replies and forum posts... only if the topic was approved before and now gets disapproved
