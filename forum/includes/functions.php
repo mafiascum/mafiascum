@@ -4876,11 +4876,10 @@ function get_topic_mods($topic_id)
 function handle_topic_not_found($post_id, $topic_id, $forum_id)
 {
 	trigger_error('NO_TOPIC');
-
 }
 
-function is_topic_moderator($user_id, &$topic_data, $topic_moderators) {
-
+function is_topic_moderator($user_id, &$topic_data, $topic_moderators)
+{
 	return $topic_data['topic_author_moderation'] && ($topic_data['topic_poster'] == $user_id || in_array($user_id, $topic_moderators));
 }
 

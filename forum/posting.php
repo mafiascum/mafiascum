@@ -827,13 +827,7 @@ if ($submit || $preview || $refresh)
 		$post_data['is_private']	= (int)request_var('topic_privacy', (($mode != 'post') ? $post_data['is_private'] : 1));
 	}
 	//End Private Topics
-	/***
-	for($index = 0;$index < strlen($message_parser->message);++$index)
-	{
-		echo($message_parser->message{$index} . "<br/>");
-	}
-	exit;
-	***/
+	
 	$autolock_arr					= get_autolock_arr(request_var('autolock_time', ''));
 	$post_data['username']			= utf8_normalize_nfc(request_var('username', $post_data['username'], true));
 	$post_data['post_edit_reason']	= (!empty($_POST['edit_reason']) && $mode == 'edit' && $auth->acl_get('m_edit', $forum_id)) ? utf8_normalize_nfc(request_var('edit_reason', '', true)) : '';
@@ -1238,7 +1232,7 @@ if ($submit || $preview || $refresh)
 
 			if($isTopicModerator && !$perm_lock_unlock)
 				$perm_lock_unlock = true;
-
+			
 			if ($post_data['topic_status'] == ITEM_LOCKED && !$topic_lock && $perm_lock_unlock)
 			{
 				$change_topic_status = ITEM_UNLOCKED;
@@ -1779,7 +1773,7 @@ if ($mode == 'post' || ($mode == 'edit' && $post_id == $post_data['topic_first_p
 		$forum_allow_private = true;
 	}
 
-	$topic_autolock_allowed = $perm_lock_unlock;
+	$topic_autolock_allowed = $perm_lock_unlock || is_topic_moderator($user->data['user_id'], $post_data, get_topic_mods($topic_id));
 }
 
 $s_topic_icons = false;
@@ -1878,10 +1872,7 @@ $count = 0;
 	}
 }
 //END PRIVATE USERS
-//echo "Post Autolock Arr Is Null: " . ($post_autolock_arr === null ? "YES" : "NO") . "<br/>";
-//echo "Post Autolock Timezone Offset Is Null: " . ($post_autolock_arr["timezone_offset"] === null ? "YES" : "NO") . "<br/>";
-//echo "Post Autolock Timezone Offset: " . ($post_autolock_arr["timezone_offset"]) . "<br/>";
-//exit;
+
 // Start assigning vars for main posting page ...
 $template->assign_vars(array(
 	'L_POST_A'					=> $page_title,
