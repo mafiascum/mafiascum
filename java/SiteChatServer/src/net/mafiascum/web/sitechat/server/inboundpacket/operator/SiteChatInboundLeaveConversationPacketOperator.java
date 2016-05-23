@@ -15,6 +15,7 @@ import com.google.gson.Gson;
 
 public class SiteChatInboundLeaveConversationPacketOperator extends SiteChatInboundSignedInPacketOperator {
 
+  @SuppressWarnings("unused")
   private static final Logger logger = Logger.getLogger(SiteChatInboundLeaveConversationPacketOperator.class.getName());
   
   public SiteChatInboundLeaveConversationPacketOperator() {

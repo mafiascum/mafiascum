@@ -260,10 +260,18 @@
 .chatWindow.expanded .outputBuffer .message .profile
 {
 	float: left;
-	width: 40px;
+	max-width: 40px;
+	max-height: 40px;
 	display: block;
 	padding: 0;
 	margin: 0;
+}
+
+.chatWindow.expanded .outputBuffer .message .avatar-container
+{
+    width: 40px;
+    height: 40px;
+    float: left;
 	margin-right: 5px;
 }
 
@@ -674,3 +682,9 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#fafafa', end
 	display: none !important;
 }
 
+.joinroom
+{
+	float: right;
+	font-size: 9px;
+	display: inline-block;
+}

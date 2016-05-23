@@ -16,6 +16,7 @@ $phpbb_root_path = (defined('PHPBB_ROOT_PATH')) ? PHPBB_ROOT_PATH : './';
 $phpEx = substr(strrchr(__FILE__, '.'), 1);
 include($phpbb_root_path . 'common.' . $phpEx);
 include($phpbb_root_path . 'includes/functions_display.' . $phpEx);
+include($phpbb_root_path . 'includes/functions_user.' . $phpEx);
 include($phpbb_root_path . 'includes/bbcode.' . $phpEx);
 
 // Start session management
@@ -659,24 +660,8 @@ if (($config['email_enable'] || $config['jab_enable']) && $config['allow_topic_n
 		$hoursSince = (int) ((time() - $row['time_of_last_post']) / 60 / 60) % 24;
  		$idleTime = "$daysSince day" . ($daysSince==1?"":"s") . " $hoursSince hour" . ($hoursSince==1?"":"s");
 		$postCount = $row['number_of_posts'];
-		
-		$isVla = false;
-		$vlaEndTimeStr = "";
-		
-		if($row['user_vla_till'] != '' && $row['user_vla_start'] != '') {
-		
-			$vlaStartDateArray = explode('-', $row['user_vla_start']);
-			$vlaEndDateArray = explode('-', $row['user_vla_till']);
-			
-			$vlaStartTime = mktime(0, 0, 0, $vlaStartDateArray[1], $vlaStartDateArray[0], $vlaStartDateArray[2]);
-			$vlaEndTime = mktime(23, 59, 59, $vlaEndDateArray[1], $vlaEndDateArray[0], $vlaEndDateArray[2]);
-			
-			$isVla = (time() >= $vlaStartTime && time() <= $vlaEndTime);
-			
-			if($isVla) {
-				$vlaEndTimeStr = strftime("%b %d %Y", $vlaEndTime);
-			}
-		}
+		$isVla = is_user_vla($row['user_vla_start'], $row['user_vla_till']);
+		$vlaEndTimeStr = $isVla ? strftime("%B %d %Y", get_vla_end_time($row['user_vla_till'])) : "";
 		
 		$template->assign_block_vars("activity_row", array
 		(
@@ -775,7 +760,7 @@ $topic_mod .= ($allow_change_type && $auth->acl_get('f_announce', $forum_id) && 
 $topic_mod .= ($auth->acl_get('m_', $forum_id)) ? '<option value="topic_logs">' . $user->lang['VIEW_TOPIC_LOGS'] . '</option>' : '';
 
 // If we've got a hightlight set pass it on to pagination.
-$pagination = generate_pagination(append_sid("{$phpbb_root_path}viewtopic.$phpEx", "f=$forum_id&amp;t=$topic_id" . ((count($isolationUserArray) >= 1) ? "&amp;user_select[]=" . $isolationUserArray[0] : '') . ((count($isolationUserArray) >= 2) ? "&amp;user_select[]=" . $isolationUserArray[1] : '') . ((count($isolationUserArray) >= 3) ? "&amp;user_select[]=" . $isolationUserArray[2] : '') . ((strlen($u_sort_param)) ? "&amp;$u_sort_param" : '') . ($posts_per_page_param !== 0 ? ('&amp;ppp=' . $posts_per_page) : '') . (($highlight_match) ? "&amp;hilit=$highlight" : '')), $total_posts, $posts_per_page, $start);
+$pagination = generate_pagination(append_sid("{$phpbb_root_path}viewtopic.$phpEx", "f=$forum_id&amp;t=$topic_id" . ((count($isolationUserArray) >= 1) ? "&amp;user_select%5B%5D=" . $isolationUserArray[0] : '') . ((count($isolationUserArray) >= 2) ? "&amp;user_select%5B%5D=" . $isolationUserArray[1] : '') . ((count($isolationUserArray) >= 3) ? "&amp;user_select%5B%5D=" . $isolationUserArray[2] : '') . ((strlen($u_sort_param)) ? "&amp;$u_sort_param" : '') . ($posts_per_page_param !== 0 ? ('&amp;ppp=' . $posts_per_page) : '') . (($highlight_match) ? "&amp;hilit=$highlight" : '')), $total_posts, $posts_per_page, $start);
 
 // Navigation links 
 generate_forum_nav($topic_data);
@@ -1373,24 +1358,8 @@ while ($row = $db->sql_fetchrow($result))
 		}
 		else
 		{
-		
-			//Make timestamps of dates to compare with.
+			$is_vla = is_user_vla($row['user_vla_start'], $row['user_vla_till']);
 			
-			if($row['user_vla_start'] != '' && $row['user_vla_till'] != '')
-			{
-				
-				$startSplit = explode('-', $row['user_vla_start']);
-				$endSplit = explode('-', $row['user_vla_till']);
-				$mkEnd =  mktime(23,59,59,$endSplit[1], $endSplit[0], $endSplit[2]);
-				$mkStart = mktime(0,0,0,$startSplit[1], $startSplit[0], $startSplit[2]);
-				$is_vla = ($mkStart < time() && $mkEnd > time()) ? true : false;
-
-			}
-			else
-			{
-				$is_vla = false;
-
-			}
 			$user_sig = '';
 
 			// We add the signature to every posters entry because enable_sig is post dependant
@@ -1427,6 +1396,7 @@ while ($row = $db->sql_fetchrow($result))
 				'vla'			=> (bool) $is_vla,
 				'vla_start'		=> ($row['user_vla_start'] != '') ? $row['user_vla_start'] : '',
 				'vla_end'		=> ($row['user_vla_till'] != '') ? $row['user_vla_till'] : '',
+				'vla_display'	=> $is_vla ? strftime("%A, %B %d %Y") : "",
 				'online'		=> false,
 				'profile'		=> append_sid("{$phpbb_root_path}memberlist.$phpEx", "mode=viewprofile&amp;u=$poster_id"),
 				'www'			=> $row['user_website'],
@@ -1822,7 +1792,7 @@ for ($i = 0, $end = sizeof($post_list); $i < $end; ++$i)
 	    !$row['post_edit_locked'] &&
 	    ($row['post_time'] > time() - ($config['delete_time'] * 60) || !$config['delete_time']) 
 	)));
-
+	
 	$postrow = array(
 		'POST_AUTHOR_FULL'		=> ($poster_id != ANONYMOUS) ? $user_cache[$poster_id]['author_full'] : get_username_string('full', $poster_id, $row['username'], $row['user_colour'], $row['post_username']),
 		'POST_AUTHOR_COLOUR'	=> ($poster_id != ANONYMOUS) ? $user_cache[$poster_id]['author_colour'] : get_username_string('colour', $poster_id, $row['username'], $row['user_colour'], $row['post_username']),
@@ -1832,8 +1802,7 @@ for ($i = 0, $end = sizeof($post_list); $i < $end; ++$i)
 		//VLA Addition
 		'S_VLA'				=> $user_cache[$poster_id]['vla'],
 		//VLA Text for Alt Tag
-		'S_VLA_START'		=> $user_cache[$poster_id]['vla_start'],
-		'S_VLA_END'			=> $user_cache[$poster_id]['vla_end'],
+		'S_VLA_END'			=> $user_cache[$poster_id]['vla_display'],
 		'RANK_TITLE'		=> $user_cache[$poster_id]['rank_title'],
 		'RANK_IMG'			=> $user_cache[$poster_id]['rank_image'],
 		'RANK_IMG_SRC'		=> $user_cache[$poster_id]['rank_image_src'],
@@ -1889,7 +1858,7 @@ for ($i = 0, $end = sizeof($post_list); $i < $end; ++$i)
 		'U_MCP_REPORT'		=> ($auth->acl_get('m_report', $forum_id)) ? append_sid("{$phpbb_root_path}mcp.$phpEx", 'i=reports&amp;mode=report_details&amp;f=' . $forum_id . '&amp;p=' . $row['post_id'], true, $user->session_id) : '',
 		'U_MCP_APPROVE'		=> ($auth->acl_get('m_approve', $forum_id)) ? append_sid("{$phpbb_root_path}mcp.$phpEx", 'i=queue&amp;mode=approve_details&amp;f=' . $forum_id . '&amp;p=' . $row['post_id'], true, $user->session_id) : '',
 		'U_MINI_POST'		=> append_sid("{$phpbb_root_path}viewtopic.$phpEx", 'p=' . $row['post_id']) . (($topic_data['topic_type'] == POST_GLOBAL) ? '&amp;f=' . $forum_id : '') . '#p' . $row['post_id'],
-		'U_ISO_URL'		=> append_sid("{$phpbb_root_path}viewtopic.$phpEx", 'p=' . $row['post_id']) . (($topic_data['topic_type'] == POST_GLOBAL) ? '&amp;f=' . $forum_id : '' . "&amp;user_select[]=" . $row['user_id'] . "#p" . $row['post_id']),
+		'U_ISO_URL'		=> append_sid("{$phpbb_root_path}viewtopic.$phpEx", 'p=' . $row['post_id']) . (($topic_data['topic_type'] == POST_GLOBAL) ? '&amp;f=' . $forum_id : '') . "&amp;user_select%5B%5D=" . $row['user_id'] . "#p" . $row['post_id'],
 		'U_NEXT_POST_ID'	=> ($i < $i_total && isset($rowset[$post_list[$i + 1]])) ? $rowset[$post_list[$i + 1]]['post_id'] : '',
 		'U_PREV_POST_ID'	=> $prev_post_id,
 		'U_NOTES'			=> ($auth->acl_getf_global('m_')) ? append_sid("{$phpbb_root_path}mcp.$phpEx", 'i=notes&amp;mode=user_notes&amp;u=' . $poster_id, true, $user->session_id) : '',

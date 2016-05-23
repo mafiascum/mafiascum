@@ -1,4 +1,4 @@
-	function rgbToHsl(r, g, b){
+function rgbToHsl(r, g, b){
     r /= 255, g /= 255, b /= 255;
     var max = Math.max(r, g, b), min = Math.min(r, g, b);
     var h, s, l = (max + min) / 2;
@@ -91,18 +91,20 @@ function hslToRgb(h, s, l){
 		}
 		return 'rgb(' + rgb[0] + ', ' + rgb[1] + ', ' + rgb[2] + ')';
 	}
-$(document).ready(function(){
-	test();
-	if (templatepath.search("mafBlack") > 0){
-		$("*").each(function( index ){
-			var colour = $(this).css('color');
-			components = colour.substring(colour.indexOf('(') + 1, colour.lastIndexOf(')')).split(/,\s*/);
-			var r = parseInt(components[0]);
-			var g = parseInt(components[1]);
-			var b = parseInt(components[2]);
-			if ((r != 238 && r != 221) || (g != 238 && g != 221) || (b != 238 && b != 221)){
-				$(this).css("color", getLightestShade(r,g,b));
-			}
-		});
+
+function adjustColor(index, element) {
+	var $element = $(element);
+    var colour = $element.css('color');
+	components = colour.substring(colour.indexOf('(') + 1, colour.lastIndexOf(')')).split(/,\s*/);
+	var r = parseInt(components[0]);
+	var g = parseInt(components[1]);
+	var b = parseInt(components[2]);
+	if ((r != 238 && r != 221) || (g != 238 && g != 221) || (b != 238 && b != 221)){
+		$element.css("color", getLightestShade(r,g,b));
 	}
+}
+    
+$(document).ready(function(){
+	if (templatepath.search("mafBlack") > 0)
+		$("*").each(adjustColor);
 });

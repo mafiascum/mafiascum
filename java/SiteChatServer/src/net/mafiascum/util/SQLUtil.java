@@ -97,7 +97,7 @@ public class SQLUtil extends MSUtil {
   }
 
   /** Encodes and quotes the enum for use in an SQL statement. */
-  public String encodeQuoteEnum (Enum value) {
+  public String encodeQuoteEnum (@SuppressWarnings("rawtypes") Enum value) {
     return (value != null)
              ? "'" + value + "'"
              : "NULL";

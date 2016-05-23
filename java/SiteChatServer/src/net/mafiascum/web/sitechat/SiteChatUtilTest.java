@@ -61,6 +61,7 @@ public class SiteChatUtilTest {
     Assert.assertEquals(5932, siteChatUtil.getConversationUniqueIdentifier("C5932"));
   }
   
+  @SuppressWarnings("unchecked")
   @Test
   public void testPutNewSiteChatConversationMessages() throws SQLException {
     

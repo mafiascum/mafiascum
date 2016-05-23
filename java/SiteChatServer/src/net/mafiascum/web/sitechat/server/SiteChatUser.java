@@ -15,6 +15,7 @@ public class SiteChatUser extends DataObjectWithIntID implements DataObject {
   protected String name;
   protected String avatarUrl;
   protected Date lastActivityDatetime;
+  protected String userColor;
   
   public SiteChatUser() {
     
@@ -26,6 +27,7 @@ public class SiteChatUser extends DataObjectWithIntID implements DataObject {
     setAvatarUrl(siteChatUser.getAvatarUrl());
     setLastActivityDatetime(new Date(siteChatUser.getLastActivityDatetime().getTime()));
     setId(siteChatUser.getId());
+    setUserColor(siteChatUser.getUserColor());
   }
   
   public String getName() {
@@ -57,12 +59,21 @@ public class SiteChatUser extends DataObjectWithIntID implements DataObject {
     
     this.lastActivityDatetime = lastActivityDatetime;
   }
+  
+  public String getUserColor() {
+    return userColor;
+  }
+  
+  public void setUserColor(String userColor) {
+    this.userColor = userColor;
+  }
 
   public void loadFromResultSet(ResultSet resultSet) throws SQLException {
     
     setId(resultSet.getInt("user_id"));
     setName(resultSet.getString("username"));
     setAvatarUrl(resultSet.getString("user_avatar"));
+    setUserColor(resultSet.getString("user_colour"));
   }
   
   public void store(Connection connection) throws SQLException {

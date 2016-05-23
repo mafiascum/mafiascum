@@ -3836,5 +3836,29 @@ function create_topic_poster_row($topic_id, $user_id, $number_of_posts)
 	$db->sql_query($sql);
 }
 
+function get_vla_start_time($vlaStartField)
+{
+	$vlaStartDateArray = explode('-', $vlaStartField);
+	return count($vlaStartDateArray) < 3 ? NULL : mktime(0, 0, 0, $vlaStartDateArray[1], $vlaStartDateArray[0], $vlaStartDateArray[2]);
+}
+
+function get_vla_end_time($vlaEndField)
+{
+	$vlaEndDateArray = explode('-', $vlaEndField);
+	return count($vlaEndDateArray) < 3 ? NULL : mktime(23, 59, 59, $vlaEndDateArray[1], $vlaEndDateArray[0], $vlaEndDateArray[2]);
+}
+
+function is_user_vla($vlaStartField, $vlaEndField)
+{
+	$vlaStartTime = get_vla_start_time($vlaStartField);
+	$vlaEndTime = get_vla_end_time($vlaEndField);
+	
+	if(is_null($vlaStartTime) || is_null($vlaEndTime))
+		return false;
+	
+	$currentTime = time();
+	
+	return ($currentTime >= $vlaStartTime && $currentTime <= $vlaEndTime);
+}
 
 ?>
