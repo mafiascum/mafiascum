@@ -93,6 +93,9 @@ function hslToRgb(h, s, l){
 	}
 
 function adjustColor(index, element) {
+	if(! (templatepath.search("mafBlack") > 0) )
+		return;
+	
 	var $element = $(element);
     var colour = $element.css('color');
 	components = colour.substring(colour.indexOf('(') + 1, colour.lastIndexOf(')')).split(/,\s*/);
@@ -105,6 +108,5 @@ function adjustColor(index, element) {
 }
     
 $(document).ready(function(){
-	if (templatepath.search("mafBlack") > 0)
-		$("*").each(adjustColor);
+	$("*").each(adjustColor);
 });
