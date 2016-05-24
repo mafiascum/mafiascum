@@ -34,12 +34,12 @@ public class J5EnumSet<Type extends Enum<Type>> implements VEnumSet {
     return (VEnum) getEnum(value);
   }
 
-  public int getValue(Enum enumValue) {
+  public int getValue(@SuppressWarnings("rawtypes") Enum enumValue) {
 
     return enumToValueMap.get(enumValue);
   }
 
-  public String toString(Enum enumValue) {
+  public String toString(@SuppressWarnings("rawtypes") Enum enumValue) {
 
     return enumToValueMap.get(enumValue).toString();
   }

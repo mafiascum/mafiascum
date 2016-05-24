@@ -46,6 +46,7 @@ public class ThreadUtil extends MSUtil {
 
   public Thread startThread (Object onObject, String name, String methodName, Object[] parameters, boolean usingDaemonThread, ThreadGroup threadGroup) {
     try {
+      @SuppressWarnings("rawtypes")
       Class[] parameterTypes = null;
       if (parameters != null) {
         parameterTypes = new Class[parameters.length];

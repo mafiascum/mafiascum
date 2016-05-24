@@ -23,7 +23,7 @@ var siteChat = (function() {
 		}
 		return true;
 	}
-
+	
 	function ChatWindow(siteChatConversationId, recipientUserId, createdByUserId, userIdSet, title, messages, width, height, authCode, expanded, blinking) {
 		this.siteChatConversationId = siteChatConversationId;
 		this.recipientUserId = recipientUserId;
@@ -51,13 +51,11 @@ var siteChat = (function() {
 		};
 
 		this.startBlinking = function() {
-			console.log("Start Blinking.");
 			this.getWindow().find(".title").addClass("blink").addClass("blinkEnd");
 			this.blinking = true;
 		};
 
 		this.stopBlinking = function() {
-			console.log("Stop Blinking.");
 			this.getWindow().find(".title").removeClass("blink").removeClass("blinkEnd");
 			this.blinking = false;
 		};
@@ -76,7 +74,7 @@ var siteChat = (function() {
 	siteChat.namespace = "ms_sc2_";//Prepended to all local storage variables.
 	siteChat.attemptReconnectIntervalId = null;
 	siteChat.onlineUserIdSet = [];
-	siteChat.MAX_MESSAGES_PER_WINDOW = 1000;
+	siteChat.MAX_MESSAGES_PER_WINDOW = 30;
 	siteChat.MAX_MESSAGE_LENGTH = 255;
 	siteChat.unloading = false;
 	siteChat.firstConnectionThisPageLoad = true;
@@ -509,17 +507,11 @@ var siteChat = (function() {
 			$title.find(".options").addClass("hidden");
 
 		siteChat.chatWindows[chatWindowIdPrefix + chatWindowUniqueIdentifier] = chatWindow;
+		
 		if(messages && messages.length > 0) {
-			var messageArrayLength = messages.length;
-			for(var messageIndex = 0;messageIndex < messageArrayLength;++messageIndex) {
-				var message = messages[messageIndex];
-				if(!siteChat.userMap[message.userId])
-					console.log("User Not In Map(" + message.userId + ") when creating chat window. Conversation #" + chatWindowIdPrefix + chatWindowUniqueIdentifier);
-				else
-					siteChat.addSiteChatConversationMessage(message, save, false);
-			}
+			siteChat.addSiteChatConversationMessages(messages, save, false);
 		}
-
+		
 		if(blinking)
 			chatWindow.startBlinking();
 
@@ -549,54 +541,92 @@ var siteChat = (function() {
 		var recipientUserId = $window.data("recipient-user-id");
 		return conversationId != null ? ("C" + conversationId) : ("P" + recipientUserId);
 	};
-
-	siteChat.addSiteChatConversationMessage = function(siteChatConversationMessage, save, isNew, prepend) {
-		var messageKey = siteChat.getMessageMapKey(siteChatConversationMessage);
-		var siteChatUser = siteChat.userMap[ siteChatConversationMessage.userId ];
+	
+	siteChat.getUserColorStyle = function(siteChatUser) {
+		return (siteChatUser.userColor != null && siteChatUser.userColor != "" ? ('color: #' + siteChatUser.userColor + ';"') : "");
+	};
+	
+	siteChat.renderMessage = function(siteChatConversationMessage, siteChatUser) {
 		var messageDate = new Date(siteChatConversationMessage.createdDatetime);
-
-		if(!siteChat.chatWindows[messageKey] && siteChatConversationMessage.recipientUserId != null) {
-
-			//If this is a private conversation & the window has not yet been created,
-			//we should have enough information to make it ourselves.
-
-			var windowSiteChatUser = siteChat.userMap[ siteChat.userId == siteChatConversationMessage.userId ? siteChatConversationMessage.recipientUserId : siteChatConversationMessage.userId ];
-			siteChat.createChatWindow(null, windowSiteChatUser.id, null, windowSiteChatUser.name, [windowSiteChatUser.id], true, [], true, null, null, null);
-		}
-		var chatWindow = siteChat.chatWindows[ messageKey ];
-
+		var avatarUrl = siteChatUser.avatarUrl != '' ?  ('http://forum.mafiascum.net/download/file.php?avatar=' + siteChatUser.avatarUrl) : defaultAvatar;
 		var messageDateString = zeroFill(messageDate.getHours(), 2) + ":" + zeroFill(messageDate.getMinutes(), 2);
-
-		chatWindow.messages.splice(prepend ? 0 : chatWindow.messages.length, 0, siteChatConversationMessage);
-		var messagesLength = chatWindow.messages.length;
-		if(messagesLength > siteChat.MAX_MESSAGES_PER_WINDOW) {
-			chatWindow.messages.splice(0, messagesLength - siteChat.MAX_MESSAGES_PER_WINDOW);
-		}
-		if (siteChatUser.avatarUrl != '')
-			avatarUrl = 'http://forum.mafiascum.net/download/file.php?avatar=' + siteChatUser.avatarUrl;
-		else
-			avatarUrl = defaultAvatar;
-
-		var $outputBuffer = $("#chat" + messageKey + " .outputBuffer");
-		var $messages = $outputBuffer.children(".messages");
-		var isScrolledToBottom = $outputBuffer.get(0).scrollTop == ($outputBuffer.get(0).scrollHeight - $outputBuffer.get(0).offsetHeight);
-
-		(prepend ? $messages.prepend : $messages.append).bind($messages)
-		(
-			'<div class="message">'
-			+	'	<a href="http://forum.mafiascum.net/memberlist.php?mode=viewprofile&u=' + siteChatUser.id + '"><img src="' + avatarUrl + '" class="profile"></img></a>'
-			+	'	<div class="messageUserName"><a href="http://forum.mafiascum.net/memberlist.php?mode=viewprofile&u=' + siteChatUser.id + '">' + siteChatUser.name + '</a></div> <span class="messageTimestamp">(' + messageDateString + ')</span>'
+		
+		return	'<div class="message">'
+			+	'	<a href="http://forum.mafiascum.net/memberlist.php?mode=viewprofile&u=' + siteChatUser.id + '"><div class="avatar-container"><img src="' + avatarUrl + '" class="profile"></img></div></a>'
+			+	'	<div class="messageUserName"><a style="' + siteChat.getUserColorStyle(siteChatUser) + '" href="http://forum.mafiascum.net/memberlist.php?mode=viewprofile&u=' + siteChatUser.id + '">' + siteChatUser.name + '</a></div> <span class="messageTimestamp">(' + messageDateString + ')</span>'
 			+	'	<div class="messagecontent">' + siteChat.parseBBCode(siteChatConversationMessage.message) + '</div>'
 			+	'</div>'
-		);
-		if(chatWindow.expanded == false && isNew && siteChatConversationMessage.userId != siteChat.userId)
-			chatWindow.startBlinking();
+	};
 
-		if(isScrolledToBottom)
-			$outputBuffer.get(0).scrollTop = $outputBuffer.get(0).scrollHeight;
+	siteChat.addSiteChatConversationMessage = function(siteChatConversationMessage, save, isNew, prepend) {
+		siteChat.addSiteChatConversationMessages([siteChatConversationMessage], save, isNew, prepend);
+	};
+
+	siteChat.addSiteChatConversationMessages = function(siteChatConversationMessages, save, isNew, prepend) {
+		var messageKeyToDataMap = {};
+		for(var messageIndex in siteChatConversationMessages) {
+			var siteChatConversationMessage = siteChatConversationMessages[messageIndex];
+			
+			var messageKey = siteChat.getMessageMapKey(siteChatConversationMessage);
+			var siteChatUser = siteChat.userMap[ siteChatConversationMessage.userId ];
+						
+			if(!siteChat.chatWindows[messageKey] && siteChatConversationMessage.recipientUserId != null) {
+
+				//If this is a private conversation & the window has not yet been created,
+				//we should have enough information to make it ourselves.
+
+				var windowSiteChatUser = siteChat.userMap[ siteChat.userId == siteChatConversationMessage.userId ? siteChatConversationMessage.recipientUserId : siteChatConversationMessage.userId ];
+				siteChat.createChatWindow(null, windowSiteChatUser.id, null, windowSiteChatUser.name, [windowSiteChatUser.id], true, [], true, null, null, null);
+			}
+			
+			var $outputBuffer = $("#chat" + messageKey + " .outputBuffer");
+			
+			if(!messageKeyToDataMap.hasOwnProperty(messageKey)) {
+				messageKeyToDataMap[messageKey] = {
+					numberOfMessagesAdded: 0,
+					messagesHtmlToAdd: [],
+					outputBuffer: $outputBuffer,
+					messages: $outputBuffer.children(".messages"),
+					messageObjects: []
+				};
+			}
+			
+			messageKeyToDataMap[messageKey]["messagesHtmlToAdd"].push(siteChat.renderMessage(siteChatConversationMessage, siteChatUser));
+			messageKeyToDataMap[messageKey]["messageObjects"].push(siteChatConversationMessage);
+		}
 		
-		if(save)
-			chatWindow.save();
+		//With all HTML generated and everything grouped by conversation, let's go through and add the messages.
+		for(var messageKey in messageKeyToDataMap) {
+			var $messages = messageKeyToDataMap[messageKey]["messages"];
+			var $outputBuffer = messageKeyToDataMap[messageKey]["outputBuffer"];
+			var isScrolledToBottom = $outputBuffer.get(0).scrollTop == ($outputBuffer.get(0).scrollHeight - $outputBuffer.get(0).offsetHeight);
+			
+			var $messageDomElements = $(messageKeyToDataMap[messageKey]["messagesHtmlToAdd"].join(""));
+			
+			(prepend ? $messages.prepend : $messages.append).bind($messages)($messageDomElements);
+			
+			$messageDomElements.find("a").each(siteChat.adjustElementColor);
+			
+			var chatWindow = siteChat.chatWindows[ messageKey ];
+			
+			for(var messageIndex in messageKeyToDataMap[messageKey]["messageObjects"]) {
+				
+				chatWindow.messages.splice(prepend ? 0 : chatWindow.messages.length, 0, messageKeyToDataMap[messageKey]["messageObjects"][messageIndex]);
+			}
+			var messagesLength = chatWindow.messages.length;
+			if(messagesLength > siteChat.MAX_MESSAGES_PER_WINDOW) {
+				chatWindow.messages.splice(0, messagesLength - siteChat.MAX_MESSAGES_PER_WINDOW);
+			}
+			
+			if(chatWindow.expanded == false && isNew && siteChatConversationMessage.userId != siteChat.userId)
+				chatWindow.startBlinking();
+				
+			if(isScrolledToBottom)
+				$outputBuffer.get(0).scrollTop = $outputBuffer.get(0).scrollHeight;
+			
+			if(save)
+				chatWindow.save();
+		}
 	};
 
 	siteChat.addUser = function(siteChatUser, save, doNotAddToOnlineList) {
@@ -619,15 +649,18 @@ var siteChat = (function() {
 		var active = siteChatUser.lastActivityDatetime ? ((new Date().getTime() - siteChatUser.lastActivityDatetime) / 1000) < (60) * (5) : false;
 		var html
 			= '<li class="username" id="username' + siteChatUser.id + '"><span class="onlineindicator ' + (active ? "active" : "idle") + '"></span>'
-			+ siteChatUser.name
+			+ '<span style="' + siteChat.getUserColorStyle(siteChatUser) + '">' + siteChatUser.name + '</span>'
 			+ '</li>';
+		var $userDomElement = $(html);
+		$userDomElement.find("*").each(siteChat.adjustElementColor);
+		
 		if(indexToInsert >= siteChat.onlineUserIdSet.length) {
-			$("#onlinelist").append(html);
+			$("#onlinelist").append($userDomElement);
 			if(!onlyAddToHTML)
 				siteChat.onlineUserIdSet.push(siteChatUser.id);
 		}
 		else {
-			$("#username" + siteChat.onlineUserIdSet[indexToInsert]).before(html);
+			$("#username" + siteChat.onlineUserIdSet[indexToInsert]).before($userDomElement);
 			if(!onlyAddToHTML)
 				siteChat.onlineUserIdSet.splice(indexToInsert, 0, siteChatUser.id);
 		}
@@ -647,7 +680,6 @@ var siteChat = (function() {
 	};
 
 	siteChat.processPendingMessages = function() {
-		console.log("Processing Pending Messages... Total In Queue: " + siteChat.pendingMessages.length);
 		for(var index = 0;index < siteChat.pendingMessages.length;++index) {
 			var siteChatConversationMessage = siteChat.pendingMessages[ index ];
 			var siteChatUser = siteChat.userMap[ siteChatConversationMessage.userId ];
@@ -824,7 +856,7 @@ var siteChat = (function() {
 	};
 
 	siteChat.generateCommandHandlers = function(siteChat, siteChatPacket) {
-
+		
 		var commandHandlers = {};
 		commandHandlers["LogIn"] = function(siteChat, siteChatPacket) {
 
@@ -930,7 +962,6 @@ var siteChat = (function() {
 		};
 
 		commandHandlers["UserList"] = function(siteChat, siteChatPacket) {
-
 			var oldRooms = siteChat.rooms;
 			siteChat.onlineUsers = 0;
 			siteChat.onlineUserIdSet = [];
@@ -1007,13 +1038,15 @@ var siteChat = (function() {
 
 		return commandHandlers;
 	};
-
+	
 	siteChat.setup = function(sessionId, userId, autoJoinLobby, siteChatUrl, siteChatProtocol) {
+		
 		siteChat.sessionId = sessionId;
 		siteChat.userId = userId;
 		siteChat.autoJoinLobby = autoJoinLobby && !sessionStorage[siteChat.namespace + "lobbyForcefullyClosed"];
 		siteChat.siteChatUrl = siteChatUrl;
 		siteChat.siteChatProtocol = siteChatProtocol;
+		siteChat.adjustElementColor = typeof window.adjustColor === "function" ? window.adjustColor : function(){};
 
 		if(!supportsHtml5Storage() || (typeof(WebSocket) != "function" && typeof(WebSocket) != "object"))
 			return;
