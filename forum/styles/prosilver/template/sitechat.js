@@ -617,10 +617,6 @@ var siteChat = (function() {
 				chatWindow.messages.splice(prepend ? 0 : chatWindow.messages.length, 0, messageKeyToDataMap[messageKey]["messageObjects"][messageIndex]);
 			}
 			var messagesLength = chatWindow.messages.length;
-			//if(messagesLength > siteChat.MAX_MESSAGES_PER_WINDOW) {
-			//	chatWindow.messages.splice(0, messagesLength - siteChat.MAX_MESSAGES_PER_WINDOW);
-			//}
-			console.log("Yo");
 			
 			if(chatWindow.expanded == false && isNew && siteChatConversationMessage.userId != siteChat.userId)
 				chatWindow.startBlinking();
