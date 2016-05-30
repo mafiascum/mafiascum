@@ -38,8 +38,11 @@ var siteChat = (function() {
 		this.blinking = blinking;
 
 		this.save = function() {
+			var windowCopy = $.extend({}, this);
+			windowCopy.messages = this.messages.slice(Math.max(0, this.messages.length - siteChat.MAX_MESSAGES_PER_WINDOW), this.messages.length);
+			
 			siteChat.setLocalStorage("conversationIdSet", JSON.stringify(siteChat.getConversationKeySet()));
-			siteChat.setLocalStorage("conversation" + this.getWindowMapKey(), JSON.stringify(this));
+			siteChat.setLocalStorage("conversation" + this.getWindowMapKey(), JSON.stringify(windowCopy));
 		};
 
 		this.getWindowMapKey = function() {
@@ -614,9 +617,6 @@ var siteChat = (function() {
 				chatWindow.messages.splice(prepend ? 0 : chatWindow.messages.length, 0, messageKeyToDataMap[messageKey]["messageObjects"][messageIndex]);
 			}
 			var messagesLength = chatWindow.messages.length;
-			if(messagesLength > siteChat.MAX_MESSAGES_PER_WINDOW) {
-				chatWindow.messages.splice(0, messagesLength - siteChat.MAX_MESSAGES_PER_WINDOW);
-			}
 			
 			if(chatWindow.expanded == false && isNew && siteChatConversationMessage.userId != siteChat.userId)
 				chatWindow.startBlinking();
