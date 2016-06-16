@@ -423,6 +423,7 @@ class auth_admin extends auth
 		{
 			$hold_ary_temp = $hold_ary;
 			$hold_ary = array();
+
 			foreach ($hold_ary_temp as $ug_id => $row)
 			{
 				foreach ($forum_names_ary as $forum_id => $forum_row)

@@ -113,7 +113,7 @@ $lang = array_merge($lang, array(
 	
 	
 	'SUBMIT_GAME'	=> 'Submit a Game',
-		'ADD_GAME_EXPLAIN'			=> 'Fill out the form to enter a game into signups.',
+	'ADD_GAME_EXPLAIN'			=> 'Fill out the form to enter a game into signups.',
 	'GAME_NAME'					=> 'Game Name',
 	'GAME_NAME_EXPLAIN'			=> 'The title of the game to approve.',
 	'MODERATOR'					=> 'Moderator',
@@ -144,4 +144,14 @@ $lang = array_merge($lang, array(
 	'CANT_EDIT_CONFIRMATION'	=> 'Sneaky little scum, you can\'t edit the game details like that...',
 	'GAME_NOT_EXIST'			=> 'The specified game doesn\'t exist.',
 	'ALREADY_APPROVED'			=> 'This game has already been approved.',
+	
+	'MOD_QUEUE_LIMITS'			=> 'You have exceeded your limit for this game type.',
+	'BAD_MOD_SELECTED'			=> 'The moderator that you selected does not exist.',
+	'MISSING_GAME_NAME'			=> 'You must enter a game name.',
+	'GAME_NAME_TOO_LONG'		=> 'The game name that you entered is too long.',
+	'MISSING_GAME_TYPE'			=> 'You must select a game type.',
+	'MISSING_REQUESTED_SLOTS'	=> 'You must enter a requested number of game slots.',
+	'NOT_ENOUGH_REQUESTED_SLOTS'=> 'You have entered too few game slots.',
+	'TOO_MANY_SLOTS'			=> 'You have entered too many game slots for this game type.'
+	
 ));

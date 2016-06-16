@@ -982,7 +982,7 @@ class acp_permissions
 		}
 
 		$back = request_var('back', 0);
-
+		
 		$template->assign_vars(array(
 			'PERMISSION'			=> $user->lang['acl_' . $permission]['lang'],
 			'PERMISSION_USERNAME'	=> $userdata['username'],

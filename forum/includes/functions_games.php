@@ -617,7 +617,7 @@ function overPlayerLimits($queue)
  * @param mixed[] $data The data to validate.
  * @return mixed[] An array of triggered errors.
  */
-function errorsInGameData($data)
+function errorsInGameData($data, $user)
 {
 	global $db;
 	$errors = array(); 
@@ -626,34 +626,34 @@ function errorsInGameData($data)
 	$mod = checkModerator($data['main_mod']);
 	if(!$mod)
 	{
-		$errors['BAD_MOD_SELECTED'];
+		$errors[] = $user->lang['BAD_MOD_SELECTED'];
 	}
 	else
 	{
 		if(!checkModLimits($data['main_mod'], $data['game_type']))
 		{
-			$errors[] = 'MOD_QUEUE_LIMITS'; 
+			$errors[] = $user->lang['MOD_QUEUE_LIMITS']; 
 		}
 	}
 		
 	//Validate game name.
 	if(!$data['game_name']) 
 	{
-		$errors[] = 'MISSING_GAME_NAME'; 
+		$errors[] = $user->lang['MISSING_GAME_NAME'];
 	}
 	if(strlen($data['game_name'] ) > 80)
 	{
-		$errors[] = 'GAME_NAME_TOO_LONG';
+		$errors[] = $user->lang['GAME_NAME_TOO_LONG'];
 	}
 	
 	//Validate game type.
 	if(!$data['game_type'])
 	{
-		$errors[] = 'MISSING_GAME_TYPE';
+		$errors[] = $user->lang['MISSING_GAME_TYPE'];
 	} else {
 		if(!$data['requested_slots'])
 		{
-			$errors[] = 'MISSING_REQUESTED_SLOTS';
+			$errors[] = $user->lang['MISSING_REQUESTED_SLOTS'];
 		}
 		else
 		{
@@ -662,9 +662,9 @@ function errorsInGameData($data)
 			$game_type_data = $db->sql_fetchrow($res);
 			if($data['requested_slots'] < $game_type_data['min_players'])
 			{
-				$errors[] = 'NOT_ENOUGH_REQUESTED_SLOTS';
+				$errors[] = $user->lang['NOT_ENOUGH_REQUESTED_SLOTS'];
 			} else if ($data['requested_slots'] > $game_type_data['max_players']){
-				$errors[] = 'Too Many Slots.';
+				$errors[] = $user->lang['TOO_MANY_SLOTS'];
 			}
 		}
 	}
@@ -804,7 +804,6 @@ function insertSlot($player_id, $slot_id, $game_id, $manual = false, $replace = 
 		{
 			if($ga['entered_players'] >= $ga['maximum_players'])
 			{
-				
 				//Delete any orphaned unapproved player signups.
 				$del = 'DELETE FROM '.MAFIA_PLAYERS_TABLE.' WHERE slot_id = 0 AND game_id = '.$db->sql_escape($game_id);
 				$db->sql_query($del);	
@@ -1157,6 +1156,8 @@ $uid = $bitfield = $options = ''; // will be modified by generate_text_for_stora
 
     // 3.0.6
     'force_approved_state'    => true, // Allow the post to be submitted without going into unapproved queue
+	'autolock_time'			=> 0,
+	'autolock_input'		=> ''
 	);
 
 	return $data;

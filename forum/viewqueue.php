@@ -67,7 +67,7 @@ switch($mode)
 			$data['game_description'] = request_var('game_description', '');
 			
 			//Double check in case they editted the variables manually. 
-			$errors = errorsInGameData($data);
+			$errors = errorsInGameData($data, $user);
 			if(sizeof($errors))
 			{
 				trigger_error('CANT_EDIT_CONFIRMATION');
@@ -87,11 +87,13 @@ switch($mode)
 			$data['requested_slots'] = request_var('requested_slots', 0);
 			$data['game_description'] = request_var('game_description', '');
 			
-			$errors = errorsInGameData($data);
+			$errors = errorsInGameData($data, $user);
 			if(sizeof($errors))
 			{
 				$loc = append_sid($phpbb_root_path . 'viewqueue.' . $phpEx);
-				$message = $user->lang['ERROR_GAME_SUBMISSION'] . '<br /><br />' . sprintf($user->lang['RETURN_MAIN_QUEUE'], '<a href="' . $loc . '">', '</a>');
+				$message = $user->lang['ERROR_GAME_SUBMISSION'] . '<br /><br />'
+				. implode($errors, '<br/>') . '<br/><br/>'
+				. sprintf($user->lang['RETURN_MAIN_QUEUE'], '<a href="' . $loc . '">', '</a>');
 				meta_refresh(3, $loc);
 				trigger_error($message);
 			}
