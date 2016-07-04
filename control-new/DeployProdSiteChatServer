@@ -1,0 +1,3 @@
+#!/bin/bash
+source ProdConfig
+source ./DeploySiteChatServer

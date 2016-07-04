@@ -703,7 +703,8 @@ function checkModerator($modName, $getID = false)
 function insertPlayer($game_id, $user_id, $type = 0, $replacement_start = null)
 {
 	global $db;
-	if ($type == 1 || $type == 2 || $type == 0){
+	if ($type == 1 || $type == 2 || $type == 0)
+	{
 		//Insert the player into the table.
 		$player_ary = array(
 			'game_id'	=> (int) $game_id,
@@ -715,25 +716,27 @@ function insertPlayer($game_id, $user_id, $type = 0, $replacement_start = null)
 		$sql = 'INSERT INTO ' . MAFIA_PLAYERS_TABLE . ' ' . $db->sql_build_array('INSERT', $player_ary);
 		$db->sql_query($sql);
 		$db->sql_freeresult($result);
-	//Update game player counts if we have successfully added a player.
-	switch($type)
-	{
-		case STANDARD_IN:
-			$ptype = 'requested_players';
-			break;
-		case PREIN:
-			$ptype = 'requested_players';
-			break;
-		case REPLACEMENT:
-			$ptype = 'replacements';
-			break;
+		//Update game player counts if we have successfully added a player.
+		switch($type)
+		{
+			case STANDARD_IN:
+				$ptype = 'requested_players';
+				break;
+			case PREIN:
+				$ptype = 'requested_players';
+				break;
+			case REPLACEMENT:
+				$ptype = 'replacements';
+				break;
+		}
+		
+		$sql = 'UPDATE ' . MAFIA_GAMES_TABLE . '
+				SET ' .$db->sql_escape($ptype). ' = '.$db->sql_escape($ptype).' + 1
+				WHERE game_id = ' . (int)$db->sql_escape($game_id);
+		$db->sql_query($sql);
 	}
-	
-	$sql = 'UPDATE ' . MAFIA_GAMES_TABLE . '
-			SET ' .$db->sql_escape($ptype). ' = '.$db->sql_escape($ptype).' + 1
-			WHERE game_id = ' . (int)$db->sql_escape($game_id);
-	$db->sql_query($sql);
-	} else if ($type == 3) {
+	else if ($type == 3)
+	{
 		//update player table
 		$sql = 'UPDATE phpbb_mafia_players p
 			SET p.type=' . APPROVED_IN . '
@@ -761,9 +764,12 @@ function insertSlot($player_id, $slot_id, $game_id, $manual = false, $replace = 
 	$sql = 'SELECT * FROM ' . MAFIA_SLOTS_TABLE . ' WHERE slot_id=' . $slot_id . ' AND game_id=' . $game_id;
 	$result = $db->sql_query($sql);
 	$slot = $db->sql_fetchrow($result);
-	if (sizeOf($slot)){
+	if (sizeOf($slot))
+	{
 	
-	} else {
+	}
+	else
+	{	
 		$slot_ary = array(
 			'game_id'	=> (int)$db->sql_escape($game_id),
 			'slot_id' 	=> (int)$db->sql_escape($slot_id)
@@ -789,6 +795,7 @@ function insertSlot($player_id, $slot_id, $game_id, $manual = false, $replace = 
 		. ' WHERE player_id = '. $db->sql_escape($player_id);
 	$db->sql_query($sql);
 	$db->sql_freeresult($result);
+	
 	if (!$replace){
 		//Check to see if signups are complete, move into setup status.
 		//Then bump up any approved games to make sure that the max amount are in signups.
