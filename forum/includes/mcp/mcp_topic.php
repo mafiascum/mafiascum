@@ -318,7 +318,7 @@ function mcp_topic_view($id, $mode, $action)
 		'S_CAN_MERGE'		=> ($auth->acl_get('m_merge', $topic_info['forum_id'])) ? true : false,
 		'S_CAN_DELETE'		=> ($auth->acl_get('m_delete', $topic_info['forum_id'])) ? true : false,
 		'S_CAN_APPROVE'		=> ($has_unapproved_posts && $auth->acl_get('m_approve', $topic_info['forum_id'])) ? true : false,
-		'S_CAN_LOCK'		=> ($auth->acl_get('m_lock', $topic_info['forum_id']) || is_topic_moderator($user->data['user_id'], $post_info, get_topic_mods($post_info['topic_id']))) ? true : false,
+		'S_CAN_LOCK'		=> ($auth->acl_get('m_lock', $topic_info['forum_id']) || is_topic_moderator($user->data['user_id'], $post_info, get_topic_mods($topic_id))) ? true : false,
 		'S_CAN_REPORT'		=> ($auth->acl_get('m_report', $topic_info['forum_id'])) ? true : false,
 		'S_REPORT_VIEW'		=> ($action == 'reports') ? true : false,
 		'S_MERGE_VIEW'		=> ($action == 'merge') ? true : false,
