@@ -3,6 +3,8 @@ package net.mafiascum.jdbc;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import org.apache.log4j.Logger;
+
 import net.mafiascum.util.QueryUtil;
 import net.mafiascum.web.misc.DataObjectWithIntID;
 import net.mafiascum.web.misc.DataObjectWithLongID;
@@ -15,8 +17,9 @@ public class StoreDataObjectSQLBuilder extends StoreSQLBuilder {
     super(tableName);
   }
   
+private static final Logger logger = Logger.getLogger(StoreDataObjectSQLBuilder.class.getName());
   public void execute(Statement statement, IsNewDataObject dataObject) throws SQLException {
-    
+    logger.info("Query: " + (dataObject.isNew() ? generateInsert() : generateUpdate()));
     statement.executeUpdate(dataObject.isNew() ? generateInsert() : generateUpdate());
   }
   

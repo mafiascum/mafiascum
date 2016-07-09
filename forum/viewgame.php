@@ -136,7 +136,7 @@ if ($user->data['user_id'] == ANONYMOUS)
 					//If we get here we are all set to accept the /prein.
 					insertPlayer($game['game_id'], $user->data['user_id'], 1);
 					$loc = append_sid($phpbb_root_path . 'viewgame.' . $phpEx.'?mode=view&g='.$game['game_id']);
-						$message = $user->lang['GAME_PREIN_SUCCESSFUL'] . '<br /><br />' . sprintf($user->lang['RETURN_GAME_VIEW'], '<a href="' . $loc . '">', '</a>');
+						$message = $user->lang['PREIN_SUCCESSFUL'] . '<br /><br />' . sprintf($user->lang['RETURN_GAME_VIEW'], '<a href="' . $loc . '">', '</a>');
 						meta_refresh(3, $loc);
 						trigger_error($message);
 					break;
@@ -172,7 +172,7 @@ if ($user->data['user_id'] == ANONYMOUS)
 			}
 			break;
 	//*********************************************
-	//Handle player removals.
+	//Handle player approvals.
 		case 'approve_player':
 			if(alreadyEntered($game_id, $user->data['user_id'], 1) || $auth->acl_get('u_queue_'.$queue)){
 				$template->assign_vars(array(

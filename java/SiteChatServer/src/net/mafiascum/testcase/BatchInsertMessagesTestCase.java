@@ -12,7 +12,7 @@ public class BatchInsertMessagesTestCase extends TestCase {
   
   public void execute() throws Exception {
     
-    queryUtil.executeConnectionNoReturn(provider, connection -> {
+    queryUtil.executeConnectionNoResult(provider, connection -> {
 
       final int NUMBER_OF_MESSAGES = 5;
       int maxMessageIdBefore = siteChatUtil.getTopSiteChatConversationMessageId(connection);

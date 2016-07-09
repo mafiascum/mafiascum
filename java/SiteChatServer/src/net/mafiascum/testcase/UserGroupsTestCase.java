@@ -11,7 +11,7 @@ public class UserGroupsTestCase extends TestCase {
   
   public void execute() throws Exception {
     
-    queryUtil.executeConnectionNoReturn(provider, connection -> {
+    queryUtil.executeConnectionNoResult(provider, connection -> {
 
       logger.info("Testing User Groups.");
       int userId = 5932;

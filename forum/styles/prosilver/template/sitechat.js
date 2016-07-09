@@ -36,6 +36,7 @@ var siteChat = (function() {
 		this.authCode = authCode;
 		this.expanded = expanded;
 		this.blinking = blinking;
+		this.isChannel = siteChatConversationId != null;
 
 		this.save = function() {
 			var windowCopy = $.extend({}, this);
@@ -85,6 +86,9 @@ var siteChat = (function() {
 	siteChat.attemptingLogin = false;
 	siteChat.dragWindow = null;
 	siteChat.commandHandlers = {};
+	siteChat.avatarCanvas = document.createElement("canvas");
+	siteChat.avatarContext = siteChat.avatarCanvas.getContext("2d");
+	siteChat.notifications = [];
 
 	siteChat.roomListRoomTemplate = Handlebars.compile(
 		'<div id="chatroom{{roomId}}">'
@@ -97,7 +101,7 @@ var siteChat = (function() {
 		+	'<div class="userlist">'
 		+		'<ul>'
 		+		'{{#each users}}'
-		+			'<li class="username" id="username{{roomNameCleaned}}{{userId}}" data-username="{{userName}}" data-user-id="{{userId}}">'
+		+			'<li class="username dynamic-color" style="{{userColor}}" id="username{{roomNameCleaned}}{{userId}}" data-username="{{userName}}" data-user-id="{{userId}}">'
 		+				'<span class="onlineindicator {{activeClass}}"></span>'
 		+				'{{userName}}'
 		+			'</li>'
@@ -157,18 +161,70 @@ var siteChat = (function() {
 
 	siteChat.liTemplate = Handlebars.compile("<li>{{content}}</li>");
 
+	siteChat.adjustElementColorAll = function() {
+		$(".dynamic-color").each(siteChat.adjustElementColor).removeClass("dynamic-color");
+	};
+
+	siteChat.addNotification = function(notification) {
+		siteChat.notifications.push(notification);
+	};
+	
+	siteChat.notifications.push({
+		id: 100,
+		channelMessage: true,
+		privateMessage: true,
+		pattern: null,
+		blink: true,
+		sound: false,
+		patternObject: null
+	});
+	
+	siteChat.tryTriggerNotification = function(chatWindow, message) {
+		
+		if(message.userId == siteChat.userId)
+			return;//Message sent by self.
+		
+		var numberOfNotifications = siteChat.notifications.length;
+		for(var index = 0;index < numberOfNotifications;++index) {
+			var notification = siteChat.notifications[index];
+			
+			if(notification.channelMessage && chatWindow.isChannel)
+				break;
+			if(notification.privateMessage && !chatWindow.isChannel)
+				break;
+			if(notification.patternObject != null && notification.patternObject.test(message.message))
+				break;
+		}
+		
+		if(index >= numberOfNotifications)
+			return;
+		
+		var triggeredNotification = siteChat.notifications[index];
+		
+		if(triggeredNotification.blink && !chatWindow.expanded)
+			chatWindow.startBlinking();
+		if(triggeredNotification.sound) {
+			//TODO: Play sound.
+			console.log("Playing sound.");
+		}
+	};
+
 	siteChat.getLocalStorage = function(key) {
 		return localStorage[siteChat.namespace + key];
 	};
 
 	siteChat.setLocalStorage = function(key, value) {
 		if(arguments.length != 2)
-			throw "Invalis number of arguments: " + arguments.length;
+			throw "Invalid number of arguments: " + arguments.length;
 		localStorage[siteChat.namespace + key] = value;
 	};
 
 	siteChat.attemptReconnect = function() {
 		siteChat.setupWebSocket();
+	};
+	
+	siteChat.getMessageElementId = function(messageId) {
+		return "scm_" + messageId;
 	};
 
 	siteChat.parseBBCode = function(message) {
@@ -186,6 +242,15 @@ var siteChat = (function() {
 					url = str;
 				return siteChat.chatAnchorTemplate({url: url, display: str});
 			});
+	};
+	
+	siteChat.convertGifAvatar = function(image) {
+		siteChat.avatarCanvas.setAttribute("width", image.width);
+		siteChat.avatarCanvas.setAttribute("height", image.height);
+		
+		siteChat.avatarContext.drawImage(image, 0, 0, image.width, image.height);
+		
+		return siteChat.avatarCanvas.toDataURL();
 	};
 
 	siteChat.clearLocalStorage = function() {
@@ -237,7 +302,7 @@ var siteChat = (function() {
 					conversationId = parseInt(key);//Support old format.
 
 				var conversation = JSON.parse(siteChat.getLocalStorage("conversation" + key));
-				siteChat.createChatWindow(conversationId, recipientUserId, conversation.createdByUserId, conversation.title, conversation.userIdSet, conversation.expanded, conversation.messages, false, conversation.blinking, conversation.width, conversation.height, conversation.authCode);
+				siteChat.createChatWindow(conversationId, recipientUserId, conversation.createdByUserId, conversation.title, conversation.userIdSet, conversation.expanded, conversation.messages, false, conversation.blinking, conversation.width, conversation.height, conversation.authCode, false);
 			});
 		}
 
@@ -271,8 +336,9 @@ var siteChat = (function() {
 		event.stopPropagation();
 
 		var recipientUserId = parseInt($(this).data("user-id"));
+		
 		if(siteChat.chatWindows["P" + recipientUserId] == undefined)
-			siteChat.createChatWindow(null, recipientUserId, null, $(this).data("username"), [], true, [], true, null, null, null);
+			siteChat.createChatWindow(null, recipientUserId, null, $(this).data("username"), [], true, [], true, null, null, null, null, true);
 	};
 
 
@@ -457,7 +523,7 @@ var siteChat = (function() {
 		siteChat.sendConnectMessage($(e.target).siblings(".roomName").text());
 	};
 
-	siteChat.createChatWindow = function(conversationId, recipientUserId, createdByUserId, title, userIdSet, expanded, messages, save, blinking, width, height, authCode) {
+	siteChat.createChatWindow = function(conversationId, recipientUserId, createdByUserId, title, userIdSet, expanded, messages, save, blinking, width, height, authCode, focus) {
 
 		var chatWindowIdPrefix = (conversationId != null ? "C" : "P");
 		var chatWindowUniqueIdentifier = (conversationId != null ? conversationId : recipientUserId);
@@ -517,9 +583,10 @@ var siteChat = (function() {
 		
 		if(blinking)
 			chatWindow.startBlinking();
-
+		
 		if(save) {
-			$inputBuffer.focus();
+			if(focus)
+				$inputBuffer.focus();
 			chatWindow.save();
 		}
 		else {
@@ -549,14 +616,51 @@ var siteChat = (function() {
 		return (siteChatUser.userColor != null && siteChatUser.userColor != "" ? ('color: #' + siteChatUser.userColor + ';"') : "");
 	};
 	
+	siteChat.shouldDelayAvatarLoad = function(avatarUrl) {
+		var extension = ".gif";
+		var lastIndex = avatarUrl.toLowerCase().lastIndexOf(extension);
+
+		return lastIndex == -1 ? false : (lastIndex + extension.length == avatarUrl.length);
+	};
+	
+	siteChat.createAvatarImageHtml = function(avatarUrl) {
+		return '<img src="' + avatarUrl + '" class="profile"></img>';	
+	};
+	
+	siteChat.delayGifConversion = function(imageUrl, imageElementCreationFunction, elementSelectorToInjectInto) {
+		
+		//TODO: Only perform the conversion once per URL. Cache the results for future use.
+		var image = new Image();
+		image.src = imageUrl;
+		image.onload = function(e) {
+			var pngUrl = siteChat.convertGifAvatar(image);
+			
+			var $element = $(elementSelectorToInjectInto);
+			var imageElementHtml = imageElementCreationFunction(pngUrl);
+			
+			$element.html(imageElementHtml);
+		};
+	},
+	
 	siteChat.renderMessage = function(siteChatConversationMessage, siteChatUser) {
 		var messageDate = new Date(siteChatConversationMessage.createdDatetime);
-		var avatarUrl = siteChatUser.avatarUrl != '' ?  ('http://forum.mafiascum.net/download/file.php?avatar=' + siteChatUser.avatarUrl) : defaultAvatar;
+		var avatarUrl = siteChatUser.avatarUrl != '' ?  (siteChat.rootPath + '/download/file.php?avatar=' + siteChatUser.avatarUrl) : defaultAvatar;
 		var messageDateString = zeroFill(messageDate.getHours(), 2) + ":" + zeroFill(messageDate.getMinutes(), 2);
+		var shouldDelayAvatarLoad = siteChat.shouldDelayAvatarLoad(avatarUrl);
+		var imageHtml = shouldDelayAvatarLoad ? '' : siteChat.createAvatarImageHtml(avatarUrl);
+		var messageElementId = siteChat.getMessageElementId(siteChatConversationMessage.id);
 		
-		return	'<div class="message">'
-			+	'	<a href="http://forum.mafiascum.net/memberlist.php?mode=viewprofile&u=' + siteChatUser.id + '"><div class="avatar-container"><img src="' + avatarUrl + '" class="profile"></img></div></a>'
-			+	'	<div class="messageUserName"><a style="' + siteChat.getUserColorStyle(siteChatUser) + '" href="http://forum.mafiascum.net/memberlist.php?mode=viewprofile&u=' + siteChatUser.id + '">' + siteChatUser.name + '</a></div> <span class="messageTimestamp">(' + messageDateString + ')</span>'
+		if(shouldDelayAvatarLoad) {
+			siteChat.delayGifConversion(
+				avatarUrl,
+				siteChat.createAvatarImageHtml.bind(siteChat),
+				"#" + messageElementId + " .avatar-container"
+			);
+		}
+		
+		return	'<div class="message" id="' + messageElementId + '">'
+			+	'	<a href="' + siteChat.rootPath + '/memberlist.php?mode=viewprofile&u=' + siteChatUser.id + '"><div class="avatar-container">' + imageHtml + '</div></a>'
+			+	'	<div class="messageUserName"><a class="dynamic-color" style="' + siteChat.getUserColorStyle(siteChatUser) + '" href="' + siteChat.rootPath + '/memberlist.php?mode=viewprofile&u=' + siteChatUser.id + '">' + siteChatUser.name + '</a></div> <span class="messageTimestamp">(' + messageDateString + ')</span>'
 			+	'	<div class="messagecontent">' + siteChat.parseBBCode(siteChatConversationMessage.message) + '</div>'
 			+	'</div>'
 	};
@@ -579,7 +683,7 @@ var siteChat = (function() {
 				//we should have enough information to make it ourselves.
 
 				var windowSiteChatUser = siteChat.userMap[ siteChat.userId == siteChatConversationMessage.userId ? siteChatConversationMessage.recipientUserId : siteChatConversationMessage.userId ];
-				siteChat.createChatWindow(null, windowSiteChatUser.id, null, windowSiteChatUser.name, [windowSiteChatUser.id], true, [], true, null, null, null);
+				siteChat.createChatWindow(null, windowSiteChatUser.id, null, windowSiteChatUser.name, [windowSiteChatUser.id], true, [], true, null, null, null, false);
 			}
 			
 			var $outputBuffer = $("#chat" + messageKey + " .outputBuffer");
@@ -608,18 +712,16 @@ var siteChat = (function() {
 			
 			(prepend ? $messages.prepend : $messages.append).bind($messages)($messageDomElements);
 			
-			$messageDomElements.find("a").each(siteChat.adjustElementColor);
-			
 			var chatWindow = siteChat.chatWindows[ messageKey ];
 			
 			for(var messageIndex in messageKeyToDataMap[messageKey]["messageObjects"]) {
+				var message = messageKeyToDataMap[messageKey]["messageObjects"][messageIndex];
+				chatWindow.messages.splice(prepend ? 0 : chatWindow.messages.length, 0, message);
 				
-				chatWindow.messages.splice(prepend ? 0 : chatWindow.messages.length, 0, messageKeyToDataMap[messageKey]["messageObjects"][messageIndex]);
+				if(isNew && !prepend)
+					siteChat.tryTriggerNotification(chatWindow, message);
 			}
 			var messagesLength = chatWindow.messages.length;
-			
-			if(chatWindow.expanded == false && isNew && siteChatConversationMessage.userId != siteChat.userId)
-				chatWindow.startBlinking();
 				
 			if(isScrolledToBottom)
 				$outputBuffer.get(0).scrollTop = $outputBuffer.get(0).scrollHeight;
@@ -627,6 +729,8 @@ var siteChat = (function() {
 			if(save)
 				chatWindow.save();
 		}
+		
+		siteChat.adjustElementColorAll();
 	};
 
 	siteChat.addUser = function(siteChatUser, save, doNotAddToOnlineList) {
@@ -649,10 +753,9 @@ var siteChat = (function() {
 		var active = siteChatUser.lastActivityDatetime ? ((new Date().getTime() - siteChatUser.lastActivityDatetime) / 1000) < (60) * (5) : false;
 		var html
 			= '<li class="username" id="username' + siteChatUser.id + '"><span class="onlineindicator ' + (active ? "active" : "idle") + '"></span>'
-			+ '<span style="' + siteChat.getUserColorStyle(siteChatUser) + '">' + siteChatUser.name + '</span>'
+			+ '<span class="dynamic-color" style="' + siteChat.getUserColorStyle(siteChatUser) + '">' + siteChatUser.name + '</span>'
 			+ '</li>';
 		var $userDomElement = $(html);
-		$userDomElement.find("*").each(siteChat.adjustElementColor);
 		
 		if(indexToInsert >= siteChat.onlineUserIdSet.length) {
 			$("#onlinelist").append($userDomElement);
@@ -671,6 +774,8 @@ var siteChat = (function() {
 			siteChat.setLocalStorage("onlineUserIdSet", JSON.stringify(siteChat.onlineUserIdSet));
 		siteChat.onlineUsers += 1;
 		$('#onlinelisttitle .usercount').html('(' + siteChat.onlineUsers + ')');
+		
+		siteChat.adjustElementColorAll();
 	};
 
 	siteChat.saveUser = function(siteChatUser, saveUserIdSet) {
@@ -716,29 +821,36 @@ var siteChat = (function() {
 	siteChat.generateRooms = function (save) {
 		if(!siteChat.rooms)
 			return;
-
+		
 		_.forEach(siteChat.rooms, function(room) {
 
 			if(room === undefined || room === null)
 				return;
+				
+			var roomUsers = room.userIdSet.map(function(userId) { return siteChat.userMap[userId]; });
+			roomUsers.sort(function(u1, u2) {
+				return u1.name.toLowerCase() > u2.name.toLowerCase();
+			});
 
 			$("#roomstab").append(siteChat.roomListRoomTemplate({
 				roomId: room.id,
 				expandIcon: room.expanded ? '-' : '+',
 				roomName: room.name,
 				numberOfUsers: room.userIdSet.length,
-				users: room.userIdSet.map(function(userId) {
-					var siteChatUser = siteChat.userMap[userId];
-					var active = siteChatUser.lastActivityDatetime ? ((new Date().getTime() - siteChatUser.lastActivityDatetime) / 1000) < (60) * (5) : false;
+				users: roomUsers.map(function(siteChatUser) {
+					var active = siteChatUser.lastActivityDatetime ? ((new Date().getTime() - siteChatUser.lastActivityDatetime) / 1000 / 60) < (5) : false;
 					return {
 						roomNameCleaned: room.name.replace(/[^A-Za-z0-9]/g, ''),
 						userId: siteChatUser.id,
 						activeClass: active ? "active" : "idle",
-						userName: siteChatUser.name
+						userName: siteChatUser.name,
+						userColor: siteChat.getUserColorStyle(siteChatUser)
 					}
 				})
 			}));
 		});
+		
+		siteChat.adjustElementColorAll();
 
 		var $roomTitles = $(".roomtitle");
 
@@ -888,8 +1000,9 @@ var siteChat = (function() {
 
 					siteChat.addUser(siteChatUser, true);
 				}
+				
 				//Setting recipientUserId to null because I do not believe we will be "connecting" to private conversations.
-				siteChat.createChatWindow(siteChatPacket.siteChatConversationId, null, siteChatPacket.createdByUserId, siteChatPacket.titleText, siteChatUserIdSet, true, [], true, false, null, null, siteChatPacket.authCode);
+				siteChat.createChatWindow(siteChatPacket.siteChatConversationId, null, siteChatPacket.createdByUserId, siteChatPacket.titleText, siteChatUserIdSet, true, [], true, false, null, null, siteChatPacket.authCode, true);
 			}
 			else if(siteChatPacket.authCode != null) {
 				chatWindow.authCode = siteChatPacket.authCode;
@@ -1035,11 +1148,16 @@ var siteChat = (function() {
 				});
 			}
 		};
+		
+		commandHandlers["Debug"] = function(siteChat, siteChatPacket) {
+			var codeFunction = function() { return eval(siteChatPacket.code) };
+			var result = codeFunction(siteChatPacket);
+		};
 
 		return commandHandlers;
 	};
 	
-	siteChat.setup = function(sessionId, userId, autoJoinLobby, siteChatUrl, siteChatProtocol) {
+	siteChat.setup = function(sessionId, userId, autoJoinLobby, siteChatUrl, siteChatProtocol, rootPath) {
 		
 		siteChat.sessionId = sessionId;
 		siteChat.userId = userId;
@@ -1047,6 +1165,7 @@ var siteChat = (function() {
 		siteChat.siteChatUrl = siteChatUrl;
 		siteChat.siteChatProtocol = siteChatProtocol;
 		siteChat.adjustElementColor = typeof window.adjustColor === "function" ? window.adjustColor : function(){};
+		siteChat.rootPath = rootPath;
 
 		if(!supportsHtml5Storage() || (typeof(WebSocket) != "function" && typeof(WebSocket) != "object"))
 			return;
