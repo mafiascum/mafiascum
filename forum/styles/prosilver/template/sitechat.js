@@ -171,17 +171,15 @@ var siteChat = (function() {
 	
 	siteChat.notifications.push({
 		id: 100,
-		channelMessage: false,
-		privateMessage: false,
-		pattern: "kison",
+		channelMessage: true,
+		privateMessage: true,
+		pattern: null,
 		blink: true,
-		sound: true,
-		patternObject: RegExp("kison")
+		sound: false,
+		patternObject: null
 	});
 	
 	siteChat.tryTriggerNotification = function(chatWindow, message) {
-		//console.log("Chat Window:", chatWindow);
-		//console.log("Message:", message);
 		
 		if(message.userId == siteChat.userId)
 			return;//Message sent by self.
@@ -217,7 +215,7 @@ var siteChat = (function() {
 
 	siteChat.setLocalStorage = function(key, value) {
 		if(arguments.length != 2)
-			throw "Invalis number of arguments: " + arguments.length;
+			throw "Invalid number of arguments: " + arguments.length;
 		localStorage[siteChat.namespace + key] = value;
 	};
 

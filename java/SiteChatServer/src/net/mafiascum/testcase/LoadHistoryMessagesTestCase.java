@@ -13,7 +13,7 @@ public class LoadHistoryMessagesTestCase extends TestCase {
   
   public void execute() throws Exception {
     
-    queryUtil.executeConnectionNoReturn(provider, connection -> {
+    queryUtil.executeConnectionNoResult(provider, connection -> {
       
       testConversationAllExisting(connection);
       testConversationSomeMissing(connection);

@@ -5,7 +5,6 @@ import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import net.mafiascum.jdbc.BatchInsertStatement;
 import net.mafiascum.phpbb.usergroup.UserGroup;
@@ -48,8 +47,8 @@ public class SiteChatUtil extends MSUtil {
   
   public void deleteUserGroup(Connection connection, int userId, int groupId) throws SQLException {
     String sql = " DELETE FROM " + queryUtil.getTableName(UserGroup.class)
-               + " WHERE user_id=" + userId
-               + " AND group_id=" + groupId;
+               + " WHERE " + sqlUtil.escapeQuoteColumnName(UserGroup.USER_ID_COLUMN) + "=" + userId
+               + " AND " + sqlUtil.escapeQuoteColumnName(UserGroup.GROUP_ID_COLUMN) + "=" + groupId;
     
     queryUtil.executeStatement(connection, statement -> statement.executeUpdate(sql));
   }
@@ -135,22 +134,21 @@ public class SiteChatUtil extends MSUtil {
     return queryUtil.getSingleIntValueResult(connection, sql);
   }
   
-  public Set<Integer> getBannedUserIdSet(Connection connection) throws SQLException {
-    
-      String sql = " SELECT user_id"
-                 + " FROM phpbb_user_group"
-                 + " WHERE group_id = " + BANNED_USERS_GROUP_ID
-                 + " AND group_leader = " + sqlUtil.encodeBooleanInt(false);
-      
-      return queryUtil.getIntegerSet(connection, sql, "user_id");
+  public List<UserGroup> getBanUserGroups(Connection connection) throws SQLException {
+    String criteria = sqlUtil.escapeQuoteColumnName(UserGroup.GROUP_ID_COLUMN) + "=" + BANNED_USERS_GROUP_ID;
+    return queryUtil.retrieveDataObjectList(connection, criteria, UserGroup.class);
+  }
+  
+  public void addUserToUserGroup(Connection connection, int userId, int userGroupId) throws SQLException {
+    new UserGroup(true, userGroupId, userId, false, false, 0).storeInsertIgnore(connection, true);
   }
   
   public List<SiteChatConversationMessage> loadSiteChatConversationMessagesForConversation(Connection connection, int siteChatConversationId, int numberToLoad, Integer oldestMessageId) throws SQLException {
     
-    String criteria = " site_chat_conversation_id=" + siteChatConversationId
-                    + (oldestMessageId == null ? "" : (" AND id < " + oldestMessageId));
-  
-    return queryUtil.executeStatement(connection, statement -> queryUtil.retrieveDataObjectList(connection.createStatement(), criteria, "id DESC", null, numberToLoad, SiteChatConversationMessage.class));
+    String criteria = " " + sqlUtil.escapeQuoteColumnName(SiteChatConversationMessage.SITE_CHAT_CONVERSATION_ID_COLUMN) + "=" + siteChatConversationId
+                    + (oldestMessageId == null ? "" : (" AND " + sqlUtil.escapeQuoteColumnName(SiteChatConversationMessage.ID_COLUMN) + " < " + oldestMessageId));
+    
+    return queryUtil.retrieveDataObjectList(connection, criteria, "id DESC", String.valueOf(numberToLoad), SiteChatConversationMessage.class, false);
   }
 
   public List<SiteChatConversationMessage> loadSiteChatConversationMessagesForPrivateConversation(Connection connection, int userId1, int userId2, int numberToLoad, Integer oldestMessageId) throws SQLException {
@@ -159,7 +157,7 @@ public class SiteChatUtil extends MSUtil {
                     + " OR (recipient_user_id=" + userId2 + " AND user_id=" + userId1 + "))"
                     + (oldestMessageId == null ? "" : (" AND id < " + oldestMessageId));
     
-    return queryUtil.executeStatement(connection, statement -> queryUtil.retrieveDataObjectList(connection.createStatement(), criteria, "id+0 DESC", null, numberToLoad, SiteChatConversationMessage.class));
+    return queryUtil.retrieveDataObjectList(connection.createStatement(), criteria, "id+0 DESC", String.valueOf(numberToLoad), SiteChatConversationMessage.class, false);
   }
   
   public int getConversationUniqueIdentifier(String conversationUniqueKey) {

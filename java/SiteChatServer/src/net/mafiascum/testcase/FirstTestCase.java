@@ -12,7 +12,7 @@ public class FirstTestCase extends TestCase {
   
   public void execute() throws Exception {
     
-    queryUtil.executeConnectionNoReturn(provider, connection -> {
+    queryUtil.executeConnectionNoResult(provider, connection -> {
       
       //Test getting user map.
       Map<Integer, SiteChatUser> siteChatUserMap = siteChatUtil.loadSiteChatUserMap(provider.getConnection());
