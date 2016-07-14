@@ -1,5 +1,4 @@
 <?php
-//get phpbb shit
 	define('IN_PHPBB', true);
 	$phpbb_root_path = (defined('PHPBB_ROOT_PATH')) ? PHPBB_ROOT_PATH : './';
 	$phpEx = substr(strrchr(__FILE__, '.'), 1);
@@ -7,15 +6,18 @@
 	include($phpbb_root_path . 'includes/functions_display.' . $phpEx);
 	include($phpbb_root_path . 'includes/functions_posting.' . $phpEx);
 	include($phpbb_root_path . 'includes/functions_user.' . $phpEx);
-		
+	
+	$anon_user_id = $config['anon_user_id'];
+	
 	// Start session
 	$user->session_begin();
 	$auth->acl($user->data);
 	$user->setup('viewforum');
-	//$service_controller_id = 12696;
-	//check if has SE access
+	
+	// Check if user has Speakeasy forum access.
 	if (group_memberships(13671,$user->data['user_id'],true)){
-		//check if forum submitted
+		
+		// Check if form submitted.
 		$submit = request_var('submit', false);
 		$post = request_var('post_message', false);
 		$delete = request_var('delete_message', false);
@@ -25,8 +27,7 @@
 			$message = $db->sql_escape(htmlspecialchars($message));
 			$sql = 'INSERT INTO phpbb_anon_messages (user_id, message, is_posted) VALUES (' . $user->data['user_id'] .', "' . $message . '", 0)';
 			$db->sql_query($sql);
-			poke_chamber(str_replace(array('\r\n', '\n', '\r'),"<br/>",$message));
-			//mail('earljamesmason@gmail.com', 'New Anon Message', $message);
+			poke_chamber(str_replace(array('\r\n', '\n', '\r'),"<br/>",$message), $anon_user_id);
 			meta_refresh(3, 'forum.mafiascum.net/index.php');
 		} else if ($post){
 			$message_id = (int)request_var('message_id', 0);
@@ -46,7 +47,7 @@
 	} else {
 		$error[] = "You don't have speakeasy access";
 	}
-	function poke_chamber($message)
+	function poke_chamber($message, $anon_user_id)
 	{
 		global $user, $db, $phpbb_root_path, $phpEx;
 
@@ -68,8 +69,8 @@
 		generate_text_for_storage($message, $uid, $bitfield, $options, $allow_bbcode, $allow_urls, $allow_smilies);
 
 		$pm_data = array(
-			'address_list'			=> array('u' => array(12696 => 'to')),
-			'from_user_id'			=> 12696,
+			'address_list'			=> array('u' => array($anon_user_id => 'to')),
+			'from_user_id'			=> $anon_user_id,
 			'from_user_ip'			=> '127.0.0.1',
 			'from_username'			=> 'pie',
 			'enable_sig'			=> false,
@@ -85,7 +86,7 @@
 		);
 		$msg_id			= submit_pm('post', $subject, $pm_data);
 		$sender_id		= 'pie';
-		$receiver_id	= 12696;
+		$receiver_id	= $anon_user_id;
 
 		$recipients[$receiver_id] = 'to';
 		pm_notification('post', 'pie', $recipients, $subject, $pm_data['message'], $msg_id);
@@ -97,9 +98,10 @@
 	</head>
 	<body style='background-color: #1a1a1a; color: white; font-size: 90%; font-family: Verdana,Helvetica,Arial,sans-serif;'>
 <?php
-if ($submit){
+if ($submit) {
 	echo 'Question submtted successfully';
-} else if (empty($error)){
+}
+else if (empty($error)) {
 ?>
 		<a href="http://forum.mafiascum.net/index.php"><img src=http://forum.mafiascum.net/styles/mafblack/imageset/site_logo.png /></a>
 		<div style="background-color: #3F3F3F; border: #800 1px solid; padding: 2px; margin: 30px 3% 5px;">
@@ -166,10 +168,10 @@ $(document).ready(function(){
 } else {
 	echo '<p>"You don\'t have speakeasy access"</p>';
 }
-if ($user->data['user_id'] == 12696){
+if ($user->data['user_id'] == $anon_user_id) {
 	$sql = "SELECT * FROM phpbb_anon_messages WHERE is_posted=0";
 	$res = $db->sql_query($sql);
-	while ($row = $db->sql_fetchrow($res)){
+	while ($row = $db->sql_fetchrow($res)) {
 ?>
 	<div style='width:84%; margin-left: 8%; background-color: #313131; padding: 5px; margin-bottom: 10px'>
 		<p><?php if($reveal && $message_id == $row['message_id']){ echo '<b>user_id: </b>' . $message_user . '<br/><br/>';} echo  str_replace(array('\r\n', '\n', '\r'),"<br/>",$row['message']); ?></p>
