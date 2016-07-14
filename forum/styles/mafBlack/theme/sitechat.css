@@ -249,6 +249,27 @@
 	min-height: 40px;
 }
 
+#chatPanel .compact-visible {
+	display: none;
+}
+
+#chatPanel .compact-invisible {
+	display: initial;
+}
+
+#chatPanel.compact .compact-visible {
+	display: initial;
+}
+
+#chatPanel.compact .compact-invisible {
+	display: none;
+}
+
+#chatPanel.compact .chatWindow.expanded .outputBuffer .message {
+	padding: 0;
+	min-height: auto;
+}
+
 .chatWindow.expanded .outputBuffer .message .profile
 {
 	float: left;
@@ -273,6 +294,12 @@
 	font-size: 12px;
 	word-wrap: break-word;
 }
+
+#chatPanel.compact .chatWindow.expanded .outputBuffer .message .messagecontent
+{
+	display: inline;
+}
+
 .chatWindow.expanded .outputBuffer .message .messageUserName
 {
 	display: inline-block;
@@ -285,7 +312,6 @@
 {
 	font-size: 12px;
 }
-
 
 /*** Input Buffer ***/
 .chatWindow .inputBuffer
@@ -688,4 +714,8 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#888888', end
 	float: right;
 	font-size: 9px;
 	display: inline-block;
+}
+
+.chatPanel .medium-font {
+	font-size: 12px;
 }

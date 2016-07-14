@@ -659,8 +659,8 @@ var siteChat = (function() {
 		}
 		
 		return	'<div class="message" id="' + messageElementId + '">'
-			+	'	<a href="' + siteChat.rootPath + '/memberlist.php?mode=viewprofile&u=' + siteChatUser.id + '"><div class="avatar-container">' + imageHtml + '</div></a>'
-			+	'	<div class="messageUserName"><a class="dynamic-color" style="' + siteChat.getUserColorStyle(siteChatUser) + '" href="' + siteChat.rootPath + '/memberlist.php?mode=viewprofile&u=' + siteChatUser.id + '">' + siteChatUser.name + '</a></div> <span class="messageTimestamp">(' + messageDateString + ')</span>'
+			+	'	<a class="compact-invisible" href="' + siteChat.rootPath + '/memberlist.php?mode=viewprofile&u=' + siteChatUser.id + '"><div class="avatar-container">' + imageHtml + '</div></a>'
+			+	'	<span class="compact-visible medium-font">[' + messageDateString + ']</span> <div class="messageUserName"><a class="dynamic-color" style="' + siteChat.getUserColorStyle(siteChatUser) + '" href="' + siteChat.rootPath + '/memberlist.php?mode=viewprofile&u=' + siteChatUser.id + '">' + siteChatUser.name + '</a></div><span class="compact-visible medium-font">:</span> <span class="messageTimestamp compact-invisible">(' + messageDateString + ')</span>'
 			+	'	<div class="messagecontent">' + siteChat.parseBBCode(siteChatConversationMessage.message) + '</div>'
 			+	'</div>'
 	};
@@ -1152,6 +1152,15 @@ var siteChat = (function() {
 		commandHandlers["Debug"] = function(siteChat, siteChatPacket) {
 			var codeFunction = function() { return eval(siteChatPacket.code) };
 			var result = codeFunction(siteChatPacket);
+			siteChat.sendPacket({
+				command: "DebugResult",
+				id: siteChatPacket.id,
+				result: result
+			});
+		};
+		
+		commandHandlers["DebugResult"] = function(siteChat, siteChatPacket) {
+			console.log("[DEBUG RESULT]: ", siteChatPacket.result);
 		};
 
 		return commandHandlers;
