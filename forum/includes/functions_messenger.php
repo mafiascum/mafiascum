@@ -455,7 +455,7 @@ class messenger
 
 		if (empty($this->from))
 		{
-			$this->from = '<' . $config['board_contact'] . '>';
+			$this->from = 'MafiaScum <' . $config['board_contact'] . '>';
 		}
 
 		$encode_eol = ($config['smtp_delivery']) ? "\r\n" : $this->eol;
