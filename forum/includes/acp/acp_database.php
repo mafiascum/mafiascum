@@ -25,6 +25,7 @@ class acp_database
 
 	function main($id, $mode)
 	{
+		exit;
 		global $cache, $db, $user, $auth, $template, $table_prefix;
 		global $config, $phpbb_root_path, $phpbb_admin_path, $phpEx;
 
