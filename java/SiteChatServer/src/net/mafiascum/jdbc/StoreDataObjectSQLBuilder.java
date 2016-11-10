@@ -17,9 +17,7 @@ public class StoreDataObjectSQLBuilder extends StoreSQLBuilder {
     super(tableName);
   }
   
-private static final Logger logger = Logger.getLogger(StoreDataObjectSQLBuilder.class.getName());
   public void execute(Statement statement, IsNewDataObject dataObject) throws SQLException {
-    logger.info("Query: " + (dataObject.isNew() ? generateInsert() : generateUpdate()));
     statement.executeUpdate(dataObject.isNew() ? generateInsert() : generateUpdate());
   }
   

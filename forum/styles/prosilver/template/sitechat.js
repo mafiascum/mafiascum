@@ -205,7 +205,6 @@ var siteChat = (function() {
 			chatWindow.startBlinking();
 		if(triggeredNotification.sound) {
 			//TODO: Play sound.
-			console.log("Playing sound.");
 		}
 	};
 
