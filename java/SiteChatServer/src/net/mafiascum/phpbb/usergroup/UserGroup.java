@@ -13,6 +13,12 @@ import net.mafiascum.util.QueryUtil;
 @Table(tableName="phpbb_user_group")
 public class UserGroup implements DataObject, IsNewDataObject {
 
+  public static final String GROUP_ID_COLUMN = "group_id";
+  public static final String USER_ID_COLUMN = "user_id";
+  public static final String GROUP_LEADER_COLUMN = "group_leader";
+  public static final String USER_PENDING_COLUMN = "user_pending";
+  public static final String AUTO_REMOVE_TIME_COLUMN = "auto_remove_time";
+  
   protected int groupId;
   protected int userId;
   protected boolean groupLeader;
@@ -26,6 +32,7 @@ public class UserGroup implements DataObject, IsNewDataObject {
   }
   
   public UserGroup(boolean isNew, int groupId, int userId, boolean groupLeader, boolean userPending, int autoRemoveTime) {
+    this();
     init(isNew, groupId, userId, groupLeader, userPending, autoRemoveTime);
   }
   
@@ -79,31 +86,35 @@ public class UserGroup implements DataObject, IsNewDataObject {
   public void loadFromResultSet(ResultSet resultSet) throws SQLException {
     
     init(false,
-         resultSet.getInt("group_id"),
-         resultSet.getInt("user_id"),
-         QueryUtil.get().getIntBoolean(resultSet, "group_leader"),
-         QueryUtil.get().getIntBoolean(resultSet, "user_pending"),
-         resultSet.getInt("auto_remove_time")
+         resultSet.getInt(GROUP_ID_COLUMN),
+         resultSet.getInt(USER_ID_COLUMN),
+         QueryUtil.get().getIntBoolean(resultSet, GROUP_LEADER_COLUMN),
+         QueryUtil.get().getIntBoolean(resultSet, USER_PENDING_COLUMN),
+         resultSet.getInt(AUTO_REMOVE_TIME_COLUMN)
     );
   }
   
   public void store(Connection connection) throws SQLException {
-    
+    storeInsertIgnore(connection, false);
+  }
+  
+  public void storeInsertIgnore(Connection connection, boolean insertIgnore) throws SQLException {
     QueryUtil.get().executeStatement(connection, statement -> {
       
       StoreDataObjectSQLBuilder builder = new StoreDataObjectSQLBuilder(QueryUtil.get().getTableName(getClass()));
       
-      builder.put("group_id", getGroupId())
-             .put("user_id", getUserId())
-             .put("group_leader", getGroupLeader())
-             .put("user_pending", getUserPending())
-             .put("auto_remove_time", getAutoRemoveTime())
-             .putPrimaryKey("group_id", getGroupId())
-             .putPrimaryKey("user_id", getUserId());
+      builder.put(GROUP_ID_COLUMN, getGroupId())
+             .put(USER_ID_COLUMN, getUserId())
+             .put(GROUP_LEADER_COLUMN, getGroupLeader())
+             .put(USER_PENDING_COLUMN, getUserPending())
+             .put(AUTO_REMOVE_TIME_COLUMN, getAutoRemoveTime())
+             .putPrimaryKey(GROUP_ID_COLUMN, getGroupId())
+             .putPrimaryKey(USER_ID_COLUMN, getUserId());
       
+      builder.setInsertIgnore(insertIgnore);
       builder.execute(statement, this);
       
       return null;
-    });
+    });    
   }
 }

@@ -1,0 +1,19 @@
+#!/bin/bash
+set -e ### Fail on error.
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+FORUM_DIR_NAME="forum-test"
+source $DIR"/ProdConfig"
+
+GIT_DIR="$DIR/git-repo"
+
+echo "Pulling Repository Updates..."
+git -C "$GIT_DIR" pull
+
+echo "Synchronizing Files..."
+sudo rsync -rv --checksum --ignore-times "$GIT_DIR/forum/" "$WWW/$FORUM_DIR_NAME/"
+
+echo "Setting Ownership..."
+sudo chown -R www-data:www-data "$WWW/$FORUM_DIR_NAME/"
+
+echo "Done!"

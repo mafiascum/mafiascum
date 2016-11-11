@@ -98,9 +98,10 @@ interface iAuthPlugin {
 	 * Modify options in the login template.
 	 *
 	 * @param $template UserLoginTemplate object.
+	 * @param $type 'signup' or 'login'. Added in 1.16.
 	 * @public
 	 */
-	public function modifyUITemplate( &$template );
+	public function modifyUITemplate( &$template, &$type );
 
 	/**
 	 * Set the domain this plugin is supposed to use when authenticating.

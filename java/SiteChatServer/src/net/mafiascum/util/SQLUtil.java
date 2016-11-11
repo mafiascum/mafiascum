@@ -245,4 +245,20 @@ public class SQLUtil extends MSUtil {
       return (preceedingSpace ? " " : "") + "LIMIT " + offset + "," + Integer.MAX_VALUE;
     return (preceedingSpace ? " " : "") + "LIMIT " + offset + "," + fetchSize;
   }
+  
+  public <T> String escapeQuoteColumnName(Class<T> dbObjectClass, String columnName) {
+    
+    String tableName = queryUtil.getTableName(dbObjectClass);
+    return escapeQuoteColumnName(tableName, columnName);
+  }
+  
+  public <T> String escapeQuoteColumnName(String tableName, String columnName) {
+    if(tableName == null)
+      return escapeQuoteColumnName(columnName);
+    return escapeQuoteColumnName(tableName) + "." + escapeQuoteColumnName(columnName);
+  }
+  
+  public String escapeQuoteColumnName(String columnName) {
+    return "`" + columnName.replaceAll("`", "") + "`";
+  }
 }

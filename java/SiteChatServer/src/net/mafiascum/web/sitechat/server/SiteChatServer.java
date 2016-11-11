@@ -14,10 +14,13 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import net.mafiascum.arguments.CommandLineArguments;
 import net.mafiascum.json.DateUnixTimestampSerializer;
 import net.mafiascum.provider.Provider;
+import net.mafiascum.util.MiscUtil;
 import net.mafiascum.util.QueryUtil;
 import net.mafiascum.util.StringUtil;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatBarebonesConversation;
@@ -68,13 +71,15 @@ public class SiteChatServer extends Server implements SignalHandler {
 
   protected volatile Map<Integer, Date> userIdToLastNetworkActivityDatetime = new HashMap<Integer, Date>();
   protected volatile Map<Integer, SiteChatUser> siteChatUserMap = new HashMap<Integer, SiteChatUser>();
+  protected volatile Map<String, SiteChatUser> usernameToUserMap = new HashMap<String, SiteChatUser>();
   protected volatile Map<Integer, List<SiteChatWebSocket>> userIdToSiteChatWebSocketsMap = new HashMap<Integer, List<SiteChatWebSocket>>();
   protected volatile List<SiteChatConversationMessage> siteChatConversationMessagesToSave = new LinkedList<SiteChatConversationMessage>();
-  protected volatile Set<Integer> bannedUserIdSet = new HashSet<Integer>();
+  
   protected SiteChatServerServiceThread serviceThread;
+  protected BanManager banManager;
 
   protected final long MILLISECONDS_UNTIL_USER_IS_INACTIVE = (1000) * (60) * (5);
-  protected final int MESSAGE_BATCH_SIZE = 25;
+  protected final int MESSAGE_BATCH_SIZE = 1;
   protected volatile int topSiteChatConversationMessageId;
 
   protected static Logger logger = Logger.getLogger(SiteChatServer.class.getName());
@@ -94,7 +99,7 @@ public class SiteChatServer extends Server implements SignalHandler {
   }
   
   public void setup(int port) throws Exception {
-    queryUtil.executeConnectionNoReturn(provider, connection -> {
+    queryUtil.executeConnectionNoResult(provider, connection -> {
       //Add handler for interruption signal.
       Signal.handle(new Signal("INT"), this);
       Signal.handle(new Signal("TERM"), this);
@@ -131,6 +136,7 @@ public class SiteChatServer extends Server implements SignalHandler {
 
       logger.info("Loading Site Chat Users...");
       this.siteChatUserMap = siteChatUtil.loadSiteChatUserMap(connection);
+      this.usernameToUserMap = buildUsernameToUserMap(this.siteChatUserMap);
 
       logger.info("Loading Site Chat Conversations...");
       List<SiteChatConversation> siteChatConversationList = siteChatUtil.getSiteChatConversations(connection);
@@ -146,33 +152,17 @@ public class SiteChatServer extends Server implements SignalHandler {
       topSiteChatConversationMessageId = siteChatUtil.getTopSiteChatConversationMessageId(connection);
 
       logger.info("Loading Banned User ID Set...");
+      this.banManager = new BanManager(this, siteChatUtil, queryUtil, provider);
       refreshBannedUserList();
     });
   }
-
-  public boolean isUserBanned(int userId) throws Exception {
-
-    return bannedUserIdSet.contains(userId);
+  
+  protected Map<String, SiteChatUser> buildUsernameToUserMap(Map<Integer, SiteChatUser> siteChatUserMap) {
+    return MiscUtil.get().map(this.siteChatUserMap.values(), user -> user.getName().toLowerCase());
   }
-
-  public void refreshBannedUserList() throws Exception {
-
-    Set<Integer> newBannedUserIdSet;
-
-    newBannedUserIdSet = queryUtil.executeConnection(provider, connection -> siteChatUtil.getBannedUserIdSet(connection));
-
-    //Disconnect all newly banned users.
-    for(Integer userId : newBannedUserIdSet) {
-
-      if(!bannedUserIdSet.contains(userId)) {
-
-        removeUser(userId);
-      }
-    }
-
-    bannedUserIdSet.clear();
-    bannedUserIdSet = newBannedUserIdSet;
-    logger.debug("Banned User ID Set: " + bannedUserIdSet.size());
+  
+  public void refreshBannedUserList() throws SQLException {
+    banManager.loadUserGroups(queryUtil.executeConnection(provider, connection -> siteChatUtil.getBanUserGroups(connection)));
   }
 
   public void printContainerSizes() {
@@ -247,6 +237,9 @@ public class SiteChatServer extends Server implements SignalHandler {
     synchronized(this.siteChatUserMap) {
       siteChatUserMap.put(siteChatUser.getId(), siteChatUser);
     }
+    synchronized(this.usernameToUserMap) {
+      this.usernameToUserMap.put(siteChatUser.getName().toLowerCase(), siteChatUser);
+    }
   }
 
   public Map<Integer, SiteChatUser> getSiteChatUserMap(Collection<Integer> userIdCollection) {
@@ -279,7 +272,7 @@ public class SiteChatServer extends Server implements SignalHandler {
     siteChatConversation.setCreatedDatetime(new Date());
     siteChatConversation.setName(siteChatConversationName);
 
-    queryUtil.executeConnectionNoReturn(provider, connection -> siteChatUtil.putSiteChatConversation(connection, siteChatConversation));
+    queryUtil.executeConnectionNoResult(provider, connection -> siteChatUtil.putSiteChatConversation(connection, siteChatConversation));
 
     SiteChatConversationWithUserList siteChatConversationWithUserList = new SiteChatConversationWithUserList();
     siteChatConversationWithUserList.setSiteChatConversation(siteChatConversation);
@@ -294,6 +287,12 @@ public class SiteChatServer extends Server implements SignalHandler {
 
     synchronized(this.siteChatUserMap) {
       return siteChatUserMap.get(userId);
+    }
+  }
+  
+  public SiteChatUser getSiteChatUser(String name) {
+    synchronized(this.usernameToUserMap) {
+      return usernameToUserMap.get(name.toLowerCase());
     }
   }
 
@@ -379,7 +378,7 @@ public class SiteChatServer extends Server implements SignalHandler {
 
         siteChatConversation.setPassword(stringUtil.isNullOrEmptyTrimmedString(password) ? null : stringUtil.getSHA1(password));
 
-        queryUtil.executeConnectionNoReturn(provider, connection -> siteChatUtil.putSiteChatConversation(connection, siteChatConversation));
+        queryUtil.executeConnectionNoResult(provider, connection -> siteChatUtil.putSiteChatConversation(connection, siteChatConversation));
       }
     }
   }
@@ -449,16 +448,18 @@ public class SiteChatServer extends Server implements SignalHandler {
     lagLogger.debug("User Cache Refreshed.");
 
     synchronized(this.siteChatUserMap) {
-
-      //Since we reloaded the map, we need to set the last activity datetime to what it is on the original map.
-      SiteChatUser siteChatUser;
-      for(int userId : this.siteChatUserMap.keySet()) {
-
-        if( (siteChatUser = siteChatUserMap.get(userId)) != null ) {
-          siteChatUser.setLastActivityDatetime(this.siteChatUserMap.get(userId).getLastActivityDatetime());
+      synchronized(this.usernameToUserMap) {
+        //Since we reloaded the map, we need to set the last activity datetime to what it is on the original map.
+        SiteChatUser siteChatUser;
+        for(int userId : this.siteChatUserMap.keySet()) {
+  
+          if( (siteChatUser = siteChatUserMap.get(userId)) != null ) {
+            siteChatUser.setLastActivityDatetime(this.siteChatUserMap.get(userId).getLastActivityDatetime());
+          }
         }
+        this.siteChatUserMap = siteChatUserMap;
+        this.usernameToUserMap = buildUsernameToUserMap(siteChatUserMap);
       }
-      this.siteChatUserMap = siteChatUserMap;
     }
   }
 
@@ -633,7 +634,7 @@ public class SiteChatServer extends Server implements SignalHandler {
 
     synchronized(siteChatConversationMessagesToSave) {
 
-      queryUtil.executeConnectionNoReturn(provider, connection -> siteChatUtil.putNewSiteChatConversationMessages(connection, siteChatConversationMessagesToSave));
+      queryUtil.executeConnectionNoResult(provider, connection -> siteChatUtil.putNewSiteChatConversationMessages(connection, siteChatConversationMessagesToSave));
       siteChatConversationMessagesToSave.clear();
     }
   }
@@ -802,6 +803,41 @@ public class SiteChatServer extends Server implements SignalHandler {
 
         sendOutboundPacketToUsers(siteChatUserMap.keySet(), siteChatOutboundUserJoinPacket, siteChatUser.getId());
       }
+    }
+  }
+  
+  public void processChannelCommand(SiteChatUser user, String message) throws Exception {
+    Pattern pattern = Pattern.compile("^/(\\w+)\\s+(.*?)$");
+    Matcher matcher = pattern.matcher(message);
+    
+    if(!matcher.find())
+      return;//TODO: Notify user of invalid command.
+    
+    String command = matcher.group(1).toLowerCase();
+    String remainder = matcher.group(2);
+    
+    if(command.equals("ban")) {
+      SiteChatUser targetUser = getSiteChatUser(remainder);
+      
+      if(!banManager.isBanAdmin(user.getId()))
+        return;
+      if(targetUser == null)
+        return;//TODO: Notify.
+      
+      banManager.banUser(targetUser.getId());
+    }
+    else if(command.equals("unban")) {
+      SiteChatUser targetUser = getSiteChatUser(remainder);
+      
+      if(!banManager.isBanAdmin(user.getId()))
+        return;
+      if(targetUser == null)
+        return;//TODO: Notify.
+      
+      banManager.unbanUser(targetUser.getId());
+    }
+    else {
+      //TODO: Notify.
     }
   }
 
@@ -1001,5 +1037,9 @@ public class SiteChatServer extends Server implements SignalHandler {
   public void setSiteChatConversationWithMemberListMap(
       Map<Integer, SiteChatConversationWithUserList> siteChatConversationWithMemberListMap) {
     this.siteChatConversationWithMemberListMap = siteChatConversationWithMemberListMap;
+  }
+  
+  public BanManager getBanManager() {
+    return banManager;
   }
 }

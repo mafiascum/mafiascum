@@ -1,5 +1,6 @@
 package net.mafiascum.web.sitechat.server.inboundpacket.operator;
 
+import java.io.IOException;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -27,8 +28,7 @@ public class SiteChatInboundSendMessagePacketOperator extends SiteChatInboundSig
   public void process(SiteChatServer siteChatServer, SiteChatUser siteChatUser, SiteChatWebSocket siteChatWebSocket, String siteChatInboundPacketJson) throws Exception {
 
     logger.trace("Processing SendChat Message...");
-    SiteChatInboundSendMessagePacket siteChatInboundSendMessagePacket = new Gson().fromJson(siteChatInboundPacketJson, SiteChatInboundSendMessagePacket.class);
-    Set<Integer> sendToUserIdSet;
+    SiteChatInboundSendMessagePacket sendMessagePacket = new Gson().fromJson(siteChatInboundPacketJson, SiteChatInboundSendMessagePacket.class);
     SiteChatConversationWithUserList siteChatConversationWithUserList = null;
     SiteChatUser siteChatRecipientUser = null;
     
@@ -39,9 +39,9 @@ public class SiteChatInboundSendMessagePacketOperator extends SiteChatInboundSig
       siteChatUser.setLastActivityDatetime(new Date());
     }
     
-    if(siteChatInboundSendMessagePacket.getSiteChatConversationId() != null) {
-      logger.debug("Site Chat Conversatin ID: " + siteChatInboundSendMessagePacket.getSiteChatConversationId());
-      siteChatConversationWithUserList = siteChatServer.getSiteChatConversationWithUserList(siteChatInboundSendMessagePacket.getSiteChatConversationId());
+    if(sendMessagePacket.getSiteChatConversationId() != null) {
+      logger.debug("Site Chat Conversatin ID: " + sendMessagePacket.getSiteChatConversationId());
+      siteChatConversationWithUserList = siteChatServer.getSiteChatConversationWithUserList(sendMessagePacket.getSiteChatConversationId());
     
       if(siteChatConversationWithUserList == null) {
       
@@ -55,30 +55,47 @@ public class SiteChatInboundSendMessagePacketOperator extends SiteChatInboundSig
         return;//User is not in the conversation.
       }
     }
-    else if(siteChatInboundSendMessagePacket.getRecipientUserId() != null) {
+    else if(sendMessagePacket.getRecipientUserId() != null) {
       
-      logger.debug("Recipient User ID: " + siteChatInboundSendMessagePacket.getRecipientUserId());
-      siteChatRecipientUser = siteChatServer.getSiteChatUser(siteChatInboundSendMessagePacket.getRecipientUserId());
+      logger.debug("Recipient User ID: " + sendMessagePacket.getRecipientUserId());
+      siteChatRecipientUser = siteChatServer.getSiteChatUser(sendMessagePacket.getRecipientUserId());
       if(siteChatRecipientUser == null) {
         
-        logger.debug("Target user `" + siteChatInboundSendMessagePacket.getRecipientUserId() + "` does not exist.");
+        logger.debug("Target user `" + sendMessagePacket.getRecipientUserId() + "` does not exist.");
         return;
       }
     }
-
+    
     //Truncate long messages.
-    if(siteChatInboundSendMessagePacket.getMessage().length() > siteChatUtil.MAX_SITE_CHAT_CONVERSATION_MESSAGE_LENGTH) {
+    if(sendMessagePacket.getMessage().length() > siteChatUtil.MAX_SITE_CHAT_CONVERSATION_MESSAGE_LENGTH) {
       
-      siteChatInboundSendMessagePacket.setMessage(siteChatInboundSendMessagePacket.getMessage().substring(0, siteChatUtil.MAX_SITE_CHAT_CONVERSATION_MESSAGE_LENGTH));
+      sendMessagePacket.setMessage(sendMessagePacket.getMessage().substring(0, siteChatUtil.MAX_SITE_CHAT_CONVERSATION_MESSAGE_LENGTH));
     }
     
-    SiteChatConversationMessage siteChatConversationMessage = siteChatServer.recordSiteChatConversationMessage(siteChatUser.getId(), siteChatInboundSendMessagePacket.getSiteChatConversationId(), siteChatInboundSendMessagePacket.getRecipientUserId(), siteChatInboundSendMessagePacket.getMessage());
-    siteChatConversationMessage = siteChatConversationMessage.clone();
-    siteChatConversationMessage.setMessage(stringUtil.escapeHTMLCharacters(siteChatConversationMessage.getMessage()));
+    if(sendMessagePacket.getMessage().startsWith("/"))
+      siteChatServer.processChannelCommand(siteChatUser, sendMessagePacket.getMessage());
+    else {
+      SiteChatConversationMessage message = siteChatServer.recordSiteChatConversationMessage(siteChatUser.getId(), sendMessagePacket.getSiteChatConversationId(), sendMessagePacket.getRecipientUserId(), sendMessagePacket.getMessage());
+      message = message.clone();
+      message.setMessage(stringUtil.escapeHTMLCharacters(message.getMessage()));
+      
+      sendOutboundMessage(siteChatConversationWithUserList, siteChatUser, siteChatServer, siteChatRecipientUser, message);
+    }
+  }
+  
+  protected void sendOutboundMessage(
+      SiteChatConversationWithUserList siteChatConversationWithUserList,
+      SiteChatUser siteChatUser,
+      SiteChatServer siteChatServer,
+      SiteChatUser siteChatRecipientUser,
+      SiteChatConversationMessage message
+  ) throws IOException {
+    
+    Set<Integer> sendToUserIdSet;
     
     //Send the message to all users in the conversation(including the user who sent it).
     SiteChatOutboundNewMessagePacket siteChatOutboundNewMessagePacket = new SiteChatOutboundNewMessagePacket();
-    siteChatOutboundNewMessagePacket.setSiteChatConversationMessage(siteChatConversationMessage);
+    siteChatOutboundNewMessagePacket.setSiteChatConversationMessage(message);
     
     //Build recipient user ID set.
     if(siteChatConversationWithUserList != null)
@@ -93,6 +110,6 @@ public class SiteChatInboundSendMessagePacketOperator extends SiteChatInboundSig
     SiteChatServer.lagLogger.debug("Sending NewMessage Packets To Users.");
     siteChatServer.sendOutboundPacketToUsers(sendToUserIdSet, siteChatOutboundNewMessagePacket, null);
     long timeBetween = System.currentTimeMillis() - timeBefore;
-    SiteChatServer.lagLogger.debug("NewMessage Packet Sent. Duration: " + timeBetween + " ms.");
+    SiteChatServer.lagLogger.debug("NewMessage Packet Sent. Duration: " + timeBetween + " ms.");    
   }
 }

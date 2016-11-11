@@ -15,6 +15,13 @@ import net.mafiascum.web.misc.DataObjectWithIntID;
 
 @Table(tableName="siteChatConversationMessage")
 public class SiteChatConversationMessage extends DataObjectWithIntID implements DataObject, BatchInsertable, Cloneable {
+
+  public static final String ID_COLUMN = "id";
+  public static final String USER_ID_COLUMN = "user_id";
+  public static final String CREATED_DATETIME_COLUMN = "created_datetime";
+  public static final String SITE_CHAT_CONVERSATION_ID_COLUMN = "site_chat_conversation_id";
+  public static final String RECIPIENT_USER_ID_COLUMN = "recipient_user_id";
+  public static final String MESSAGE_COLUMN = "message";
   
   protected int userId;
   protected Date createdDatetime;
@@ -83,12 +90,12 @@ public class SiteChatConversationMessage extends DataObjectWithIntID implements 
   }
   
   public void setBatchInsertStatementColumns(BatchInsertStatement batchInsertStatement) throws SQLException {
-    batchInsertStatement.addField("id");
-    batchInsertStatement.addField("site_chat_conversation_id");
-    batchInsertStatement.addField("user_id");
-    batchInsertStatement.addField("recipient_user_id");
-    batchInsertStatement.addField("created_datetime");
-    batchInsertStatement.addField("message");
+    batchInsertStatement.addField(ID_COLUMN);
+    batchInsertStatement.addField(SITE_CHAT_CONVERSATION_ID_COLUMN);
+    batchInsertStatement.addField(USER_ID_COLUMN);
+    batchInsertStatement.addField(RECIPIENT_USER_ID_COLUMN);
+    batchInsertStatement.addField(CREATED_DATETIME_COLUMN);
+    batchInsertStatement.addField(MESSAGE_COLUMN);
   }
   
   public void addToBatchInsertStatement(BatchInsertStatement batchInsertStatement) throws SQLException {
@@ -106,12 +113,12 @@ public class SiteChatConversationMessage extends DataObjectWithIntID implements 
   
   public void loadFromResultSet(ResultSet resultSet) throws SQLException {
     
-    setId(resultSet.getInt("id"));
-    setSiteChatConversationId(QueryUtil.get().getInteger(resultSet, "site_chat_conversation_id"));
-    setUserId(resultSet.getInt("user_id"));
-    setCreatedDatetime(resultSet.getTimestamp("created_datetime"));
-    setMessage(resultSet.getString("message"));
-    setRecipientUserId(QueryUtil.get().getInteger(resultSet, "recipient_user_id"));
+    setId(resultSet.getInt(ID_COLUMN));
+    setSiteChatConversationId(QueryUtil.get().getInteger(resultSet, SITE_CHAT_CONVERSATION_ID_COLUMN));
+    setUserId(resultSet.getInt(USER_ID_COLUMN));
+    setCreatedDatetime(resultSet.getTimestamp(CREATED_DATETIME_COLUMN));
+    setMessage(resultSet.getString(MESSAGE_COLUMN));
+    setRecipientUserId(QueryUtil.get().getInteger(resultSet, RECIPIENT_USER_ID_COLUMN));
   }
   
   public void store(Connection connection) throws SQLException {
@@ -120,11 +127,11 @@ public class SiteChatConversationMessage extends DataObjectWithIntID implements 
       
       StoreDataObjectSQLBuilder builder = new StoreDataObjectSQLBuilder(QueryUtil.get().getTableName(getClass()));
 
-      builder.put("site_chat_conversation_id", getSiteChatConversationId())
-             .put("user_id", getUserId())
-             .put("created_datetime", getCreatedDatetime())
-             .put("message", getMessage())
-             .put("recipient_user_id", getRecipientUserId())
+      builder.put(SITE_CHAT_CONVERSATION_ID_COLUMN, getSiteChatConversationId())
+             .put(USER_ID_COLUMN, getUserId())
+             .put(CREATED_DATETIME_COLUMN, getCreatedDatetime())
+             .put(MESSAGE_COLUMN, getMessage())
+             .put(RECIPIENT_USER_ID_COLUMN, getRecipientUserId())
              .putPrimaryKey("id", isNew() ? null : getId());
       
       builder.execute(statement, this);

@@ -19,8 +19,10 @@ import net.mafiascum.functional.ConsumerWithException;
 import net.mafiascum.jdbc.BatchInsertStatement;
 import net.mafiascum.jdbc.BatchInsertable;
 import net.mafiascum.jdbc.ConnectionExecutor;
+import net.mafiascum.jdbc.ConnectionExecutorNoResult;
 import net.mafiascum.jdbc.DataObject;
 import net.mafiascum.jdbc.StatementExecutor;
+import net.mafiascum.jdbc.StatementExecutorNoResult;
 import net.mafiascum.jdbc.Table;
 import net.mafiascum.provider.Provider;
 
@@ -712,36 +714,59 @@ public class QueryUtil extends MSUtil {
     return collection;
   }
   
+  public <T extends DataObject> List<T> retrieveDataObjectList(Connection connection, String criteria, Class<T> dbObjectClass) throws SQLException {
+    return executeStatement(connection, statement -> retrieveDataObjectList(statement, criteria, dbObjectClass));
+  }
+
+  public <T extends DataObject> List<T> retrieveDataObjectList(Connection connection, String criteria, Class<T> dbObjectClass, boolean forUpdate) throws SQLException {
+    return executeStatement(connection, statement -> retrieveDataObjectList(statement, criteria, null, null, dbObjectClass, forUpdate));
+  }
+
   public <T extends DataObject> List<T> retrieveDataObjectList(Statement statement, String criteria, Class<T> dbObjectClass) throws SQLException {
-    
-    return retrieveDataObjectList(statement, criteria, null, null, null, dbObjectClass);
+    return retrieveDataObjectList(statement, criteria, null, null, dbObjectClass, false);
+  }
+
+  public <T extends DataObject> List<T> retrieveDataObjectList(Connection connection, String criteria, String orderBy, Class<T> dbObjectClass) throws SQLException {
+    return executeStatement(connection, statement -> retrieveDataObjectList(statement, criteria, orderBy, null, dbObjectClass, false));
   }
   
-  public <T extends DataObject> List<T> retrieveDataObjectList(Statement statement, String criteria, String orderBy, Integer offset, Integer fetchSize, Class<T> dbObjectClass) throws SQLException {
+  public <T extends DataObject> List<T> retrieveDataObjectList(Connection connection, String criteria, String orderBy, String limit, Class<T> dbObjectClass, boolean forUpdate) throws SQLException {
+    return executeStatement(connection, statement -> retrieveDataObjectList(statement, criteria, orderBy, limit, dbObjectClass, forUpdate));
+  }
+
+  public <T extends DataObject> List<T> retrieveDataObjectList(Statement statement, String criteria, String orderBy, Class<T> dbObjectClass) throws SQLException {
+    return retrieveDataObjectList(statement, criteria, orderBy, null, dbObjectClass, false);
+  }
+  
+  public <T extends DataObject> List<T> retrieveDataObjectList(Statement statement, String criteria, String orderBy, String limit, Class<T> dbObjectClass, boolean forUpdate) throws SQLException {
     
-    String tableName = getTableName(dbObjectClass);
+    String escapedTableName = getEscapedTableName(dbObjectClass);
     
-    if(tableName == null) {
+    if(escapedTableName == null) {
       
       throw new SQLException("No table name found for class `" + dbObjectClass.getName() + "`");
     }
     
     String sql = " SELECT *"
-               + " FROM `" + tableName.replace("`", "") + "`"
+               + " FROM " + escapedTableName
                + " WHERE " + (criteria == null ? "1" : criteria)
                + (orderBy == null ? "" : (" ORDER BY " + orderBy))
-               + sqlUtil.generateLimitClause(offset, fetchSize, true);
+               + (limit == null ? "" : (" LIMIT " + limit));
     
     return retrieveDataObjectListBySql(statement, sql, dbObjectClass);
+  }
+  
+  public <T extends DataObject> List<T> retrieveDataObjectListBySql(Connection connection, String sql, Class<T> dbObjectClass) throws SQLException {
+    return executeStatement(connection, statement -> retrieveDataObjectListBySql(statement, sql, dbObjectClass));
   }
   
   public <T extends DataObject> List<T> retrieveDataObjectListBySql(Statement statement, String sql, Class<T> dbObjectClass) throws SQLException {
     
     ResultSet resultSet = statement.executeQuery(sql);
-    return retrieveDataObjectList(statement, resultSet, dbObjectClass);
+    return retrieveDataObjectList(resultSet, dbObjectClass);
   }
   
-  public <T extends DataObject> List<T> retrieveDataObjectList(Statement statement, ResultSet resultSet, Class<T> dbObjectClass) throws SQLException {
+  public <T extends DataObject> List<T> retrieveDataObjectList(ResultSet resultSet, Class<T> dbObjectClass) throws SQLException {
     
     List<T> dbObjectList = new ArrayList<T>();
     
@@ -755,24 +780,36 @@ public class QueryUtil extends MSUtil {
     return dbObjectList;
   }
   
+  public <KeyType, PassingType extends DataObject> Map<KeyType, PassingType> retrieveDataObjectMap(Connection connection, String criteria, Class<PassingType> passingTypeClass, Function<PassingType, KeyType> keyAccessor) throws SQLException {
+    return executeStatement(connection, statement -> retrieveDataObjectMap(statement, criteria, passingTypeClass, keyAccessor));
+  }
+  
+  public <KeyType, PassingType extends DataObject> Map<KeyType, PassingType> retrieveDataObjectMapBySql(Connection connection, String sql, Class<PassingType> passingTypeClass, Function<PassingType, KeyType> keyAccessor) throws SQLException {
+    return executeStatement(connection, statement -> retrieveDataObjectMapBySql(statement, sql, passingTypeClass, keyAccessor));
+  }
+  
+  public <KeyType, PassingType extends DataObject> Map<KeyType, PassingType> retrieveDataObjectMapBySql(Statement statement, String sql, Class<PassingType> passingTypeClass, Function<PassingType, KeyType> keyAccessor) throws SQLException {
+    ResultSet resultSet = statement.executeQuery(sql);
+    return retrieveDataObjectMap(resultSet, passingTypeClass, keyAccessor);
+  }
+  
   public <KeyType, PassingType extends DataObject> Map<KeyType, PassingType> retrieveDataObjectMap(Statement statement, String criteria, Class<PassingType> passingTypeClass, Function<PassingType, KeyType> keyAccessor) throws SQLException {
     
-    String tableName = getTableName(passingTypeClass);
+    String escapedTableName = getEscapedTableName(passingTypeClass);
     
-    if(tableName == null) {
+    if(escapedTableName == null) {
       
       throw new SQLException("No table name found for class `" + passingTypeClass.getName() + "`");
     }
     
     String sql = " SELECT *"
-               + " FROM `" + tableName.replace("`", "") + "`"
+               + " FROM " + escapedTableName
                + " WHERE " + (criteria == null ? "1" : criteria);
 
-    ResultSet resultSet = statement.executeQuery(sql);
-    return retrieveDataObjectMap(statement, resultSet, passingTypeClass, keyAccessor);
+    return retrieveDataObjectMapBySql(statement, sql, passingTypeClass, keyAccessor);
   }
   
-  public <KeyType, PassingType extends DataObject> Map<KeyType, PassingType> retrieveDataObjectMap(Statement statement, ResultSet resultSet, Class<PassingType> passingTypeClass, Function<PassingType, KeyType> keyAccessor) throws SQLException {
+  public <KeyType, PassingType extends DataObject> Map<KeyType, PassingType> retrieveDataObjectMap(ResultSet resultSet, Class<PassingType> passingTypeClass, Function<PassingType, KeyType> keyAccessor) throws SQLException {
     
     Map<KeyType, PassingType> map = new HashMap<KeyType, PassingType>();
     
@@ -787,34 +824,67 @@ public class QueryUtil extends MSUtil {
     return map;
   }
 
+  public <T extends DataObject> T retrieveDataObject(Connection connection, String criteria, Class<T> dbObjectClass) throws SQLException {
+    return executeStatement(connection, statement -> retrieveDataObject(statement, criteria, dbObjectClass));
+  }
+  
+  public <T extends DataObject> T retrieveDataObject(Connection connection, String criteria, Class<T> dbObjectClass, boolean forUpdate) throws SQLException {
+    return executeStatement(connection, statement -> retrieveDataObject(statement, criteria, dbObjectClass, forUpdate));
+  }
+  
   public <T extends DataObject> T retrieveDataObject(Statement statement, String criteria, Class<T> dbObjectClass) throws SQLException {
+    return retrieveDataObject(statement, criteria, dbObjectClass, false);
+  }
+  
+  public <T extends DataObject> T retrieveDataObject(Statement statement, String criteria, Class<T> dbObjectClass, boolean forUpdate) throws SQLException {
     
-    String tableName = getTableName(dbObjectClass);
+    String escapedTableName = getEscapedTableName(dbObjectClass);
     
-    if(tableName == null) {
+    if(escapedTableName == null) {
       throw new SQLException("No table name found for class `" + dbObjectClass.getName() + "`");
     }
     
     String sql = " SELECT *"
-               + " FROM `" + tableName.replace("`", "") + "`"
+               + " FROM " + escapedTableName
                + " WHERE " + (criteria == null ? "1" : criteria);
     
-    return retrieveDataObjectWithSql(statement, sql, dbObjectClass);
+    if(forUpdate) {
+      sql += " FOR UPDATE";
+    }
+    
+    return retrieveDataObjectBySql(statement, sql, dbObjectClass);
   }
-  
-  public <T extends DataObject> T retrieveDataObjectWithSql(Statement statement, String sql, Class<T> dbObjectClass) throws SQLException {
+
+  public <T extends DataObject> T retrieveDataObjectBySql(Connection connection, String sql, Class<T> dbObjectClass) throws SQLException {
+    
+    return executeStatement(connection, statement -> retrieveDataObjectBySql(statement, sql, dbObjectClass));
+  }
+
+  public <T extends DataObject> T retrieveDataObjectBySql(Statement statement, String sql, Class<T> dbObjectClass) throws SQLException {
     
     ResultSet resultSet = statement.executeQuery(sql);
     T dataObject = null;
-    
+    try {
     if(resultSet.next()) {
       
       dataObject = retrieveDataObject(resultSet, dbObjectClass);
+    }
+    }
+    catch(NullPointerException sqlException) {
+      sqlException.printStackTrace();
+      throw sqlException;
     }
     
     resultSet.close();
     
     return dataObject;
+  }
+
+  public ResultSet retrieveResultSetBySql(Statement statement, String sql) throws SQLException {
+    
+    ResultSet resultSet = statement.executeQuery(sql);
+    
+    return resultSet;
   }
   
   public <T extends DataObject> T retrieveDataObject(ResultSet resultSet, Class<T> dbObjectClass) throws SQLException {
@@ -835,6 +905,41 @@ public class QueryUtil extends MSUtil {
       
       throw new SQLException(exception);
     }
+  }
+  
+  public <T> T executeConnection(Provider provider, ConnectionExecutor<T> connectionExecutor) throws SQLException {
+    
+    Connection connection = null;
+    
+    try {
+      
+      connection = provider.getConnection();
+      
+      T result = connectionExecutor.execute(connection);
+      
+      connection.commit();
+      connection.close();
+      connection = null;
+      
+      return result;
+    }
+    catch(Exception exception) {
+      
+      rollbackNoThrow(connection);
+      throw exception instanceof SQLException ? (SQLException)exception : new SQLException(exception);
+    }
+    finally {
+      
+      closeNoThrow(connection);
+    }
+  }
+  
+  public void executeConnectionNoResult(Provider provider, ConnectionExecutorNoResult connectionExecutor) throws SQLException {
+    
+    executeConnection(provider, connection -> {
+      connectionExecutor.execute(connection);
+      return null;
+    });
   }
   
   public <T> T executeStatement(Provider provider, StatementExecutor<T> statementExecutor) throws SQLException {
@@ -864,37 +969,11 @@ public class QueryUtil extends MSUtil {
     }
   }
   
-  public <T> T executeConnection(Provider provider, ConnectionExecutor<T> connectionExecutor) throws SQLException {
+  public void executeStatementNoResult(Provider provider, StatementExecutorNoResult statementExecutor) throws SQLException {
     
-    Connection connection = null;
-    
-    try {
+    executeStatement(provider, statement -> {
       
-      connection = provider.getConnection();
-      
-      T result = connectionExecutor.execute(connection);
-      
-      connection.commit();
-      connection.close();
-      connection = null;
-      
-      return result;
-    }
-    catch(Exception exception) {
-      rollbackNoThrow(connection);
-      throw exception instanceof SQLException ? (SQLException)exception : new SQLException(exception);
-    }
-    finally {
-      
-      closeNoThrow(connection);
-    }
-  }
-  
-  public void executeConnectionNoReturn(Provider provider, ConsumerWithException<Connection> consumer) throws SQLException {
-    
-    executeConnection(provider, connection -> {
-      
-      consumer.accept(connection);
+      statementExecutor.execute(statement);
       return null;
     });
   }
@@ -921,6 +1000,35 @@ public class QueryUtil extends MSUtil {
       
       closeNoThrow(statement);
     }
+  }
+  
+  public void executeStatementNoResult(Connection connection, StatementExecutorNoResult statementExecutor) throws SQLException {
+    
+    executeStatement(connection, statement -> {
+      
+      statementExecutor.execute(statement);
+      return null;
+    });
+  }
+  
+  public void forEachResultSet(Connection connection, String sql, ConsumerWithException<ResultSet> consumer) throws SQLException {
+    
+    executeStatementNoResult(connection, statement -> {
+      
+      ResultSet resultSet = statement.executeQuery(sql);
+      while(resultSet.next())
+        consumer.accept(resultSet);
+      resultSet.close();
+    });
+  }
+  
+  public <T> String getEscapedTableName(Class<T> dbObjectClass) {
+    Table table = dbObjectClass.getAnnotation(Table.class);
+    if(table == null)
+      return null;
+    if(table.schema() != null && !table.schema().isEmpty())
+      return sqlUtil.escapeQuoteColumnName(table.schema()) + "." + sqlUtil.escapeQuoteColumnName(table.tableName());
+    return sqlUtil.escapeQuoteColumnName(table.tableName());    
   }
   
   public <T> String getTableName(Class<T> dbObjectClass) {
