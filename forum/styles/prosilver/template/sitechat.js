@@ -1262,7 +1262,7 @@ var siteChat = (function() {
 			localStorage[siteChat.namespace + "userId"] = siteChat.userId;
 		}
 
-		siteChat.settings = siteChat.getLocalStorageObject("settings");
+		siteChat.settings = siteChat.getLocalStorageObject("settings") || {};
 
 		$(window).bind("beforeunload", function() {
 

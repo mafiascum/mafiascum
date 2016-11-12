@@ -31,6 +31,11 @@ function display_forums($root_data = '', $display_moderators = true, $return_mod
 	// Mark forums read?
 	$mark_read = request_var('mark', '');
 
+	if($mark_read != '' && !confirm_box(true) && !confirm_box(false))
+	{
+		$mark_read = '';
+	}
+
 	if ($mark_read == 'all')
 	{
 		$mark_read = '';
