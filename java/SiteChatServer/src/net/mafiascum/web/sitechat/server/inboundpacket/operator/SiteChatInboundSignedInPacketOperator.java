@@ -1,10 +1,10 @@
 package net.mafiascum.web.sitechat.server.inboundpacket.operator;
 
-import org.apache.log4j.Logger;
-
 import net.mafiascum.web.sitechat.server.SiteChatServer;
-import net.mafiascum.web.sitechat.server.SiteChatUser;
 import net.mafiascum.web.sitechat.server.SiteChatServer.SiteChatWebSocket;
+import net.mafiascum.web.sitechat.server.SiteChatUser;
+
+import org.apache.log4j.Logger;
 
 public abstract class SiteChatInboundSignedInPacketOperator extends SiteChatInboundPacketOperator {
 

@@ -1,7 +1,6 @@
 package net.mafiascum.web.sitechat.server.inboundpacket.operator;
 
 import java.io.IOException;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -33,11 +32,6 @@ public class SiteChatInboundSendMessagePacketOperator extends SiteChatInboundSig
     SiteChatUser siteChatRecipientUser = null;
     
     siteChatServer.updateUserActivity(siteChatUser.getId());
-    
-    synchronized(siteChatUser) {
-      
-      siteChatUser.setLastActivityDatetime(new Date());
-    }
     
     if(sendMessagePacket.getSiteChatConversationId() != null) {
       logger.debug("Site Chat Conversatin ID: " + sendMessagePacket.getSiteChatConversationId());
@@ -106,10 +100,10 @@ public class SiteChatInboundSendMessagePacketOperator extends SiteChatInboundSig
       sendToUserIdSet.add(siteChatUser.getId());
     }
     
-    long timeBefore = System.currentTimeMillis();
-    SiteChatServer.lagLogger.debug("Sending NewMessage Packets To Users.");
+    //long timeBefore = System.currentTimeMillis();
+    //SiteChatServer.lagLogger.debug("Sending NewMessage Packets To Users.");
     siteChatServer.sendOutboundPacketToUsers(sendToUserIdSet, siteChatOutboundNewMessagePacket, null);
-    long timeBetween = System.currentTimeMillis() - timeBefore;
-    SiteChatServer.lagLogger.debug("NewMessage Packet Sent. Duration: " + timeBetween + " ms.");    
+    //long timeBetween = System.currentTimeMillis() - timeBefore;
+    //SiteChatServer.lagLogger.debug("NewMessage Packet Sent. Duration: " + timeBetween + " ms.");    
   }
 }

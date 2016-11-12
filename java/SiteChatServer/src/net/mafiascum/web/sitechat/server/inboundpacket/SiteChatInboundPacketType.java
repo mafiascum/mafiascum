@@ -7,6 +7,8 @@ import net.mafiascum.enumerator.NameValueItemSet;
 import net.mafiascum.enumerator.VEnum;
 import net.mafiascum.enumerator.VEnumSet;
 import net.mafiascum.web.sitechat.server.inboundpacket.operator.SiteChatInboundConnectPacketOperator;
+import net.mafiascum.web.sitechat.server.inboundpacket.operator.SiteChatInboundDebugPacketOperator;
+import net.mafiascum.web.sitechat.server.inboundpacket.operator.SiteChatInboundDebugResultPacketOperator;
 import net.mafiascum.web.sitechat.server.inboundpacket.operator.SiteChatInboundHeartbeatPacketOperator;
 import net.mafiascum.web.sitechat.server.inboundpacket.operator.SiteChatInboundLeaveConversationPacketOperator;
 import net.mafiascum.web.sitechat.server.inboundpacket.operator.SiteChatInboundLoadMessagesPacketOperator;
@@ -15,6 +17,7 @@ import net.mafiascum.web.sitechat.server.inboundpacket.operator.SiteChatInboundL
 import net.mafiascum.web.sitechat.server.inboundpacket.operator.SiteChatInboundPacketOperator;
 import net.mafiascum.web.sitechat.server.inboundpacket.operator.SiteChatInboundSendMessagePacketOperator;
 import net.mafiascum.web.sitechat.server.inboundpacket.operator.SiteChatInboundSetPasswordPacketOperator;
+import net.mafiascum.web.sitechat.server.inboundpacket.operator.SiteChatInboundSetUserSettingsPacketOperator;
 
 abstract class SiteChatDataPacketTypeStatic {
 
@@ -37,7 +40,10 @@ public enum SiteChatInboundPacketType implements VEnum {
   lookupUser(4, "LookupUser", SiteChatInboundLookupUserPacketOperator.class),
   heartbeat(5, "Heartbeat", SiteChatInboundHeartbeatPacketOperator.class),
   setPassword(6, "SetPassword", SiteChatInboundSetPasswordPacketOperator.class),
-  loadMessages(7, "LoadMessages", SiteChatInboundLoadMessagesPacketOperator.class);
+  loadMessages(7, "LoadMessages", SiteChatInboundLoadMessagesPacketOperator.class),
+  debug(8, "Debug", SiteChatInboundDebugPacketOperator.class),
+  debugResult(9, "DebugResult", SiteChatInboundDebugResultPacketOperator.class),
+  setUserSettings(10, "SetUserSettings", SiteChatInboundSetUserSettingsPacketOperator.class);
   
 
   private String standardName;

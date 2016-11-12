@@ -1,7 +1,5 @@
 package net.mafiascum.web.sitechat.server.inboundpacket.operator;
 
-import java.util.Date;
-
 import net.mafiascum.web.sitechat.server.SiteChatServer;
 import net.mafiascum.web.sitechat.server.SiteChatServer.SiteChatWebSocket;
 import net.mafiascum.web.sitechat.server.SiteChatUser;
@@ -27,11 +25,6 @@ public class SiteChatInboundConnectPacketOperator extends SiteChatInboundSignedI
     SiteChatConversationWithUserList siteChatConversationWithUserList;
     
     siteChatServer.updateUserActivity(siteChatUser.getId());
-    
-    synchronized(siteChatUser) {
-      
-      siteChatUser.setLastActivityDatetime(new Date());
-    }
     
     String siteChatConversationName = siteChatInboundConnectPacket.getSiteChatConversationName();
     
