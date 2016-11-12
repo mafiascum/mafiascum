@@ -257,6 +257,31 @@
 	min-height: 40px;
 }
 
+#chatPanel .compact-visible {
+	display: none;
+}
+
+#chatPanel .compact-invisible {
+	display: initial;
+}
+
+#chatPanel.compact .compact-visible {
+	display: initial;
+}
+
+#chatPanel.compact .compact-invisible {
+	display: none;
+}
+
+#chatPanel.compact .chatWindow.expanded .outputBuffer .message {
+	padding: 0;
+	min-height: auto;
+}
+
+#chatPanel.compact .chatWindow.expanded .outputBuffer .message:last-child {
+	margin-bottom:5px;
+}
+
 .chatWindow.expanded .outputBuffer .message .profile
 {
 	float: left;
@@ -281,6 +306,12 @@
 	font-size: 12px;
 	word-wrap: break-word;
 }
+
+#chatPanel.compact .chatWindow.expanded .outputBuffer .message .messagecontent
+{
+	display: inline;
+}
+
 .chatWindow.expanded .outputBuffer .message .messageUserName
 {
 	display: inline-block;
@@ -566,54 +597,67 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#fafafa', end
 	overflow: auto;
 	background-color: white;
 }
-
+.chatWindow.expanded #settingstab #settingsInner {
+	margin: 10px 5px 10px 5px;
+}
+.chatWindow #settingstab form label {
+	font-size: 14px;
+}
+.chatWindow #settingstab form input[type=checkbox] {
+	height: 18px;
+}
+.chatWindow #settingstab form input[type=text] {
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0 0 0 5px;
+    width: 170px;
+    cursor: text;
+    font-size: 11px !important;
+    line-height: 20px;
+    height: 25px;
+    background: #EEE;
+    border: none;
+    -webkit-transition: all 0.1s linear;
+    -o-transition: all 0.1s linear;
+    -moz-transition: all 0.1s linear;
+    transition: all 0.1s linear;
+}
+.chatWindow #settingstab ul li {
+	margin-top: 10px;
+}
 .chatWindow.collapsed #settingstab {
 	display:none;
 }
-#disable_button {
-	margin-left: 48px;
-	margin-top: 10px;
-	-moz-box-shadow:inset 0px 1px 0px 0px #bbdaf7;
-	-webkit-box-shadow:inset 0px 1px 0px 0px #bbdaf7;
+#settingsInner button {
 	box-shadow:inset 0px 1px 0px 0px #bbdaf7;
 	background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #79bbff), color-stop(1, #378de5) );
 	background:-moz-linear-gradient( center top, #79bbff 5%, #378de5 100% );
 	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#79bbff', endColorstr='#378de5');
 	background-color:#79bbff;
-	-webkit-border-top-left-radius:6px;
-	-moz-border-radius-topleft:6px;
-	border-top-left-radius:6px;
-	-webkit-border-top-right-radius:6px;
-	-moz-border-radius-topright:6px;
-	border-top-right-radius:6px;
-	-webkit-border-bottom-right-radius:6px;
-	-moz-border-radius-bottomright:6px;
-	border-bottom-right-radius:6px;
-	-webkit-border-bottom-left-radius:6px;
-	-moz-border-radius-bottomleft:6px;
-	border-bottom-left-radius:6px;
+	border-radius:6px;
 	text-indent:0px;
 	border:1px solid #84bbf3;
 	display:inline-block;
 	color:#ffffff;
 	font-family:Arial;
-	font-size:15px;
+	font-size:13px;
 	font-weight:bold;
 	font-style:normal;
-	height:50px;
-	line-height:50px;
-	width:200px;
 	text-decoration:none;
 	text-align:center;
-	cursor: pointer;
+	cursor:pointer;
+	padding:5px;
 	text-shadow:1px 1px 0px #528ecc;
 }
-#disable_button:hover {
+#settingsInner button:hover {
 	background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #378de5), color-stop(1, #79bbff) );
 	background:-moz-linear-gradient( center top, #378de5 5%, #79bbff 100% );
 	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#378de5', endColorstr='#79bbff');
 	background-color:#378de5;
-}#disable_button:active {
+}
+#settingsInner button:active {
 	position:relative;
 	top:1px;
 }
@@ -687,4 +731,8 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#fafafa', end
 	float: right;
 	font-size: 9px;
 	display: inline-block;
+}
+
+.chatPanel .medium-font {
+	font-size: 12px;
 }

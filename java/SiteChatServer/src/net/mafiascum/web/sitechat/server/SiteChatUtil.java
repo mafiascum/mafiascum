@@ -194,4 +194,17 @@ public class SiteChatUtil extends MSUtil {
     
     return stringUtil.getSHA1(String.valueOf(siteChatUserId) + String.valueOf(siteChatConversationId) + siteChatConversationPasswordSha1);
   }
+  
+  public void putSiteChatUserSettings(Connection connection, SiteChatUserSettings userSettings) throws SQLException {
+    userSettings.store(connection);
+  }
+  
+  public SiteChatUserSettings getSiteChatUserSettings(Connection connection, int userId) throws SQLException {
+    String criteria = sqlUtil.escapeQuoteColumnName(SiteChatUserSettings.USER_ID_COLUMN) + "=" + userId;
+    return queryUtil.retrieveDataObject(connection, criteria, SiteChatUserSettings.class);
+  }
+  
+  public List<SiteChatUserSettings> getSiteChatUserSettingsList(Connection connection) throws SQLException {
+    return queryUtil.retrieveDataObjectList(connection, null, SiteChatUserSettings.class);
+  }
 }

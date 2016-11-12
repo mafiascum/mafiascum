@@ -3,7 +3,6 @@ package net.mafiascum.web.sitechat.server;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Date;
 
 import net.mafiascum.jdbc.DataObject;
 import net.mafiascum.jdbc.Table;
@@ -14,7 +13,6 @@ public class SiteChatUser extends DataObjectWithIntID implements DataObject {
   
   protected String name;
   protected String avatarUrl;
-  protected Date lastActivityDatetime;
   protected String userColor;
   
   public SiteChatUser() {
@@ -25,7 +23,6 @@ public class SiteChatUser extends DataObjectWithIntID implements DataObject {
   public SiteChatUser(SiteChatUser siteChatUser) {
     setName(siteChatUser.getName());
     setAvatarUrl(siteChatUser.getAvatarUrl());
-    setLastActivityDatetime(new Date(siteChatUser.getLastActivityDatetime().getTime()));
     setId(siteChatUser.getId());
     setUserColor(siteChatUser.getUserColor());
   }
@@ -48,16 +45,6 @@ public class SiteChatUser extends DataObjectWithIntID implements DataObject {
   public void setAvatarUrl(String avatarUrl) {
     
     this.avatarUrl = avatarUrl;
-  }
-  
-  public Date getLastActivityDatetime() {
-    
-    return lastActivityDatetime;
-  }
-  
-  public void setLastActivityDatetime(Date lastActivityDatetime) {
-    
-    this.lastActivityDatetime = lastActivityDatetime;
   }
   
   public String getUserColor() {

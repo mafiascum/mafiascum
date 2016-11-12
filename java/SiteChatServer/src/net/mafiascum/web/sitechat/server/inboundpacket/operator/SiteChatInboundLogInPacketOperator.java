@@ -2,7 +2,7 @@ package net.mafiascum.web.sitechat.server.inboundpacket.operator;
 
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -10,11 +10,13 @@ import java.util.Map;
 import net.mafiascum.web.sitechat.server.SiteChatServer;
 import net.mafiascum.web.sitechat.server.SiteChatServer.SiteChatWebSocket;
 import net.mafiascum.web.sitechat.server.SiteChatUser;
+import net.mafiascum.web.sitechat.server.SiteChatUserSettings;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationMessage;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationType;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationWithUserList;
 import net.mafiascum.web.sitechat.server.inboundpacket.SiteChatInboundLogInPacket;
 import net.mafiascum.web.sitechat.server.outboundpacket.SiteChatOutboundLogInPacket;
+import net.mafiascum.web.sitechat.server.user.UserData;
 
 import org.apache.log4j.Logger;
 
@@ -43,8 +45,6 @@ public class SiteChatInboundLogInPacketOperator extends SiteChatInboundPacketOpe
     siteChatServer.updateUserActivity(siteChatUser.getId());
     
     synchronized(siteChatUser) {
-      
-      siteChatUser.setLastActivityDatetime(new Date());
       userId = siteChatUser.getId();
     }
     
@@ -67,7 +67,6 @@ public class SiteChatInboundLogInPacketOperator extends SiteChatInboundPacketOpe
       return;
     }
     
-    logger.trace("Logged In. Last Activity: " + siteChatUser.getLastActivityDatetime());
     siteChatWebSocket.setSiteChatUser(siteChatUser);
     
     synchronized(siteChatWebSocket) {
@@ -153,10 +152,24 @@ public class SiteChatInboundLogInPacketOperator extends SiteChatInboundPacketOpe
       }
     });
     
+    UserData userData = siteChatServer.getUserManager().getUser(siteChatUser.getId());
+    
     //Create the response
     SiteChatOutboundLogInPacket siteChatOutboundLogInPacket = new SiteChatOutboundLogInPacket();
     siteChatOutboundLogInPacket.setWasSuccessful(true);
     siteChatOutboundLogInPacket.setMissedSiteChatConversationMessages(missedSiteChatConversationMessages);
+    siteChatOutboundLogInPacket.setSettings(createSettingsMap(userData));
     siteChatWebSocket.sendOutboundPacket(siteChatOutboundLogInPacket);
+  }
+  
+  protected Map<String, Object> createSettingsMap(UserData userData) {
+    Map<String, Object> settingsMap = new HashMap<>();
+    SiteChatUserSettings userSettings = userData.getUserSettings();
+    
+    settingsMap.put("compact", userSettings == null ? false : userSettings.getCompact());
+    settingsMap.put("animateAvatars", userSettings == null ? true : userSettings.getAnimateAvatars());
+    settingsMap.put("timestamp", userSettings == null ? "" : userSettings.getTimestampFormat());
+    
+    return settingsMap;
   }
 }

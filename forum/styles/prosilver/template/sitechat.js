@@ -23,6 +23,21 @@ var siteChat = (function() {
 		}
 		return true;
 	}
+
+	var htmlEntityMap = {
+		"&": "&amp;",
+		"<": "&lt;",
+		">": "&gt;",
+		'"': '&quot;',
+		"'": '&#39;',
+		"/": '&#x2F;'
+	};
+
+	function escapeHtml(string) {
+		return String(string).replace(/[&<>"'\/]/g, function (s) {
+			return htmlEntityMap[s];
+		});
+	}
 	
 	function ChatWindow(siteChatConversationId, recipientUserId, createdByUserId, userIdSet, title, messages, width, height, authCode, expanded, blinking) {
 		this.siteChatConversationId = siteChatConversationId;
@@ -131,7 +146,7 @@ var siteChat = (function() {
 	);
 
 	siteChat.utilityWindowTemplate = Handlebars.compile(
-		'<div class="chatWindow {{windowStateClass}}" id="utilitywindow">'
+			'<div class="chatWindow {{windowStateClass}}" id="utilitywindow">'
 		+	'	<div class="chatWindowOuter">'
 		+	'	<div class="chatWindowInner">'
 		+	'		<div class="title">Site Chat<div class="exclamation hidden">!</div></div>'
@@ -151,9 +166,15 @@ var siteChat = (function() {
 		+	'		<div id="roomstab"></div>'
 		+	'		</div>'
 		+	'		<div id="utilitywindow-3" class="tab_content">'
-		+	'		<div id="settingstab"><div id="disable_button">Disable Chat</div></div>'
-		+	'		</div>'
-		+	'			<div id="joindiv"><form id="joinConversationForm"><input autocomplete="off" placeholder="Enter Chat Room Name" type="text" name="input"/></div>'
+		+	'		<div id="settingstab"><div id="settingsInner"><form>'
+		+	'			<ul>'
+		+	'				<li><label for="settingsCompact">Compact Messages:</label> <input type="checkbox" id="settingsCompact" name="compact" {{#if compact}}checked{{/if}}/></li>'
+		+	'				<li><label for="settingsAnimateAvatars">Animate Avatars:</label> <input type="checkbox" id="settingsAnimateAvatars" name="animateAvatars" {{#if animateAvatars}}checked{{/if}}/></li>'
+		+	'				<li><label for="settingsTimestamp">Timestamp:</label> <input type="text" id="settingsTimestamp" name="timestamp" value="{{timestamp}}"/></li>'
+		+	'				<li><button type="button" id="saveSettings">Save Settings</button> <button type="button" id="disableChat">Disable Chat</button></li>'
+		+	'			</ul>'
+		+	'		</form></div></div></div>'
+		+	'		<div id="joindiv"><form id="joinConversationForm"><input autocomplete="off" placeholder="Enter Channel Name" type="text" name="input"/></form></div>'
 		+	'	</div>'
 		+	'	</div>'
 		+	'</div>'
@@ -210,6 +231,16 @@ var siteChat = (function() {
 
 	siteChat.getLocalStorage = function(key) {
 		return localStorage[siteChat.namespace + key];
+	};
+
+	siteChat.getLocalStorageObject = function(key) {
+		var value = siteChat.getLocalStorage(key);
+		try {
+			return JSON.parse(value);
+		}
+		catch(exception) {
+			return null;
+		}
 	};
 
 	siteChat.setLocalStorage = function(key, value) {
@@ -616,6 +647,8 @@ var siteChat = (function() {
 	};
 	
 	siteChat.shouldDelayAvatarLoad = function(avatarUrl) {
+		if(siteChat.settings.animateAvatars)
+			return false;
 		var extension = ".gif";
 		var lastIndex = avatarUrl.toLowerCase().lastIndexOf(extension);
 
@@ -644,7 +677,7 @@ var siteChat = (function() {
 	siteChat.renderMessage = function(siteChatConversationMessage, siteChatUser) {
 		var messageDate = new Date(siteChatConversationMessage.createdDatetime);
 		var avatarUrl = siteChatUser.avatarUrl != '' ?  (siteChat.rootPath + '/download/file.php?avatar=' + siteChatUser.avatarUrl) : defaultAvatar;
-		var messageDateString = zeroFill(messageDate.getHours(), 2) + ":" + zeroFill(messageDate.getMinutes(), 2);
+		var messageDateString = escapeHtml(siteChat.settings.timestamp == "" ? (zeroFill(messageDate.getHours(), 2) + ":" + zeroFill(messageDate.getMinutes(), 2)) : moment(messageDate).format(siteChat.settings.timestamp));
 		var shouldDelayAvatarLoad = siteChat.shouldDelayAvatarLoad(avatarUrl);
 		var imageHtml = shouldDelayAvatarLoad ? '' : siteChat.createAvatarImageHtml(avatarUrl);
 		var messageElementId = siteChat.getMessageElementId(siteChatConversationMessage.id);
@@ -867,13 +900,16 @@ var siteChat = (function() {
 			siteChat.socket.send(JSON.stringify(packetObject));
 	};
 
-		siteChat.createChatPanel = function() {
-		$("body").append("<div class='chatPanel' id='chatPanel'></div>");
+	siteChat.createChatPanel = function() {
+		$("body").append("<div class='chatPanel" + (siteChat.settings.compact ? " compact" : "") + "' id='chatPanel'></div>");
 	};
 
 	siteChat.createUtilityWindow = function() {
 		$("#chatPanel").prepend(siteChat.utilityWindowTemplate({
 			windowStateClass: sessionStorage[siteChat.namespace + "utilityExpanded"] == "true" ? "expanded" : "collapsed",
+			compact: siteChat.settings.compact,
+			animateAvatars: siteChat.settings.animateAvatars,
+			timestamp: siteChat.settings.timestamp
 		}));
 		var index = siteChat.tabs.push({}) -1;
 		siteChat.tabs[index].id = 0;
@@ -895,6 +931,19 @@ var siteChat = (function() {
 			alert ('Chat disabled. It can be enable through the user control panel');
 		}
 	};
+
+	siteChat.saveSettingsClick = function(e) {
+		e.preventDefault();
+
+		var $form = $(this).closest("form");
+		siteChat.settings.compact = $form.find("[name=compact]").is(":checked");
+		siteChat.settings.animateAvatars = $form.find("[name=animateAvatars]").is(":checked");
+		siteChat.settings.timestamp = $form.find("[name=timestamp]").val();
+
+		siteChat.setPanelCompact(siteChat.settings.compact);
+		siteChat.setSettings(siteChat.settings);
+		siteChat.updateCachedSettings(siteChat.settings);
+	}
 
 	siteChat.setActiveTab = function(id) {
 		$('#tab' + id).addClass('active');
@@ -987,6 +1036,10 @@ var siteChat = (function() {
 				siteChat.sendConnectMessage("Lobby");
 			}
 			siteChat.firstConnectionThisPageLoad = false;
+
+			siteChat.settings = siteChatPacket.settings;
+			siteChat.setPanelCompact(siteChat.settings.compact);
+			siteChat.updateCachedSettings(siteChat.settings);
 		};
 
 		commandHandlers["Connect"] = function(siteChat, siteChatPacket) {
@@ -1164,6 +1217,29 @@ var siteChat = (function() {
 
 		return commandHandlers;
 	};
+
+	siteChat.setSettings = function(settings) {
+		var packet = {
+			command: "SetUserSettings"
+		};
+
+		for(var key in settings)
+			if(settings.hasOwnProperty(key))
+				packet[key] = settings[key];
+		
+		siteChat.sendPacket(packet);
+	};
+
+	siteChat.setPanelCompact = function(compact) {
+		if(compact)
+			$("#chatPanel").addClass("compact");
+		else
+			$("#chatPanel").removeClass("compact");
+	};
+
+	siteChat.updateCachedSettings = function(settings) {
+		siteChat.setLocalStorage("settings", JSON.stringify(settings));
+	};
 	
 	siteChat.setup = function(sessionId, userId, autoJoinLobby, siteChatUrl, siteChatProtocol, rootPath) {
 		
@@ -1185,6 +1261,8 @@ var siteChat = (function() {
 			siteChat.clearLocalStorage();
 			localStorage[siteChat.namespace + "userId"] = siteChat.userId;
 		}
+
+		siteChat.settings = siteChat.getLocalStorageObject("settings");
 
 		$(window).bind("beforeunload", function() {
 
@@ -1418,7 +1496,8 @@ var siteChat = (function() {
 		siteChat.loadFromLocalStorage();
 		siteChat.populateUtilityWindow();
 		setInterval(siteChat.heartbeat, 150000);
-		$("#disable_button").on("click", siteChat.disableChat);
+		$("#disableChat").on("click", siteChat.disableChat);
+		$("#saveSettings").on("click", siteChat.saveSettingsClick);
 		siteChat.createPasswordLightbox();
 	};
 

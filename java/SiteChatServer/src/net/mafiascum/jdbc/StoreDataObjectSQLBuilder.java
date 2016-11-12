@@ -1,9 +1,8 @@
 package net.mafiascum.jdbc;
 
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
-
-import org.apache.log4j.Logger;
 
 import net.mafiascum.util.QueryUtil;
 import net.mafiascum.web.misc.DataObjectWithIntID;
@@ -19,6 +18,22 @@ public class StoreDataObjectSQLBuilder extends StoreSQLBuilder {
   
   public void execute(Statement statement, IsNewDataObject dataObject) throws SQLException {
     statement.executeUpdate(dataObject.isNew() ? generateInsert() : generateUpdate());
+  }
+  
+  public void execute(Connection connection, IsNewDataObject dataObject) throws SQLException {
+    QueryUtil.get().executeStatementNoResult(connection, statement -> execute(statement, dataObject));
+  }
+  
+  public void execute(Connection connection, DataObjectWithShortID dataObject) throws SQLException {
+    QueryUtil.get().executeStatementNoResult(connection, statement -> execute(statement, dataObject));
+  }
+  
+  public void execute(Connection connection, DataObjectWithIntID dataObject) throws SQLException {
+    QueryUtil.get().executeStatementNoResult(connection, statement -> execute(statement, dataObject));
+  }
+  
+  public void execute(Connection connection, DataObjectWithLongID dataObject) throws SQLException {
+    QueryUtil.get().executeStatementNoResult(connection, statement -> execute(statement, dataObject));
   }
   
   public int execute(Statement statement, DataObjectWithShortID dataObject) throws SQLException {
