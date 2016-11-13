@@ -171,6 +171,11 @@ if (!$auth->acl_get('f_read', $forum_id))
 	page_footer();
 }
 
+if($mark_read != '' && !confirm_box(true) && !confirm_box(false))
+{
+	$mark_read = '';
+}
+
 // Handle marking posts
 if ($mark_read == 'topics')
 {
