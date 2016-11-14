@@ -461,6 +461,11 @@ public class MiscUtil extends MSUtil {
     return collection.stream().map(transformationFunction).collect(Collectors.toList());
   }
   
+  public <PassingType, TransformedType> Set<TransformedType> transformToSet(Collection<PassingType> collection, Function<PassingType, TransformedType> transformationFunction) {
+    
+    return collection.stream().map(transformationFunction).collect(Collectors.toSet());
+  }
+  
   public <KeyType, ValueType> List<ValueType> pushToListMap(KeyType key, Map<KeyType, List<ValueType>> map) {
     
     List<ValueType> list = map.get(key);

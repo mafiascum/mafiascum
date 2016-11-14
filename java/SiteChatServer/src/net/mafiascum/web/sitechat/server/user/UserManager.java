@@ -12,8 +12,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
 
-import org.apache.log4j.Logger;
-
 import net.mafiascum.provider.Provider;
 import net.mafiascum.util.MiscUtil;
 import net.mafiascum.util.QueryUtil;
@@ -56,6 +54,15 @@ public class UserManager {
     
     userData.setLastActivityDatetime(LocalDateTime.now());
   }
+
+  public void updateUserNetworkActivity(int userId) {
+    UserData userData = getUser(userId);
+    
+    if(userData == null)
+      return;
+    
+    userData.setLastNetworkActivityDatetime(LocalDateTime.now());
+  }
   
   public Map<Integer, SiteChatUser> getSiteChatUserMap(Collection<Integer> userIds) {
     Map<Integer, SiteChatUser> siteChatUserMap = new HashMap<>();
@@ -69,6 +76,20 @@ public class UserManager {
     }
     
     return siteChatUserMap;
+  }
+  
+  public Map<Integer, UserData> getUserDataMap(Collection<Integer> userIds) {
+    Map<Integer, UserData> userDataMap = new HashMap<>();
+    
+    for(Integer userId : userIds) {
+      
+      UserData userData = getUser(userId);
+      
+      if(userData != null)
+        userDataMap.put(userId, userData);
+    }
+    
+    return userDataMap;
   }
   
   public void setupUsernameToUserMap() {
@@ -118,24 +139,22 @@ public class UserManager {
   }
   
   protected boolean isUserInactive(UserData userData, long contextDatetimeMilliseconds) {
-    LocalDateTime lastNetworkActivityDatetime = userData.getLastActivityDatetime();
+    LocalDateTime lastNetworkActivityDatetime = userData.getLastNetworkActivityDatetime();
     if(lastNetworkActivityDatetime == null)
       return false;
     
     return (contextDatetimeMilliseconds - lastNetworkActivityDatetime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()) >= MILLISECONDS_UNTIL_USER_IS_INACTIVE;
   }
   
-  public List<SiteChatUser> getClonedSiteChatUserList(Predicate<UserData> predicate) {
-    List<SiteChatUser> userList = new ArrayList<>();
+  public List<UserPacket> getClonedSiteChatUserList(Predicate<UserData> predicate) {
+    List<UserPacket> userList = new ArrayList<>();
     
     for(UserData userData : userIdToUserMap.values())
       if(predicate.test(userData))
-        userList.add(new SiteChatUser(userData.getUser()));
+        userList.add(userData.createUserPacket());
     
     return userList;
   }
-  
-  private static final Logger logger = Logger.getLogger(UserManager.class.getName());
   
   public void setUserSettings(int userId, boolean compact, boolean animateAvatars, String timestampFormat) throws SQLException {
     QueryUtil.get().executeConnectionNoResult(provider, connection -> {

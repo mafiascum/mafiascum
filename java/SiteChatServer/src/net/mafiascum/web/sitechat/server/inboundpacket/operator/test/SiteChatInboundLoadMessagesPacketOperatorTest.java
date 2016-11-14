@@ -12,6 +12,7 @@ import net.mafiascum.web.sitechat.server.inboundpacket.SiteChatInboundLoadMessag
 import net.mafiascum.web.sitechat.server.inboundpacket.operator.SiteChatInboundLoadMessagesPacketOperator;
 import net.mafiascum.web.sitechat.server.outboundpacket.SiteChatOutboundLoadMessagesPacket;
 import net.mafiascum.web.sitechat.server.outboundpacket.SiteChatOutboundPacketType;
+import net.mafiascum.web.sitechat.server.user.UserData;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -27,7 +28,10 @@ public class SiteChatInboundLoadMessagesPacketOperatorTest {
     
     SiteChatInboundLoadMessagesPacket packet = new SiteChatInboundLoadMessagesPacket("C11", 10);
     
+    UserData userData = new UserData();
     SiteChatUser user = new SiteChatUser();
+    
+    userData.setUser(user);
     user.setId(5932);
 
     SiteChatInboundLoadMessagesPacketOperator operator = new SiteChatInboundLoadMessagesPacketOperator();
@@ -36,7 +40,7 @@ public class SiteChatInboundLoadMessagesPacketOperatorTest {
     ArgumentCaptor<SiteChatOutboundLoadMessagesPacket> outboundPacketCaptor = ArgumentCaptor.forClass(SiteChatOutboundLoadMessagesPacket.class);
 
     Mockito.doNothing().when(siteChatWebSocket).sendOutboundPacket(outboundPacketCaptor.capture());
-    Mockito.when(siteChatWebSocket.getSiteChatUser()).thenReturn(user);
+    Mockito.when(siteChatWebSocket.getUserData()).thenReturn(userData);
     Mockito.when(siteChatServer.loadHistoricalMessages(Mockito.anyInt(), Mockito.any(), Mockito.anyInt(), Mockito.anyInt()))
            .thenReturn(Arrays.asList(new SiteChatConversationMessage(), new SiteChatConversationMessage(), new SiteChatConversationMessage()));
     
@@ -53,7 +57,7 @@ public class SiteChatInboundLoadMessagesPacketOperatorTest {
     outboundPacketCaptor = ArgumentCaptor.forClass(SiteChatOutboundLoadMessagesPacket.class);
     
     Mockito.doNothing().when(siteChatWebSocket).sendOutboundPacket(outboundPacketCaptor.capture());
-    Mockito.when(siteChatWebSocket.getSiteChatUser()).thenReturn(user);
+    Mockito.when(siteChatWebSocket.getUserData()).thenReturn(userData);
     Mockito.doThrow(new SiteChatException("message")).when(siteChatServer).loadHistoricalMessages(Mockito.anyInt(), Mockito.any(), Mockito.anyInt(), Mockito.anyInt());
 
     operator.process(siteChatServer, siteChatWebSocket, new Gson().toJson(packet));
@@ -65,7 +69,7 @@ public class SiteChatInboundLoadMessagesPacketOperatorTest {
     outboundPacketCaptor = ArgumentCaptor.forClass(SiteChatOutboundLoadMessagesPacket.class);
     
     Mockito.doNothing().when(siteChatWebSocket).sendOutboundPacket(outboundPacketCaptor.capture());
-    Mockito.when(siteChatWebSocket.getSiteChatUser()).thenReturn(user);
+    Mockito.when(siteChatWebSocket.getUserData()).thenReturn(userData);
     Mockito.doThrow(new Exception("message")).when(siteChatServer).loadHistoricalMessages(Mockito.anyInt(), Mockito.any(), Mockito.anyInt(), Mockito.anyInt());
 
     operator.process(siteChatServer, siteChatWebSocket, new Gson().toJson(packet));

@@ -52,7 +52,7 @@ public class SiteChatInboundLoadMessagesPacketOperator extends SiteChatInboundSi
       
       outboundPacket.setMessages(messages);
       outboundPacket.setConversationKey(packet.getConversationKey());
-      outboundPacket.setUserMap(siteChatServer.getSiteChatUserMap(miscUtil.transformToList(messages, SiteChatConversationMessage::getUserId)));
+      outboundPacket.setUserMap(siteChatServer.getUserPacketMap(miscUtil.transformToList(messages, SiteChatConversationMessage::getUserId)));
     }
     
     siteChatWebSocket.sendOutboundPacket(outboundPacket);

@@ -765,15 +765,15 @@ var siteChat = (function() {
 		siteChat.adjustElementColorAll();
 	};
 
-	siteChat.addUser = function(siteChatUser, save, doNotAddToOnlineList) {
-		if(!siteChat.userMap.hasOwnProperty(siteChatUser.id)) {
+	siteChat.addUser = function(siteChatUser, save, doNotAddToOnlineList, replace) {
+		if(replace || !siteChat.userMap.hasOwnProperty(siteChatUser.id)) {
 			siteChat.userMap[ siteChatUser.id ] = siteChatUser;
 
 			if(!doNotAddToOnlineList)
 				siteChat.addUserToOnlineList(siteChatUser, false);
 			if(save)
 				siteChat.saveUser(siteChatUser, true);
-			}
+		}
 	};
 
 	siteChat.addUserToOnlineList = function(siteChatUser, onlyAddToHTML) {
@@ -783,6 +783,7 @@ var siteChat = (function() {
 		}
 
 		var active = siteChatUser.lastActivityDatetime ? ((new Date().getTime() - siteChatUser.lastActivityDatetime) / 1000) < (60) * (5) : false;
+
 		var html
 			= '<li class="username" id="username' + siteChatUser.id + '"><span class="onlineindicator ' + (active ? "active" : "idle") + '"></span>'
 			+ '<span class="dynamic-color" style="' + siteChat.getUserColorStyle(siteChatUser) + '">' + siteChatUser.name + '</span>'
@@ -871,6 +872,7 @@ var siteChat = (function() {
 				numberOfUsers: room.userIdSet.length,
 				users: roomUsers.map(function(siteChatUser) {
 					var active = siteChatUser.lastActivityDatetime ? ((new Date().getTime() - siteChatUser.lastActivityDatetime) / 1000 / 60) < (5) : false;
+					
 					return {
 						roomNameCleaned: room.name.replace(/[^A-Za-z0-9]/g, ''),
 						userId: siteChatUser.id,
@@ -1050,7 +1052,7 @@ var siteChat = (function() {
 					var siteChatUser = siteChatPacket.users[ siteChatUserIndex ];
 					siteChatUserIdSet.push(siteChatUser.id);
 
-					siteChat.addUser(siteChatUser, true);
+					siteChat.addUser(siteChatUser, true, false, false);
 				}
 				
 				//Setting recipientUserId to null because I do not believe we will be "connecting" to private conversations.
@@ -1095,7 +1097,7 @@ var siteChat = (function() {
 		commandHandlers["UserJoin"] = function(siteChat, siteChatPacket) {
 
 			if(!siteChat.userMap.hasOwnProperty(siteChatPacket.siteChatUser.id))
-				siteChat.addUser(siteChatPacket.siteChatUser, true);
+				siteChat.addUser(siteChatPacket.siteChatUser, true, false, false);
 
 			if(siteChat.chatWindows.hasOwnProperty("C" + siteChatPacket.siteChatConversationId))
 				siteChat.chatWindows[ "C" + siteChatPacket.siteChatConversationId ].userIdSet.push( siteChatPacket.siteChatUser.id );
@@ -1137,8 +1139,7 @@ var siteChat = (function() {
 
 			//Import users.
 			siteChatPacket.siteChatUsers.forEach(function(siteChatUser) {
-				if(siteChat.userMap[siteChatUser.id] == null)
-					siteChat.addUser(siteChatUser, true, true);
+				siteChat.addUser(siteChatUser, true, true, true);
 				siteChat.addUserToOnlineList(siteChatUser, false);
 				siteChat.saveUser(siteChatUser, false);
 			});

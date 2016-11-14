@@ -35,10 +35,11 @@ public class SiteChatInboundLogInPacketOperator extends SiteChatInboundPacketOpe
     SiteChatInboundLogInPacket siteChatInboundLogInPacket = new Gson().fromJson(siteChatInboundPacketJson, SiteChatInboundLogInPacket.class);
     int userId;
     
-    SiteChatUser siteChatUser = siteChatServer.getSiteChatUser(siteChatInboundLogInPacket.getUserId());
+    UserData userData = siteChatServer.getUserData(siteChatInboundLogInPacket.getUserId());
+    SiteChatUser siteChatUser = userData.getUser();
     if(siteChatUser == null) {
       
-      logger.error("Non Existant User Attempted To Log In. User ID: " + siteChatInboundLogInPacket.getUserId());
+      logger.error("Non Existent User Attempted To Log In. User ID: " + siteChatInboundLogInPacket.getUserId());
       return;
     }
     
@@ -67,7 +68,7 @@ public class SiteChatInboundLogInPacketOperator extends SiteChatInboundPacketOpe
       return;
     }
     
-    siteChatWebSocket.setSiteChatUser(siteChatUser);
+    siteChatWebSocket.setUserData(userData);
     
     synchronized(siteChatWebSocket) {
       
@@ -151,8 +152,6 @@ public class SiteChatInboundLogInPacketOperator extends SiteChatInboundPacketOpe
         return 0;
       }
     });
-    
-    UserData userData = siteChatServer.getUserManager().getUser(siteChatUser.getId());
     
     //Create the response
     SiteChatOutboundLogInPacket siteChatOutboundLogInPacket = new SiteChatOutboundLogInPacket();
