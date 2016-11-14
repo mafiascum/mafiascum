@@ -113,7 +113,7 @@ var siteChat = (function() {
 		+		'<span class="usercount">({{numberOfUsers}})</span>'
 		+		'<a href="#" class="joinroom">Join Room</a>'
 		+	'</div>'
-		+	'<div class="userlist">'
+		+	'<div class="userlist" {{#if collapsed}}style="display:none;"{{/if}}>'
 		+		'<ul>'
 		+		'{{#each users}}'
 		+			'<li class="username dynamic-color" style="{{userColor}}" id="username{{roomNameCleaned}}{{userId}}" data-username="{{userName}}" data-user-id="{{userId}}">'
@@ -859,7 +859,7 @@ var siteChat = (function() {
 
 			if(room === undefined || room === null)
 				return;
-				
+			
 			var roomUsers = room.userIdSet.map(function(userId) { return siteChat.userMap[userId]; });
 			roomUsers.sort(function(u1, u2) {
 				return u1.name.toLowerCase() > u2.name.toLowerCase();
@@ -868,11 +868,12 @@ var siteChat = (function() {
 			$("#roomstab").append(siteChat.roomListRoomTemplate({
 				roomId: room.id,
 				expandIcon: room.expanded ? '-' : '+',
+				collapsed: !room.expanded,
 				roomName: room.name,
 				numberOfUsers: room.userIdSet.length,
 				users: roomUsers.map(function(siteChatUser) {
 					var active = siteChatUser.lastActivityDatetime ? ((new Date().getTime() - siteChatUser.lastActivityDatetime) / 1000 / 60) < (5) : false;
-					
+
 					return {
 						roomNameCleaned: room.name.replace(/[^A-Za-z0-9]/g, ''),
 						userId: siteChatUser.id,
