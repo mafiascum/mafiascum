@@ -43,7 +43,7 @@ public class SiteChatInboundSendMessagePacketOperator extends SiteChatInboundSig
         return;//Conversation does not exist.
       }
     
-      if(!siteChatConversationWithUserList.getUserIdSet().contains(siteChatWebSocket.getSiteChatUser().getId())) {
+      if(!siteChatConversationWithUserList.getUserIdSet().contains(siteChatWebSocket.getUserData().getId())) {
       
         logger.error("User not in chat.");
         return;//User is not in the conversation.
@@ -67,7 +67,7 @@ public class SiteChatInboundSendMessagePacketOperator extends SiteChatInboundSig
     }
     
     if(sendMessagePacket.getMessage().startsWith("/"))
-      siteChatServer.processChannelCommand(siteChatUser, sendMessagePacket.getMessage());
+      siteChatServer.processChannelCommand(siteChatWebSocket, siteChatUser, sendMessagePacket.getMessage());
     else {
       SiteChatConversationMessage message = siteChatServer.recordSiteChatConversationMessage(siteChatUser.getId(), sendMessagePacket.getSiteChatConversationId(), sendMessagePacket.getRecipientUserId(), sendMessagePacket.getMessage());
       message = message.clone();

@@ -3,21 +3,21 @@ package net.mafiascum.web.sitechat.server.outboundpacket;
 import java.util.Date;
 import java.util.List;
 
-import net.mafiascum.web.sitechat.server.SiteChatUser;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatBarebonesConversation;
+import net.mafiascum.web.sitechat.server.user.UserPacket;
 
 public class SiteChatOutboundUserListPacket extends SiteChatOutboundPacket {
 
-  protected List<SiteChatUser> siteChatUsers;
+  protected List<UserPacket> siteChatUsers;
   protected List<SiteChatBarebonesConversation> siteChatConversations;
   protected Date packetSentDatetime;
 
-  public List<SiteChatUser> getSitechatUsers() {
+  public List<UserPacket> getSitechatUsers() {
     
     return siteChatUsers;
   }
   
-  public void setSiteChatUsers(List<SiteChatUser> siteChatUsers) {
+  public void setSiteChatUsers(List<UserPacket> siteChatUsers) {
     
     this.siteChatUsers = siteChatUsers;
   }

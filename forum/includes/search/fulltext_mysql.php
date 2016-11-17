@@ -438,7 +438,8 @@ class fulltext_mysql extends search_backend
 		}
 
 		$sql_select			= (!$result_count) ? 'SQL_CALC_FOUND_ROWS ' : '';
-		$sql_select			= ($type == 'posts') ? $sql_select . 'p.post_id' : 'DISTINCT ' . $sql_select . 't.topic_id';
+		$sql_select			= ($type == 'posts') ? $sql_select . 'p.post_id' : $sql_select . 't.topic_id';
+		$sql_group			= ($type == 'posts') ? 'p.post_id' : 't.topic_id';
 		$sql_from			= ($join_topic) ? TOPICS_TABLE . ' t, ' : '';
 		$field				= ($type == 'posts') ? 'post_id' : 'topic_id';
 		if (sizeof($author_ary) && $author_name)
@@ -474,6 +475,7 @@ class fulltext_mysql extends search_backend
 				$sql_where_options
 				AND t.topic_id = p.topic_id
 				AND" . "(p.topic_id IS NULL OR t.is_private = 0 OR ptu.topic_id IS NOT NULL)
+			GROUP BY $sql_group
 			ORDER BY $sql_sort";
 		$result = $db->sql_query_limit($sql, $config['search_block_size'], $start);
 

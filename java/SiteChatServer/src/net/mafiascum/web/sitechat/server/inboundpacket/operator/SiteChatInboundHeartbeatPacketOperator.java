@@ -11,6 +11,6 @@ public class SiteChatInboundHeartbeatPacketOperator extends SiteChatInboundSigne
   }
   
   public void process(SiteChatServer siteChatServer, SiteChatUser siteChatUser, SiteChatWebSocket siteChatWebSocket, String siteChatInboundPacketJson) throws Exception {
-    siteChatServer.updateUserActivity(siteChatUser.getId());
+    siteChatServer.updateUserNetworkActivity(siteChatUser.getId());
   }
 }

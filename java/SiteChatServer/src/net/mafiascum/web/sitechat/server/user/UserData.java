@@ -13,7 +13,12 @@ public class UserData {
   protected SiteChatUser user;
   protected List<SiteChatWebSocket> webSockets = new ArrayList<>();
   protected LocalDateTime lastActivityDatetime;
+  protected LocalDateTime lastNetworkActivityDatetime;
   protected SiteChatUserSettings userSettings;
+  
+  public int getId() {
+    return user.getId();
+  }
   
   public SiteChatUser getUser() {
     return user;
@@ -33,10 +38,20 @@ public class UserData {
   public void setLastActivityDatetime(LocalDateTime lastActivityDatetime) {
     this.lastActivityDatetime = lastActivityDatetime;
   }
+  public LocalDateTime getLastNetworkActivityDatetime() {
+    return lastNetworkActivityDatetime;
+  }
+  public void setLastNetworkActivityDatetime(LocalDateTime lastNetworkActivityDatetime) {
+    this.lastNetworkActivityDatetime = lastNetworkActivityDatetime;
+  }
   public SiteChatUserSettings getUserSettings() {
     return userSettings;
   }
   public void setUserSettings(SiteChatUserSettings userSettings) {
     this.userSettings = userSettings;
+  }
+  
+  public UserPacket createUserPacket() {
+    return new UserPacket(user, lastActivityDatetime);
   }
 }

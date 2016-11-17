@@ -3,15 +3,15 @@ package net.mafiascum.web.sitechat.server.outboundpacket;
 import java.util.List;
 import java.util.Map;
 
-import net.mafiascum.web.sitechat.server.SiteChatUser;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationMessage;
+import net.mafiascum.web.sitechat.server.user.UserPacket;
 
 public class SiteChatOutboundLoadMessagesPacket extends SiteChatOutboundPacket {
 
   protected String conversationKey;
   protected List<SiteChatConversationMessage> messages;
   protected String errorMessage;
-  protected Map<Integer, SiteChatUser> userMap;
+  protected Map<Integer, UserPacket> userMap;
   
   public SiteChatOutboundLoadMessagesPacket() {
     super();
@@ -45,11 +45,11 @@ public class SiteChatOutboundLoadMessagesPacket extends SiteChatOutboundPacket {
     this.errorMessage = errorMessage;
   }
 
-  public Map<Integer, SiteChatUser> getUserMap() {
+  public Map<Integer, UserPacket> getUserMap() {
     return userMap;
   }
 
-  public void setUserMap(Map<Integer, SiteChatUser> userMap) {
+  public void setUserMap(Map<Integer, UserPacket> userMap) {
     this.userMap = userMap;
   }
 }

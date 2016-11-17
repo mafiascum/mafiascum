@@ -1,11 +1,11 @@
 package net.mafiascum.web.sitechat.server.outboundpacket;
 
-import net.mafiascum.web.sitechat.server.SiteChatUser;
+import net.mafiascum.web.sitechat.server.user.UserPacket;
 
 public class SiteChatOutboundUserJoinPacket extends SiteChatOutboundPacket {
 
   protected int siteChatConversationId;
-  protected SiteChatUser siteChatUser;
+  protected UserPacket siteChatUser;
   
   public SiteChatOutboundUserJoinPacket() {
     
@@ -20,11 +20,11 @@ public class SiteChatOutboundUserJoinPacket extends SiteChatOutboundPacket {
     this.siteChatConversationId = siteChatConversationId;
   }
 
-  public SiteChatUser getSiteChatUser() {
+  public UserPacket getSiteChatUser() {
     return siteChatUser;
   }
 
-  public void setSiteChatUser(SiteChatUser siteChatUser) {
+  public void setSiteChatUser(UserPacket siteChatUser) {
     this.siteChatUser = siteChatUser;
   }
 

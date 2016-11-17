@@ -3,6 +3,7 @@ package net.mafiascum.web.sitechat.server.inboundpacket.operator;
 import net.mafiascum.web.sitechat.server.SiteChatServer;
 import net.mafiascum.web.sitechat.server.SiteChatServer.SiteChatWebSocket;
 import net.mafiascum.web.sitechat.server.SiteChatUser;
+import net.mafiascum.web.sitechat.server.user.UserData;
 
 import org.apache.log4j.Logger;
 
@@ -14,14 +15,14 @@ public abstract class SiteChatInboundSignedInPacketOperator extends SiteChatInbo
   
   public void process(SiteChatServer siteChatServer, SiteChatWebSocket siteChatWebSocket, String siteChatInboundPacketJson) throws Exception {
     
-    SiteChatUser siteChatUser = siteChatWebSocket.getSiteChatUser();
-    if(siteChatUser == null) {
+    UserData userData = siteChatWebSocket.getUserData();
+    if(userData == null) {
       //Not logged in.
       
       logger.error("User trying to leave conversation without first logging in.");
       return;
     }
     
-    process(siteChatServer, siteChatUser, siteChatWebSocket, siteChatInboundPacketJson);
+    process(siteChatServer, userData.getUser(), siteChatWebSocket, siteChatInboundPacketJson);
   }
 }

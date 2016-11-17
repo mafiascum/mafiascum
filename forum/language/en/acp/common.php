@@ -669,6 +669,9 @@ $lang = array_merge($lang, array(
 	'LOG_RESYNC_POST_MARKING'	=> '<strong>Dotted topics resynchronised</strong>',
 	'LOG_RESYNC_STATS'			=> '<strong>Post, topic and user statistics resynchronised</strong>',
 
+	'LOG_SC_IGNORE'				=> '<strong>Site chat ignore %1$s</strong><br />» %2$s',
+	'LOG_SC_BAN'				=> '<strong>Site chat ban %1$s</strong><br />» %2$s (%3$s)',
+
 	'LOG_SEARCH_INDEX_CREATED'	=> '<strong>Created search index for</strong><br />» %s',
 	'LOG_SEARCH_INDEX_REMOVED'	=> '<strong>Removed search index for</strong><br />» %s',
 	'LOG_STYLE_ADD'				=> '<strong>Added new style</strong><br />» %s',

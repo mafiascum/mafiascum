@@ -1,5 +1,6 @@
 package net.mafiascum.web.sitechat.server.inboundpacket.operator;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -7,6 +8,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import net.mafiascum.web.sitechat.server.SiteChatIgnore;
 import net.mafiascum.web.sitechat.server.SiteChatServer;
 import net.mafiascum.web.sitechat.server.SiteChatServer.SiteChatWebSocket;
 import net.mafiascum.web.sitechat.server.SiteChatUser;
@@ -14,9 +16,12 @@ import net.mafiascum.web.sitechat.server.SiteChatUserSettings;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationMessage;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationType;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationWithUserList;
+import net.mafiascum.web.sitechat.server.ignore.IgnoreManager;
+import net.mafiascum.web.sitechat.server.ignore.IgnorePacket;
 import net.mafiascum.web.sitechat.server.inboundpacket.SiteChatInboundLogInPacket;
 import net.mafiascum.web.sitechat.server.outboundpacket.SiteChatOutboundLogInPacket;
 import net.mafiascum.web.sitechat.server.user.UserData;
+import net.mafiascum.web.sitechat.server.user.UserManager;
 
 import org.apache.log4j.Logger;
 
@@ -35,10 +40,11 @@ public class SiteChatInboundLogInPacketOperator extends SiteChatInboundPacketOpe
     SiteChatInboundLogInPacket siteChatInboundLogInPacket = new Gson().fromJson(siteChatInboundPacketJson, SiteChatInboundLogInPacket.class);
     int userId;
     
-    SiteChatUser siteChatUser = siteChatServer.getSiteChatUser(siteChatInboundLogInPacket.getUserId());
+    UserData userData = siteChatServer.getUserData(siteChatInboundLogInPacket.getUserId());
+    SiteChatUser siteChatUser = userData.getUser();
     if(siteChatUser == null) {
       
-      logger.error("Non Existant User Attempted To Log In. User ID: " + siteChatInboundLogInPacket.getUserId());
+      logger.error("Non Existent User Attempted To Log In. User ID: " + siteChatInboundLogInPacket.getUserId());
       return;
     }
     
@@ -67,7 +73,7 @@ public class SiteChatInboundLogInPacketOperator extends SiteChatInboundPacketOpe
       return;
     }
     
-    siteChatWebSocket.setSiteChatUser(siteChatUser);
+    siteChatWebSocket.setUserData(userData);
     
     synchronized(siteChatWebSocket) {
       
@@ -152,13 +158,12 @@ public class SiteChatInboundLogInPacketOperator extends SiteChatInboundPacketOpe
       }
     });
     
-    UserData userData = siteChatServer.getUserManager().getUser(siteChatUser.getId());
-    
     //Create the response
     SiteChatOutboundLogInPacket siteChatOutboundLogInPacket = new SiteChatOutboundLogInPacket();
     siteChatOutboundLogInPacket.setWasSuccessful(true);
     siteChatOutboundLogInPacket.setMissedSiteChatConversationMessages(missedSiteChatConversationMessages);
     siteChatOutboundLogInPacket.setSettings(createSettingsMap(userData));
+    siteChatOutboundLogInPacket.setIgnores(getIgnorePackets(siteChatUser, siteChatServer.getUserManager(), siteChatServer.getIgnoreManager()));
     siteChatWebSocket.sendOutboundPacket(siteChatOutboundLogInPacket);
   }
   
@@ -171,5 +176,19 @@ public class SiteChatInboundLogInPacketOperator extends SiteChatInboundPacketOpe
     settingsMap.put("timestamp", userSettings == null ? "" : userSettings.getTimestampFormat());
     
     return settingsMap;
+  }
+  
+  protected List<IgnorePacket> getIgnorePackets(SiteChatUser user, UserManager userManager, IgnoreManager ignoreManager) {
+    List<IgnorePacket> ignorePackets = new ArrayList<>();
+    
+    for(SiteChatIgnore ignoreEntry : ignoreManager.getIgnores(user.getId())) {
+      UserData ignoredUserData = userManager.getUser(ignoreEntry.getIgnoredUserId());
+      
+      if(ignoredUserData == null)
+        continue;
+      
+      ignorePackets.add(ignoreEntry.createPacket(ignoredUserData.getUser()));
+    }
+    return ignorePackets;
   }
 }

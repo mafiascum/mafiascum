@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
@@ -20,6 +19,7 @@ import java.util.regex.Pattern;
 import net.mafiascum.arguments.CommandLineArguments;
 import net.mafiascum.json.DateUnixTimestampSerializer;
 import net.mafiascum.provider.Provider;
+import net.mafiascum.util.MiscUtil;
 import net.mafiascum.util.QueryUtil;
 import net.mafiascum.util.StringUtil;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatBarebonesConversation;
@@ -28,6 +28,7 @@ import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationMessag
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationType;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationWithUserList;
 import net.mafiascum.web.sitechat.server.debug.DebugManager;
+import net.mafiascum.web.sitechat.server.ignore.IgnoreManager;
 import net.mafiascum.web.sitechat.server.inboundpacket.SiteChatInboundPacketSkeleton;
 import net.mafiascum.web.sitechat.server.inboundpacket.SiteChatInboundPacketType;
 import net.mafiascum.web.sitechat.server.inboundpacket.operator.SiteChatInboundPacketOperator;
@@ -39,6 +40,7 @@ import net.mafiascum.web.sitechat.server.outboundpacket.SiteChatOutboundUserJoin
 import net.mafiascum.web.sitechat.server.outboundpacket.SiteChatOutboundUserListPacket;
 import net.mafiascum.web.sitechat.server.user.UserData;
 import net.mafiascum.web.sitechat.server.user.UserManager;
+import net.mafiascum.web.sitechat.server.user.UserPacket;
 
 import org.apache.log4j.Logger;
 import org.eclipse.jetty.server.Server;
@@ -77,6 +79,7 @@ public class SiteChatServer extends Server implements SignalHandler {
   protected BanManager banManager;
   protected DebugManager debugManager;
   protected UserManager userManager;
+  protected IgnoreManager ignoreManager;
   
   protected final int MESSAGE_BATCH_SIZE = 1;
   protected volatile int topSiteChatConversationMessageId;
@@ -110,7 +113,7 @@ public class SiteChatServer extends Server implements SignalHandler {
 
       connector = new ServerConnector(this);
       connector.setPort(port);
-
+      
       addConnector(connector);
       webSocketHandler = new WebSocketHandler() {
 
@@ -137,6 +140,10 @@ public class SiteChatServer extends Server implements SignalHandler {
       this.userManager = new UserManager(provider, siteChatUtil);
       this.userManager.loadUserMap(siteChatUtil.loadSiteChatUserMap(connection).values(), siteChatUtil.getSiteChatUserSettingsList(connection));
 
+      logger.info("Loading Site Chat Ignores...");
+      this.ignoreManager = new IgnoreManager(provider, userManager);
+      this.ignoreManager.reload();
+      
       logger.info("Loading Site Chat Conversations...");
       List<SiteChatConversation> siteChatConversationList = siteChatUtil.getSiteChatConversations(connection);
       for(SiteChatConversation siteChatConversation : siteChatConversationList) {
@@ -230,6 +237,22 @@ public class SiteChatServer extends Server implements SignalHandler {
       return userManager.getSiteChatUserMap(userIdCollection);
     }
   }
+  
+  public Map<Integer, UserData> getUserDataMap(Collection<Integer> userIdCollection) {
+    synchronized(userManager) {
+      return userManager.getUserDataMap(userIdCollection);
+    }
+  }
+  
+  public Map<Integer, UserPacket> getUserPacketMap(Collection<Integer> userIdCollection) {
+    Map<Integer, UserData> userDataMap;
+    synchronized(userManager) {
+      userDataMap = userManager.getUserDataMap(userIdCollection);
+    }
+    
+    List<UserPacket> userPackets = MiscUtil.get().transformToList(userDataMap.values(), UserData::createUserPacket);
+    return MiscUtil.get().map(userPackets, packet -> packet.id);
+  }
 
   public SiteChatConversationWithUserList createSiteChatConversation(String siteChatConversationName, int userId) throws Exception {
 
@@ -258,6 +281,18 @@ public class SiteChatServer extends Server implements SignalHandler {
   public SiteChatUser getSiteChatUser(String name) {
     synchronized(userManager) {
       return userManager.getUser(name).getUser();
+    }
+  }
+  
+  public UserData getUserData(int userId) {
+    synchronized(userManager) {
+      return userManager.getUser(userId);
+    }
+  }
+  
+  public UserData getUserData(String name) {
+    synchronized(userManager) {
+      return userManager.getUser(name);
     }
   }
 
@@ -421,7 +456,7 @@ public class SiteChatServer extends Server implements SignalHandler {
   public void sendUserListToAllWebSockets() throws Exception {
 
     //lagLogger.debug("Sending User List To All Web Sockets. START.");
-    List<SiteChatUser> siteChatUserList;
+    List<UserPacket> siteChatUserList;
     List<SiteChatBarebonesConversation> siteChatBarebonesConversations = new LinkedList<SiteChatBarebonesConversation>();
     
     synchronized(userManager) {
@@ -429,15 +464,15 @@ public class SiteChatServer extends Server implements SignalHandler {
     }
     
     //Generate message for each user.
-    for(SiteChatUser siteChatUser : siteChatUserList) {
+    for(UserPacket userPacket : siteChatUserList) {
 
-      int userId = siteChatUser.getId();
+      int userId = userPacket.id;
       //logger.debug("Considering Sending To User ID: " + userId);
       siteChatBarebonesConversations.clear();
       List<SiteChatWebSocket> webSockets;
 
       synchronized(userManager) {
-        webSockets = new ArrayList<>(userManager.getUser(siteChatUser.getId()).getWebSockets());
+        webSockets = new ArrayList<>(userManager.getUser(userPacket.id).getWebSockets());
       }
       
       if(webSockets.isEmpty())
@@ -520,6 +555,7 @@ public class SiteChatServer extends Server implements SignalHandler {
       webSocketsToClose.addAll(userData.getWebSockets());
       userData.getWebSockets().clear();
       userData.setLastActivityDatetime(null);
+      userData.setLastNetworkActivityDatetime(null);
     }
     
     for(SiteChatWebSocket webSocket : webSocketsToClose) {
@@ -582,7 +618,7 @@ public class SiteChatServer extends Server implements SignalHandler {
 
       synchronized(siteChatWebSocket) {
 
-        if(siteChatWebSocket.getSiteChatUser() != null) {
+        if(siteChatWebSocket.getUserData() != null) {
 
           for(Integer userId : userIdSet) {
 
@@ -591,7 +627,7 @@ public class SiteChatServer extends Server implements SignalHandler {
               continue;
             }
 
-            if(siteChatWebSocket.getSiteChatUser().getId() == userId) {
+            if(siteChatWebSocket.getUserData().getUser().getId() == userId) {
 
               try {
                 siteChatWebSocket.sendOutboundPacket(siteChatOutboundPacket);
@@ -636,10 +672,10 @@ public class SiteChatServer extends Server implements SignalHandler {
   public void attemptJoinConversation(SiteChatWebSocket siteChatWebSocket, int siteChatUserId, int siteChatConversationId, boolean notifyUser, boolean notifyConversationMembers, String password, String authCode) throws IOException {
 
     synchronized(userManager) {
-      SiteChatUser siteChatUser = userManager.getUser(siteChatUserId).getUser();
+      UserData userData = userManager.getUser(siteChatUserId);
       SiteChatConversationWithUserList siteChatConversationWithUserList = siteChatConversationWithMemberListMap.get(siteChatConversationId);
       SiteChatConversation siteChatConversation = siteChatConversationWithUserList.getSiteChatConversation();
-      Map<Integer, SiteChatUser> siteChatUserMap = getSiteChatUserMap(siteChatConversationWithUserList.getUserIdSet());
+      Map<Integer, UserData> userDataMap = getUserDataMap(siteChatConversationWithUserList.getUserIdSet());
 
       if(siteChatConversation.getPassword() != null) {
 
@@ -666,8 +702,8 @@ public class SiteChatServer extends Server implements SignalHandler {
       }
 
       //Add user to user list.
-      logger.debug("Adding user #" + siteChatUser.getId() + " to chat #" + siteChatConversationWithUserList.getSiteChatConversation().getId() + ".");
-      siteChatConversationWithUserList.getUserIdSet().add(siteChatUser.getId());
+      logger.debug("Adding user #" + userData.getUser().getId() + " to chat #" + siteChatConversationWithUserList.getSiteChatConversation().getId() + ".");
+      siteChatConversationWithUserList.getUserIdSet().add(userData.getUser().getId());
 
       //Generate response packet to user.
       if(notifyUser) {
@@ -679,22 +715,17 @@ public class SiteChatServer extends Server implements SignalHandler {
 
         if(siteChatConversation.getPassword() != null) {
 
-          siteChatOutboundConnectPacket.setAuthCode(siteChatUtil.generateConversationAuthCode(siteChatUser.getId(), siteChatConversation.getId(), siteChatConversation.getPassword()));
+          siteChatOutboundConnectPacket.setAuthCode(siteChatUtil.generateConversationAuthCode(userData.getUser().getId(), siteChatConversation.getId(), siteChatConversation.getPassword()));
 
         }
 
-        Set<SiteChatUser> siteChatUserSet = new HashSet<SiteChatUser>();
+        Set<UserPacket> userPacketSet = MiscUtil.get().transformToSet(userDataMap.values(), UserData::createUserPacket);
 
-        for(Integer userId : siteChatUserMap.keySet()) {
-
-          siteChatUserSet.add(siteChatUserMap.get(userId));
-        }
-
-        siteChatOutboundConnectPacket.setUsers(siteChatUserSet);
+        siteChatOutboundConnectPacket.setUsers(userPacketSet);
 
         for(SiteChatWebSocket tempSiteChatWebSocket : descriptors) {
 
-          if(tempSiteChatWebSocket.getSiteChatUser() != null && tempSiteChatWebSocket.getSiteChatUser().getId() == siteChatUserId) {
+          if(tempSiteChatWebSocket.getUserData() != null && tempSiteChatWebSocket.getUserData().getUser().getId() == siteChatUserId) {
 
             try {
               tempSiteChatWebSocket.sendOutboundPacket(siteChatOutboundConnectPacket);
@@ -710,14 +741,14 @@ public class SiteChatServer extends Server implements SignalHandler {
       if(notifyConversationMembers) {
         SiteChatOutboundUserJoinPacket siteChatOutboundUserJoinPacket = new SiteChatOutboundUserJoinPacket();
         siteChatOutboundUserJoinPacket.setSiteChatConversationId(siteChatConversationWithUserList.getSiteChatConversation().getId());
-        siteChatOutboundUserJoinPacket.setSiteChatUser(siteChatUser);
+        siteChatOutboundUserJoinPacket.setSiteChatUser(userData.createUserPacket());
 
-        sendOutboundPacketToUsers(siteChatUserMap.keySet(), siteChatOutboundUserJoinPacket, siteChatUser.getId());
+        sendOutboundPacketToUsers(userDataMap.keySet(), siteChatOutboundUserJoinPacket, userData.getUser().getId());
       }
     }
   }
   
-  public void processChannelCommand(SiteChatUser user, String message) throws Exception {
+  public void processChannelCommand(SiteChatWebSocket webSocket, SiteChatUser user, String message) throws Exception {
     Pattern pattern = Pattern.compile("^/(\\w+)\\s+(.*?)$");
     Matcher matcher = pattern.matcher(message);
     
@@ -728,6 +759,7 @@ public class SiteChatServer extends Server implements SignalHandler {
     String remainder = matcher.group(2);
     
     if(command.equals("ban")) {
+      
       SiteChatUser targetUser = getSiteChatUser(remainder);
       
       if(!banManager.isBanAdmin(user.getId()))
@@ -735,7 +767,7 @@ public class SiteChatServer extends Server implements SignalHandler {
       if(targetUser == null)
         return;//TODO: Notify.
       
-      banManager.banUser(targetUser.getId());
+      banManager.banUser(webSocket.getConnection().getRemoteAddress().getHostString(), user.getId(), targetUser);
     }
     else if(command.equals("unban")) {
       SiteChatUser targetUser = getSiteChatUser(remainder);
@@ -745,10 +777,24 @@ public class SiteChatServer extends Server implements SignalHandler {
       if(targetUser == null)
         return;//TODO: Notify.
       
-      banManager.unbanUser(targetUser.getId());
+      banManager.unbanUser(webSocket.getConnection().getRemoteAddress().getHostString(), user.getId(), targetUser);
     }
     else {
       //TODO: Notify.
+    }
+  }
+  
+  public SiteChatIgnore addIgnore(SiteChatWebSocket webSocket, int userId, int ignoredUserId) throws SQLException {
+    String ipAddress = webSocket.getConnection().getRemoteAddress().getHostString();
+    synchronized(ignoreManager) {
+      return ignoreManager.addIgnore(userId, ignoredUserId, ipAddress);
+    }
+  }
+  
+  public void removeIgnore(SiteChatWebSocket webSocket, int userId, int ignoredUserId) throws SQLException {
+    String ipAddress = webSocket.getConnection().getRemoteAddress().getHostString();
+    synchronized(ignoreManager) {
+      ignoreManager.removeIgnore(ipAddress, userId, ignoredUserId);
     }
   }
 
@@ -795,8 +841,7 @@ public class SiteChatServer extends Server implements SignalHandler {
       logger.info("Setting Up Site Chat Server.");
       SiteChatServer server = new SiteChatServer(provider);
       server.setup(port);
-
-      //server.setResourceBase("-");
+      
       logger.info("Starting Site Chat Server.");
       server.start();
       server.join();
@@ -815,16 +860,16 @@ public class SiteChatServer extends Server implements SignalHandler {
 
   public class SiteChatWebSocket implements WebSocketListener {
     protected WebSocketSession connection;
-    protected SiteChatUser siteChatUser;
+    protected UserData userData;
 
-    public SiteChatUser getSiteChatUser() {
+    public UserData getUserData() {
 
-      return siteChatUser;
+      return userData;
     }
 
-    public void setSiteChatUser(SiteChatUser siteChatUser) {
+    public void setUserData(UserData userData) {
 
-      this.siteChatUser = siteChatUser;
+      this.userData = userData;
     }
 
     public WebSocketSession getConnection() {
@@ -853,16 +898,15 @@ public class SiteChatServer extends Server implements SignalHandler {
       logger.trace(this.getClass().getSimpleName() + "#onWebSocketClose   arg0: " + arg0 + ", Data: " + data);
       descriptors.remove(this);
 
-      if(this.getSiteChatUser() != null) {
+      if(this.getUserData() != null) {
         
         synchronized(userManager) {
-          userManager.removeWebSocketFromUser(getSiteChatUser().getId(), this);
+          userManager.removeWebSocketFromUser(userData.getUser().getId(), this);
         }
       }
     }
 
     public void onWebSocketConnect(Session session) {
-
       logger.trace(this.getClass().getSimpleName() + "#onWebSocketConnect   " + session.getRemoteAddress().getHostString());
       this.connection = (WebSocketSession)session;
     }
@@ -873,6 +917,7 @@ public class SiteChatServer extends Server implements SignalHandler {
 
     public void onWebSocketText(String data) {
 
+      logger.info("User Data: " + userData);
       logger.trace(this.getClass().getSimpleName() + "#onWebSocketText   " + data);
       try {
         logger.info("Got text: " + data);
@@ -902,6 +947,10 @@ public class SiteChatServer extends Server implements SignalHandler {
   }
   public void updateUserActivity(int userId) {
     userManager.updateUserActivity(userId);
+  }
+  
+  public void updateUserNetworkActivity(int userId) {
+    userManager.updateUserNetworkActivity(userId);
   }
   
   public void setUserSettings(int userId, boolean compact, boolean animateAvatars, String timestampFormat) throws SQLException {
@@ -953,5 +1002,9 @@ public class SiteChatServer extends Server implements SignalHandler {
   
   public UserManager getUserManager() {
     return userManager;
+  }
+  
+  public IgnoreManager getIgnoreManager() {
+    return ignoreManager;
   }
 }

@@ -6,6 +6,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 import org.apache.commons.codec.digest.DigestUtils;
 
@@ -674,21 +676,42 @@ public class StringUtil extends MSUtil {
     return value.toString();
   }
 
-  public List<String> buildListFromString (String value, String seperator_sequence) {
-
-    List<String> values = new ArrayList<String>();
+  public List<String> buildListFromString (String value, String separatorSequence) {
+    return buildListFromString(value, separatorSequence, String::valueOf);
+  }
+  
+  public Set<String> buildSetFromString(String value, String separatorSequence) {
+    return buildSetFromString(value, separatorSequence, String::valueOf);
+  }
+  
+  public <T> List<T> buildListFromString(String value, String separatorSequence, Function<String, T> conversionFunction) {
+    return buildListFromString(value, separatorSequence, conversionFunction, null);
+  }
+  
+  public <T> List<T> buildListFromString(String value, String separatorSequence, Function<String, T> conversionFunction, Predicate<T> exclusionPredicate) {
+    return buildCollectionFromString(value, separatorSequence, conversionFunction, exclusionPredicate, new ArrayList<>());
+  }
+  
+  public <T> Set<T> buildSetFromString(String value, String separatorSequence, Function<String, T> conversionFunction) {
+    return buildCollectionFromString(value, separatorSequence, conversionFunction, null, new HashSet<T>());
+  }
+  
+  public <T, C extends Collection<T>> C buildCollectionFromString(String value, String seperatorSequence, Function<String, T> conversionFunction, Predicate<T> exclusionPredicate, C collection) {
     
     if(value != null) {
       
-      String[] temp_values = value.split(seperator_sequence);
+      String[] tempValues = value.split(seperatorSequence);
       
-      for(int i=0; i<temp_values.length; i++) {
+      for(int i=0; i<tempValues.length; i++) {
         
-        values.add(temp_values[i]);
+        T convertedValue = conversionFunction.apply(tempValues[i]);
+        
+        if(exclusionPredicate == null || !exclusionPredicate.test(convertedValue))
+          collection.add(convertedValue);
       }
     }
     
-    return values;
+    return collection;
   }
   
   public String getSHA1(String str) {

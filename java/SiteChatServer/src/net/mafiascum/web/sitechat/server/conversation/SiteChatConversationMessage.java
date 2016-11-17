@@ -123,19 +123,15 @@ public class SiteChatConversationMessage extends DataObjectWithIntID implements 
   
   public void store(Connection connection) throws SQLException {
     
-    QueryUtil.get().executeStatement(connection, statement -> {
-      
-      StoreDataObjectSQLBuilder builder = new StoreDataObjectSQLBuilder(QueryUtil.get().getTableName(getClass()));
+    StoreDataObjectSQLBuilder builder = new StoreDataObjectSQLBuilder(QueryUtil.get().getTableName(getClass()));
 
-      builder.put(SITE_CHAT_CONVERSATION_ID_COLUMN, getSiteChatConversationId())
-             .put(USER_ID_COLUMN, getUserId())
-             .put(CREATED_DATETIME_COLUMN, getCreatedDatetime())
-             .put(MESSAGE_COLUMN, getMessage())
-             .put(RECIPIENT_USER_ID_COLUMN, getRecipientUserId())
-             .putPrimaryKey("id", isNew() ? null : getId());
-      
-      builder.execute(statement, this);
-      return null;
-    });
+    builder.put(SITE_CHAT_CONVERSATION_ID_COLUMN, getSiteChatConversationId())
+           .put(USER_ID_COLUMN, getUserId())
+           .put(CREATED_DATETIME_COLUMN, getCreatedDatetime())
+           .put(MESSAGE_COLUMN, getMessage())
+           .put(RECIPIENT_USER_ID_COLUMN, getRecipientUserId())
+           .putPrimaryKey(ID_COLUMN, isNew() ? null : getId());
+    
+    builder.execute(connection, this);
   }
 }

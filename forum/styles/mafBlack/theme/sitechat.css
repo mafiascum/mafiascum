@@ -241,6 +241,11 @@
 	position: relative;
 }
 
+.chatWindow .outputBuffer .message.ignored
+{
+	display: none;
+}
+
 .chatWindow.expanded .outputBuffer .message
 {
 	margin: 0 5px 0 5px;
@@ -268,10 +273,6 @@
 #chatPanel.compact .chatWindow.expanded .outputBuffer .message {
 	padding: 0;
 	min-height: auto;
-}
-
-#chatPanel.compact .chatWindow.expanded .outputBuffer .message:last-child {
-	margin-bottom:5px;
 }
 
 .chatWindow.expanded .outputBuffer .message .profile
@@ -615,7 +616,7 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#888888', end
     -moz-transition: all 0.1s linear;
     transition: all 0.1s linear;
 }
-.chatWindow #settingstab ul li {
+.chatWindow #settingstab ul#settingsList li {
 	margin-top: 10px;
 }
 .chatWindow.collapsed #settingstab {
@@ -739,4 +740,34 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#888888', end
 
 .chatPanel .medium-font {
 	font-size: 12px;
+}
+
+#ignoreForm {
+	margin-top:15px;
+}
+
+.chatWindow #settingstab span,
+.chatWindow #settingstab a {
+	font-size: 14px;
+}
+
+.chatWindow #settingstab span {
+	color: #fff;
+}
+
+.chatWindow #settingstab .remove-ignore {
+	color:#fff;
+	border:none;
+	box-shadow:none;
+	background:none;
+	padding:0;
+}
+
+
+#chatPanel .username-label {
+	font-weight: bold;
+}
+
+#chatPanel.compact .chatWindow .outputBuffer .messages {
+	padding-bottom:5px;
 }

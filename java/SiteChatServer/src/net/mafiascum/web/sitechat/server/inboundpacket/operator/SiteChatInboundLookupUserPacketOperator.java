@@ -28,7 +28,7 @@ public class SiteChatInboundLookupUserPacketOperator extends SiteChatInboundSign
     //Create the response
     SiteChatOutboundLookupUserPacket siteChatOutboundLookupUserPacket = new SiteChatOutboundLookupUserPacket();
     siteChatOutboundLookupUserPacket.setUserId(siteChatInboundLookupUserPacket.getUserId());
-    siteChatOutboundLookupUserPacket.setSiteChatUser(siteChatServer.getSiteChatUser(siteChatInboundLookupUserPacket.getUserId()));
+    siteChatOutboundLookupUserPacket.setSiteChatUser(siteChatServer.getUserData(siteChatInboundLookupUserPacket.getUserId()).createUserPacket());
     siteChatWebSocket.sendOutboundPacket(siteChatOutboundLookupUserPacket);
   }
 }

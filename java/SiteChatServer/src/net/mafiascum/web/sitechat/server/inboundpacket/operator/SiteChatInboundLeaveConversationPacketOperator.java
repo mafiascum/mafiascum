@@ -35,11 +35,11 @@ public class SiteChatInboundLeaveConversationPacketOperator extends SiteChatInbo
     }
     
     //Remove the user from the user ID cache.
-    siteChatConversationWithUserList.getUserIdSet().remove(siteChatWebSocket.getSiteChatUser().getId());
+    siteChatConversationWithUserList.getUserIdSet().remove(siteChatWebSocket.getUserData().getId());
     
     //Notify all other users in the conversation of the user's departure.
     SiteChatOutboundLeaveConversationPacket siteChatOutboundLeaveConversationPacket = new SiteChatOutboundLeaveConversationPacket();
-    siteChatOutboundLeaveConversationPacket.setUserId(siteChatWebSocket.getSiteChatUser().getId());
+    siteChatOutboundLeaveConversationPacket.setUserId(siteChatWebSocket.getUserData().getId());
     siteChatOutboundLeaveConversationPacket.setSiteChatConversationId(siteChatInboundLeaveConversationPacket.getSiteChatConversationId());
     
     siteChatServer.sendOutboundPacketToUsers(siteChatConversationWithUserList.getUserIdSet(), siteChatOutboundLeaveConversationPacket, null);

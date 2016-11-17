@@ -237,4 +237,8 @@ public class DateUtil extends MSUtil {
     
     return (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24);
   }
+  
+  public long currentTimeSeconds() {
+    return System.currentTimeMillis() / 1000;
+  }
 }
