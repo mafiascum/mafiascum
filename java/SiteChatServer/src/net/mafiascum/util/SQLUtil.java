@@ -3,6 +3,10 @@ package net.mafiascum.util;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -71,6 +75,18 @@ public class SQLUtil extends MSUtil {
     return (timestamp != null)
                 ? new SimpleDateFormat("''yyyyMMdd''").format(timestamp)
                 : "NULL";
+  }
+  
+  public String encodeQuoteDate (LocalDateTime timestamp) {
+    return timestamp != null ? timestamp.format(DateTimeFormatter.ofPattern("''yyyyMMddHHmmss''")) : "NULL";
+  }
+  
+  public String encodeQuoteDate (LocalDate timestamp) {
+    return timestamp != null ? timestamp.format(DateTimeFormatter.ofPattern("''yyyyMMdd''")) : "NULL";
+  }
+  
+  public String encodeQuoteTime (LocalTime time) {
+    return time == null ? "NULL" : time.format(DateTimeFormatter.ofPattern("''HH:mm:ss''"));
   }
 
   /** Encodes a boolean value as an SQL integer value. */

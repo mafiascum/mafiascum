@@ -2,6 +2,9 @@ package net.mafiascum.jdbc;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
@@ -97,6 +100,18 @@ public class StoreSQLBuilder {
   
   public StoreSQLBuilder put(String columnName, Date value) {
     return putEscapedString(columnName, (value != null) ? SQLUtil.get().encodeQuoteDate(value) : "NULL");
+  }
+  
+  public StoreSQLBuilder put(String columnName, LocalDateTime value) {
+    return putEscapedString(columnName, (value != null) ? SQLUtil.get().encodeQuoteDate(value) : "NULL");
+  }
+  
+  public StoreSQLBuilder put(String columnName, LocalDate value) {
+    return putEscapedString(columnName, (value != null) ? SQLUtil.get().encodeQuoteDate(value) : "NULL");
+  }
+  
+  public StoreSQLBuilder put(String columnName, LocalTime value) {
+    return putEscapedString(columnName, (value != null) ? SQLUtil.get().encodeQuoteTime(value) : "NULL");
   }
   
   public StoreSQLBuilder put(String columnName, VEnum vEnum) {

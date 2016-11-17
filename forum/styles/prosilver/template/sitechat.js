@@ -155,7 +155,7 @@ var siteChat = (function() {
 		+	' 			<li id="tab1" data-tab-id="1" class="tab"><a href="#utilitywindow-2">Rooms</a></li>'
 		+	' 			<li id="tab2" data-tab-id="2" class="tab"><a href="#utilitywindow-3">Settings</a></li>'
 		+ 	' 			<div class="clear"></div>'
-		+	' 		</ul> '
+		+	' 		</ul>'
 		+	'		<div id="utilitywindow-1" class="tab_content">'
 		+	'			<div id="onlinelistcontainer">'
 		+	'				<p id="onlinelisttitle"><span class="expand-icon">-</span>Online Users <span class="usercount">(0)</span></p>'
@@ -166,18 +166,28 @@ var siteChat = (function() {
 		+	'		<div id="roomstab"></div>'
 		+	'		</div>'
 		+	'		<div id="utilitywindow-3" class="tab_content">'
-		+	'		<div id="settingstab"><div id="settingsInner"><form>'
-		+	'			<ul>'
-		+	'				<li><label for="settingsCompact">Compact Messages:</label> <input type="checkbox" id="settingsCompact" name="compact" {{#if compact}}checked{{/if}}/></li>'
-		+	'				<li><label for="settingsAnimateAvatars">Animate Avatars:</label> <input type="checkbox" id="settingsAnimateAvatars" name="animateAvatars" {{#if animateAvatars}}checked{{/if}}/></li>'
-		+	'				<li><label for="settingsTimestamp">Timestamp:</label> <input type="text" id="settingsTimestamp" name="timestamp" value="{{timestamp}}"/></li>'
-		+	'				<li><button type="button" id="saveSettings">Save Settings</button> <button type="button" id="disableChat">Disable Chat</button></li>'
-		+	'			</ul>'
-		+	'		</form></div></div></div>'
+		+	'		<div id="settingstab"><div id="settingsInner">'
+		+	'			<form id="settingsForm">'
+		+	'				<ul id="settingsList">'
+		+	'					<li><label for="settingsCompact">Compact Messages:</label> <input type="checkbox" id="settingsCompact" name="compact" {{#if compact}}checked{{/if}}/></li>'
+		+	'					<li><label for="settingsAnimateAvatars">Animate Avatars:</label> <input type="checkbox" id="settingsAnimateAvatars" name="animateAvatars" {{#if animateAvatars}}checked{{/if}}/></li>'
+		+	'					<li><label for="settingsTimestamp">Timestamp:</label> <input type="text" id="settingsTimestamp" name="timestamp" value="{{timestamp}}"/></li>'
+		+	'					<li><button type="button" id="saveSettings">Save Settings</button> <button type="button" id="disableChat">Disable Chat</button></li>'
+		+	'				</ul>'
+		+	'			</form>'
+		+	'			<form id="ignoreForm">'
+		+	'				<span>Ignore User:</span> <input type="text"/>'
+		+	'				<ul id="ignoreList"></ul>'
+		+	'			</form>'
+		+	'		</div></div></div>'
 		+	'		<div id="joindiv"><form id="joinConversationForm"><input autocomplete="off" placeholder="Enter Channel Name" type="text" name="input"/></form></div>'
 		+	'	</div>'
 		+	'	</div>'
 		+	'</div>'
+	);
+
+	siteChat.utilityIgnoreEntry = Handlebars.compile(
+		'<li class="ignore-user" data-user-id="{{userId}}"><a href="{{profileUrl}}" class="username-label dynamic-color" style="{{userColorStyle}}">{{name}}</a> <button data-user-id="{{userId}}" class="remove-ignore" type="button">X</button></li>'
 	);
 
 	siteChat.liTemplate = Handlebars.compile("<li>{{content}}</li>");
@@ -673,15 +683,19 @@ var siteChat = (function() {
 			$element.html(imageElementHtml);
 		};
 	},
-	
-	siteChat.renderMessage = function(siteChatConversationMessage, siteChatUser) {
+
+	siteChat.getProfileUrl = function(siteChatUser) {
+		return siteChat.rootPath + '/memberlist.php?mode=viewprofile&u=' + siteChatUser.id;
+	};
+
+	siteChat.renderMessage = function(siteChatConversationMessage, siteChatUser, isIgnored) {
 		var messageDate = new Date(siteChatConversationMessage.createdDatetime);
 		var avatarUrl = siteChatUser.avatarUrl != '' ?  (siteChat.rootPath + '/download/file.php?avatar=' + siteChatUser.avatarUrl) : defaultAvatar;
 		var messageDateString = escapeHtml(siteChat.settings.timestamp == "" ? (zeroFill(messageDate.getHours(), 2) + ":" + zeroFill(messageDate.getMinutes(), 2)) : moment(messageDate).format(siteChat.settings.timestamp));
 		var shouldDelayAvatarLoad = siteChat.shouldDelayAvatarLoad(avatarUrl);
 		var imageHtml = shouldDelayAvatarLoad ? '' : siteChat.createAvatarImageHtml(avatarUrl);
 		var messageElementId = siteChat.getMessageElementId(siteChatConversationMessage.id);
-		
+
 		if(shouldDelayAvatarLoad) {
 			siteChat.delayGifConversion(
 				avatarUrl,
@@ -690,9 +704,9 @@ var siteChat = (function() {
 			);
 		}
 		
-		return	'<div class="message" id="' + messageElementId + '">'
+		return	'<div class="message' + (isIgnored ? ' ignored' : '') + '" data-user-id="' + siteChatUser.id + '" id="' + messageElementId + '">'
 			+	'	<a class="compact-invisible" href="' + siteChat.rootPath + '/memberlist.php?mode=viewprofile&u=' + siteChatUser.id + '"><div class="avatar-container">' + imageHtml + '</div></a>'
-			+	'	<span class="compact-visible medium-font">[' + messageDateString + ']</span> <div class="messageUserName"><a class="dynamic-color" style="' + siteChat.getUserColorStyle(siteChatUser) + '" href="' + siteChat.rootPath + '/memberlist.php?mode=viewprofile&u=' + siteChatUser.id + '">' + siteChatUser.name + '</a></div><span class="compact-visible medium-font">:</span> <span class="messageTimestamp compact-invisible">(' + messageDateString + ')</span>'
+			+	'	<span class="compact-visible medium-font">[' + messageDateString + ']</span> <span class="messageUserName"><a class="dynamic-color" style="' + siteChat.getUserColorStyle(siteChatUser) + '" href="' + siteChat.getProfileUrl(siteChatUser) + '">' + siteChatUser.name + '</a></span><span class="compact-visible medium-font">:</span> <span class="messageTimestamp compact-invisible">(' + messageDateString + ')</span>'
 			+	'	<div class="messagecontent">' + siteChat.parseBBCode(siteChatConversationMessage.message) + '</div>'
 			+	'</div>'
 	};
@@ -708,8 +722,9 @@ var siteChat = (function() {
 			
 			var messageKey = siteChat.getMessageMapKey(siteChatConversationMessage);
 			var siteChatUser = siteChat.userMap[ siteChatConversationMessage.userId ];
-						
-			if(!siteChat.chatWindows[messageKey] && siteChatConversationMessage.recipientUserId != null) {
+			var isIgnored = siteChat.findIgnore(siteChatUser.id) != undefined;
+
+			if(!siteChat.chatWindows[messageKey] && siteChatConversationMessage.recipientUserId != null && !isIgnored) {
 
 				//If this is a private conversation & the window has not yet been created,
 				//we should have enough information to make it ourselves.
@@ -726,11 +741,12 @@ var siteChat = (function() {
 					messagesHtmlToAdd: [],
 					outputBuffer: $outputBuffer,
 					messages: $outputBuffer.children(".messages"),
-					messageObjects: []
+					messageObjects: [],
+					isIgnored: isIgnored
 				};
 			}
 			
-			messageKeyToDataMap[messageKey]["messagesHtmlToAdd"].push(siteChat.renderMessage(siteChatConversationMessage, siteChatUser));
+			messageKeyToDataMap[messageKey]["messagesHtmlToAdd"].push(siteChat.renderMessage(siteChatConversationMessage, siteChatUser, isIgnored));
 			messageKeyToDataMap[messageKey]["messageObjects"].push(siteChatConversationMessage);
 		}
 		
@@ -738,7 +754,7 @@ var siteChat = (function() {
 		for(var messageKey in messageKeyToDataMap) {
 			var $messages = messageKeyToDataMap[messageKey]["messages"];
 			var $outputBuffer = messageKeyToDataMap[messageKey]["outputBuffer"];
-			var isScrolledToBottom = $outputBuffer.get(0).scrollTop == ($outputBuffer.get(0).scrollHeight - $outputBuffer.get(0).offsetHeight);
+			var isScrolledToBottom = $outputBuffer.length > 0 && $outputBuffer.get(0).scrollTop == ($outputBuffer.get(0).scrollHeight - $outputBuffer.get(0).offsetHeight);
 			
 			var $messageDomElements = $(messageKeyToDataMap[messageKey]["messagesHtmlToAdd"].join(""));
 			
@@ -746,20 +762,23 @@ var siteChat = (function() {
 			
 			var chatWindow = siteChat.chatWindows[ messageKey ];
 			
-			for(var messageIndex in messageKeyToDataMap[messageKey]["messageObjects"]) {
-				var message = messageKeyToDataMap[messageKey]["messageObjects"][messageIndex];
-				chatWindow.messages.splice(prepend ? 0 : chatWindow.messages.length, 0, message);
+			if(chatWindow != null) {//Window may be null if ignore blocked window creation.
+				for(var messageIndex in messageKeyToDataMap[messageKey]["messageObjects"]) {
+					var isIgnored = messageKeyToDataMap[messageKey]["isIgnored"];
+					var message = messageKeyToDataMap[messageKey]["messageObjects"][messageIndex];
+					chatWindow.messages.splice(prepend ? 0 : chatWindow.messages.length, 0, message);
+					
+					if(isNew && !prepend && !isIgnored)
+						siteChat.tryTriggerNotification(chatWindow, message);
+				}
+				var messagesLength = chatWindow.messages.length;
+					
+				if(isScrolledToBottom)
+					$outputBuffer.get(0).scrollTop = $outputBuffer.get(0).scrollHeight;
 				
-				if(isNew && !prepend)
-					siteChat.tryTriggerNotification(chatWindow, message);
+				if(save)
+					chatWindow.save();
 			}
-			var messagesLength = chatWindow.messages.length;
-				
-			if(isScrolledToBottom)
-				$outputBuffer.get(0).scrollTop = $outputBuffer.get(0).scrollHeight;
-			
-			if(save)
-				chatWindow.save();
 		}
 		
 		siteChat.adjustElementColorAll();
@@ -907,6 +926,28 @@ var siteChat = (function() {
 		$("body").append("<div class='chatPanel" + (siteChat.settings.compact ? " compact" : "") + "' id='chatPanel'></div>");
 	};
 
+	siteChat.addUtilityIgnoreEntry = function(ignoreEntry) {
+		$("#ignoreList").append(siteChat.utilityIgnoreEntry({
+			profileUrl: siteChat.getProfileUrl(ignoreEntry.ignoredUser),
+			name: ignoreEntry.ignoredUser.name,
+			userId: ignoreEntry.ignoredUser.id,
+			userColorStyle: siteChat.getUserColorStyle(ignoreEntry.ignoredUser)
+		}));
+	};
+
+	siteChat.rebuildUtilityIgnoreList = function() {
+		$("#ignoreList").html("");
+
+		var ignores = siteChat.ignores.slice();
+		ignores.sort(function(i1, i2) { return i1.ignoredUser.name.toLowerCase().localeCompare(i2.ignoredUser.name.toLowerCase()); });
+
+		ignores.forEach(function(ignoreEntry) {
+			siteChat.addUtilityIgnoreEntry(ignoreEntry);
+		});
+
+		siteChat.adjustElementColorAll();
+	};
+
 	siteChat.createUtilityWindow = function() {
 		$("#chatPanel").prepend(siteChat.utilityWindowTemplate({
 			windowStateClass: sessionStorage[siteChat.namespace + "utilityExpanded"] == "true" ? "expanded" : "collapsed",
@@ -914,6 +955,9 @@ var siteChat = (function() {
 			animateAvatars: siteChat.settings.animateAvatars,
 			timestamp: siteChat.settings.timestamp
 		}));
+
+		siteChat.rebuildUtilityIgnoreList();
+
 		var index = siteChat.tabs.push({}) -1;
 		siteChat.tabs[index].id = 0;
 		index =	siteChat.tabs.push({}) -1;
@@ -1043,6 +1087,8 @@ var siteChat = (function() {
 			siteChat.settings = siteChatPacket.settings;
 			siteChat.setPanelCompact(siteChat.settings.compact);
 			siteChat.updateCachedSettings(siteChat.settings);
+			siteChat.ignores = siteChatPacket.ignores;
+			siteChat.saveCachedIgnores();
 		};
 
 		commandHandlers["Connect"] = function(siteChat, siteChatPacket) {
@@ -1217,6 +1263,26 @@ var siteChat = (function() {
 			console.log("[DEBUG RESULT]: ", siteChatPacket.result);
 		};
 
+		commandHandlers["SetIgnore"] = function(siteChat, siteChatPacket) {
+			console.log("Set Ignore Response:", siteChatPacket);
+
+			if(siteChatPacket.errors.length > 0) {
+				alert(siteChatPacket.errors.join("\n"));
+				return;
+			}
+
+			if(siteChatPacket.removed) {
+				siteChat.removeCachedIgnore(siteChatPacket.ignoredUserId);
+				siteChat.unmarkMessagesIgnored(siteChatPacket.ignoredUserId);
+			}
+			else {
+				siteChat.addCachedIgnore(siteChatPacket.ignore);
+				siteChat.markMessagesIgnored(siteChatPacket.ignoredUserId);
+			}
+
+			siteChat.rebuildUtilityIgnoreList();
+		};
+
 		return commandHandlers;
 	};
 
@@ -1242,7 +1308,65 @@ var siteChat = (function() {
 	siteChat.updateCachedSettings = function(settings) {
 		siteChat.setLocalStorage("settings", JSON.stringify(settings));
 	};
+
+	siteChat.findIgnore = function(ignoredUserId) {
+		var ignoreIndex = siteChat.findIgnoreIndex(ignoredUserId);
+		return ignoreIndex == -1 ? undefined : siteChat.ignores[ignoreIndex];
+	}
+
+	siteChat.findIgnoreIndex = function(ignoredUserId) {
+		return siteChat.ignores.findIndex(function(ignoreEntry) {
+			return ignoreEntry.ignoredUser.id == ignoredUserId;
+		});
+	}
+
+	siteChat.setIgnore = function(ignoredUserId, ignoredName, remove) {
+		
+		var packet = {
+			command: "SetIgnore",
+			operation: remove ? "REMOVE" : "SET"
+		};
+
+		if(ignoredUserId != null)
+			packet.ignoredUserId = ignoredUserId;
+		if(ignoredName != null)
+			packet.ignoredName = ignoredName;
+
+		siteChat.sendPacket(packet);
+	};
 	
+	siteChat.addCachedIgnore = function(ignoreEntry) {
+		var ignore = siteChat.findIgnore(ignoreEntry.ignoredUser.id);
+		
+		if(ignore != undefined)
+			return;
+		
+		siteChat.ignores.push(ignoreEntry);
+		siteChat.saveCachedIgnores();
+	};
+
+	siteChat.removeCachedIgnore = function(ignoredUserId) {
+
+		var ignoreIndex = siteChat.findIgnoreIndex(ignoredUserId);
+
+		if(ignoreIndex != -1)
+			siteChat.ignores.splice(ignoreIndex, 1);
+		
+		siteChat.saveCachedIgnores();
+	};
+
+	siteChat.saveCachedIgnores = function() {
+		siteChat.setLocalStorage("ignores", JSON.stringify(siteChat.ignores));
+	};
+
+	siteChat.markMessagesIgnored = function(userId) {
+		$("#chatPanel .message[data-user-id='" + userId + "']").addClass("ignored");
+	};
+
+	siteChat.unmarkMessagesIgnored = function(userId) {
+		$("#chatPanel .message.ignored[data-user-id='" + userId + "']").removeClass("ignored");
+	};
+
 	siteChat.setup = function(sessionId, userId, autoJoinLobby, siteChatUrl, siteChatProtocol, rootPath) {
 		
 		siteChat.sessionId = sessionId;
@@ -1265,6 +1389,7 @@ var siteChat = (function() {
 		}
 
 		siteChat.settings = siteChat.getLocalStorageObject("settings") || {};
+		siteChat.ignores = siteChat.getLocalStorageObject("ignores") || [];
 
 		$(window).bind("beforeunload", function() {
 
@@ -1272,7 +1397,6 @@ var siteChat = (function() {
 			if(siteChat.socket.connected)
 				siteChat.socket.close();
 		});
-
 
 		$(document).on("submit", "#joinConversationForm", function(event) {
 			event.preventDefault();
@@ -1477,6 +1601,20 @@ var siteChat = (function() {
 
 			siteChat.sendPacket(packet);
 		});
+
+		$(document).on("submit", "#ignoreForm", function(e) {
+			e.preventDefault();
+			var $form = $(this);
+			var username = $form.find("input").val();
+			$form.find("input").val("");
+
+			siteChat.setIgnore(null, username, false);
+		})
+
+		$(document).on("click", ".remove-ignore", function(e) {
+			e.preventDefault();
+			siteChat.setIgnore($(this).data("user-id"), null, true);
+		})
 
 		$(document).on("click", "#chatPanel .loadMore", function(e) {
 			e.preventDefault();

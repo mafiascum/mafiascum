@@ -16,6 +16,7 @@ import net.mafiascum.web.sitechat.server.inboundpacket.operator.SiteChatInboundL
 import net.mafiascum.web.sitechat.server.inboundpacket.operator.SiteChatInboundLookupUserPacketOperator;
 import net.mafiascum.web.sitechat.server.inboundpacket.operator.SiteChatInboundPacketOperator;
 import net.mafiascum.web.sitechat.server.inboundpacket.operator.SiteChatInboundSendMessagePacketOperator;
+import net.mafiascum.web.sitechat.server.inboundpacket.operator.SiteChatInboundSetIgnorePacketOperator;
 import net.mafiascum.web.sitechat.server.inboundpacket.operator.SiteChatInboundSetPasswordPacketOperator;
 import net.mafiascum.web.sitechat.server.inboundpacket.operator.SiteChatInboundSetUserSettingsPacketOperator;
 
@@ -43,7 +44,8 @@ public enum SiteChatInboundPacketType implements VEnum {
   loadMessages(7, "LoadMessages", SiteChatInboundLoadMessagesPacketOperator.class),
   debug(8, "Debug", SiteChatInboundDebugPacketOperator.class),
   debugResult(9, "DebugResult", SiteChatInboundDebugResultPacketOperator.class),
-  setUserSettings(10, "SetUserSettings", SiteChatInboundSetUserSettingsPacketOperator.class);
+  setUserSettings(10, "SetUserSettings", SiteChatInboundSetUserSettingsPacketOperator.class),
+  setIgnore(11, "SetIgnore", SiteChatInboundSetIgnorePacketOperator.class);
   
 
   private String standardName;

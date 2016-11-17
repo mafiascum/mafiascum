@@ -13,11 +13,11 @@ public class UserPacket {
   public String userColor;
   public long lastActivityDatetime;
   
-  public UserPacket(SiteChatUser user, LocalDateTime lastActivitydatetime) {
+  public UserPacket(SiteChatUser user, LocalDateTime lastActivityDatetime) {
     this.id = user.getId();
     this.name = user.getName();
     this.avatarUrl = user.getAvatarUrl();
     this.userColor = user.getUserColor();
-    this.lastActivityDatetime = lastActivitydatetime.atZone(ZoneId.systemDefault()).toEpochSecond() * 1000;
+    this.lastActivityDatetime = lastActivityDatetime == null ? 0 : lastActivityDatetime.atZone(ZoneId.systemDefault()).toEpochSecond() * 1000;
   }
 }

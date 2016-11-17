@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import net.mafiascum.jdbc.BatchInsertStatement;
+import net.mafiascum.phpbb.log.ForumLog;
 import net.mafiascum.phpbb.usergroup.UserGroup;
 import net.mafiascum.util.MSUtil;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversation;
@@ -139,8 +140,8 @@ public class SiteChatUtil extends MSUtil {
     return queryUtil.retrieveDataObjectList(connection, criteria, UserGroup.class);
   }
   
-  public void addUserToUserGroup(Connection connection, int userId, int userGroupId) throws SQLException {
-    new UserGroup(true, userGroupId, userId, false, false, 0).storeInsertIgnore(connection, true);
+  public void addUserToUserGroup(Connection connection, int userId, int userGroupId, Long autoRemoveTime) throws SQLException {
+    new UserGroup(true, userGroupId, userId, false, false, autoRemoveTime == null ? 0 : autoRemoveTime.intValue()).storeInsertIgnore(connection, true);
   }
   
   public List<SiteChatConversationMessage> loadSiteChatConversationMessagesForConversation(Connection connection, int siteChatConversationId, int numberToLoad, Integer oldestMessageId) throws SQLException {
@@ -206,5 +207,24 @@ public class SiteChatUtil extends MSUtil {
   
   public List<SiteChatUserSettings> getSiteChatUserSettingsList(Connection connection) throws SQLException {
     return queryUtil.retrieveDataObjectList(connection, null, SiteChatUserSettings.class);
+  }
+  
+  public void putSiteChatIgnore(Connection connection, SiteChatIgnore ignore) throws SQLException {
+    ignore.store(connection);
+  }
+  
+  public void removeSiteChatIgnore(Connection connection, int userId, int ignoredUserId) throws SQLException {
+    String sql = " DELETE FROM " + queryUtil.getEscapedTableName(SiteChatIgnore.class)
+               + " WHERE " + sqlUtil.escapeQuoteColumnName(SiteChatIgnore.USER_ID_COLUMN) + "=" + userId
+               + " AND " + sqlUtil.escapeQuoteColumnName(SiteChatIgnore.IGNORED_USER_ID_COLUMN) + "=" + ignoredUserId;
+    queryUtil.executeStatementNoResult(connection, statement -> statement.executeUpdate(sql));
+  }
+  
+  public List<SiteChatIgnore> getSiteChatIgnores(Connection connection) throws SQLException {
+    return queryUtil.retrieveDataObjectList(connection, null, SiteChatIgnore.class);
+  }
+  
+  public void putForumLog(Connection connection, ForumLog forumLog) throws SQLException {
+    forumLog.store(connection);
   }
 }

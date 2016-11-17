@@ -28,6 +28,7 @@ import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationMessag
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationType;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationWithUserList;
 import net.mafiascum.web.sitechat.server.debug.DebugManager;
+import net.mafiascum.web.sitechat.server.ignore.IgnoreManager;
 import net.mafiascum.web.sitechat.server.inboundpacket.SiteChatInboundPacketSkeleton;
 import net.mafiascum.web.sitechat.server.inboundpacket.SiteChatInboundPacketType;
 import net.mafiascum.web.sitechat.server.inboundpacket.operator.SiteChatInboundPacketOperator;
@@ -78,6 +79,7 @@ public class SiteChatServer extends Server implements SignalHandler {
   protected BanManager banManager;
   protected DebugManager debugManager;
   protected UserManager userManager;
+  protected IgnoreManager ignoreManager;
   
   protected final int MESSAGE_BATCH_SIZE = 1;
   protected volatile int topSiteChatConversationMessageId;
@@ -111,7 +113,7 @@ public class SiteChatServer extends Server implements SignalHandler {
 
       connector = new ServerConnector(this);
       connector.setPort(port);
-
+      
       addConnector(connector);
       webSocketHandler = new WebSocketHandler() {
 
@@ -138,6 +140,10 @@ public class SiteChatServer extends Server implements SignalHandler {
       this.userManager = new UserManager(provider, siteChatUtil);
       this.userManager.loadUserMap(siteChatUtil.loadSiteChatUserMap(connection).values(), siteChatUtil.getSiteChatUserSettingsList(connection));
 
+      logger.info("Loading Site Chat Ignores...");
+      this.ignoreManager = new IgnoreManager(provider, userManager);
+      this.ignoreManager.reload();
+      
       logger.info("Loading Site Chat Conversations...");
       List<SiteChatConversation> siteChatConversationList = siteChatUtil.getSiteChatConversations(connection);
       for(SiteChatConversation siteChatConversation : siteChatConversationList) {
@@ -742,7 +748,7 @@ public class SiteChatServer extends Server implements SignalHandler {
     }
   }
   
-  public void processChannelCommand(SiteChatUser user, String message) throws Exception {
+  public void processChannelCommand(SiteChatWebSocket webSocket, SiteChatUser user, String message) throws Exception {
     Pattern pattern = Pattern.compile("^/(\\w+)\\s+(.*?)$");
     Matcher matcher = pattern.matcher(message);
     
@@ -753,6 +759,7 @@ public class SiteChatServer extends Server implements SignalHandler {
     String remainder = matcher.group(2);
     
     if(command.equals("ban")) {
+      
       SiteChatUser targetUser = getSiteChatUser(remainder);
       
       if(!banManager.isBanAdmin(user.getId()))
@@ -760,7 +767,7 @@ public class SiteChatServer extends Server implements SignalHandler {
       if(targetUser == null)
         return;//TODO: Notify.
       
-      banManager.banUser(targetUser.getId());
+      banManager.banUser(webSocket.getConnection().getRemoteAddress().getHostString(), user.getId(), targetUser);
     }
     else if(command.equals("unban")) {
       SiteChatUser targetUser = getSiteChatUser(remainder);
@@ -770,10 +777,24 @@ public class SiteChatServer extends Server implements SignalHandler {
       if(targetUser == null)
         return;//TODO: Notify.
       
-      banManager.unbanUser(targetUser.getId());
+      banManager.unbanUser(webSocket.getConnection().getRemoteAddress().getHostString(), user.getId(), targetUser);
     }
     else {
       //TODO: Notify.
+    }
+  }
+  
+  public SiteChatIgnore addIgnore(SiteChatWebSocket webSocket, int userId, int ignoredUserId) throws SQLException {
+    String ipAddress = webSocket.getConnection().getRemoteAddress().getHostString();
+    synchronized(ignoreManager) {
+      return ignoreManager.addIgnore(userId, ignoredUserId, ipAddress);
+    }
+  }
+  
+  public void removeIgnore(SiteChatWebSocket webSocket, int userId, int ignoredUserId) throws SQLException {
+    String ipAddress = webSocket.getConnection().getRemoteAddress().getHostString();
+    synchronized(ignoreManager) {
+      ignoreManager.removeIgnore(ipAddress, userId, ignoredUserId);
     }
   }
 
@@ -886,7 +907,6 @@ public class SiteChatServer extends Server implements SignalHandler {
     }
 
     public void onWebSocketConnect(Session session) {
-
       logger.trace(this.getClass().getSimpleName() + "#onWebSocketConnect   " + session.getRemoteAddress().getHostString());
       this.connection = (WebSocketSession)session;
     }
@@ -982,5 +1002,9 @@ public class SiteChatServer extends Server implements SignalHandler {
   
   public UserManager getUserManager() {
     return userManager;
+  }
+  
+  public IgnoreManager getIgnoreManager() {
+    return ignoreManager;
   }
 }

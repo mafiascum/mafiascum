@@ -5,6 +5,11 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -1053,5 +1058,20 @@ public class QueryUtil extends MSUtil {
     }
     
     batchInsertStatement.finish();
+  }
+  
+  public LocalDateTime getLocalDateTime(ResultSet resultSet, String columnName) throws SQLException {
+    Timestamp timestamp = resultSet.getTimestamp(columnName);
+    return timestamp == null ? null : timestamp.toLocalDateTime();
+  }
+  
+  public LocalDate getLocalDate(ResultSet resultSet, String columnName) throws SQLException {
+    Timestamp timestamp = resultSet.getTimestamp(columnName);
+    return timestamp == null ? null : timestamp.toLocalDateTime().toLocalDate();
+  }
+  
+  public LocalTime getLocalTime(ResultSet resultSet, String columnName) throws SQLException {
+    Time time = resultSet.getTime(columnName);
+    return time == null ? null : time.toLocalTime();
   }
 }

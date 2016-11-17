@@ -67,7 +67,7 @@ public class SiteChatInboundSendMessagePacketOperator extends SiteChatInboundSig
     }
     
     if(sendMessagePacket.getMessage().startsWith("/"))
-      siteChatServer.processChannelCommand(siteChatUser, sendMessagePacket.getMessage());
+      siteChatServer.processChannelCommand(siteChatWebSocket, siteChatUser, sendMessagePacket.getMessage());
     else {
       SiteChatConversationMessage message = siteChatServer.recordSiteChatConversationMessage(siteChatUser.getId(), sendMessagePacket.getSiteChatConversationId(), sendMessagePacket.getRecipientUserId(), sendMessagePacket.getMessage());
       message = message.clone();

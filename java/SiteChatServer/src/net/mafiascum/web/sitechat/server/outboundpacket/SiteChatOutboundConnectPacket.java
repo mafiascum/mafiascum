@@ -2,7 +2,6 @@ package net.mafiascum.web.sitechat.server.outboundpacket;
 
 import java.util.Set;
 
-import net.mafiascum.web.sitechat.server.SiteChatUser;
 import net.mafiascum.web.sitechat.server.user.UserPacket;
 
 public class SiteChatOutboundConnectPacket extends SiteChatOutboundPacket {
