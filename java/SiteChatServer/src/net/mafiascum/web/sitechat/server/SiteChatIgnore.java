@@ -38,7 +38,6 @@ public class SiteChatIgnore extends DataObjectWithIntID implements DataObject {
     StoreDataObjectSQLBuilder builder = new StoreDataObjectSQLBuilder(QueryUtil.get().getTableName(getClass()));
     
     builder
-    .put(ID_COLUMN, getId())
     .put(USER_ID_COLUMN, getUserId())
     .put(IGNORED_USER_ID_COLUMN, getIgnoredUserId())
     .put(CREATED_DATETIME_COLUMN, getCreatedDatetime())
