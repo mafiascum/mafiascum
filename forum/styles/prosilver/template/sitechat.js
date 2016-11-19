@@ -539,9 +539,9 @@ var siteChat = (function() {
 		siteChat.sendPacket(siteChatPacket);
 	};
 
-	siteChat.handleSocketClose = function() {
+	siteChat.handleSocketClose = function(e) {
 
-		console.log("[" + new Date() + "] Web Socket Closed.");
+		console.log("[" + new Date() + "] Web Socket Closed.", e);
 		siteChat.socket.connected = false;
 		if(!siteChat.unloading && siteChat.tryReconnect) {
 
@@ -553,6 +553,10 @@ var siteChat = (function() {
 			$("#utilitywindow .exclamation").removeClass("hidden");
 		}
 		siteChat.attemptingLogin = false;
+	};
+
+	siteChat.handleSocketError = function(e) {
+		console.log("[" + new Date() + "] Web Socket Error.", e);
 	};
 
 	siteChat.handleRoomListJoinRoom = function(e) {
@@ -1669,6 +1673,7 @@ var siteChat = (function() {
 		siteChat.socket.onopen = siteChat.handleSocketOpen;
 		siteChat.socket.onclose = siteChat.handleSocketClose;
 		siteChat.socket.onmessage = siteChat.handleSocketMessage;
+		siteChat.socket.onerror = siteChat.handleSocketError;
 		siteChat.attemptingLogin = false;
 	};
 

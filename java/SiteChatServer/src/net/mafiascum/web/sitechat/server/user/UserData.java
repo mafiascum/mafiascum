@@ -4,14 +4,14 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.mafiascum.web.sitechat.server.SiteChatServer.SiteChatWebSocket;
+import net.mafiascum.web.sitechat.server.Descriptor;
 import net.mafiascum.web.sitechat.server.SiteChatUser;
 import net.mafiascum.web.sitechat.server.SiteChatUserSettings;
 
 public class UserData {
 
   protected SiteChatUser user;
-  protected List<SiteChatWebSocket> webSockets = new ArrayList<>();
+  protected List<Descriptor> descriptors = new ArrayList<>();
   protected LocalDateTime lastActivityDatetime;
   protected LocalDateTime lastNetworkActivityDatetime;
   protected SiteChatUserSettings userSettings;
@@ -26,11 +26,11 @@ public class UserData {
   public void setUser(SiteChatUser user) {
     this.user = user;
   }
-  public List<SiteChatWebSocket> getWebSockets() {
-    return webSockets;
+  public List<Descriptor> getDescriptors() {
+    return descriptors;
   }
-  public void setWebSockets(List<SiteChatWebSocket> webSockets) {
-    this.webSockets = webSockets;
+  public void setDescriptors(List<Descriptor> descriptors) {
+    this.descriptors = descriptors;
   }
   public LocalDateTime getLastActivityDatetime() {
     return lastActivityDatetime;

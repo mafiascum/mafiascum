@@ -1,12 +1,13 @@
 package net.mafiascum.web.sitechat.server.inboundpacket.operator;
 
-import net.mafiascum.web.sitechat.server.SiteChatServer;
-import net.mafiascum.web.sitechat.server.SiteChatServer.SiteChatWebSocket;
+import net.mafiascum.web.sitechat.server.Descriptor;
+import net.mafiascum.web.sitechat.server.SiteChatMessageProcessor;
 import net.mafiascum.web.sitechat.server.SiteChatUser;
 import net.mafiascum.web.sitechat.server.debug.DebugEntry;
 import net.mafiascum.web.sitechat.server.debug.DebugManager;
 import net.mafiascum.web.sitechat.server.inboundpacket.SiteChatInboundDebugResultPacket;
 import net.mafiascum.web.sitechat.server.outboundpacket.SiteChatOutboundDebugResultPacket;
+import net.mafiascum.web.sitechat.server.user.UserData;
 
 import org.apache.log4j.Logger;
 
@@ -20,11 +21,11 @@ public class SiteChatInboundDebugResultPacketOperator extends SiteChatInboundSig
     super();
   }
   
-  public void process(SiteChatServer siteChatServer, SiteChatUser siteChatUser, SiteChatWebSocket siteChatWebSocket, String siteChatInboundPacketJson) throws Exception {
+  public void process(SiteChatMessageProcessor processor, UserData user, Descriptor descriptor, String siteChatInboundPacketJson) throws Exception {
     
     SiteChatInboundDebugResultPacket resultPacket = new Gson().fromJson(siteChatInboundPacketJson, SiteChatInboundDebugResultPacket.class);
-    logger.info("Debug Result. ID: " + resultPacket.getId() + ", Result: " + resultPacket.getResult() + ", User ID: " + siteChatUser.getId());
-    DebugManager debugManager = siteChatServer.getDebugManager();
+    logger.info("Debug Result. ID: " + resultPacket.getId() + ", Result: " + resultPacket.getResult() + ", User ID: " + user.getId());
+    DebugManager debugManager = processor.getDebugManager();
     
     DebugEntry entry = debugManager.getEntry(resultPacket.getId());
     
@@ -33,7 +34,7 @@ public class SiteChatInboundDebugResultPacketOperator extends SiteChatInboundSig
       return;
     }
     
-    SiteChatUser initiatingUser = siteChatServer.getSiteChatUser(entry.getInitiatingUserId());
+    SiteChatUser initiatingUser = processor.getSiteChatUser(entry.getInitiatingUserId());
     
     if(initiatingUser == null) {
       logger.error("Invalid initiating user `" + entry.getInitiatingUserId() + "`");
@@ -45,6 +46,6 @@ public class SiteChatInboundDebugResultPacketOperator extends SiteChatInboundSig
     outboundPacket.setId(entry.getId());
     outboundPacket.setResult(resultPacket.getResult());
     
-    siteChatServer.sendOutboundPacketToUsers(miscUtil.makeHashSet(initiatingUser.getId()), outboundPacket, null);
+    processor.sendOutboundPacketToUsers(miscUtil.makeHashSet(initiatingUser.getId()), outboundPacket, null);
   }
 }

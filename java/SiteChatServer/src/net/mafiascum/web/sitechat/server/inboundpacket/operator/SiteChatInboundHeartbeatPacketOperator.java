@@ -1,8 +1,8 @@
 package net.mafiascum.web.sitechat.server.inboundpacket.operator;
 
-import net.mafiascum.web.sitechat.server.SiteChatServer;
-import net.mafiascum.web.sitechat.server.SiteChatServer.SiteChatWebSocket;
-import net.mafiascum.web.sitechat.server.SiteChatUser;
+import net.mafiascum.web.sitechat.server.Descriptor;
+import net.mafiascum.web.sitechat.server.SiteChatMessageProcessor;
+import net.mafiascum.web.sitechat.server.user.UserData;
 
 public class SiteChatInboundHeartbeatPacketOperator extends SiteChatInboundSignedInPacketOperator {
 
@@ -10,7 +10,7 @@ public class SiteChatInboundHeartbeatPacketOperator extends SiteChatInboundSigne
     super();
   }
   
-  public void process(SiteChatServer siteChatServer, SiteChatUser siteChatUser, SiteChatWebSocket siteChatWebSocket, String siteChatInboundPacketJson) throws Exception {
-    siteChatServer.updateUserNetworkActivity(siteChatUser.getId());
+  public void process(SiteChatMessageProcessor processor, UserData user, Descriptor descriptor, String siteChatInboundPacketJson) throws Exception {
+    processor.updateUserNetworkActivity(user.getId());
   }
 }

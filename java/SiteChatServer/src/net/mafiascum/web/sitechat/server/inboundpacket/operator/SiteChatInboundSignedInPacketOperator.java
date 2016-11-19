@@ -1,8 +1,7 @@
 package net.mafiascum.web.sitechat.server.inboundpacket.operator;
 
-import net.mafiascum.web.sitechat.server.SiteChatServer;
-import net.mafiascum.web.sitechat.server.SiteChatServer.SiteChatWebSocket;
-import net.mafiascum.web.sitechat.server.SiteChatUser;
+import net.mafiascum.web.sitechat.server.Descriptor;
+import net.mafiascum.web.sitechat.server.SiteChatMessageProcessor;
 import net.mafiascum.web.sitechat.server.user.UserData;
 
 import org.apache.log4j.Logger;
@@ -11,11 +10,11 @@ public abstract class SiteChatInboundSignedInPacketOperator extends SiteChatInbo
 
   private static final Logger logger = Logger.getLogger(SiteChatInboundSignedInPacketOperator.class.getName());
   
-  public abstract void process(SiteChatServer siteChatServer, SiteChatUser siteChatUser, SiteChatWebSocket siteChatWebSocket, String siteChatInboundPacketJson) throws Exception;
+  public abstract void process(SiteChatMessageProcessor processor, UserData user, Descriptor descriptor, String siteChatInboundPacketJson) throws Exception;
   
-  public void process(SiteChatServer siteChatServer, SiteChatWebSocket siteChatWebSocket, String siteChatInboundPacketJson) throws Exception {
+  public void process(SiteChatMessageProcessor processor, Descriptor descriptor, String siteChatInboundPacketJson) throws Exception {
     
-    UserData userData = siteChatWebSocket.getUserData();
+    UserData userData = processor.getUserManager().getUserByDescriptorId(descriptor.getId());
     if(userData == null) {
       //Not logged in.
       
@@ -23,6 +22,6 @@ public abstract class SiteChatInboundSignedInPacketOperator extends SiteChatInbo
       return;
     }
     
-    process(siteChatServer, userData.getUser(), siteChatWebSocket, siteChatInboundPacketJson);
+    process(processor, userData, descriptor, siteChatInboundPacketJson);
   }
 }

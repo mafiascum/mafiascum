@@ -21,14 +21,14 @@ import de.ailis.pherialize.Pherialize;
 
 public class BanManager {
   protected Map<Integer, UserGroup> userIdToBanUserGroupMap = new HashMap<Integer, UserGroup>();
-  protected SiteChatServer server;
+  protected SiteChatMessageProcessor processor;
   protected SiteChatUtil siteChatUtil;
   protected QueryUtil queryUtil;
   protected Provider provider;
   protected DateUtil dateUtil = DateUtil.get();
   
-  public BanManager(SiteChatServer server, SiteChatUtil siteChatUtil, QueryUtil queryUtil, Provider provider) {
-    this.server = server;
+  public BanManager(SiteChatMessageProcessor processor, SiteChatUtil siteChatUtil, QueryUtil queryUtil, Provider provider) {
+    this.processor = processor;
     this.siteChatUtil = siteChatUtil;
     this.queryUtil = queryUtil;
     this.provider = provider;
@@ -38,7 +38,7 @@ public class BanManager {
     
     for(UserGroup newUserGroup : banUserGroups) {
       if(isUserBanned(newUserGroup) && !isUserBanned(newUserGroup.getUserId()))
-        server.removeUser(newUserGroup.getUserId());
+        processor.removeUser(newUserGroup.getUserId());
     }
     
     this.userIdToBanUserGroupMap = MiscUtil.get().map(banUserGroups, UserGroup::getUserId);
@@ -72,7 +72,7 @@ public class BanManager {
     
     userIdToBanUserGroupMap.put(userId, createBanUserGroup(userId));
     
-    server.removeUser(userId);
+    processor.removeUser(userId);
     
     long autoRemoveTime = dateUtil.currentTimeSeconds() + (60 * 60 * 24 * 2);//Two days.
     queryUtil.executeConnectionNoResult(provider, connection -> siteChatUtil.addUserToUserGroup(connection, userId, siteChatUtil.BANNED_USERS_GROUP_ID, autoRemoveTime));

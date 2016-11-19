@@ -97,18 +97,13 @@ public class SiteChatUtil extends MSUtil {
     if(siteChatConversationMessages.isEmpty())
       return;
     
-    synchronized(siteChatConversationMessages.get(0)) {
-      siteChatConversationMessages.get(0).setBatchInsertStatementColumns(batchInsertStatement);
-    }  
+    siteChatConversationMessages.get(0).setBatchInsertStatementColumns(batchInsertStatement);
     
     batchInsertStatement.start();
     
     for(SiteChatConversationMessage siteChatConversationMessage : siteChatConversationMessages) {
       
-      synchronized(siteChatConversationMessage) {
-
-        siteChatConversationMessage.addToBatchInsertStatement(batchInsertStatement);
-      }
+      siteChatConversationMessage.addToBatchInsertStatement(batchInsertStatement);
     }
     
     batchInsertStatement.finish();

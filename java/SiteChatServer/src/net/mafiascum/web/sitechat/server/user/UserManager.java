@@ -15,14 +15,15 @@ import java.util.function.Predicate;
 import net.mafiascum.provider.Provider;
 import net.mafiascum.util.MiscUtil;
 import net.mafiascum.util.QueryUtil;
-import net.mafiascum.web.sitechat.server.SiteChatServer.SiteChatWebSocket;
+import net.mafiascum.web.sitechat.server.Descriptor;
 import net.mafiascum.web.sitechat.server.SiteChatUser;
 import net.mafiascum.web.sitechat.server.SiteChatUserSettings;
 import net.mafiascum.web.sitechat.server.SiteChatUtil;
 
 public class UserManager {
-  protected Map<Integer, UserData> userIdToUserMap = new HashMap<Integer, UserData>();
-  protected Map<String, UserData> usernameToUserMap = new HashMap<String, UserData>();
+  protected Map<Integer, UserData> userIdToUserMap = new HashMap<>();
+  protected Map<String, UserData> usernameToUserMap = new HashMap<>();
+  protected Map<String, Integer> descriptorIdToUserIdMap = new HashMap<>();
   
   protected Provider provider;
   protected SiteChatUtil siteChatUtil;
@@ -44,6 +45,15 @@ public class UserManager {
   
   public UserData getUser(int userId) {
     return userIdToUserMap.get(userId);
+  }
+  
+  public UserData getUserByDescriptorId(String descriptorId) {
+    Integer userId = descriptorIdToUserIdMap.get(descriptorId);
+    
+    if(userId == null)
+      return null;
+    
+    return getUser(userId);
   }
   
   public void updateUserActivity(int userId) {
@@ -118,12 +128,19 @@ public class UserManager {
     setupUsernameToUserMap();
   }
   
-  public void associateWebSocketWithUser(int userId, SiteChatWebSocket webSocket) {
-    getUser(userId).getWebSockets().add(webSocket);
+  public void associateDescriptorUser(int userId, Descriptor descriptor) {
+    getUser(userId).getDescriptors().add(descriptor);
+    descriptorIdToUserIdMap.put(descriptor.getId(), userId);
   }
   
-  public void removeWebSocketFromUser(int userId, SiteChatWebSocket webSocket) {
-    getUser(userId).getWebSockets().remove(webSocket);
+  public void removeDescriptorFromUser(String descriptorId) {
+    Integer userId = descriptorIdToUserIdMap.get(descriptorId);
+    
+    if(userId == null)
+      return;
+    
+    descriptorIdToUserIdMap.remove(descriptorId);
+    getUser(userId).getDescriptors().removeIf(descriptor -> descriptor.getId().equals(descriptorId));
   }
   
   public Set<Integer> getIdleUserIdSet() {

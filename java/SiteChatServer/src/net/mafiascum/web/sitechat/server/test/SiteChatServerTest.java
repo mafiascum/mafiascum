@@ -1,5 +1,10 @@
 package net.mafiascum.web.sitechat.server.test;
 
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyInt;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import java.sql.Connection;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -9,7 +14,7 @@ import java.util.Map;
 import net.mafiascum.provider.Provider;
 import net.mafiascum.util.MiscUtil;
 import net.mafiascum.web.sitechat.server.SiteChatException;
-import net.mafiascum.web.sitechat.server.SiteChatServer;
+import net.mafiascum.web.sitechat.server.SiteChatMessageProcessor;
 import net.mafiascum.web.sitechat.server.SiteChatUtil;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationMessage;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationType;
@@ -17,32 +22,31 @@ import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationWithUs
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.mockito.Mockito;
-
 public class SiteChatServerTest {
 
   protected final int CONVERSATION_ID = 11;
   protected final int USER_ID = 5932;
-  protected Provider provider = Mockito.mock(Provider.class);
-  protected SiteChatUtil siteChatUtil = Mockito.mock(SiteChatUtil.class);
+  protected Provider provider = mock(Provider.class);
+  protected SiteChatUtil siteChatUtil = mock(SiteChatUtil.class);
   
-  protected SiteChatServer getSiteChatServer() {
-    SiteChatServer siteChatServer = new SiteChatServer(provider);
-    siteChatServer.setSiteChatUtil(siteChatUtil);
-    return siteChatServer;
+  protected SiteChatMessageProcessor getProcessor() {
+    SiteChatMessageProcessor processor = new SiteChatMessageProcessor();
+    processor.setProvider(provider);
+    processor.setSiteChatUtil(siteChatUtil);
+    return processor;
   }
   
   @Test
   public void testLoadHistoricalMessagesForPrivateMessage() throws Exception {
     
-    Mockito.when(provider.getConnection()).thenReturn(Mockito.mock(Connection.class));
-    Mockito.when(siteChatUtil.loadSiteChatConversationMessagesForPrivateConversation(Mockito.any(), Mockito.anyInt(), Mockito.anyInt(), Mockito.anyInt(), Mockito.anyInt()))
+    when(provider.getConnection()).thenReturn(mock(Connection.class));
+    when(siteChatUtil.loadSiteChatConversationMessagesForPrivateConversation(any(), anyInt(), anyInt(), anyInt(), anyInt()))
            .thenReturn(Arrays.asList(new SiteChatConversationMessage(), new SiteChatConversationMessage(), new SiteChatConversationMessage()));
-    SiteChatServer siteChatServer = getSiteChatServer();
+    SiteChatMessageProcessor processor = getProcessor();
     
     List<SiteChatConversationMessage> messages;
     
-    messages = siteChatServer.loadHistoricalMessages(USER_ID, SiteChatConversationType.Private, USER_ID, null);
+    messages = processor.loadHistoricalMessages(USER_ID, SiteChatConversationType.Private, USER_ID, null);
     
     Assert.assertEquals(3, messages.size());
   }
@@ -50,20 +54,20 @@ public class SiteChatServerTest {
   @Test
   public void testLoadHistoricalMessagesForConversationWithAccess() throws Exception {
     
-    Mockito.when(provider.getConnection()).thenReturn(Mockito.mock(Connection.class));
-    Mockito.when(siteChatUtil.loadSiteChatConversationMessagesForConversation(Mockito.any(), Mockito.anyInt(), Mockito.anyInt(), Mockito.anyInt()))
+    when(provider.getConnection()).thenReturn(mock(Connection.class));
+    when(siteChatUtil.loadSiteChatConversationMessagesForConversation(any(), anyInt(), anyInt(), anyInt()))
            .thenReturn(Arrays.asList(new SiteChatConversationMessage(), new SiteChatConversationMessage(), new SiteChatConversationMessage()));
-    SiteChatServer siteChatServer = getSiteChatServer();
+    SiteChatMessageProcessor processor = getProcessor();
     
     SiteChatConversationWithUserList conversation = new SiteChatConversationWithUserList();
     conversation.setUserIdSet(MiscUtil.get().makeHashSet(USER_ID));
     Map<Integer, SiteChatConversationWithUserList> conversationMap = new HashMap<Integer, SiteChatConversationWithUserList>();
     conversationMap.put(CONVERSATION_ID, conversation);
-    siteChatServer.setSiteChatConversationWithMemberListMap(conversationMap);
+    processor.setSiteChatConversationWithMemberListMap(conversationMap);
     
     List<SiteChatConversationMessage> messages;
     
-    messages = siteChatServer.loadHistoricalMessages(USER_ID, SiteChatConversationType.Conversation, CONVERSATION_ID, null);
+    messages = processor.loadHistoricalMessages(USER_ID, SiteChatConversationType.Conversation, CONVERSATION_ID, null);
     
     Assert.assertEquals(3, messages.size());
   }
@@ -71,30 +75,30 @@ public class SiteChatServerTest {
   @Test(expected=SiteChatException.class)
   public void testLoadHistoricalMessagesForConversationWithNoAccess() throws Exception {
     
-    Mockito.when(provider.getConnection()).thenReturn(Mockito.mock(Connection.class));
-    Mockito.when(siteChatUtil.loadSiteChatConversationMessagesForConversation(Mockito.any(), Mockito.anyInt(), Mockito.anyInt(), Mockito.anyInt()))
+    when(provider.getConnection()).thenReturn(mock(Connection.class));
+    when(siteChatUtil.loadSiteChatConversationMessagesForConversation(any(), anyInt(), anyInt(), anyInt()))
            .thenReturn(Arrays.asList(new SiteChatConversationMessage(), new SiteChatConversationMessage(), new SiteChatConversationMessage()));
-    SiteChatServer siteChatServer = getSiteChatServer();
+    SiteChatMessageProcessor processor = getProcessor();
     
     SiteChatConversationWithUserList conversation = new SiteChatConversationWithUserList();
     conversation.setUserIdSet(MiscUtil.get().makeHashSet());
     Map<Integer, SiteChatConversationWithUserList> conversationMap = new HashMap<Integer, SiteChatConversationWithUserList>();
     conversationMap.put(CONVERSATION_ID, conversation);
-    siteChatServer.setSiteChatConversationWithMemberListMap(conversationMap);
+    processor.setSiteChatConversationWithMemberListMap(conversationMap);
     
-    siteChatServer.loadHistoricalMessages(USER_ID, SiteChatConversationType.Conversation, CONVERSATION_ID, null);
+    processor.loadHistoricalMessages(USER_ID, SiteChatConversationType.Conversation, CONVERSATION_ID, null);
   }
   
   @Test(expected=SiteChatException.class)
   public void testLoadHistoricalMessagesForConversationWithInvalidConversation() throws Exception {
     
-    Mockito.when(provider.getConnection()).thenReturn(Mockito.mock(Connection.class));
-    Mockito.when(siteChatUtil.loadSiteChatConversationMessagesForConversation(Mockito.any(), Mockito.anyInt(), Mockito.anyInt(), Mockito.anyInt()))
+    when(provider.getConnection()).thenReturn(mock(Connection.class));
+    when(siteChatUtil.loadSiteChatConversationMessagesForConversation(any(), anyInt(), anyInt(), anyInt()))
            .thenReturn(Arrays.asList(new SiteChatConversationMessage(), new SiteChatConversationMessage(), new SiteChatConversationMessage()));
-    SiteChatServer siteChatServer = getSiteChatServer();
+    SiteChatMessageProcessor processor = getProcessor();
     
-    siteChatServer.setSiteChatConversationWithMemberListMap(new HashMap<Integer, SiteChatConversationWithUserList>());
+    processor.setSiteChatConversationWithMemberListMap(new HashMap<Integer, SiteChatConversationWithUserList>());
     
-    siteChatServer.loadHistoricalMessages(USER_ID, SiteChatConversationType.Conversation, CONVERSATION_ID, null);
+    processor.loadHistoricalMessages(USER_ID, SiteChatConversationType.Conversation, CONVERSATION_ID, null);
   }
 }
