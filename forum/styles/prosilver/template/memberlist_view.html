@@ -60,6 +60,7 @@
 		<h3>{L_CONTACT_USER} {USERNAME}</h3>
 
 		<dl class="details">
+		<!-- IF S_CHAT --> <dt>{L_SITE_CHAT}:</dt> <dd><a class="sc-user-window-init" data-username="{USERNAME}" data-user-id="{USER_ID}" href="#">Send message</a></dd> <!-- ENDIF -->
 		<!-- IF U_PM --><dt>{L_PM}:</dt> <dd><a href="{U_PM}">{L_SEND_PRIVATE_MESSAGE}</a></dd><!-- ENDIF -->
 		<!-- IF U_EMAIL --><dt>{L_EMAIL_ADDRESS}:</dt> <dd><a href="{U_EMAIL}">{L_SEND_EMAIL_USER} {USERNAME}</a></dd><!-- ENDIF -->
 		<!-- IF U_WIKI2 --><dt>{L_WIKI}:</dt> <dd><a href="{U_WIKI2}" title="{L_VISIT_WIKI}: {USERNAME}">{USERNAME}</a></dd><!-- ENDIF -->

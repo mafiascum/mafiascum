@@ -4532,10 +4532,11 @@ function page_header($page_title = '', $display_online_list = true, $item_id = 0
 		$s_search_hidden_fields['sid'] = $_SID;
 	}
 	
-	global $siteChatUrl, $siteChatProtocol;
+	global $siteChatUrl, $siteChatProtocol, $cacheBreaker;
 	
 	// The following assigns all _common_ variables that may be used at any point in a template.
 	$template->assign_vars(array(
+		'CACHE_BREAKER'					=> urlencode($cacheBreaker),
 		'SITENAME'						=> $config['sitename'],
 		'SITE_DESCRIPTION'				=> $config['site_desc'],
 		'PAGE_TITLE'					=> $page_title,

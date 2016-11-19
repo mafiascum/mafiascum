@@ -1710,6 +1710,7 @@ function show_profile($data, $user_notes_enabled = false, $warn_user_enabled = f
 		'POSTS'			=> ($data['user_posts']) ? $data['user_posts'] : 0,
 		'WARNINGS'		=> isset($data['user_warnings']) ? $data['user_warnings'] : 0,
 
+		'USER_ID'			=> $data['user_id'],
 		'USERNAME_FULL'		=> get_username_string('full', $user_id, $username, $data['user_colour']),
 		'USERNAME'			=> get_username_string('username', $user_id, $username, $data['user_colour']),
 		'USER_COLOR'		=> get_username_string('colour', $user_id, $username, $data['user_colour']),

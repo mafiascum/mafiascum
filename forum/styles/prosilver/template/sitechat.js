@@ -116,7 +116,7 @@ var siteChat = (function() {
 		+	'<div class="userlist" {{#if collapsed}}style="display:none;"{{/if}}>'
 		+		'<ul>'
 		+		'{{#each users}}'
-		+			'<li class="username dynamic-color" style="{{userColor}}" id="username{{roomNameCleaned}}{{userId}}" data-username="{{userName}}" data-user-id="{{userId}}">'
+		+			'<li class="sc-user-window-init username dynamic-color" style="{{userColor}}" id="username{{roomNameCleaned}}{{userId}}" data-username="{{userName}}" data-user-id="{{userId}}">'
 		+				'<span class="onlineindicator {{activeClass}}"></span>'
 		+				'{{userName}}'
 		+			'</li>'
@@ -808,7 +808,7 @@ var siteChat = (function() {
 		var active = siteChatUser.lastActivityDatetime ? ((new Date().getTime() - siteChatUser.lastActivityDatetime) / 1000) < (60) * (5) : false;
 
 		var html
-			= '<li class="username" id="username' + siteChatUser.id + '"><span class="onlineindicator ' + (active ? "active" : "idle") + '"></span>'
+			= '<li class="sc-user-window-init username" id="username' + siteChatUser.id + '"><span class="onlineindicator ' + (active ? "active" : "idle") + '"></span>'
 			+ '<span class="dynamic-color" style="' + siteChat.getUserColorStyle(siteChatUser) + '">' + siteChatUser.name + '</span>'
 			+ '</li>';
 		var $userDomElement = $(html);
@@ -1449,7 +1449,7 @@ var siteChat = (function() {
 		$(document).on("click", "#chatPanel .chatWindow .title", siteChat.handleWindowTitleClick);
 		$(document).on("click", "#chatPanel .chatWindow .title .close", siteChat.handleWindowCloseButtonClick);
 		$(document).on("keypress", "#chatPanel .chatWindow .inputBuffer", siteChat.handleWindowInputSubmission);
-		$(document).on("click", "#utilitywindow .username", siteChat.handleUserListUsernameClick);
+		$(document).on("click", ".sc-user-window-init", siteChat.handleUserListUsernameClick);
 		$(document).on("mousewheel", "#onlinelistcontainer, #chatPanel .outputBuffer, #roomstab", function(e) {
 
 			var wheelDistance = function(evt){

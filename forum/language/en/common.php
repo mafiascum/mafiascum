@@ -557,6 +557,7 @@ $lang = array_merge($lang, array(
 	'SEND_PRIVATE_MESSAGE'			=> 'Send private message',
 	'SETTINGS'				=> 'Settings',
 	'SIGNATURE'				=> 'Signature',
+	'SITE_CHAT'				=> 'Site chat',
 	'SKIP'					=> 'Skip to content',
 	'SMTP_NO_AUTH_SUPPORT'			=> 'SMTP server does not support authentication.',
 	'SORRY_AUTH_READ'			=> 'You are not authorised to read this forum.',

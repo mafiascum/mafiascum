@@ -4,6 +4,7 @@
 # /forum/
 /forum/backup.php
 /forum/backup_report.php
+/forum/cachebreaker.txt
 /forum/config.php
 /forum/files
 
