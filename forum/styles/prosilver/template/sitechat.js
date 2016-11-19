@@ -376,7 +376,7 @@ var siteChat = (function() {
 		event.stopPropagation();
 
 		var recipientUserId = parseInt($(this).data("user-id"));
-		
+
 		if(siteChat.chatWindows["P" + recipientUserId] == undefined)
 			siteChat.createChatWindow(null, recipientUserId, null, $(this).data("username"), [], true, [], true, null, null, null, null, true);
 	};
@@ -885,7 +885,7 @@ var siteChat = (function() {
 			
 			var roomUsers = room.userIdSet.map(function(userId) { return siteChat.userMap[userId]; });
 			roomUsers.sort(function(u1, u2) {
-				return u1.name.toLowerCase() > u2.name.toLowerCase();
+				return u1.name.toLowerCase().localeCompare(u2.name.toLowerCase());
 			});
 
 			$("#roomstab").append(siteChat.roomListRoomTemplate({
