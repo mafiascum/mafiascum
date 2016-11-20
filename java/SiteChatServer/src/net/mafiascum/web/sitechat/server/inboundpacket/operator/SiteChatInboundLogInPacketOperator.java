@@ -163,6 +163,7 @@ public class SiteChatInboundLogInPacketOperator extends SiteChatInboundPacketOpe
     settingsMap.put("compact", userSettings == null ? false : userSettings.getCompact());
     settingsMap.put("animateAvatars", userSettings == null ? true : userSettings.getAnimateAvatars());
     settingsMap.put("timestamp", userSettings == null ? "" : userSettings.getTimestampFormat());
+    settingsMap.put("invisible", userSettings == null ? false : userSettings.getInvisible());
     
     return settingsMap;
   }

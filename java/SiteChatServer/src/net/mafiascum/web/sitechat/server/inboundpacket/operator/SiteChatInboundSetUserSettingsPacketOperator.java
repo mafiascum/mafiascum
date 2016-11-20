@@ -12,6 +12,6 @@ public class SiteChatInboundSetUserSettingsPacketOperator extends SiteChatInboun
   public void process(SiteChatMessageProcessor processor, UserData user, Descriptor descriptor, String siteChatInboundPacketJson) throws Exception {
     
     SiteChatInboundSetUserSettingsPacket setUserSettingsPacket = new Gson().fromJson(siteChatInboundPacketJson, SiteChatInboundSetUserSettingsPacket.class);
-    processor.setUserSettings(user.getId(), setUserSettingsPacket.getCompact(), setUserSettingsPacket.getAnimateAvatars(), setUserSettingsPacket.getTimestamp());
+    processor.setUserSettings(user.getId(), setUserSettingsPacket.getCompact(), setUserSettingsPacket.getAnimateAvatars(), setUserSettingsPacket.getInvisible(), setUserSettingsPacket.getTimestamp());
   }
 }

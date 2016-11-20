@@ -766,3 +766,7 @@ ul li.tab.active {
 #chatPanel.compact .chatWindow .outputBuffer .messages {
 	padding-bottom:5px;
 }
+
+#chatPanel .invisible{
+	font-style:italic;
+}

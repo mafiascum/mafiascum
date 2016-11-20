@@ -222,4 +222,8 @@ public class SiteChatUtil extends MSUtil {
   public void putForumLog(Connection connection, ForumLog forumLog) throws SQLException {
     forumLog.store(connection);
   }
+  
+  public List<UserGroup> getUserGroups(Connection connection) throws SQLException {
+    return queryUtil.retrieveDataObjectList(connection, null, UserGroup.class);
+  }
 }

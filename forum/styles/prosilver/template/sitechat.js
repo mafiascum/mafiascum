@@ -116,7 +116,7 @@ var siteChat = (function() {
 		+	'<div class="userlist" {{#if collapsed}}style="display:none;"{{/if}}>'
 		+		'<ul>'
 		+		'{{#each users}}'
-		+			'<li class="sc-user-window-init username dynamic-color" style="{{userColor}}" id="username{{roomNameCleaned}}{{userId}}" data-username="{{userName}}" data-user-id="{{userId}}">'
+		+			'<li class="sc-user-window-init username dynamic-color {{#if invisible}}invisible{{/if}}" style="{{userColor}}" id="username{{roomNameCleaned}}{{userId}}" data-username="{{userName}}" data-user-id="{{userId}}">'
 		+				'<span class="onlineindicator {{activeClass}}"></span>'
 		+				'{{userName}}'
 		+			'</li>'
@@ -171,6 +171,7 @@ var siteChat = (function() {
 		+	'				<ul id="settingsList">'
 		+	'					<li><label for="settingsCompact">Compact Messages:</label> <input type="checkbox" id="settingsCompact" name="compact" {{#if compact}}checked{{/if}}/></li>'
 		+	'					<li><label for="settingsAnimateAvatars">Animate Avatars:</label> <input type="checkbox" id="settingsAnimateAvatars" name="animateAvatars" {{#if animateAvatars}}checked{{/if}}/></li>'
+		+	'					<li><label for="settingsInvisible">Hide Online Status:</label> <input type="checkbox" id="settingsInvisible" name="invisible" {{#if invisible}}checked{{/if}}/></li>'
 		+	'					<li><label for="settingsTimestamp">Timestamp:</label> <input type="text" id="settingsTimestamp" name="timestamp" value="{{timestamp}}"/></li>'
 		+	'					<li><button type="button" id="saveSettings">Save Settings</button> <button type="button" id="disableChat">Disable Chat</button></li>'
 		+	'				</ul>'
@@ -806,10 +807,15 @@ var siteChat = (function() {
 		}
 
 		var active = siteChatUser.lastActivityDatetime ? ((new Date().getTime() - siteChatUser.lastActivityDatetime) / 1000) < (60) * (5) : false;
+		var invisible = siteChat.invisibleUsers.hasOwnProperty(siteChatUser.id);
 
+		var userSpanClasses = ["dynamic-color"];
+		if(invisible)
+			userSpanClasses.push("invisible");
+		
 		var html
 			= '<li class="sc-user-window-init username" id="username' + siteChatUser.id + '"><span class="onlineindicator ' + (active ? "active" : "idle") + '"></span>'
-			+ '<span class="dynamic-color" style="' + siteChat.getUserColorStyle(siteChatUser) + '">' + siteChatUser.name + '</span>'
+			+ '<span class="' + userSpanClasses.join(" ") + '" style="' + siteChat.getUserColorStyle(siteChatUser) + '">' + siteChatUser.name + '</span>'
 			+ '</li>';
 		var $userDomElement = $(html);
 		
@@ -902,7 +908,8 @@ var siteChat = (function() {
 						userId: siteChatUser.id,
 						activeClass: active ? "active" : "idle",
 						userName: siteChatUser.name,
-						userColor: siteChat.getUserColorStyle(siteChatUser)
+						userColor: siteChat.getUserColorStyle(siteChatUser),
+						invisible: siteChat.invisibleUsers.hasOwnProperty(siteChatUser.id)
 					}
 				})
 			}));
@@ -957,6 +964,7 @@ var siteChat = (function() {
 			windowStateClass: sessionStorage[siteChat.namespace + "utilityExpanded"] == "true" ? "expanded" : "collapsed",
 			compact: siteChat.settings.compact,
 			animateAvatars: siteChat.settings.animateAvatars,
+			invisible: siteChat.settings.invisible,
 			timestamp: siteChat.settings.timestamp
 		}));
 
@@ -990,6 +998,7 @@ var siteChat = (function() {
 		siteChat.settings.compact = $form.find("[name=compact]").is(":checked");
 		siteChat.settings.animateAvatars = $form.find("[name=animateAvatars]").is(":checked");
 		siteChat.settings.timestamp = $form.find("[name=timestamp]").val();
+		siteChat.settings.invisible = $form.find("[name=invisible]").is(":checked");
 
 		siteChat.setPanelCompact(siteChat.settings.compact);
 		siteChat.setSettings(siteChat.settings);
@@ -1184,6 +1193,7 @@ var siteChat = (function() {
 			siteChat.onlineUsers = 0;
 			siteChat.onlineUserIdSet = [];
 			siteChat.rooms = {};
+			siteChat.setInvisibleUsers(siteChatPacket.invisibleUserIds);
 
 			$("#onlinelist").html("");
 			$("#roomstab").html("");
@@ -1207,6 +1217,7 @@ var siteChat = (function() {
 			});
 
 			siteChat.generateRooms(true);
+			siteChat.setLocalStorage("onlineUserIdSet", JSON.stringify(siteChat.onlineUserIdSet));
 		};
 
 		commandHandlers["PasswordRequired"] = function(siteChat, siteChatPacket) {
@@ -1370,6 +1381,15 @@ var siteChat = (function() {
 	siteChat.unmarkMessagesIgnored = function(userId) {
 		$("#chatPanel .message.ignored[data-user-id='" + userId + "']").removeClass("ignored");
 	};
+	
+	siteChat.setInvisibleUsers = function(invisibleUserIds) {
+		siteChat.invisibleUsers = {};
+		for(var index in invisibleUserIds) {
+			siteChat.invisibleUsers[invisibleUserIds[index]] = 1;
+		}
+
+		siteChat.setLocalStorage("invisibleUsers", JSON.stringify(siteChat.invisibleUsers));
+	}
 
 	siteChat.setup = function(sessionId, userId, autoJoinLobby, siteChatUrl, siteChatProtocol, rootPath) {
 		
@@ -1379,7 +1399,7 @@ var siteChat = (function() {
 		siteChat.siteChatUrl = siteChatUrl;
 		siteChat.siteChatProtocol = siteChatProtocol;
 		siteChat.adjustElementColor = typeof window.adjustColor === "function" ? window.adjustColor : function(){};
-		siteChat.rootPath = rootPath;
+		siteChat.rootPath = (rootPath || "").replace(/\/+$/, "");
 
 		if(!supportsHtml5Storage() || (typeof(WebSocket) != "function" && typeof(WebSocket) != "object"))
 			return;
@@ -1394,6 +1414,7 @@ var siteChat = (function() {
 
 		siteChat.settings = siteChat.getLocalStorageObject("settings") || {};
 		siteChat.ignores = siteChat.getLocalStorageObject("ignores") || [];
+		siteChat.invisibleUsers = siteChat.getLocalStorageObject("invisibleUsers") || {};
 
 		$(window).bind("beforeunload", function() {
 

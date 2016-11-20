@@ -38,6 +38,7 @@ public class SiteChatAsyncProcessOperation {
   
   public void start(SiteChatMessageProcessor processor) {
     this.hasStarted.set(true);
+    this.isFinished.set(false);
     
     Runnable innerRunnable = () -> {
       try {

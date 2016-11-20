@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
 
+import net.mafiascum.phpbb.usergroup.UserGroup;
 import net.mafiascum.provider.Provider;
 import net.mafiascum.util.MiscUtil;
 import net.mafiascum.util.QueryUtil;
@@ -106,7 +107,7 @@ public class UserManager {
     this.usernameToUserMap = MiscUtil.get().map(userIdToUserMap.values(), user -> getUsernameMapKey(user.getUser().getName()));
   }
   
-  public void loadUserMap(Collection<SiteChatUser> users, Collection<SiteChatUserSettings> settingsList) {
+  public void loadUserMap(Collection<SiteChatUser> users, Collection<SiteChatUserSettings> settingsList, Collection<UserGroup> userGroups) {
     for(SiteChatUser user : users) {
       UserData userData = getUser(user.getId());
       
@@ -114,6 +115,7 @@ public class UserManager {
         userData = new UserData();
       
       userData.setUser(user);
+      userData.getUserGroups().clear();
       
       userIdToUserMap.put(user.getId(), userData);
     }
@@ -123,6 +125,13 @@ public class UserManager {
       
       if(userData != null)
         userData.setUserSettings(userSettings);
+    }
+    
+    for(UserGroup userGroup : userGroups) {
+      UserData userData = getUser(userGroup.getUserId());
+      
+      if(userData != null) 
+        userData.getUserGroups().add(userGroup);
     }
     
     setupUsernameToUserMap();
@@ -173,7 +182,7 @@ public class UserManager {
     return userList;
   }
   
-  public void setUserSettings(int userId, boolean compact, boolean animateAvatars, String timestampFormat) throws SQLException {
+  public void setUserSettings(int userId, boolean compact, boolean animateAvatars, boolean invisible, String timestampFormat) throws SQLException {
     QueryUtil.get().executeConnectionNoResult(provider, connection -> {
         
       UserData userData = getUser(userId);
@@ -192,6 +201,7 @@ public class UserManager {
       settings.setCompact(compact);
       settings.setAnimateAvatars(animateAvatars);
       settings.setTimestampFormat(timestampFormat);
+      settings.setInvisible(invisible);
       
       saveUserSettings(settings);
     });
@@ -199,5 +209,21 @@ public class UserManager {
   
   protected void saveUserSettings(SiteChatUserSettings settings) throws SQLException {
     QueryUtil.get().executeConnectionNoResult(provider, connection -> siteChatUtil.putSiteChatUserSettings(connection, settings));
+  }
+  
+  public int getAdminGroupId() {
+    return 13637;
+  }
+  
+  public int getBanGroupId() {
+    return 13662;
+  }
+  
+  public boolean isAdmin(UserData userData) {
+    return userData.isInGroup(getAdminGroupId(), null, false);
+  }
+  
+  public boolean isChatMod(UserData userData) {
+    return userData.isInGroup(getBanGroupId(), true, false);
   }
 }

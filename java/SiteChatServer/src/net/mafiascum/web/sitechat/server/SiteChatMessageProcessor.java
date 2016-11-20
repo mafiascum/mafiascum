@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
@@ -15,6 +16,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import net.mafiascum.arguments.CommandLineArguments;
 import net.mafiascum.json.DateUnixTimestampSerializer;
@@ -100,7 +102,7 @@ public class SiteChatMessageProcessor implements SignalHandler{
       
       logger.info("Loading Site Chat Users...");
       this.userManager = new UserManager(provider, siteChatUtil);
-      this.userManager.loadUserMap(siteChatUtil.loadSiteChatUserMap(connection).values(), siteChatUtil.getSiteChatUserSettingsList(connection));
+      this.userManager.loadUserMap(siteChatUtil.loadSiteChatUserMap(connection).values(), siteChatUtil.getSiteChatUserSettingsList(connection), siteChatUtil.getUserGroups(connection));
 
       logger.info("Loading Site Chat Ignores...");
       this.ignoreManager = new IgnoreManager(provider, userManager);
@@ -168,7 +170,7 @@ public class SiteChatMessageProcessor implements SignalHandler{
     logger.debug("Total: " + totalMemory + "MB, Free: " + freeMemory + "MB, Max: " + maxMemory + "MB.");
   }
   
-  public SiteChatConversationWithUserList getSiteChatConversationWithUserList(String siteChatConversationName) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
+  public SiteChatConversationWithUserList getConversationWithUserList(String siteChatConversationName) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
 
     SiteChatConversation siteChatConversation = null;
     for(Integer siteChatConversationId : siteChatConversationWithMemberListMap.keySet()) {
@@ -361,18 +363,21 @@ public class SiteChatMessageProcessor implements SignalHandler{
   }
 
   public void sendUserListToAllDescriptors() throws Exception {
-
-    //lagLogger.debug("Sending User List To All Web Sockets. START.");
-    List<UserPacket> siteChatUserList;
-    List<SiteChatBarebonesConversation> siteChatBarebonesConversations = new LinkedList<SiteChatBarebonesConversation>();
     
-    siteChatUserList = userManager.getClonedSiteChatUserList(userData -> userData.getLastActivityDatetime() != null);
+    List<UserPacket> visibleUsers, allUsers, invisibleUsers;
+    List<SiteChatBarebonesConversation> siteChatBarebonesConversations = new ArrayList<SiteChatBarebonesConversation>();
+    
+    visibleUsers = userManager.getClonedSiteChatUserList(userData -> userData.getLastActivityDatetime() != null && !userData.isInvisible());
+    allUsers = userManager.getClonedSiteChatUserList(userData -> userData.getLastActivityDatetime() != null);
+    invisibleUsers = userManager.getClonedSiteChatUserList(userData -> userData.getLastActivityDatetime() != null && userData.isInvisible());
+    Set<Integer> invisibleUserIdSet = MiscUtil.get().transformToSet(invisibleUsers, userPacket -> userPacket.id);
     
     //Generate message for each user.
-    for(UserPacket userPacket : siteChatUserList) {
-
+    for(UserPacket userPacket : allUsers) {
+      
       int userId = userPacket.id;
-      //logger.debug("Considering Sending To User ID: " + userId);
+      UserData userData = userManager.getUser(userId);
+      boolean canSeeInvisibleUsers = userManager.isAdmin(userData) || userManager.isChatMod(userData);
       siteChatBarebonesConversations.clear();
       List<Descriptor> descriptors;
       
@@ -380,42 +385,36 @@ public class SiteChatMessageProcessor implements SignalHandler{
       
       if(descriptors.isEmpty())
         continue;
-
-      //logger.debug("Preparing user list packet for user #" + userId);
-
+      
       for(int siteChatConversationId : siteChatConversationWithMemberListMap.keySet()) {
 
-        SiteChatConversationWithUserList siteChatConversationWithUserList = siteChatConversationWithMemberListMap.get(siteChatConversationId);
+        SiteChatConversationWithUserList conversationWithUserList = siteChatConversationWithMemberListMap.get(siteChatConversationId);
+        SiteChatConversation conversation = conversationWithUserList.getSiteChatConversation();
         
-        if(siteChatConversationWithUserList.getUserIdSet().isEmpty()) {
-
+        //No users in channel.
+        if(conversationWithUserList.getUserIdSet().isEmpty())
           continue;
-        }
-        if(siteChatConversationWithUserList.getSiteChatConversation().getPassword() != null) {
-
-          if(!siteChatConversationWithUserList.getUserIdSet().contains(userId)) {
-
+        
+        //Password protected channel, user is not in channel.
+        if(conversation.getPassword() != null && !conversationWithUserList.getUserIdSet().contains(userId))
             continue;
-          }
-        }
 
         //Copy all but the message array over. We do not need it for this.
-        //logger.debug("Creating barebones conversation.");
         SiteChatBarebonesConversation barebonesConversation = new SiteChatBarebonesConversation();
-        barebonesConversation.setId(siteChatConversationWithUserList.getSiteChatConversation().getId());
-        barebonesConversation.setName(siteChatConversationWithUserList.getSiteChatConversation().getName());
-        barebonesConversation.setUserIdSet(siteChatConversationWithUserList.getUserIdSet());
-        barebonesConversation.setCreatedByUserId(siteChatConversationWithUserList.getSiteChatConversation().getCreatedByUserId());
-        //logger.debug("Barebones conversation created.");
+        barebonesConversation.setId(conversationWithUserList.getSiteChatConversation().getId());
+        barebonesConversation.setName(conversationWithUserList.getSiteChatConversation().getName());
+        barebonesConversation.setUserIdSet(conversationWithUserList.getUserIdSet().stream().filter(channelUserId -> canSeeInvisibleUsers || !invisibleUserIdSet.contains(channelUserId)).collect(Collectors.toSet()));
+        barebonesConversation.setCreatedByUserId(conversationWithUserList.getSiteChatConversation().getCreatedByUserId());
+        
         siteChatBarebonesConversations.add(barebonesConversation);
       }
-
-      //logger.debug("Creating outbound user list packet. Users: " + siteChatUserList.size() + ", Conversations: " + siteChatBarebonesConversations.size());
+      
       SiteChatOutboundUserListPacket siteChatOutboundUserListPacket = new SiteChatOutboundUserListPacket();
-      siteChatOutboundUserListPacket.setSiteChatUsers(siteChatUserList);
+      siteChatOutboundUserListPacket.setSiteChatUsers(canSeeInvisibleUsers ? allUsers : visibleUsers);
       siteChatOutboundUserListPacket.setSiteChatConversations(siteChatBarebonesConversations);
+      siteChatOutboundUserListPacket.setInvisibleUserIds(canSeeInvisibleUsers ? invisibleUserIdSet : new HashSet<>());
       siteChatOutboundUserListPacket.setPacketSentDatetime(new Date());
-        
+      
       for(Descriptor descriptor : descriptors) {
         sendToDescriptor(descriptor.getId(), siteChatOutboundUserListPacket);
       }
@@ -812,8 +811,8 @@ public class SiteChatMessageProcessor implements SignalHandler{
     userManager.updateUserNetworkActivity(userId);
   }
   
-  public void setUserSettings(int userId, boolean compact, boolean animateAvatars, String timestampFormat) throws SQLException {
-    userManager.setUserSettings(userId, compact, animateAvatars, timestampFormat);
+  public void setUserSettings(int userId, boolean compact, boolean animateAvatars, boolean invisible, String timestampFormat) throws SQLException {
+    userManager.setUserSettings(userId, compact, animateAvatars, invisible, timestampFormat);
   }
 
   public SiteChatUtil getSiteChatUtil() {

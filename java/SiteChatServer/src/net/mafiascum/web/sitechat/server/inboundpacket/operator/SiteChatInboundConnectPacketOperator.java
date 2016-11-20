@@ -34,7 +34,7 @@ public class SiteChatInboundConnectPacketOperator extends SiteChatInboundSignedI
       siteChatConversationName = siteChatConversationName.substring(0, siteChatUtil.MAX_SITE_CHAT_CONVERSATION_NAME_LENGTH);
     }
     
-    siteChatConversationWithUserList = processor.getSiteChatConversationWithUserList(siteChatConversationName);
+    siteChatConversationWithUserList = processor.getConversationWithUserList(siteChatConversationName);
     
     if(siteChatConversationWithUserList == null) {
       
