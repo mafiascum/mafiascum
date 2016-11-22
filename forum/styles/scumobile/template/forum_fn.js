@@ -36,6 +36,45 @@ function jumpto()
 	}
 }
 
+$(document).ready(function() {
+	$('#jumpto1').keyup(function(e) {
+		jumptobinding(e, '#jumpto1');
+	});
+	$('#jumpto2').keyup(function(e) {
+		jumptobinding(e, '#jumpto2');
+	});
+    $('#private_usr_add_button').on('click', function(){
+		var username = $('#private_user_input').val();
+		private_id_count++;
+		console.log(username);
+		console.log(encodeURI(username));
+		$.ajax({
+			url : 'verify_username.php',
+			type: 'POST',
+			data: {name: encodeURI(username), id: private_id_count},
+			success : function(data){
+				if (data == 'false'){
+					$('#privateuser' + private_id_count).text('invalid username');
+					setTimeout (function(){
+						$('#privateuser' + private_id_count).remove();
+					}, 2000);
+				}
+				else {
+					$('#privateuser' + private_id_count).html(data);
+					$('.repeatable-remove').on("click", function(){
+						$(this).parent().remove();  
+					}); 
+				}
+			}
+		})
+		$('#private_user_input').val('');
+		$('#private_user_list').append('<li id="privateuser' + private_id_count + '">Processing...</li>');
+	});
+    $('.repeatable-remove').on("click", function(){
+        $(this).parent().remove();  
+    });  
+});
+
 /**
 * Mark/unmark checklist
 * id = ID of parent container, name = name prefix, state = state [true/false]
