@@ -1489,6 +1489,9 @@ class acp_users
 				$user_row['iso_lang_id'] = $row['lang_id'];
 
 				$data = array(
+					'skype'			=> request_var('skype', $user_row['user_skype']),
+					'facebook'		=> request_var('facebook', $user_row['user_facebook']),
+					'twitter'		=> request_var('twitter', $user_row['user_twitter']),
 					'icq'			=> request_var('icq', $user_row['user_icq']),
 					'aim'			=> request_var('aim', $user_row['user_aim']),
 					'msn'			=> request_var('msn', $user_row['user_msnm']),
@@ -1517,6 +1520,9 @@ class acp_users
 				if ($submit)
 				{
 					$error = validate_data($data, array(
+						'skype'			=> array('string', true, 1, 255),
+						'facebook'		=> array('string', true, 1, 255),
+						'twitter'		=> array('string', true, 1, 255),
 						'icq'			=> array(
 							array('string', true, 3, 15),
 							array('match', true, '#^[0-9]+$#i')),
@@ -1553,6 +1559,9 @@ class acp_users
 					if (!sizeof($error))
 					{
 						$sql_ary = array(
+							'user_skype'	=> $data['skype'],
+							'user_facebook'	=> $data['facebook'],
+							'user_twitter'	=> $data['twitter'],
 							'user_icq'		=> $data['icq'],
 							'user_aim'		=> $data['aim'],
 							'user_msnm'		=> $data['msn'],
@@ -1605,6 +1614,9 @@ class acp_users
 				unset($now);
 
 				$template->assign_vars(array(
+					'SKYPE'			=> $data['skype'],
+					'FACEBOOK'		=> $data['facebook'],
+					'TWITTER'		=> $data['twitter'],
 					'ICQ'			=> $data['icq'],
 					'YIM'			=> $data['yim'],
 					'AIM'			=> $data['aim'],

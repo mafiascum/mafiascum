@@ -270,6 +270,9 @@ class ucp_profile
 				$cp_data = $cp_error = array();
 
 				$data = array(
+					'skype'			=> request_var('skype', $user->data['user_skype']),
+					'twitter'		=> request_var('twitter', $user->data['user_twitter']),
+					'facebook'		=> request_var('facebook', $user->data['user_facebook']),
 					'icq'			=> request_var('icq', $user->data['user_icq']),
 					'aim'			=> request_var('aim', $user->data['user_aim']),
 					'msn'			=> request_var('msn', $user->data['user_msnm']),
@@ -301,6 +304,9 @@ class ucp_profile
 				if ($submit)
 				{
 					$validate_array = array(
+						'skype'			=> array('string', true, 1, 255),
+						'facebook'		=> array('string', true, 1, 255),
+						'twitter'		=> array('string', true, 1, 255),
 						'icq'			=> array(
 							array('string', true, 3, 15),
 							array('match', true, '#^[0-9]+$#i')),
@@ -355,6 +361,9 @@ class ucp_profile
 						}
 
 						$sql_ary = array(
+							'user_skype'	=> $data['skype'],
+							'user_twitter'	=> $data['twitter'],
+							'user_facebook'	=> $data['facebook'],
 							'user_icq'		=> $data['icq'],
 							'user_aim'		=> $data['aim'],
 							'user_msnm'		=> $data['msn'],
@@ -426,6 +435,9 @@ class ucp_profile
 				$template->assign_vars(array(
 					'ERROR'		=> (sizeof($error)) ? implode('<br />', $error) : '',
 
+					'SKYPE'		=> $data['skype'],
+					'FACEBOOK'	=> $data['facebook'],
+					'TWITTER'	=> $data['twitter'],
 					'ICQ'		=> $data['icq'],
 					'YIM'		=> $data['yim'],
 					'AIM'		=> $data['aim'],

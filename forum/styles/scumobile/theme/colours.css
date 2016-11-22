@@ -689,6 +689,9 @@ a.fontsize {
 
 /* Profile & navigation icons */
 .email-icon, .email-icon a		{ background-image: url("{IMG_ICON_CONTACT_EMAIL_SRC}"); }
+.skype-icon, .skype-icon a		{ background-image: url("{IMG_ICON_CONTACT_SKYPE_SRC}"); }
+.facebook-icon, .facebook-icon a{ background-image: url("{IMG_ICON_CONTACT_FACEBOOK_SRC}"); }
+.twitter-icon, .twitter-icon a	{ background-image: url("{IMG_ICON_CONTACT_TWITTER_SRC}"); }
 .aim-icon, .aim-icon a			{ background-image: url("{IMG_ICON_CONTACT_AIM_SRC}"); }
 .yahoo-icon, .yahoo-icon a		{ background-image: url("{IMG_ICON_CONTACT_YAHOO_SRC}"); }
 .web-icon, .web-icon a			{ background-image: url("{IMG_ICON_CONTACT_WWW_SRC}"); }
