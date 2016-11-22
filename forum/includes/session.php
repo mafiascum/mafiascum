@@ -789,7 +789,7 @@ class session
 		$sql_ary['session_id'] = (string) $this->session_id;
 		$sql_ary['session_page'] = (string) substr($this->page['page'], 0, 199);
 		$sql_ary['session_forum_id'] = $this->page['forum'];
-		
+
 		$sql = 'INSERT INTO ' . SESSIONS_TABLE . ' ' . $db->sql_build_array('INSERT', $sql_ary);
 		$db->sql_query($sql);
 		$db->sql_return_on_error(false);
@@ -1502,7 +1502,7 @@ class user extends session
 	var $img_array = array();
 
 	// Able to add new options (up to id 31)
-	var $keyoptions = array('viewimg' => 0, 'viewflash' => 1, 'viewsmilies' => 2, 'viewsigs' => 3, 'viewavatars' => 4, 'viewcensors' => 5, 'attachsig' => 6, 'bbcode' => 8, 'smilies' => 9, 'popuppm' => 10, 'sig_bbcode' => 15, 'sig_smilies' => 16, 'sig_links' => 17, 'allow_quote_options' => 18, 'viewyoutube' => 19, 'autodetectmobile' =>20,'enterlobby' =>21,'chat_enabled' =>22,'sigbb_disabled' =>23,);
+	var $keyoptions = array('viewimg' => 0, 'viewflash' => 1, 'viewsmilies' => 2, 'viewsigs' => 3, 'viewavatars' => 4, 'viewcensors' => 5, 'attachsig' => 6, 'bbcode' => 8, 'smilies' => 9, 'popuppm' => 10, 'sig_bbcode' => 15, 'sig_smilies' => 16, 'sig_links' => 17, 'allow_quote_options' => 18, 'viewyoutube' => 19, 'autodetectmobile' => 20, 'enterlobby' => 21, 'chat_enabled' => 22, 'sigbb_disabled' => 23, 'confirm_mark_read' => 24);
 	var $keyvalues = array();
 
 	/**
@@ -1538,7 +1538,7 @@ class user extends session
 	{
 		global $db, $template, $config, $auth, $phpEx, $phpbb_root_path, $cache, $mobile;
 	//detect mobile device
-		$chrome_browser = 0; 
+		$chrome_browser = 0;
 		$mobile_browser = 0;
 		$mobile = false;
 		if (preg_match('/(up.browser|up.link|mmp|symbian|smartphone|midp|wap|phone|android|mobile)/i', strtolower($_SERVER['HTTP_USER_AGENT']))) {
@@ -1547,26 +1547,26 @@ class user extends session
 		if (preg_match('/(chrome)/i', strtolower($_SERVER['HTTP_USER_AGENT']))) {
 			$chrome_browser++;
 		}
-		 
+
 		if ((strpos(strtolower($_SERVER['HTTP_ACCEPT']),'application/vnd.wap.xhtml+xml') > 0) or ((isset($_SERVER['HTTP_X_WAP_PROFILE']) or isset($_SERVER['HTTP_PROFILE'])))) {
 			$mobile_browser++;
-		}    
-		 
+		}
+
 		$mobile_ua = strtolower(substr($_SERVER['HTTP_USER_AGENT'], 0, 4));
 		$mobile_agents = array('w3c','acs-','alav','alca','amoi','audi','avan','benq','bird','blac','blaz','brew','cell','cldc','cmd-','dang','doco','eric','hipt','inno','ipaq','java','jigs','kddi','keji','leno','lg-c','lg-d','lg-','lge-','maui','maxo','midp','mits','mmef','mobi','mot-','moto','mwbp','nec-','newt','noki','oper','palm','pana','pant','phil','play','port','prox','qwap','sage','sams','sany','sch-','sec-','send','seri','sgh-','shar','sie-','siem','smal','smar','sony','sph-','symb','t-mo','teli','tim-','tosh','tsm-','upg1','upsi','vk-v','voda','wap-','wapa','wapi','wapp', 'wapr','webc','winw','winw','xda ','xda-');
-		 
+
 		if (in_array($mobile_ua,$mobile_agents)) {
 			$mobile_browser++;
 		}
-		 
+
 		//if (strpos(strtolower($_SERVER['ALL_HTTP']),'OperaMini') > 0) {
 		//    $mobile_browser++;
 		//}
-		 
+
 		if (strpos(strtolower($_SERVER['HTTP_USER_AGENT']),'windows') > 0) {
 			$mobile_browser = 0;
 		}
-		 
+
 		if ($mobile_browser > 0) {
 		   $mobile = true;
 		}
@@ -1640,7 +1640,7 @@ class user extends session
 
 		$this->add_lang($lang_set);
 		unset($lang_set);
-		
+
 
 		$mobileStyle = request_var('disableMobile', MOBILE_STYLE);
 		if (!empty($_GET['style']) && $auth->acl_get('a_styles') && !defined('ADMIN_START'))

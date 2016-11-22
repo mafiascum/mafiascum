@@ -186,7 +186,7 @@ class ucp_prefs
 					// BEGIN Topic Preview Mod
 					'topic_preview'	=> request_var('topic_preview', (!empty($user->data['user_topic_preview']) ? $user->data['user_topic_preview'] : 0)),
 					// END Topic Preview Mod
-
+					'confirm_mark_read' => request_var('confirm_mark_read', (bool) $user->optionget('confirm_mark_read'))
 				);
 
 				if ($submit)
@@ -215,6 +215,7 @@ class ucp_prefs
 						$user->optionset('chat_enabled', $data['chat']);
 						$user->optionset('enterlobby', $data['lobby']);
 						$user->optionset('sigbb_disabled', $data['bbsigs']);
+						$user->optionset('confirm_mark_read', $data['confirm_mark_read']);
 
 						if ($auth->acl_get('u_chgcensors'))
 						{
@@ -233,7 +234,6 @@ class ucp_prefs
 							// BEGIN Topic Preview MOD
 							'user_topic_preview'		=> $data['topic_preview'],
 							// END Topic Preview MOD
-
 						);
 
 						$sql = 'UPDATE ' . USERS_TABLE . '
@@ -309,6 +309,8 @@ class ucp_prefs
 					'S_DISPLAY_TOPIC_PREVIEW'	=> $data['topic_preview'],
 					'S_TOPIC_PREVIEW'			=> $config['topic_preview_limit'],
 					// END Topic Preview MOD
+
+					'S_CONFIRM_MARK_READ' => $data['confirm_mark_read'],
 
 					'S_CHANGE_CENSORS'		=> ($auth->acl_get('u_chgcensors') && $config['allow_nocensors']) ? true : false,
 
