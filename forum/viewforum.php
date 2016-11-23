@@ -171,7 +171,7 @@ if (!$auth->acl_get('f_read', $forum_id))
 	page_footer();
 }
 
-if($mark_read != '' && !confirm_box(true) && !confirm_box(false))
+if($mark_read != '' && !$user->optionget('confirm_mark_read') && !confirm_box(true) && !confirm_box(false))
 {
 	$mark_read = '';
 }
@@ -449,7 +449,7 @@ $sql = 'SELECT t.topic_id
 	WHERE $sql_where
 		AND t.topic_type IN (" . POST_NORMAL . ', ' . POST_STICKY . ")
 		$sql_approved
-		$sql_limit_time 
+		$sql_limit_time
 		AND ((" . ($auth->acl_get('m_report', $forum_id) ? '1=1' : ("t.is_private=1 AND ptu.user_id =" . $user->data['user_id'])) . ") OR (t.is_private=0))
 	GROUP BY t.topic_id
 	ORDER BY t.topic_type " . ((!$store_reverse) ? 'DESC' : 'ASC') . ', ' . $sql_sort_order;
@@ -676,7 +676,7 @@ if (sizeof($topic_list))
 		// END Topic Preview Mod
 
 		// Send vars to template
-		
+
 		$template->assign_block_vars('topicrow', array(
 			'FORUM_ID'					=> $topic_forum_id,
 			'TOPIC_ID'					=> $topic_id,

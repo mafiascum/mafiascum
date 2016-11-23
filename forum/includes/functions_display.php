@@ -31,7 +31,7 @@ function display_forums($root_data = '', $display_moderators = true, $return_mod
 	// Mark forums read?
 	$mark_read = request_var('mark', '');
 
-	if($mark_read != '' && !confirm_box(true) && !confirm_box(false))
+	if($mark_read != '' && !$user->optionget('confirm_mark_read') && !confirm_box(true) && !confirm_box(false))
 	{
 		$mark_read = '';
 	}

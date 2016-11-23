@@ -190,55 +190,55 @@ class acp_users
 				$ip				= request_var('ip', 'ip');
 
 				if($action == 'addalt') {
-					
+
 					$alt_username = utf8_clean_string(request_var('alt_add_username', ''));
-					
+
 					$sql = 'SELECT user_id
 							FROM ' . USERS_TABLE . "
 							WHERE username_clean='" . $db->sql_escape($alt_username) . "'";
-						
+
 					$resultSet = $db->sql_query($sql);
-					
+
 					if(!($row = $db->sql_fetchrow($resultSet))) {
-						
+
 						trigger_error('No User Found.');
 					}
-					
+
 					$alt_user_id = $row['user_id'];
-					
+
 					$db->sql_freeresult($resultSet);
-					
+
 					$userAltData = UserAltData::getAlts($user_row['user_id']);
-					
+
 					if($userAltData->isHydra()) {
-						
+
 						trigger_error('Cannot add an alt to a hydra. You must add the hydra as an alt of another user.');
 					}
-					
+
 					if($userAltData->hasAlt($alt_user_id) || $userAltData->hasMain($alt_user_id)) {
-						
+
 						trigger_error("Alt already added.");
 					}
-					
+
 					$sql = 'INSERT INTO ' . ALT_TABLE
 						 . $db->sql_build_array('INSERT', Array(
 						 'main_user_id'		=> $userAltData->getSingleMainUserId(),
 						 'alt_user_id'		=> $alt_user_id,
 						 ));
-					
+
 					$db->sql_query($sql);
 				}
 				else if($action == 'removealt') {
-					
+
 					$alt_user_id = request_var('alt_user_id', 0);
-						
+
 					$sql = 'DELETE FROM ' . ALT_TABLE . '
 							WHERE main_user_id=' . $user_row['user_id'] . '
 							AND alt_user_id=' . $alt_user_id;
-								
+
 					$db->sql_query($sql);
 				}
-				
+
 				if ($submit)
 				{
 					// You can't delete the founder
@@ -1163,32 +1163,32 @@ class acp_users
 						));
 					}
 				}
-				
+
 				//User alt table
 				$alts = $userAltData->getAllAlts();
-				
+
 				$userAltData->loadAltUserData();
-				
+
 				$index = 0;
-				
+
 				while($index < count($alts)) {
-					
+
 					$alt_user_id = $alts[ $index ];
-					
+
 					$row = $userAltData->getAltUserData($alt_user_id);
-					
+
 					$template->assign_block_vars('useraltrow', array(
-					
+
 						'USERNAME'		=> ($row['user_id'] == ANONYMOUS) ? $user->lang['GUEST'] : $row['username'],
 						'U_PROFILE'		=> append_sid("{$phpbb_admin_path}index.$phpEx", "i=users&amp;mode=overview&amp;u={$row['user_id']}"),
 						'ACCOUNT_TYPE'	=> ($userAltData->hasMain($alt_user_id) ? 'Main' : ($row['is_hydra'] ? 'Hydra' : 'Alt')),
 						'REMOVE_URL'	=> $this->u_action . '&amp;u=' . $user_id . '&amp;action=removealt&amp;alt_user_id=' . $row['user_id'],
 						'CAN_REMOVE'	=> ($userAltData->isMain() && !$userAltData->hasMain($alt_user_id) ? 1 : 0),
 					));
-					
+
 					++$index;
 				}
-				
+
 				//Old user emails.
 				$old_emails = explode("\n", $user_row['user_old_emails']);
 
@@ -1678,12 +1678,13 @@ class acp_users
 					'smilies'	=> request_var('smilies', $this->optionget($user_row, 'smilies')),
 					'sig'		=> request_var('sig', $this->optionget($user_row, 'attachsig')),
 					'notify'	=> request_var('notify', $user_row['user_notify']),
-					
+
 					'youtube'	=> request_var('youtube', $this->optionget($user_row, 'viewyoutube')),
 					'mobile'	=> request_var('mobile', $this->optionget($user_row, 'autodetectmobile')),
 					'chat'	=> request_var('chat', $this->optionget($user_row, 'chat_enabled')),
 					'lobby'		=> request_var('lobby', $this->optionget($user_row, 'enterlobby')),
 					'bbsigs'	=> request_var('bbsigs', $this->optionget($user_row, 'sigbb_disabled')),
+					'confirm_mark_read' => request_var('confirm_mark_read', (bool) $this->optionget($user_row, 'confirm_mark_read'))
 				);
 
 				if ($submit)
@@ -1716,12 +1717,13 @@ class acp_users
 						$this->optionset($user_row, 'bbcode', $data['bbcode']);
 						$this->optionset($user_row, 'smilies', $data['smilies']);
 						$this->optionset($user_row, 'attachsig', $data['sig']);
-						
+
 						$this->optionset($user_row, 'viewyoutube', $data['youtube']);
 						$this->optionset($user_row, 'autodetectmobile', $data['mobile']);
 						$this->optionset($user_row, 'chat_enabled', $data['chat']);
 						$this->optionset($user_row, 'enterlobby', $data['lobby']);
 						$this->optionset($user_row, 'sigbb_disabled', $data['bbsigs']);
+						$this->optionset($user_row, 'confirm_mark_read', $data['confirm_mark_read']);
 
 						$sql_ary = array(
 							'user_options'			=> $user_row['user_options'],
@@ -1867,12 +1869,13 @@ class acp_users
 					'VIEW_SIGS'			=> $data['view_sigs'],
 					'VIEW_AVATARS'		=> $data['view_avatars'],
 					'VIEW_WORDCENSOR'	=> $data['view_wordcensor'],
-					
+
 					'VIEW_YOUTUBE'		=> $data['youtube'],
 					'VIEW_MOBILE'		=> $data['mobile'],
 					'VIEW_CHAT'			=> $data['chat'],
 					'VIEW_LOBBY'		=> $data['lobby'],
 					'VIEW_BBSIGS'	=> $data['bbsigs'],
+					'VIEW_CONFIRM_MARK_READ' => $data['confirm_mark_read'],
 
 					'S_TOPIC_SORT_DAYS'		=> $s_limit_topic_days,
 					'S_TOPIC_SORT_KEY'		=> $s_sort_topic_key,
@@ -2006,7 +2009,7 @@ class acp_users
 			include($phpbb_root_path . 'includes/functions_user.' . $phpEx);
 				$clearVLA = (isset($_POST['clearVLA'])) ? true : false;
 
-				
+
 				//Initial VLA status determination.
 				$onVLA = false;
 				//Static timestamp for date validations.
@@ -2014,20 +2017,20 @@ class acp_users
 				//Initial date variables.
 				$data['vlastart_day'] = $data['vlastart_month'] = $data['vlastart_year'] = 0;
 				$data['vlatill_day'] = $data['vlatill_month'] = $data['vlatill_year'] = 0;
-				
-				//Clear VLA if requested.	
+
+				//Clear VLA if requested.
 				if($clearVLA)
 				{
 					$sql_ary = array(
 							'user_vla_start'		=> (string) '',
 							'user_vla_till'		=> (string) '',
 						);
-					
+
 						$sql = 'UPDATE ' . USERS_TABLE . '
 							SET ' . $db->sql_build_array('UPDATE', $sql_ary) . '
 							WHERE user_id = ' . $user_id;
 						$db->sql_query($sql);
-					
+
 					trigger_error($user->lang['USER_VLA_UPDATED'] . adm_back_link($this->u_action . '&amp;u=' . $user_id));
 				}
 				//If a V/LA has been submitted, handle that.
@@ -2041,15 +2044,15 @@ class acp_users
 					$data['vlastart_day'] = request_var('vlastart_day', 0);
 					$data['vlastart_month'] = request_var('vlastart_month', 0);
 					$data['vlastart_year'] = request_var('vlastart_year', 0);
-					
+
 					$data['user_vla_start'] = sprintf('%2d-%2d-%4d', $data['vlastart_day'], $data['vlastart_month'], $data['vlastart_year']);
 					$data['vlatill_day'] = request_var('vlatill_day', 0);
 					$data['vlatill_month'] = request_var('vlatill_month', 0);
 					$data['vlatill_year'] = request_var('vlatill_year', 0);
 
 					$data['user_vla_till'] = sprintf('%2d-%2d-%4d', $data['vlatill_day'], $data['vlatill_month'], $data['vlatill_year']);
-					
-					
+
+
 					//Validate the submitted dates.
 					$validate_array = array(
 						'vlastart_day'		=> array('num', true, 1, 31),
@@ -2061,19 +2064,19 @@ class acp_users
 						'user_vla_start' => array('date', true),
 						'user_vla_till' => array('date', true),
 					);
-					
+
 					$error = validate_data($data, $validate_array);
-					
+
 					//Make sure that the VLA dates are legal for our purposes.
-					
+
 					//Start Date timestamp for date comparison.
 					$mkStart =  mktime(0,0,0,$data['vlastart_month'],$data['vlastart_day'],$data['vlastart_year']);
 					//End Date timestamp for date comparison.
 					$mkEnd =  mktime(23,59,59,$data['vlatill_month'],$data['vlatill_day'],$data['vlatill_year']);
-					
-					
+
+
 					//Make sure that every variable is set properly.
-					if(($data['vlastart_day'] === 0) || ($data['vlastart_month'] === 0) || ($data['vlastart_year'] === 0) || 
+					if(($data['vlastart_day'] === 0) || ($data['vlastart_month'] === 0) || ($data['vlastart_year'] === 0) ||
 						($data['vlatill_day'] === 0) || ($data['vlatill_month'] === 0) || ($data['vlatill_year'] === 0))
 					{
 						$error[] = 'TOO_SMALL';
@@ -2083,20 +2086,20 @@ class acp_users
 					{
 						$error[] = 'NO_VLA_DATA';
 					}
-					
+
 					//Make sure that the end date is after the start date.
 					else if($mkStart >= $mkEnd)
 					{
 						$error[] = 'MISMATCHED_VLA_DATE';
 					}
-					
+
 					//Make sure that the end date is after the start date.
 					//else if($mkStart < time() || $mkEnd < time())
 					else if($mkEnd < time())
 					{
 						$error[] = 'VLA_DATE_PRIOR';
 					}
-					
+
 					//Make sure that vla is at least three days.
 					else if(($mkEnd - $mkStart) < 259000)
 					{
@@ -2115,7 +2118,7 @@ class acp_users
 							'user_vla_start'		=> (string) $data['user_vla_start'],
 							'user_vla_till'		=> (string) $data['user_vla_till'],
 						);
-					
+
 						$sql = 'UPDATE ' . USERS_TABLE . '
 							SET ' . $db->sql_build_array('UPDATE', $sql_ary) . '
 							WHERE user_id = ' . $user_row['user_id'];
@@ -2127,9 +2130,9 @@ class acp_users
 					// Replace "error" strings with their real, localised form
 					$error = preg_replace('#^([A-Z_]+)$#e', "(!empty(\$user->lang['\\1'])) ? \$user->lang['\\1'] : '\\1'", $error);
 				}
-				
+
 				//Get display data for VLA dates.
-				
+
 
 				//Check if V/LA start is already defined, if so use that.
 				if ($user_row['user_vla_start'])
@@ -2141,12 +2144,12 @@ class acp_users
 				{
 					list($data['vlatill_day'], $data['vlatill_month'], $data['vlatill_year']) = explode('-', $user_row['user_vla_till']);
 				}
-				
-				
+
+
 				//Check if the V/LA is already finished. If so, reset the VLA dates.
 				//End Date timestamp for date comparison.
 				$mkEnd =  mktime(23,59,59,$data['vlatill_month'],$data['vlatill_day'],$data['vlatill_year']);
-				
+
 				if($mkEnd < time() && $mkEnd != $mkStatic)
 				{
 					$data['vlatill_day'] = $data['vlatill_month'] = $data['vlatill_year'] = 0;
@@ -2155,7 +2158,7 @@ class acp_users
 							'user_vla_start'		=> (string) '',
 							'user_vla_till'		=> (string) '',
 						);
-					
+
 						$sql = 'UPDATE ' . USERS_TABLE . '
 							SET ' . $db->sql_build_array('UPDATE', $sql_ary) . '
 							WHERE user_id = ' . $user_id;
@@ -2171,7 +2174,7 @@ class acp_users
 					'ERROR'				=> (sizeof($error)) ? implode('<br />', $error) : '',
 					'S_IS_VLA'			=> $onVLA,
 				));
-				
+
 				//Assign the available V/LA dates for selection.
 
 					//Start Dates.
@@ -2181,7 +2184,7 @@ class acp_users
 							$selected = ($i == $data['vlastart_day']) ? ' selected="selected"' : '';
 							$s_vlastart_day_options .= "<option value=\"$i\"$selected>$i</option>";
 						}
-	
+
 						$s_vlastart_month_options = '<option value="0"' . ((!$data['vlastart_month']) ? ' selected="selected"' : '') . '>--</option>';
 						for ($i = 1; $i < 13; $i++)
 						{
@@ -2189,7 +2192,7 @@ class acp_users
 							$s_vlastart_month_options .= "<option value=\"$i\"$selected>$i</option>";
 						}
 						$s_vlastart_year_options = '';
-	
+
 						$now = getdate();
 						$s_vlastart_year_options = '<option value="0"' . ((!$data['vlastart_year']) ? ' selected="selected"' : '') . '>--</option>';
 						for ($i = $now['year']; $i <= ($now['year'] + 1); $i++)
@@ -2198,7 +2201,7 @@ class acp_users
 							$s_vlastart_year_options .= "<option value=\"$i\"$selected>$i</option>";
 						}
 						unset($now);
-						
+
 					//End Dates.
 					$s_vlatill_day_options = '<option value="0"' . ((!$data['vlatill_day']) ? ' selected="selected"' : '') . '>--</option>';
 					for ($i = 1; $i < 32; $i++)
@@ -2235,8 +2238,8 @@ class acp_users
 						'S_VLASTART_ENABLED'		=> true,
 					));
 
-		
-			
+
+
 
 		$template->assign_vars(array(
 			'S_VLA'	=> true,
