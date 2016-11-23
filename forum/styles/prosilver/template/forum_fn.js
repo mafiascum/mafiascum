@@ -51,11 +51,11 @@ function jumptopage(page)
 }
 $(document).ready(function() {
 	$('#jumpto1').keyup(function(e) {
-			jumptobinding(e, '#jumpto1');
-		});
+		jumptobinding(e, '#jumpto1');
+	});
 	$('#jumpto2').keyup(function(e) {
-			jumptobinding(e, '#jumpto2');
-		}); 
+		jumptobinding(e, '#jumpto2');
+	});
     $('#private_usr_add_button').on('click', function(){
 		var username = $('#private_user_input').val();
 		private_id_count++;

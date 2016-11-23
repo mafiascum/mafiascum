@@ -17,11 +17,13 @@ public class SiteChatUserSettings implements IsNewDataObject, DataObject {
   public static final String COMPACT_COLUMN = "compact";
   public static final String ANIMATE_AVATARS_COLUMN = "animate_avatars";
   public static final String TIMESTAMP_FORMAT_COLUMN = "timestamp_format";
+  public static final String INVISIBLE_COLUMN = "invisible";
   
   protected int userId;
   protected boolean compact;
   protected boolean animateAvatars;
   protected String timestampFormat;
+  protected boolean invisible;
   
   boolean isNew;
 
@@ -30,6 +32,7 @@ public class SiteChatUserSettings implements IsNewDataObject, DataObject {
     setCompact(false);
     setAnimateAvatars(true);
     setTimestampFormat("");
+    setInvisible(false);
   }
   
   public boolean isNew() {
@@ -62,6 +65,12 @@ public class SiteChatUserSettings implements IsNewDataObject, DataObject {
   public void setTimestampFormat(String timestampFormat) {
     this.timestampFormat = timestampFormat;
   }
+  public boolean getInvisible() {
+    return invisible;
+  }
+  public void setInvisible(boolean invisible) {
+    this.invisible = invisible;
+  }
   
   public void loadFromResultSet(ResultSet resultSet) throws SQLException {
     setIsNew(false);
@@ -72,6 +81,7 @@ public class SiteChatUserSettings implements IsNewDataObject, DataObject {
     setCompact(queryUtil.getIntBoolean(resultSet, COMPACT_COLUMN));
     setAnimateAvatars(queryUtil.getIntBoolean(resultSet, ANIMATE_AVATARS_COLUMN));
     setTimestampFormat(resultSet.getString(TIMESTAMP_FORMAT_COLUMN));
+    setInvisible(queryUtil.getIntBoolean(resultSet, INVISIBLE_COLUMN));
   }
   
   public void store(Connection connection) throws SQLException {
@@ -85,6 +95,7 @@ public class SiteChatUserSettings implements IsNewDataObject, DataObject {
     .put(USER_ID_COLUMN, getUserId())
     .put(ANIMATE_AVATARS_COLUMN, getAnimateAvatars())
     .put(TIMESTAMP_FORMAT_COLUMN, getTimestampFormat())
+    .put(INVISIBLE_COLUMN, getInvisible())
     .putPrimaryKey(USER_ID_COLUMN, isNew() ? null : getUserId());
     
     builder.execute(connection, this);

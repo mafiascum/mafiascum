@@ -116,7 +116,7 @@ var siteChat = (function() {
 		+	'<div class="userlist" {{#if collapsed}}style="display:none;"{{/if}}>'
 		+		'<ul>'
 		+		'{{#each users}}'
-		+			'<li class="username dynamic-color" style="{{userColor}}" id="username{{roomNameCleaned}}{{userId}}" data-username="{{userName}}" data-user-id="{{userId}}">'
+		+			'<li class="sc-user-window-init username dynamic-color {{#if invisible}}invisible{{/if}}" style="{{userColor}}" id="username{{roomNameCleaned}}{{userId}}" data-username="{{userName}}" data-user-id="{{userId}}">'
 		+				'<span class="onlineindicator {{activeClass}}"></span>'
 		+				'{{userName}}'
 		+			'</li>'
@@ -171,6 +171,7 @@ var siteChat = (function() {
 		+	'				<ul id="settingsList">'
 		+	'					<li><label for="settingsCompact">Compact Messages:</label> <input type="checkbox" id="settingsCompact" name="compact" {{#if compact}}checked{{/if}}/></li>'
 		+	'					<li><label for="settingsAnimateAvatars">Animate Avatars:</label> <input type="checkbox" id="settingsAnimateAvatars" name="animateAvatars" {{#if animateAvatars}}checked{{/if}}/></li>'
+		+	'					<li><label for="settingsInvisible">Hide Online Status:</label> <input type="checkbox" id="settingsInvisible" name="invisible" {{#if invisible}}checked{{/if}}/></li>'
 		+	'					<li><label for="settingsTimestamp">Timestamp:</label> <input type="text" id="settingsTimestamp" name="timestamp" value="{{timestamp}}"/></li>'
 		+	'					<li><button type="button" id="saveSettings">Save Settings</button> <button type="button" id="disableChat">Disable Chat</button></li>'
 		+	'				</ul>'
@@ -376,7 +377,7 @@ var siteChat = (function() {
 		event.stopPropagation();
 
 		var recipientUserId = parseInt($(this).data("user-id"));
-		
+
 		if(siteChat.chatWindows["P" + recipientUserId] == undefined)
 			siteChat.createChatWindow(null, recipientUserId, null, $(this).data("username"), [], true, [], true, null, null, null, null, true);
 	};
@@ -539,9 +540,9 @@ var siteChat = (function() {
 		siteChat.sendPacket(siteChatPacket);
 	};
 
-	siteChat.handleSocketClose = function() {
+	siteChat.handleSocketClose = function(e) {
 
-		console.log("[" + new Date() + "] Web Socket Closed.");
+		console.log("[" + new Date() + "] Web Socket Closed.", e);
 		siteChat.socket.connected = false;
 		if(!siteChat.unloading && siteChat.tryReconnect) {
 
@@ -553,6 +554,10 @@ var siteChat = (function() {
 			$("#utilitywindow .exclamation").removeClass("hidden");
 		}
 		siteChat.attemptingLogin = false;
+	};
+
+	siteChat.handleSocketError = function(e) {
+		console.log("[" + new Date() + "] Web Socket Error.", e);
 	};
 
 	siteChat.handleRoomListJoinRoom = function(e) {
@@ -802,10 +807,15 @@ var siteChat = (function() {
 		}
 
 		var active = siteChatUser.lastActivityDatetime ? ((new Date().getTime() - siteChatUser.lastActivityDatetime) / 1000) < (60) * (5) : false;
+		var invisible = siteChat.invisibleUsers.hasOwnProperty(siteChatUser.id);
 
+		var userSpanClasses = ["dynamic-color"];
+		if(invisible)
+			userSpanClasses.push("invisible");
+		
 		var html
-			= '<li class="username" id="username' + siteChatUser.id + '"><span class="onlineindicator ' + (active ? "active" : "idle") + '"></span>'
-			+ '<span class="dynamic-color" style="' + siteChat.getUserColorStyle(siteChatUser) + '">' + siteChatUser.name + '</span>'
+			= '<li class="sc-user-window-init username" id="username' + siteChatUser.id + '"><span class="onlineindicator ' + (active ? "active" : "idle") + '"></span>'
+			+ '<span class="' + userSpanClasses.join(" ") + '" style="' + siteChat.getUserColorStyle(siteChatUser) + '">' + siteChatUser.name + '</span>'
 			+ '</li>';
 		var $userDomElement = $(html);
 		
@@ -881,7 +891,7 @@ var siteChat = (function() {
 			
 			var roomUsers = room.userIdSet.map(function(userId) { return siteChat.userMap[userId]; });
 			roomUsers.sort(function(u1, u2) {
-				return u1.name.toLowerCase() > u2.name.toLowerCase();
+				return u1.name.toLowerCase().localeCompare(u2.name.toLowerCase());
 			});
 
 			$("#roomstab").append(siteChat.roomListRoomTemplate({
@@ -898,7 +908,8 @@ var siteChat = (function() {
 						userId: siteChatUser.id,
 						activeClass: active ? "active" : "idle",
 						userName: siteChatUser.name,
-						userColor: siteChat.getUserColorStyle(siteChatUser)
+						userColor: siteChat.getUserColorStyle(siteChatUser),
+						invisible: siteChat.invisibleUsers.hasOwnProperty(siteChatUser.id)
 					}
 				})
 			}));
@@ -953,6 +964,7 @@ var siteChat = (function() {
 			windowStateClass: sessionStorage[siteChat.namespace + "utilityExpanded"] == "true" ? "expanded" : "collapsed",
 			compact: siteChat.settings.compact,
 			animateAvatars: siteChat.settings.animateAvatars,
+			invisible: siteChat.settings.invisible,
 			timestamp: siteChat.settings.timestamp
 		}));
 
@@ -986,6 +998,7 @@ var siteChat = (function() {
 		siteChat.settings.compact = $form.find("[name=compact]").is(":checked");
 		siteChat.settings.animateAvatars = $form.find("[name=animateAvatars]").is(":checked");
 		siteChat.settings.timestamp = $form.find("[name=timestamp]").val();
+		siteChat.settings.invisible = $form.find("[name=invisible]").is(":checked");
 
 		siteChat.setPanelCompact(siteChat.settings.compact);
 		siteChat.setSettings(siteChat.settings);
@@ -1180,6 +1193,7 @@ var siteChat = (function() {
 			siteChat.onlineUsers = 0;
 			siteChat.onlineUserIdSet = [];
 			siteChat.rooms = {};
+			siteChat.setInvisibleUsers(siteChatPacket.invisibleUserIds);
 
 			$("#onlinelist").html("");
 			$("#roomstab").html("");
@@ -1203,6 +1217,7 @@ var siteChat = (function() {
 			});
 
 			siteChat.generateRooms(true);
+			siteChat.setLocalStorage("onlineUserIdSet", JSON.stringify(siteChat.onlineUserIdSet));
 		};
 
 		commandHandlers["PasswordRequired"] = function(siteChat, siteChatPacket) {
@@ -1366,6 +1381,15 @@ var siteChat = (function() {
 	siteChat.unmarkMessagesIgnored = function(userId) {
 		$("#chatPanel .message.ignored[data-user-id='" + userId + "']").removeClass("ignored");
 	};
+	
+	siteChat.setInvisibleUsers = function(invisibleUserIds) {
+		siteChat.invisibleUsers = {};
+		for(var index in invisibleUserIds) {
+			siteChat.invisibleUsers[invisibleUserIds[index]] = 1;
+		}
+
+		siteChat.setLocalStorage("invisibleUsers", JSON.stringify(siteChat.invisibleUsers));
+	}
 
 	siteChat.setup = function(sessionId, userId, autoJoinLobby, siteChatUrl, siteChatProtocol, rootPath) {
 		
@@ -1375,7 +1399,7 @@ var siteChat = (function() {
 		siteChat.siteChatUrl = siteChatUrl;
 		siteChat.siteChatProtocol = siteChatProtocol;
 		siteChat.adjustElementColor = typeof window.adjustColor === "function" ? window.adjustColor : function(){};
-		siteChat.rootPath = rootPath;
+		siteChat.rootPath = (rootPath || "").replace(/\/+$/, "");
 
 		if(!supportsHtml5Storage() || (typeof(WebSocket) != "function" && typeof(WebSocket) != "object"))
 			return;
@@ -1390,6 +1414,7 @@ var siteChat = (function() {
 
 		siteChat.settings = siteChat.getLocalStorageObject("settings") || {};
 		siteChat.ignores = siteChat.getLocalStorageObject("ignores") || [];
+		siteChat.invisibleUsers = siteChat.getLocalStorageObject("invisibleUsers") || {};
 
 		$(window).bind("beforeunload", function() {
 
@@ -1445,7 +1470,7 @@ var siteChat = (function() {
 		$(document).on("click", "#chatPanel .chatWindow .title", siteChat.handleWindowTitleClick);
 		$(document).on("click", "#chatPanel .chatWindow .title .close", siteChat.handleWindowCloseButtonClick);
 		$(document).on("keypress", "#chatPanel .chatWindow .inputBuffer", siteChat.handleWindowInputSubmission);
-		$(document).on("click", "#utilitywindow .username", siteChat.handleUserListUsernameClick);
+		$(document).on("click", ".sc-user-window-init", siteChat.handleUserListUsernameClick);
 		$(document).on("mousewheel", "#onlinelistcontainer, #chatPanel .outputBuffer, #roomstab", function(e) {
 
 			var wheelDistance = function(evt){
@@ -1669,6 +1694,7 @@ var siteChat = (function() {
 		siteChat.socket.onopen = siteChat.handleSocketOpen;
 		siteChat.socket.onclose = siteChat.handleSocketClose;
 		siteChat.socket.onmessage = siteChat.handleSocketMessage;
+		siteChat.socket.onerror = siteChat.handleSocketError;
 		siteChat.attemptingLogin = false;
 	};
 

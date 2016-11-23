@@ -4,13 +4,14 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
-import net.mafiascum.web.sitechat.server.SiteChatServer;
-import net.mafiascum.web.sitechat.server.SiteChatServer.SiteChatWebSocket;
+import net.mafiascum.web.sitechat.server.Descriptor;
+import net.mafiascum.web.sitechat.server.SiteChatMessageProcessor;
 import net.mafiascum.web.sitechat.server.SiteChatUser;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationMessage;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationWithUserList;
 import net.mafiascum.web.sitechat.server.inboundpacket.SiteChatInboundSendMessagePacket;
 import net.mafiascum.web.sitechat.server.outboundpacket.SiteChatOutboundNewMessagePacket;
+import net.mafiascum.web.sitechat.server.user.UserData;
 
 import org.apache.log4j.Logger;
 
@@ -24,18 +25,18 @@ public class SiteChatInboundSendMessagePacketOperator extends SiteChatInboundSig
     super();
   }
   
-  public void process(SiteChatServer siteChatServer, SiteChatUser siteChatUser, SiteChatWebSocket siteChatWebSocket, String siteChatInboundPacketJson) throws Exception {
+  public void process(SiteChatMessageProcessor processor, UserData user, Descriptor descriptor, String siteChatInboundPacketJson) throws Exception {
 
     logger.trace("Processing SendChat Message...");
     SiteChatInboundSendMessagePacket sendMessagePacket = new Gson().fromJson(siteChatInboundPacketJson, SiteChatInboundSendMessagePacket.class);
     SiteChatConversationWithUserList siteChatConversationWithUserList = null;
     SiteChatUser siteChatRecipientUser = null;
     
-    siteChatServer.updateUserActivity(siteChatUser.getId());
+    processor.updateUserActivity(user.getId());
     
     if(sendMessagePacket.getSiteChatConversationId() != null) {
       logger.debug("Site Chat Conversatin ID: " + sendMessagePacket.getSiteChatConversationId());
-      siteChatConversationWithUserList = siteChatServer.getSiteChatConversationWithUserList(sendMessagePacket.getSiteChatConversationId());
+      siteChatConversationWithUserList = processor.getSiteChatConversationWithUserList(sendMessagePacket.getSiteChatConversationId());
     
       if(siteChatConversationWithUserList == null) {
       
@@ -43,7 +44,7 @@ public class SiteChatInboundSendMessagePacketOperator extends SiteChatInboundSig
         return;//Conversation does not exist.
       }
     
-      if(!siteChatConversationWithUserList.getUserIdSet().contains(siteChatWebSocket.getUserData().getId())) {
+      if(!siteChatConversationWithUserList.getUserIdSet().contains(user.getId())) {
       
         logger.error("User not in chat.");
         return;//User is not in the conversation.
@@ -52,7 +53,7 @@ public class SiteChatInboundSendMessagePacketOperator extends SiteChatInboundSig
     else if(sendMessagePacket.getRecipientUserId() != null) {
       
       logger.debug("Recipient User ID: " + sendMessagePacket.getRecipientUserId());
-      siteChatRecipientUser = siteChatServer.getSiteChatUser(sendMessagePacket.getRecipientUserId());
+      siteChatRecipientUser = processor.getSiteChatUser(sendMessagePacket.getRecipientUserId());
       if(siteChatRecipientUser == null) {
         
         logger.debug("Target user `" + sendMessagePacket.getRecipientUserId() + "` does not exist.");
@@ -67,20 +68,20 @@ public class SiteChatInboundSendMessagePacketOperator extends SiteChatInboundSig
     }
     
     if(sendMessagePacket.getMessage().startsWith("/"))
-      siteChatServer.processChannelCommand(siteChatWebSocket, siteChatUser, sendMessagePacket.getMessage());
+      processor.processChannelCommand(descriptor, user.getUser(), sendMessagePacket.getMessage());
     else {
-      SiteChatConversationMessage message = siteChatServer.recordSiteChatConversationMessage(siteChatUser.getId(), sendMessagePacket.getSiteChatConversationId(), sendMessagePacket.getRecipientUserId(), sendMessagePacket.getMessage());
+      SiteChatConversationMessage message = processor.recordSiteChatConversationMessage(user.getId(), sendMessagePacket.getSiteChatConversationId(), sendMessagePacket.getRecipientUserId(), sendMessagePacket.getMessage());
       message = message.clone();
       message.setMessage(stringUtil.escapeHTMLCharacters(message.getMessage()));
       
-      sendOutboundMessage(siteChatConversationWithUserList, siteChatUser, siteChatServer, siteChatRecipientUser, message);
+      sendOutboundMessage(siteChatConversationWithUserList, user.getUser(), processor, siteChatRecipientUser, message);
     }
   }
   
   protected void sendOutboundMessage(
       SiteChatConversationWithUserList siteChatConversationWithUserList,
       SiteChatUser siteChatUser,
-      SiteChatServer siteChatServer,
+      SiteChatMessageProcessor processor,
       SiteChatUser siteChatRecipientUser,
       SiteChatConversationMessage message
   ) throws IOException {
@@ -100,10 +101,6 @@ public class SiteChatInboundSendMessagePacketOperator extends SiteChatInboundSig
       sendToUserIdSet.add(siteChatUser.getId());
     }
     
-    //long timeBefore = System.currentTimeMillis();
-    //SiteChatServer.lagLogger.debug("Sending NewMessage Packets To Users.");
-    siteChatServer.sendOutboundPacketToUsers(sendToUserIdSet, siteChatOutboundNewMessagePacket, null);
-    //long timeBetween = System.currentTimeMillis() - timeBefore;
-    //SiteChatServer.lagLogger.debug("NewMessage Packet Sent. Duration: " + timeBetween + " ms.");    
+    processor.sendOutboundPacketToUsers(sendToUserIdSet, siteChatOutboundNewMessagePacket, null);    
   }
 }

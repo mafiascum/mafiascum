@@ -116,7 +116,7 @@ public class ConnectionPool {
     
         connectionInvocationHandler.setLastOpenedDatetime(new Date());
     
-        logger.debug("Connection allocated. Remaining: " + availableConnections.size() + ", Opened: " + openConnections.size());
+        //logger.debug("Connection allocated. Remaining: " + availableConnections.size() + ", Opened: " + openConnections.size());
 
         notifyAll();
         return connectionInvocationHandler.getConnectionProxy();
@@ -128,7 +128,7 @@ public class ConnectionPool {
   
   public synchronized void releaseConnection(ConnectionInvocationHandler connectionInvocationHandler) {
     
-    logger.debug("Releasing Connection.");
+    //logger.debug("Releasing Connection.");
     connectionInvocationHandler.setLastClosedDatetime(new Date());
     
     openConnections.remove(connectionInvocationHandler);

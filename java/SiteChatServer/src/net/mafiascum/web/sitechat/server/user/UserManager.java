@@ -12,17 +12,19 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
 
+import net.mafiascum.phpbb.usergroup.UserGroup;
 import net.mafiascum.provider.Provider;
 import net.mafiascum.util.MiscUtil;
 import net.mafiascum.util.QueryUtil;
-import net.mafiascum.web.sitechat.server.SiteChatServer.SiteChatWebSocket;
+import net.mafiascum.web.sitechat.server.Descriptor;
 import net.mafiascum.web.sitechat.server.SiteChatUser;
 import net.mafiascum.web.sitechat.server.SiteChatUserSettings;
 import net.mafiascum.web.sitechat.server.SiteChatUtil;
 
 public class UserManager {
-  protected Map<Integer, UserData> userIdToUserMap = new HashMap<Integer, UserData>();
-  protected Map<String, UserData> usernameToUserMap = new HashMap<String, UserData>();
+  protected Map<Integer, UserData> userIdToUserMap = new HashMap<>();
+  protected Map<String, UserData> usernameToUserMap = new HashMap<>();
+  protected Map<String, Integer> descriptorIdToUserIdMap = new HashMap<>();
   
   protected Provider provider;
   protected SiteChatUtil siteChatUtil;
@@ -44,6 +46,15 @@ public class UserManager {
   
   public UserData getUser(int userId) {
     return userIdToUserMap.get(userId);
+  }
+  
+  public UserData getUserByDescriptorId(String descriptorId) {
+    Integer userId = descriptorIdToUserIdMap.get(descriptorId);
+    
+    if(userId == null)
+      return null;
+    
+    return getUser(userId);
   }
   
   public void updateUserActivity(int userId) {
@@ -96,7 +107,7 @@ public class UserManager {
     this.usernameToUserMap = MiscUtil.get().map(userIdToUserMap.values(), user -> getUsernameMapKey(user.getUser().getName()));
   }
   
-  public void loadUserMap(Collection<SiteChatUser> users, Collection<SiteChatUserSettings> settingsList) {
+  public void loadUserMap(Collection<SiteChatUser> users, Collection<SiteChatUserSettings> settingsList, Collection<UserGroup> userGroups) {
     for(SiteChatUser user : users) {
       UserData userData = getUser(user.getId());
       
@@ -104,6 +115,7 @@ public class UserManager {
         userData = new UserData();
       
       userData.setUser(user);
+      userData.getUserGroups().clear();
       
       userIdToUserMap.put(user.getId(), userData);
     }
@@ -115,15 +127,29 @@ public class UserManager {
         userData.setUserSettings(userSettings);
     }
     
+    for(UserGroup userGroup : userGroups) {
+      UserData userData = getUser(userGroup.getUserId());
+      
+      if(userData != null) 
+        userData.getUserGroups().add(userGroup);
+    }
+    
     setupUsernameToUserMap();
   }
   
-  public void associateWebSocketWithUser(int userId, SiteChatWebSocket webSocket) {
-    getUser(userId).getWebSockets().add(webSocket);
+  public void associateDescriptorUser(int userId, Descriptor descriptor) {
+    getUser(userId).getDescriptors().add(descriptor);
+    descriptorIdToUserIdMap.put(descriptor.getId(), userId);
   }
   
-  public void removeWebSocketFromUser(int userId, SiteChatWebSocket webSocket) {
-    getUser(userId).getWebSockets().remove(webSocket);
+  public void removeDescriptorFromUser(String descriptorId) {
+    Integer userId = descriptorIdToUserIdMap.get(descriptorId);
+    
+    if(userId == null)
+      return;
+    
+    descriptorIdToUserIdMap.remove(descriptorId);
+    getUser(userId).getDescriptors().removeIf(descriptor -> descriptor.getId().equals(descriptorId));
   }
   
   public Set<Integer> getIdleUserIdSet() {
@@ -156,7 +182,7 @@ public class UserManager {
     return userList;
   }
   
-  public void setUserSettings(int userId, boolean compact, boolean animateAvatars, String timestampFormat) throws SQLException {
+  public void setUserSettings(int userId, boolean compact, boolean animateAvatars, boolean invisible, String timestampFormat) throws SQLException {
     QueryUtil.get().executeConnectionNoResult(provider, connection -> {
         
       UserData userData = getUser(userId);
@@ -175,6 +201,7 @@ public class UserManager {
       settings.setCompact(compact);
       settings.setAnimateAvatars(animateAvatars);
       settings.setTimestampFormat(timestampFormat);
+      settings.setInvisible(invisible);
       
       saveUserSettings(settings);
     });
@@ -182,5 +209,21 @@ public class UserManager {
   
   protected void saveUserSettings(SiteChatUserSettings settings) throws SQLException {
     QueryUtil.get().executeConnectionNoResult(provider, connection -> siteChatUtil.putSiteChatUserSettings(connection, settings));
+  }
+  
+  public int getAdminGroupId() {
+    return 13637;
+  }
+  
+  public int getBanGroupId() {
+    return 13662;
+  }
+  
+  public boolean isAdmin(UserData userData) {
+    return userData.isInGroup(getAdminGroupId(), null, false);
+  }
+  
+  public boolean isChatMod(UserData userData) {
+    return userData.isInGroup(getBanGroupId(), true, false);
   }
 }

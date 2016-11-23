@@ -1,10 +1,10 @@
 package net.mafiascum.web.sitechat.server.inboundpacket.operator;
 
-import net.mafiascum.web.sitechat.server.SiteChatServer;
-import net.mafiascum.web.sitechat.server.SiteChatServer.SiteChatWebSocket;
-import net.mafiascum.web.sitechat.server.SiteChatUser;
+import net.mafiascum.web.sitechat.server.Descriptor;
+import net.mafiascum.web.sitechat.server.SiteChatMessageProcessor;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationWithUserList;
 import net.mafiascum.web.sitechat.server.inboundpacket.SiteChatInboundConnectPacket;
+import net.mafiascum.web.sitechat.server.user.UserData;
 
 import org.apache.log4j.Logger;
 
@@ -19,12 +19,12 @@ public class SiteChatInboundConnectPacketOperator extends SiteChatInboundSignedI
     super();
   }
   
-  public void process(SiteChatServer siteChatServer, SiteChatUser siteChatUser, SiteChatWebSocket siteChatWebSocket, String siteChatInboundPacketJson) throws Exception {
+  public void process(SiteChatMessageProcessor processor, UserData user, Descriptor descriptor, String siteChatInboundPacketJson) throws Exception {
     
     SiteChatInboundConnectPacket siteChatInboundConnectPacket = new Gson().fromJson(siteChatInboundPacketJson, SiteChatInboundConnectPacket.class);
     SiteChatConversationWithUserList siteChatConversationWithUserList;
     
-    siteChatServer.updateUserActivity(siteChatUser.getId());
+    processor.updateUserActivity(user.getId());
     
     String siteChatConversationName = siteChatInboundConnectPacket.getSiteChatConversationName();
     
@@ -34,13 +34,13 @@ public class SiteChatInboundConnectPacketOperator extends SiteChatInboundSignedI
       siteChatConversationName = siteChatConversationName.substring(0, siteChatUtil.MAX_SITE_CHAT_CONVERSATION_NAME_LENGTH);
     }
     
-    siteChatConversationWithUserList = siteChatServer.getSiteChatConversationWithUserList(siteChatConversationName);
+    siteChatConversationWithUserList = processor.getConversationWithUserList(siteChatConversationName);
     
     if(siteChatConversationWithUserList == null) {
       
-      siteChatConversationWithUserList = siteChatServer.createSiteChatConversation(siteChatInboundConnectPacket.getSiteChatConversationName(), siteChatUser.getId());
+      siteChatConversationWithUserList = processor.createSiteChatConversation(siteChatInboundConnectPacket.getSiteChatConversationName(), user.getId());
     }
     
-    siteChatServer.attemptJoinConversation(siteChatWebSocket, siteChatUser.getId(), siteChatConversationWithUserList.getSiteChatConversation().getId(), true, true, siteChatInboundConnectPacket.getPassword(), null);
+    processor.attemptJoinConversation(descriptor, user.getId(), siteChatConversationWithUserList.getSiteChatConversation().getId(), true, true, siteChatInboundConnectPacket.getPassword(), null);
   }
 }

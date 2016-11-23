@@ -279,6 +279,13 @@ switch ($mode)
 		$presence_img = '';
 		switch ($action)
 		{
+			case 'skype':
+				$lang = 'SKYPE';
+				$sql_field = 'user_skype';
+				$s_select = 'S_SEND_SKYPE';
+				$s_action = '';
+			break;
+			
 			case 'aim':
 				$lang = 'AIM';
 				$sql_field = 'user_aim';
@@ -373,6 +380,9 @@ switch ($mode)
 
 		// Send vars to the template
 		$template->assign_vars(array(
+
+			'U_SKYPE_CONTACT'	=> ($action == 'skype' ? ("skype:" . urlencode($row[$sql_field])) : '') . '?add',
+
 			'IM_CONTACT'	=> $row[$sql_field],
 			'A_IM_CONTACT'	=> addslashes($row[$sql_field]),
 
@@ -618,6 +628,9 @@ switch ($mode)
 			'EMAIL_IMG'		=> $user->img('icon_contact_email', $user->lang['EMAIL']),
 			'WIKI_IMG'		=> $user->img('icon_contact_wiki', $user->lang['WIKI']),
 			'WWW_IMG'		=> $user->img('icon_contact_www', $user->lang['WWW']),
+			'SKYPE_IMG'		=> $user->img('icon_contact_skype', $user->lang['SKYPE']),
+			'FACEBOOK_IMG'	=> $user->img('icon_contact_facebook', $user->lang['FACEBOOK']),
+			'TWITTER_IMG'	=> $user->img('icon_contact_twitter', $user->lang['TWITTER']),
 			'ICQ_IMG'		=> $user->img('icon_contact_icq', $user->lang['ICQ']),
 			'AIM_IMG'		=> $user->img('icon_contact_aim', $user->lang['AIM']),
 			'MSN_IMG'		=> $user->img('icon_contact_msnm', $user->lang['MSNM']),
@@ -983,8 +996,8 @@ switch ($mode)
 		$template_html = 'memberlist_body.html';
 
 		// Sorting
-		$sort_key_text = array('a' => $user->lang['SORT_USERNAME'], 'b' => $user->lang['SORT_LOCATION'], 'c' => $user->lang['SORT_JOINED'], 'd' => $user->lang['SORT_POST_COUNT'], 'f' => $user->lang['WEBSITE'], 'g' => $user->lang['ICQ'], 'h' => $user->lang['AIM'], 'i' => $user->lang['MSNM'], 'j' => $user->lang['YIM'], 'k' => $user->lang['JABBER']);
-		$sort_key_sql = array('a' => 'u.username_clean', 'b' => 'u.user_from', 'c' => 'u.user_regdate', 'd' => 'u.user_posts', 'f' => 'u.user_website', 'g' => 'u.user_icq', 'h' => 'u.user_aim', 'i' => 'u.user_msnm', 'j' => 'u.user_yim', 'k' => 'u.user_jabber');
+		$sort_key_text = array('a' => $user->lang['SORT_USERNAME'], 'b' => $user->lang['SORT_LOCATION'], 'c' => $user->lang['SORT_JOINED'], 'd' => $user->lang['SORT_POST_COUNT'], 'f' => $user->lang['WEBSITE'], 'g' => $user->lang['ICQ'], 'h' => $user->lang['AIM'], 'i' => $user->lang['MSNM'], 'j' => $user->lang['YIM'], 'k' => $user->lang['JABBER'], 'u' => $user->lang['SKYPE'], 'v' => $user->lang['FACEBOOK'], 'w' => $user->lang['TWITTER']);
+		$sort_key_sql = array('a' => 'u.username_clean', 'b' => 'u.user_from', 'c' => 'u.user_regdate', 'd' => 'u.user_posts', 'f' => 'u.user_website', 'g' => 'u.user_icq', 'h' => 'u.user_aim', 'i' => 'u.user_msnm', 'j' => 'u.user_yim', 'k' => 'u.user_jabber', 'u' => 'u.user_skype', 'v' => 'u.user_facebook', 'w' => 'u.user_twitter');
 
 		if ($auth->acl_get('a_user'))
 		{
@@ -1027,7 +1040,7 @@ switch ($mode)
 		$select_single 	= request_var('select_single', false);
 
 		// Search URL parameters, if any of these are in the URL we do a search
-		$search_params = array('username', 'email', 'icq', 'aim', 'yahoo', 'msn', 'jabber', 'search_group_id', 'joined_select', 'active_select', 'count_select', 'joined', 'active', 'count', 'ip');
+		$search_params = array('username', 'email', 'icq', 'aim', 'yahoo', 'msn', 'jabber', 'skype', 'facebook', 'twitter', 'search_group_id', 'joined_select', 'active_select', 'count_select', 'joined', 'active', 'count', 'ip');
 
 		// We validate form and field here, only id/class allowed
 		$form = (!preg_match('/^[a-z0-9_-]+$/i', $form)) ? '' : $form;
@@ -1041,6 +1054,9 @@ switch ($mode)
 			$yahoo		= request_var('yahoo', '');
 			$msn		= request_var('msn', '');
 			$jabber		= request_var('jabber', '');
+			$facebook	= request_var('facebook', '');
+			$twitter	= request_var('twitter', '');
+			$skype		= request_var('skype', '');
 			$search_group_id	= request_var('search_group_id', 0);
 
 			// when using these, make sure that we actually have values defined in $find_key_match
@@ -1082,6 +1098,9 @@ switch ($mode)
 			$sql_where .= ($auth->acl_get('a_user') && $email) ? ' AND u.user_email ' . $db->sql_like_expression(str_replace('*', $db->any_char, $email)) . ' ' : '';
 			$sql_where .= ($icq) ? ' AND u.user_icq ' . $db->sql_like_expression(str_replace('*', $db->any_char, $icq)) . ' ' : '';
 			$sql_where .= ($aim) ? ' AND u.user_aim ' . $db->sql_like_expression(str_replace('*', $db->any_char, $aim)) . ' ' : '';
+			$sql_where .= ($skype) ? ' AND u.user_skype ' . $db->sql_like_expression(str_replace('*', $db->any_char, $skype)) . ' ' : '';
+			$sql_where .= ($facebook) ? ' AND u.user_facebook ' . $db->sql_like_expression(str_replace('*', $db->any_char, $facebook)) . ' ' : '';
+			$sql_where .= ($twitter) ? ' AND u.user_twitter ' . $db->sql_like_expression(str_replace('*', $db->any_char, $twitter)) . ' ' : '';
 			$sql_where .= ($yahoo) ? ' AND u.user_yim ' . $db->sql_like_expression(str_replace('*', $db->any_char, $yahoo)) . ' ' : '';
 			$sql_where .= ($msn) ? ' AND u.user_msnm ' . $db->sql_like_expression(str_replace('*', $db->any_char, $msn)) . ' ' : '';
 			$sql_where .= ($jabber) ? ' AND u.user_jabber ' . $db->sql_like_expression(str_replace('*', $db->any_char, $jabber)) . ' ' : '';
@@ -1330,6 +1349,9 @@ switch ($mode)
 			'select_single'	=> array('select_single', $select_single),
 			'username'		=> array('username', '', true),
 			'email'			=> array('email', ''),
+			'skype'			=> array('skype', ''),
+			'facebook'		=> array('facebook', ''),
+			'twitter'		=> array('twitter', ''),
 			'icq'			=> array('icq', ''),
 			'aim'			=> array('aim', ''),
 			'yahoo'			=> array('yahoo', ''),
@@ -1435,6 +1457,9 @@ switch ($mode)
 			$template->assign_vars(array(
 				'USERNAME'	=> $username,
 				'EMAIL'		=> $email,
+				'SKYPE'		=> $skype,
+				'FACEBOOK'	=> $facebook,
+				'TWITTER'	=> $twitter,
 				'ICQ'		=> $icq,
 				'AIM'		=> $aim,
 				'YAHOO'		=> $yahoo,
@@ -1592,6 +1617,9 @@ switch ($mode)
 			'EMAIL_IMG'		=> $user->img('icon_contact_email', $user->lang['EMAIL']),
 			'WIKI_IMG'		=> $user->img('icon_contact_wiki', $user->lang['WIKI']),
 			'WWW_IMG'		=> $user->img('icon_contact_www', $user->lang['WWW']),
+			'SKYPE_IMG'		=> $user->img('icon_contact_skype', $user->lang['SKYPE']),
+			'FACEBOOK_IMG'	=> $user->img('icon_contact_facebook', $user->lang['FACEBOOK']),
+			'TWITTER_IMG'	=> $user->img('icon_contact_twitter', $user->lang['TWITTER']),
 			'ICQ_IMG'		=> $user->img('icon_contact_icq', $user->lang['ICQ']),
 			'AIM_IMG'		=> $user->img('icon_contact_aim', $user->lang['AIM']),
 			'MSN_IMG'		=> $user->img('icon_contact_msnm', $user->lang['MSNM']),
@@ -1608,6 +1636,9 @@ switch ($mode)
 			'U_SORT_EMAIL'			=> $sort_url . '&amp;sk=e&amp;sd=' . (($sort_key == 'e' && $sort_dir == 'a') ? 'd' : 'a'),
 			'U_SORT_WEBSITE'		=> $sort_url . '&amp;sk=f&amp;sd=' . (($sort_key == 'f' && $sort_dir == 'a') ? 'd' : 'a'),
 			'U_SORT_LOCATION'		=> $sort_url . '&amp;sk=b&amp;sd=' . (($sort_key == 'b' && $sort_dir == 'a') ? 'd' : 'a'),
+			'U_SORT_SKYPE'			=> $sort_url . '&amp;sk=u&amp;sd=' . (($sort_key == 'u' && $sort_dir == 'a') ? 'd' : 'a'),
+			'U_SORT_FACEBOOK'		=> $sort_url . '&amp;sk=v&amp;sd=' . (($sort_key == 'v' && $sort_dir == 'a') ? 'd' : 'a'),
+			'U_SORT_TWITTER'		=> $sort_url . '&amp;sk=w&amp;sd=' . (($sort_key == 'w' && $sort_dir == 'a') ? 'd' : 'a'),
 			'U_SORT_ICQ'			=> $sort_url . '&amp;sk=g&amp;sd=' . (($sort_key == 'g' && $sort_dir == 'a') ? 'd' : 'a'),
 			'U_SORT_AIM'			=> $sort_url . '&amp;sk=h&amp;sd=' . (($sort_key == 'h' && $sort_dir == 'a') ? 'd' : 'a'),
 			'U_SORT_MSN'			=> $sort_url . '&amp;sk=i&amp;sd=' . (($sort_key == 'i' && $sort_dir == 'a') ? 'd' : 'a'),
@@ -1710,6 +1741,7 @@ function show_profile($data, $user_notes_enabled = false, $warn_user_enabled = f
 		'POSTS'			=> ($data['user_posts']) ? $data['user_posts'] : 0,
 		'WARNINGS'		=> isset($data['user_warnings']) ? $data['user_warnings'] : 0,
 
+		'USER_ID'			=> $data['user_id'],
 		'USERNAME_FULL'		=> get_username_string('full', $user_id, $username, $data['user_colour']),
 		'USERNAME'			=> get_username_string('username', $user_id, $username, $data['user_colour']),
 		'USER_COLOR'		=> get_username_string('colour', $user_id, $username, $data['user_colour']),
@@ -1736,6 +1768,9 @@ function show_profile($data, $user_notes_enabled = false, $warn_user_enabled = f
 		'U_WIKI2'		=> ('http://wiki.mafiascum.net/index.php?title=' . $username),
 		'U_WWW'			=> (!empty($data['user_website'])) ? $data['user_website'] : '',
 		'U_SHORT_WWW'			=> (!empty($data['user_website'])) ? ((strlen($data['user_website']) > 55) ? substr($data['user_website'], 0, 39) . ' ... ' . substr($data['user_website'], -10) : $data['user_website']) : '',
+		'U_SKYPE'		=> ($data['user_skype'] && $auth->acl_get('u_sendim')) ? append_sid("{$phpbb_root_path}memberlist.$phpEx", 'mode=contact&amp;action=skype&amp;u=' . $user_id) : '',
+		'U_FACEBOOK'	=> ($data['user_facebook']) ? 'https://www.facebook.com/' . urlencode($data['user_facebook']) : '',
+		'U_TWITTER'		=> ($data['user_twitter']) ? 'https://twitter.com/' . urlencode($data['user_twitter']) : '',
 		'U_ICQ'			=> ($data['user_icq']) ? 'http://www.icq.com/people/' . urlencode($data['user_icq']) . '/' : '',
 		'U_AIM'			=> ($data['user_aim'] && $auth->acl_get('u_sendim')) ? append_sid("{$phpbb_root_path}memberlist.$phpEx", 'mode=contact&amp;action=aim&amp;u=' . $user_id) : '',
 		'U_YIM'			=> ($data['user_yim']) ? 'http://edit.yahoo.com/config/send_webmesg?.target=' . urlencode($data['user_yim']) . '&amp;.src=pg' : '',
@@ -1743,6 +1778,9 @@ function show_profile($data, $user_notes_enabled = false, $warn_user_enabled = f
 		'U_JABBER'		=> ($data['user_jabber'] && $auth->acl_get('u_sendim')) ? append_sid("{$phpbb_root_path}memberlist.$phpEx", 'mode=contact&amp;action=jabber&amp;u=' . $user_id) : '',
 		'LOCATION'		=> ($data['user_from']) ? $data['user_from'] : '',
 
+		'USER_SKYPE'		=> $data['user_skype'],
+		'USER_FACEBOOK'		=> $data['user_facebook'],
+		'USER_TWITTER'		=> $data['user_twitter'],
 		'USER_ICQ'			=> $data['user_icq'],
 		'USER_AIM'			=> $data['user_aim'],
 		'USER_YIM'			=> $data['user_yim'],

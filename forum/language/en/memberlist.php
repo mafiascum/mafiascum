@@ -72,6 +72,7 @@ $lang = array_merge($lang, array(
 	'HIDE_MEMBER_SEARCH'	=> 'Hide member search',
 
 	'IM_ADD_CONTACT'		=> 'Add Contact',
+	'IM_SKYPE'				=> 'Please note that you need Skype installed to use this.',
 	'IM_AIM'				=> 'Please note that you need AOL Instant Messenger installed to use this.',
 	'IM_AIM_EXPRESS'		=> 'AIM Express',
 	'IM_DOWNLOAD_APP'		=> 'Download application',
@@ -124,6 +125,7 @@ $lang = array_merge($lang, array(
 	'SEND_IM'				=> 'Instant messaging',
 	'SEND_JABBER_MESSAGE'	=> 'Send Jabber message',
 	'SEND_MESSAGE'			=> 'Message',
+	'ADD_SKYPE_CONTACT'		=> 'Add Skype contact',
 	'SEND_MSNM_MESSAGE'		=> 'Send MSNM/WLM message',
 	'SEND_YIM_MESSAGE'		=> 'Send YIM message',
 	'SORT_EMAIL'			=> 'E-mail',

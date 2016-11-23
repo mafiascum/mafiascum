@@ -130,6 +130,9 @@ ul.profile-icons li a:hover { background: none; }
 
 /* Profile & navigation icons */
 .email-icon, .email-icon a		{ background: none top left no-repeat; }
+.skype-icon, .skype-icon a		{ background: none top left no-repeat; }
+.facebook-icon, .facebook-icon a{ background: none top left no-repeat; }
+.twitter-icon, .twitter-icon a	{ background: none top left no-repeat; }
 .aim-icon, .aim-icon a			{ background: none top left no-repeat; }
 .yahoo-icon, .yahoo-icon a		{ background: none top left no-repeat; }
 .web-icon, .web-icon a			{ background: none top left no-repeat; }
@@ -151,6 +154,9 @@ ul.profile-icons li a:hover { background: none; }
 
 /* Set profile icon dimensions */
 ul.profile-icons li.email-icon		{ width: {IMG_ICON_CONTACT_EMAIL_WIDTH}px; height: {IMG_ICON_CONTACT_EMAIL_HEIGHT}px; }
+ul.profile-icons li.skype-icon	{ width: {IMG_ICON_CONTACT_SKYPE_WIDTH}px; height: {IMG_ICON_CONTACT_SKYPE_HEIGHT}px; }
+ul.profile-icons li.facebook-icon{ width: {IMG_ICON_CONTACT_FACEBOOK_WIDTH}px; height: {IMG_ICON_CONTACT_FACEBOOK_HEIGHT}px; }
+ul.profile-icons li.twitter-icon{ width: {IMG_ICON_CONTACT_TWITTER_WIDTH}px; height: {IMG_ICON_CONTACT_TWITTER_HEIGHT}px; }
 ul.profile-icons li.aim-icon	{ width: {IMG_ICON_CONTACT_AIM_WIDTH}px; height: {IMG_ICON_CONTACT_AIM_HEIGHT}px; }
 ul.profile-icons li.yahoo-icon	{ width: {IMG_ICON_CONTACT_YAHOO_WIDTH}px; height: {IMG_ICON_CONTACT_YAHOO_HEIGHT}px; }
 ul.profile-icons li.web-icon	{ width: {IMG_ICON_CONTACT_WWW_WIDTH}px; height: {IMG_ICON_CONTACT_WWW_HEIGHT}px; }

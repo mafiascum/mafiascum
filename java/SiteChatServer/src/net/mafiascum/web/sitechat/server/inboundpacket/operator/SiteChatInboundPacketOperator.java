@@ -2,7 +2,8 @@ package net.mafiascum.web.sitechat.server.inboundpacket.operator;
 
 import net.mafiascum.util.MiscUtil;
 import net.mafiascum.util.StringUtil;
-import net.mafiascum.web.sitechat.server.SiteChatServer;
+import net.mafiascum.web.sitechat.server.Descriptor;
+import net.mafiascum.web.sitechat.server.SiteChatMessageProcessor;
 import net.mafiascum.web.sitechat.server.SiteChatUtil;
 
 public abstract class SiteChatInboundPacketOperator {
@@ -11,7 +12,7 @@ public abstract class SiteChatInboundPacketOperator {
   protected MiscUtil miscUtil;
   protected SiteChatUtil siteChatUtil;
   
-  public abstract void process(SiteChatServer siteChatServer, SiteChatServer.SiteChatWebSocket siteChatWebSocket, String siteChatInboundPacketJson) throws Exception;
+  public abstract void process(SiteChatMessageProcessor processor, Descriptor descriptor, String siteChatInboundPacketJson) throws Exception;
   
   public SiteChatInboundPacketOperator() {
     setStringUtil(StringUtil.get());

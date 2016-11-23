@@ -1,10 +1,10 @@
 package net.mafiascum.web.sitechat.server.inboundpacket.operator;
 
-import net.mafiascum.web.sitechat.server.SiteChatServer;
-import net.mafiascum.web.sitechat.server.SiteChatServer.SiteChatWebSocket;
-import net.mafiascum.web.sitechat.server.SiteChatUser;
+import net.mafiascum.web.sitechat.server.Descriptor;
+import net.mafiascum.web.sitechat.server.SiteChatMessageProcessor;
 import net.mafiascum.web.sitechat.server.inboundpacket.SiteChatInboundLookupUserPacket;
 import net.mafiascum.web.sitechat.server.outboundpacket.SiteChatOutboundLookupUserPacket;
+import net.mafiascum.web.sitechat.server.user.UserData;
 
 import org.apache.log4j.Logger;
 
@@ -18,17 +18,17 @@ public class SiteChatInboundLookupUserPacketOperator extends SiteChatInboundSign
     super();
   }
   
-  public void process(SiteChatServer siteChatServer, SiteChatUser siteChatUser, SiteChatWebSocket siteChatWebSocket, String siteChatInboundPacketJson) throws Exception {
+  public void process(SiteChatMessageProcessor processor, UserData user, Descriptor descriptor, String siteChatInboundPacketJson) throws Exception {
     
     SiteChatInboundLookupUserPacket siteChatInboundLookupUserPacket = new Gson().fromJson(siteChatInboundPacketJson, SiteChatInboundLookupUserPacket.class);
     logger.debug("LookupUser Packet. User ID: " + siteChatInboundLookupUserPacket.getUserId());
     
-    siteChatServer.updateUserActivity(siteChatUser.getId());
+    processor.updateUserActivity(user.getId());
     
     //Create the response
     SiteChatOutboundLookupUserPacket siteChatOutboundLookupUserPacket = new SiteChatOutboundLookupUserPacket();
     siteChatOutboundLookupUserPacket.setUserId(siteChatInboundLookupUserPacket.getUserId());
-    siteChatOutboundLookupUserPacket.setSiteChatUser(siteChatServer.getUserData(siteChatInboundLookupUserPacket.getUserId()).createUserPacket());
-    siteChatWebSocket.sendOutboundPacket(siteChatOutboundLookupUserPacket);
+    siteChatOutboundLookupUserPacket.setSiteChatUser(processor.getUserData(siteChatInboundLookupUserPacket.getUserId()).createUserPacket());
+    processor.sendToDescriptor(descriptor.getId(), siteChatOutboundLookupUserPacket);
   }
 }

@@ -5,6 +5,7 @@ public class SiteChatInboundSetUserSettingsPacket extends SiteChatInboundPacket 
   protected boolean compact;
   protected boolean animateAvatars;
   protected String timestamp;
+  protected boolean invisible;
   
   public boolean getCompact() {
     return compact;
@@ -33,5 +34,13 @@ public class SiteChatInboundSetUserSettingsPacket extends SiteChatInboundPacket 
 
   public void setTimestamp(String timestamp) {
     this.timestamp = timestamp;
+  }
+  
+  public boolean getInvisible() {
+    return invisible;
+  }
+  
+  public void setInvisible(boolean invisible) {
+    this.invisible = invisible;
   }
 }

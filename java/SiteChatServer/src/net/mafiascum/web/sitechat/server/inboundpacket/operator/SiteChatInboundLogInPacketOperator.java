@@ -8,9 +8,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import net.mafiascum.web.sitechat.server.Descriptor;
 import net.mafiascum.web.sitechat.server.SiteChatIgnore;
-import net.mafiascum.web.sitechat.server.SiteChatServer;
-import net.mafiascum.web.sitechat.server.SiteChatServer.SiteChatWebSocket;
+import net.mafiascum.web.sitechat.server.SiteChatMessageProcessor;
 import net.mafiascum.web.sitechat.server.SiteChatUser;
 import net.mafiascum.web.sitechat.server.SiteChatUserSettings;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationMessage;
@@ -35,12 +35,12 @@ public class SiteChatInboundLogInPacketOperator extends SiteChatInboundPacketOpe
     super();
   }
   
-  public void process(SiteChatServer siteChatServer, SiteChatWebSocket siteChatWebSocket, String siteChatInboundPacketJson) throws Exception {
+  public void process(SiteChatMessageProcessor processor, Descriptor descriptor, String siteChatInboundPacketJson) throws Exception {
     
     SiteChatInboundLogInPacket siteChatInboundLogInPacket = new Gson().fromJson(siteChatInboundPacketJson, SiteChatInboundLogInPacket.class);
     int userId;
     
-    UserData userData = siteChatServer.getUserData(siteChatInboundLogInPacket.getUserId());
+    UserData userData = processor.getUserData(siteChatInboundLogInPacket.getUserId());
     SiteChatUser siteChatUser = userData.getUser();
     if(siteChatUser == null) {
       
@@ -48,37 +48,30 @@ public class SiteChatInboundLogInPacketOperator extends SiteChatInboundPacketOpe
       return;
     }
     
-    siteChatServer.updateUserActivity(siteChatUser.getId());
+    processor.updateUserActivity(siteChatUser.getId());
     
-    synchronized(siteChatUser) {
-      userId = siteChatUser.getId();
-    }
+    userId = siteChatUser.getId();
     
     logger.trace("Log In Packet. User ID: " + siteChatInboundLogInPacket.getUserId() + ", Session: " + siteChatInboundLogInPacket.getSessionId());
     
     //Before even authenticating, perform the cheaper check to see if the user is banned.
-    if(siteChatServer.getBanManager().isUserBanned(siteChatUser.getId())) {
+    if(processor.getBanManager().isUserBanned(siteChatUser.getId())) {
       
       logger.debug("Banned user #" + siteChatUser.getId() + " attempting to log in. Denied.");
-      siteChatWebSocket.getConnection().close();
+      processor.closeDescriptor(descriptor.getId());
       return;
     }
     
-    boolean loginResult = siteChatServer.authenticateUserLogin(siteChatInboundLogInPacket.getUserId(), siteChatInboundLogInPacket.getSessionId());
+    boolean loginResult = processor.authenticateUserLogin(siteChatInboundLogInPacket.getUserId(), siteChatInboundLogInPacket.getSessionId());
     
     if(!loginResult) {
       
       logger.debug("Login authentication failed for user #" + siteChatUser.getId() + ". Session ID: " + siteChatInboundLogInPacket.getSessionId());
-      siteChatWebSocket.getConnection().close();
+      processor.closeDescriptor(descriptor.getId());
       return;
     }
     
-    siteChatWebSocket.setUserData(userData);
-    
-    synchronized(siteChatWebSocket) {
-      
-      siteChatServer.associateWebSocketWithUser(userId, siteChatWebSocket);
-    }
+    processor.getUserManager().associateDescriptorUser(userId, descriptor);
     
     Map<Integer, String> conversationIdToAuthCodeMap = siteChatInboundLogInPacket.getCoversationIdToAuthCodeMap();
     
@@ -95,19 +88,17 @@ public class SiteChatInboundLogInPacketOperator extends SiteChatInboundPacketOpe
 
       int siteChatConversationId = siteChatUtil.getConversationUniqueIdentifier(siteChatConversationKey);
       
-      SiteChatConversationWithUserList siteChatConversationWithUserList = siteChatServer.getSiteChatConversationWithUserList(siteChatConversationId);
+      SiteChatConversationWithUserList siteChatConversationWithUserList = processor.getSiteChatConversationWithUserList(siteChatConversationId);
       
       if(siteChatConversationWithUserList == null) {
         
         logger.error("User sent conversation ID that does not exist in system: " + siteChatConversationId);
       }
       else {
-        synchronized(siteChatConversationWithUserList) {
+        
+        if(!siteChatConversationWithUserList.getUserIdSet().contains(siteChatUser.getId())) {
           
-          if(!siteChatConversationWithUserList.getUserIdSet().contains(siteChatUser.getId())) {
-            
-            siteChatServer.attemptJoinConversation(siteChatWebSocket, siteChatUser.getId(), siteChatConversationId, false, true, null, conversationIdToAuthCodeMap == null ? null : conversationIdToAuthCodeMap.get(siteChatConversationId));
-          }
+          processor.attemptJoinConversation(descriptor, siteChatUser.getId(), siteChatConversationId, false, true, null, conversationIdToAuthCodeMap == null ? null : conversationIdToAuthCodeMap.get(siteChatConversationId));
         }
       }
     }
@@ -131,17 +122,15 @@ public class SiteChatInboundLogInPacketOperator extends SiteChatInboundPacketOpe
           continue;
         }
         
-        List<SiteChatConversationMessage> siteChatConversationMessages = siteChatServer.getMessageHistory(siteChatConversationType, mostRecentSiteChatConversationMessageId, siteChatUser.getId(), uniqueIdentifier);
+        List<SiteChatConversationMessage> siteChatConversationMessages = processor.getMessageHistory(siteChatConversationType, mostRecentSiteChatConversationMessageId, siteChatUser.getId(), uniqueIdentifier);
         
-        synchronized(siteChatConversationMessages) {
-          if(siteChatConversationMessages == null || siteChatConversationMessages.isEmpty() == true) {
-          
-            continue;
-          }
-          else {
-          
-            missedSiteChatConversationMessages.addAll(siteChatConversationMessages);
-          }
+        if(siteChatConversationMessages == null || siteChatConversationMessages.isEmpty() == true) {
+        
+          continue;
+        }
+        else {
+        
+          missedSiteChatConversationMessages.addAll(siteChatConversationMessages);
         }
       }
     }
@@ -163,8 +152,8 @@ public class SiteChatInboundLogInPacketOperator extends SiteChatInboundPacketOpe
     siteChatOutboundLogInPacket.setWasSuccessful(true);
     siteChatOutboundLogInPacket.setMissedSiteChatConversationMessages(missedSiteChatConversationMessages);
     siteChatOutboundLogInPacket.setSettings(createSettingsMap(userData));
-    siteChatOutboundLogInPacket.setIgnores(getIgnorePackets(siteChatUser, siteChatServer.getUserManager(), siteChatServer.getIgnoreManager()));
-    siteChatWebSocket.sendOutboundPacket(siteChatOutboundLogInPacket);
+    siteChatOutboundLogInPacket.setIgnores(getIgnorePackets(siteChatUser, processor.getUserManager(), processor.getIgnoreManager()));
+    processor.sendToDescriptor(descriptor.getId(), siteChatOutboundLogInPacket);
   }
   
   protected Map<String, Object> createSettingsMap(UserData userData) {
@@ -174,6 +163,7 @@ public class SiteChatInboundLogInPacketOperator extends SiteChatInboundPacketOpe
     settingsMap.put("compact", userSettings == null ? false : userSettings.getCompact());
     settingsMap.put("animateAvatars", userSettings == null ? true : userSettings.getAnimateAvatars());
     settingsMap.put("timestamp", userSettings == null ? "" : userSettings.getTimestampFormat());
+    settingsMap.put("invisible", userSettings == null ? false : userSettings.getInvisible());
     
     return settingsMap;
   }

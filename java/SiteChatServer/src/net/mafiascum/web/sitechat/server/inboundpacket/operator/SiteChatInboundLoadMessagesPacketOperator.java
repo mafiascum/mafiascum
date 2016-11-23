@@ -2,14 +2,14 @@ package net.mafiascum.web.sitechat.server.inboundpacket.operator;
 
 import java.util.List;
 
+import net.mafiascum.web.sitechat.server.Descriptor;
 import net.mafiascum.web.sitechat.server.SiteChatException;
-import net.mafiascum.web.sitechat.server.SiteChatServer;
-import net.mafiascum.web.sitechat.server.SiteChatServer.SiteChatWebSocket;
-import net.mafiascum.web.sitechat.server.SiteChatUser;
+import net.mafiascum.web.sitechat.server.SiteChatMessageProcessor;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationMessage;
 import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationType;
 import net.mafiascum.web.sitechat.server.inboundpacket.SiteChatInboundLoadMessagesPacket;
 import net.mafiascum.web.sitechat.server.outboundpacket.SiteChatOutboundLoadMessagesPacket;
+import net.mafiascum.web.sitechat.server.user.UserData;
 
 import org.apache.log4j.Logger;
 
@@ -23,7 +23,7 @@ public class SiteChatInboundLoadMessagesPacketOperator extends SiteChatInboundSi
     super();
   }
   
-  public void process(SiteChatServer siteChatServer, SiteChatUser siteChatUser, SiteChatWebSocket siteChatWebSocket, String siteChatInboundPacketJson) throws Exception {
+  public void process(SiteChatMessageProcessor processor, UserData user, Descriptor descriptor, String siteChatInboundPacketJson) throws Exception {
     
     SiteChatInboundLoadMessagesPacket packet = new Gson().fromJson(siteChatInboundPacketJson, SiteChatInboundLoadMessagesPacket.class);
     
@@ -36,7 +36,7 @@ public class SiteChatInboundLoadMessagesPacketOperator extends SiteChatInboundSi
     boolean hasError = true;
     
     try {
-      messages = siteChatServer.loadHistoricalMessages(siteChatUser.getId(), type, uniqueIdentifier, packet.getOldestMessageId());
+      messages = processor.loadHistoricalMessages(user.getId(), type, uniqueIdentifier, packet.getOldestMessageId());
       hasError = false;
     }
     catch(SiteChatException exception) {
@@ -52,9 +52,9 @@ public class SiteChatInboundLoadMessagesPacketOperator extends SiteChatInboundSi
       
       outboundPacket.setMessages(messages);
       outboundPacket.setConversationKey(packet.getConversationKey());
-      outboundPacket.setUserMap(siteChatServer.getUserPacketMap(miscUtil.transformToList(messages, SiteChatConversationMessage::getUserId)));
+      outboundPacket.setUserMap(processor.getUserPacketMap(miscUtil.transformToList(messages, SiteChatConversationMessage::getUserId)));
     }
     
-    siteChatWebSocket.sendOutboundPacket(outboundPacket);
+    processor.sendToDescriptor(descriptor.getId(), outboundPacket);
   }
 }

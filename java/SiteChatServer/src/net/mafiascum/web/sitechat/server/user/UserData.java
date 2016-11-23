@@ -4,17 +4,23 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.mafiascum.web.sitechat.server.SiteChatServer.SiteChatWebSocket;
+import net.mafiascum.phpbb.usergroup.UserGroup;
+import net.mafiascum.web.sitechat.server.Descriptor;
 import net.mafiascum.web.sitechat.server.SiteChatUser;
 import net.mafiascum.web.sitechat.server.SiteChatUserSettings;
 
 public class UserData {
 
   protected SiteChatUser user;
-  protected List<SiteChatWebSocket> webSockets = new ArrayList<>();
+  protected List<Descriptor> descriptors = new ArrayList<>();
   protected LocalDateTime lastActivityDatetime;
   protected LocalDateTime lastNetworkActivityDatetime;
   protected SiteChatUserSettings userSettings;
+  protected List<UserGroup> userGroups;
+  
+  public UserData() {
+    userGroups = new ArrayList<>();
+  }
   
   public int getId() {
     return user.getId();
@@ -26,11 +32,11 @@ public class UserData {
   public void setUser(SiteChatUser user) {
     this.user = user;
   }
-  public List<SiteChatWebSocket> getWebSockets() {
-    return webSockets;
+  public List<Descriptor> getDescriptors() {
+    return descriptors;
   }
-  public void setWebSockets(List<SiteChatWebSocket> webSockets) {
-    this.webSockets = webSockets;
+  public void setDescriptors(List<Descriptor> descriptors) {
+    this.descriptors = descriptors;
   }
   public LocalDateTime getLastActivityDatetime() {
     return lastActivityDatetime;
@@ -50,8 +56,26 @@ public class UserData {
   public void setUserSettings(SiteChatUserSettings userSettings) {
     this.userSettings = userSettings;
   }
+  public List<UserGroup> getUserGroups() {
+    return userGroups;
+  }
+  public void setUserGroups(List<UserGroup> userGroups) {
+    this.userGroups = userGroups;
+  }
   
   public UserPacket createUserPacket() {
     return new UserPacket(user, lastActivityDatetime);
+  }
+  
+  public boolean isInvisible() {
+    return userSettings != null && userSettings.getInvisible();
+  }
+  
+  public boolean isInGroup(int groupId, Boolean leader, Boolean pending) {
+    return userGroups.stream().filter(userGroup -> {
+      return userGroup.getGroupId() == groupId
+          && (leader == null || leader.equals(userGroup.getGroupLeader()))
+          && (pending == null || pending.equals(userGroup.getUserPending()));
+    }).findAny().isPresent();
   }
 }
