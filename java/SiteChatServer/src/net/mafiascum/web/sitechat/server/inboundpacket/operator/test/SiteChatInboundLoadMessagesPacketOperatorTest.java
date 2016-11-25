@@ -20,6 +20,7 @@ import net.mafiascum.web.sitechat.server.conversation.SiteChatConversationMessag
 import net.mafiascum.web.sitechat.server.inboundpacket.SiteChatInboundLoadMessagesPacket;
 import net.mafiascum.web.sitechat.server.inboundpacket.operator.SiteChatInboundLoadMessagesPacketOperator;
 import net.mafiascum.web.sitechat.server.outboundpacket.SiteChatOutboundLoadMessagesPacket;
+import net.mafiascum.web.sitechat.server.outboundpacket.SiteChatOutboundPacket;
 import net.mafiascum.web.sitechat.server.outboundpacket.SiteChatOutboundPacketType;
 import net.mafiascum.web.sitechat.server.user.UserData;
 
@@ -53,7 +54,7 @@ public class SiteChatInboundLoadMessagesPacketOperatorTest {
     operator.setSiteChatUtil(SiteChatUtil.get());
     operator.process(processor, userData, descriptor, new Gson().toJson(packet));
     
-    verify(processor, times(1)).sendToDescriptor(any(), any());
+    verify(processor, times(1)).sendToDescriptor(any(), (SiteChatOutboundPacket)any());
     Assert.assertEquals(packet.getConversationKey(), outboundPacketCaptor.getValue().getConversationKey());
     Assert.assertEquals(SiteChatOutboundPacketType.loadMessages.getStandardName(), outboundPacketCaptor.getValue().getCommand());
     Assert.assertEquals(3, outboundPacketCaptor.getValue().getMessages().size());
