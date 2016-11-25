@@ -718,4 +718,10 @@ public class StringUtil extends MSUtil {
     
     return DigestUtils.sha1Hex(str);
   }
+  
+  public String removeNonBmp(String str) {
+    if(str == null)
+      return null;
+    return str.replaceAll("[^\\u0000-\\uFFFF]", "");
+  }
 }

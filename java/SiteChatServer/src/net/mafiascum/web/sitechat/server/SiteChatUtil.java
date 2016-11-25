@@ -2,6 +2,8 @@ package net.mafiascum.web.sitechat.server;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -110,8 +112,19 @@ public class SiteChatUtil extends MSUtil {
   }
   
   public void putNewSiteChatConversationMessages(Connection connection, List<SiteChatConversationMessage> siteChatConversationMessages) throws SQLException {
-    BatchInsertStatement batchInsertStatement = new BatchInsertStatement(connection, "siteChatConversationMessage", siteChatConversationMessages.size() + 1);
-    putNewSiteChatConversationMessages(siteChatConversationMessages, batchInsertStatement);
+    for(SiteChatConversationMessage message : siteChatConversationMessages) {
+      try {
+        BatchInsertStatement batchInsertStatement = new BatchInsertStatement(connection, "siteChatConversationMessage", 1);
+        putNewSiteChatConversationMessages(new ArrayList<>(Arrays.asList(message)), batchInsertStatement);
+      }
+      catch(Exception exception) {
+        logger.error("Error storing message.", exception);
+      }
+    }
+  }
+  
+  public void putSiteChatConversationMessage(Connection connection, SiteChatConversationMessage message) throws SQLException {
+    message.store(connection);
   }
   
   public int getTopSiteChatConversationMessageId(Connection connection) throws SQLException {
