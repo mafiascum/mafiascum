@@ -20,7 +20,6 @@ $phpEx = substr(strrchr(__FILE__, '.'), 1);
 require($phpbb_root_path . 'common.' . $phpEx);
 require($phpbb_root_path . 'includes/functions_admin.' . $phpEx);
 require($phpbb_root_path . 'includes/functions_module.' . $phpEx);
-require($phpbb_root_path . 'includes/functions_backups.' . $phpEx);
 
 // Start session management
 $user->session_begin();

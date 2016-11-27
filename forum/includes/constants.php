@@ -38,21 +38,6 @@ define('USER_ACTIVATION_SELF', 1);
 define('USER_ACTIVATION_ADMIN', 2);
 define('USER_ACTIVATION_DISABLE', 3);
 
-define('BACKUP_STATUS_PENDING', 0);
-define('BACKUP_STATUS_DUMPING_FORUM', 1);
-define('BACKUP_STATUS_DUMPING_WIKI', 2);
-define('BACKUP_STATUS_COPYING_FORUM_FILES', 3);
-define('BACKUP_STATUS_COPYING_WIKI_FILES', 4);
-define('BACKUP_STATUS_RENAMING_TEMP_BACKUP_DIRECTORY', 5);
-define('BACKUP_STATUS_COMPRESSING_BACKUP_DIRECTORY', 6);
-define('BACKUP_STATUS_COMPRESSING_BACKUP_DIRECTORY_FAILED', 7);
-define('BACKUP_STATUS_SENDING_BY_FTP', 8);
-define('BACKUP_STATUS_COMPLETE', 9);
-
-define('BACKUP_REMOTE_FILE_STATUS_PENDING', 0);
-define('BACKUP_REMOTE_FILE_STATUS_FAILED', 1);
-define('BACKUP_REMOTE_FILE_STATUS_COMPLETE', 2);
-
 define('AVATAR_UPLOAD', 1);
 define('AVATAR_REMOTE', 2);
 define('AVATAR_GALLERY', 3);
@@ -314,11 +299,10 @@ define('MAFIA_FACTIONS_TABLE', $table_prefix . 'mafia_factions');
 define('MAFIA_GAME_TYPES_TABLE', $table_prefix . 'mafia_game_types');
 define('MAFIA_ROLES_TABLE', $table_prefix . 'mafia_roles');
 define('MAFIA_MODIFIERS_TABLE', $table_prefix . 'mafia_modifiers');
-define('BACKUP_TABLE', $table_prefix . 'backup');
-define('BACKUP_REMOTE_FILE_TABLE', $table_prefix . 'backup_remote_file');
 define('POSTS_ARCHIVE_TABLE', $table_prefix . 'posts_archive');
 define('MAFIA_GAME_STATUS_TABLE', $table_prefix . 'mafia_game_status');
 define('TOPIC_POSTERS_TABLE', $table_prefix . 'topic_posters');
+define('PRIVATE_TOPIC_USERS',		$table_prefix . 'private_topic_users');
 
 define('MOBILE_STYLE', '10');
 
