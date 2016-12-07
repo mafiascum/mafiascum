@@ -357,6 +357,9 @@ background-color:#0000FF;
 margin-bottom:6px;
 }
 /*private topics*/
+.private-user-select-group {
+    margin: 5px 0 5px 0;
+}
 #private_users_list li {
 	list-style-type: none;
 }
