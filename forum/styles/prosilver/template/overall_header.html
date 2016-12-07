@@ -122,7 +122,10 @@
 <script type="text/javascript">
 var templatepath = "{T_THEME_PATH}";
 <!-- IF SCRIPT_NAME eq 'posting' -->
-	var private_id_count = {HAS_PRIVATE_USERS};
+var private_id_count = {
+private_users: {HAS_PRIVATE_USERS},
+private_mods: {HAS_PRIVATE_MODS}
+};
 <!-- ENDIF -->
 /***
 window.onerror = function(msg, url, lineNo)  {

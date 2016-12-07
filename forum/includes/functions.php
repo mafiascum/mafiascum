@@ -1739,6 +1739,10 @@ function get_unread_topics($user_id = false, $sql_extra = '', $sql_sort = '', $s
 					'FROM' => array(phpbb_private_topic_users => 'ptu'),
 					'ON'   => "(" . "t.is_private=1 AND ptu.user_id =" . $user->data['user_id'] . " AND t.topic_id=ptu.topic_id)",
 				),
+                array(
+					'FROM' => array(phpbb_topic_mod => 'tm'),
+					'ON'   => "(" . "tm.user_id =" . $user->data['user_id'] . " AND t.topic_id=tm.topic_id)",
+				),
 			),
 
 			'WHERE'			=> "
@@ -1748,7 +1752,7 @@ function get_unread_topics($user_id = false, $sql_extra = '', $sql_sort = '', $s
 				(tt.mark_time IS NULL AND ft.mark_time IS NOT NULL AND t.topic_last_post_time > ft.mark_time) OR
 				(tt.mark_time IS NULL AND ft.mark_time IS NULL)
 				)
-				AND" . "(t.is_private = 0 OR ptu.topic_id IS NOT NULL)
+				AND" . "(t.is_private = 0 OR ptu.topic_id IS NOT NULL OR tm.topic_id IS NOT NULL)
 				$sql_extra
 				$sql_sort",
 		);
