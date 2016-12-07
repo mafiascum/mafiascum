@@ -263,8 +263,10 @@
       <dl>
 	<dt><label for="topic_type-0"><!-- IF S_EDIT_POST -->Change topic privacy to<!-- ELSE -->Post topic privacy as<!-- ENDIF -->:</label></dt>
 	<dd><label for="topic_type-public"><input type="radio" name="topic_privacy" id="topic_type-public" value="0" <!-- IF not S_PUBLIC --> checked='checked'<!-- ENDIF -->/>Public</label><label for="topic_type-private"><input type="radio" name="topic_privacy" id="topic_type-private" value="1" <!-- IF S_PUBLIC --> checked='checked'<!-- ENDIF -->/>Private</label></dd>	
-      </dl>	
+      </dl>
+      <hr class="dashed">
       <!-- IF IS_PRIVATE or not S_EDIT_POST  -->
+      <div class="private-user-select-group">
       <dl>Users that can view this topic: </dl>
       <dl>
 	<ul id="private_users_list">
@@ -282,7 +284,9 @@
 	<button id='private_users_add_button' type ='button'>Add User</button>
 	<span>(<a onclick="find_username(this.href); return false;" href="./memberlist.php?mode=searchuser&amp;form=postform&amp;field=private_users_input&amp;select_single=true">Find a member</a>)</span>
       </dl>
-
+  </div>
+  <hr class="dashed">
+  <div class="private-user-select-group">
       <dl>Users that can <em>moderate</em> this topic: </dl>
       <dl>
 	<ul id="private_mods_list">
@@ -300,6 +304,8 @@
 	<button id='private_mods_add_button' type ='button'>Add Moderator</button>
 	<span>(<a onclick="find_username(this.href); return false;" href="./memberlist.php?mode=searchuser&amp;form=postform&amp;field=private_mods_input&amp;select_single=true">Find a member</a>)</span>
       </dl>
+  </div>
+  <hr class="dashed">
       <!-- ENDIF -->
       <!-- ENDIF -->
       

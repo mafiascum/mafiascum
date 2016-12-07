@@ -16,6 +16,9 @@ a.signature_hideshow:hover{
 }
 
 /*private topics*/
+.private-user-select-group {
+    margin: 5px 0 5px 0;
+}
 #private_users_list li {
 	list-style-type: none;
 }
