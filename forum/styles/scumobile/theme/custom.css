@@ -16,16 +16,25 @@ a.signature_hideshow:hover{
 }
 
 /*private topics*/
-#private_user_list li {
+#private_users_list li {
 	list-style-type: none;
 }
-#private_user_list li a{
+#private_users_list li a{
+	display: inline-block;
+}
+#private_mods_list li {
+	list-style-type: none;
+}
+#private_mods_list li a{
 	display: inline-block;
 }
 #site-description p, #site-description h1 {
 	display:none;
 }
-#private_user_input {
+#private_users_input {
+	cursor: text;
+}
+#private_mods_input {
 	cursor: text;
 }
 .private {

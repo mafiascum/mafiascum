@@ -267,7 +267,7 @@ function compose_pm($id, $mode, $action, $user_folders = array())
 				trigger_error('NOT_AUTHORISED');
 			}
 			if ($post['is_private']){
-				$sql = 'SELECT user_id FROM phpbb_private_topic_users WHERE topic_id = ' . $post['topic_id'];
+				$sql = 'SELECT user_id FROM phpbb_private_topic_users WHERE topic_id = ' . $post['topic_id'] . ' UNION SELECT user_id FROM phpbb_topic_mod WHERE topic_id = ' . $post['topic_id'];
 				$notauthorized = true;
 				$result = $db->sql_query($sql);
 				while ($private_user_id = $db->sql_fetchrow()){

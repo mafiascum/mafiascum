@@ -446,11 +446,13 @@ $sql = 'SELECT t.topic_id
 	FROM ' . TOPICS_TABLE . " t
 	LEFT JOIN phpbb_private_topic_users ptu
 	ON t.topic_id = ptu.topic_id
+    LEFT JOIN phpbb_topic_mod tm
+    ON t.topic_id = tm.topic_id
 	WHERE $sql_where
 		AND t.topic_type IN (" . POST_NORMAL . ', ' . POST_STICKY . ")
 		$sql_approved
 		$sql_limit_time
-		AND ((" . ($auth->acl_get('m_report', $forum_id) ? '1=1' : ("t.is_private=1 AND ptu.user_id =" . $user->data['user_id'])) . ") OR (t.is_private=0))
+		AND ((" . ($auth->acl_get('m_report', $forum_id) ? '1=1' : ("t.is_private=1 AND (ptu.user_id =" . $user->data['user_id'] . " OR tm.user_id =" . $user->data['user_id'] . ")")) . ") OR (t.is_private=0))
 	GROUP BY t.topic_id
 	ORDER BY t.topic_type " . ((!$store_reverse) ? 'DESC' : 'ASC') . ', ' . $sql_sort_order;
 $result = $db->sql_query_limit($sql, $sql_limit, $sql_start);
