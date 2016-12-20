@@ -51,7 +51,7 @@ $(document).ready(function() {
 		$.ajax({
 			url : 'verify_username.php',
 			type: 'POST',
-			data: {name: encodeURI(username), id: private_id_count},
+			data: {name: username, id: private_id_count},
 			success : function(data){
 				if (data == 'false'){
 					$('#privateuser' + private_id_count).text('invalid username');
