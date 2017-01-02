@@ -44,15 +44,14 @@ $(document).ready(function() {
 		jumptobinding(e, '#jumpto2');
 	});
 
-     var user_search = function(prefix) {
-        var username = $('#' + prefix + '_input').val();
+	var user_search = function(prefix) {
+	var username = $('#' + prefix + '_input').val();
 	private_id_count[prefix]++;
-	console.log(username);
-	console.log(encodeURI(username));
+
 	$.ajax({
 	    url : 'verify_username.php',
 	    type: 'POST',
-	    data: {name: encodeURI(username), id: private_id_count[prefix], field_name: prefix},
+	    data: {name: username, id: private_id_count[prefix], field_name: prefix},
 	    success : function(data){
 		if (data == 'false'){
 		    $('#' + prefix + private_id_count[prefix]).text('invalid username');
