@@ -471,10 +471,11 @@ class fulltext_mysql extends search_backend
 		$sql = "SELECT $sql_select
 			FROM $sql_from$sql_sort_table
 			LEFT JOIN phpbb_private_topic_users ptu ON (" . "t.is_private=1 AND ptu.user_id =" . $user->data['user_id'] . " AND t.topic_id=ptu.topic_id)" . "
+            LEFT JOIN phpbb_topic_mod tm ON tm.user_id =" . $user->data['user_id'] . " AND t.topic_id=tm.topic_id
 			WHERE MATCH ($sql_match) AGAINST ('" . $db->sql_escape(htmlspecialchars_decode($this->search_query)) . "' IN BOOLEAN MODE)
 				$sql_where_options
 				AND t.topic_id = p.topic_id
-				AND" . "(p.topic_id IS NULL OR t.is_private = 0 OR ptu.topic_id IS NOT NULL)
+				AND" . "(p.topic_id IS NULL OR t.is_private = 0 OR ptu.topic_id IS NOT NULL OR tm.topic_id IS NOT NULL)
 			GROUP BY $sql_group
 			ORDER BY $sql_sort";
 		$result = $db->sql_query_limit($sql, $config['search_block_size'], $start);
@@ -628,6 +629,7 @@ class fulltext_mysql extends search_backend
 				FROM " . $sql_sort_table . POSTS_TABLE . ' p' .  '
 				LEFT JOIN ' . TOPICS_TABLE . ' t ' . "ON t.topic_id = p.topic_id
 				LEFT JOIN phpbb_private_topic_users ptu ON (" . "t.is_private=1 AND ptu.user_id =" . $user->data['user_id'] . " AND t.topic_id=ptu.topic_id)" . "
+                LEFT JOIN phpbb_topic_mod tm ON tm.user_id =" . $user->data['user_id'] . " AND t.topic_id=tm.topic_id
 				WHERE $sql_author
 					$sql_topic_id
 					$sql_firstpost
@@ -635,7 +637,7 @@ class fulltext_mysql extends search_backend
 					$sql_fora
 					$sql_sort_join
 					$sql_time
-					AND" . "(p.topic_id IS NULL OR t.is_private = 0 OR ptu.topic_id IS NOT NULL)
+					AND" . "(p.topic_id IS NULL OR t.is_private = 0 OR ptu.topic_id IS NOT NULL OR tm.topic_id IS NOT NULL)
 				ORDER BY $sql_sort";
 			$field = 'post_id';
 		}
@@ -644,6 +646,7 @@ class fulltext_mysql extends search_backend
 			$sql = "SELECT DISTINCT {$calc_results}t.topic_id
 				FROM "  . POSTS_TABLE . " p," . $sql_sort_table . TOPICS_TABLE . " t
 				LEFT JOIN phpbb_private_topic_users ptu ON (" . "t.is_private=1 AND ptu.user_id =" . $user->data['user_id'] . " AND t.topic_id=ptu.topic_id)" . "
+                LEFT JOIN phpbb_topic_mod tm ON tm.user_id =" . $user->data['user_id'] . " AND t.topic_id=tm.topic_id
 				WHERE $sql_author
 					$sql_topic_id
 					$sql_firstpost
@@ -652,7 +655,7 @@ class fulltext_mysql extends search_backend
 					AND t.topic_id = p.topic_id
 					$sql_sort_join
 					$sql_time
-					AND" . "(p.topic_id IS NULL OR t.is_private = 0 OR ptu.topic_id IS NOT NULL)
+					AND" . "(p.topic_id IS NULL OR t.is_private = 0 OR ptu.topic_id IS NOT NULL OR tm.topic_id IS NOT NULL)
 				GROUP BY t.topic_id
 				ORDER BY $sql_sort";
 			$field = 'topic_id';

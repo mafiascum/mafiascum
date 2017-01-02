@@ -385,7 +385,7 @@ if (!$auth->acl_get('f_read', $forum_id))
 	login_box('', $user->lang['LOGIN_VIEWFORUM']);
 }
 if($topic_data['is_private']){
-	$sql = 'SELECT * FROM phpbb_private_topic_users WHERE topic_id=' . $topic_data['topic_id'] . ' AND user_id=' . $user->data['user_id'] . ';';
+	$sql = 'SELECT topic_id, user_id FROM phpbb_private_topic_users WHERE topic_id=' . $topic_data['topic_id'] . ' AND user_id=' . $user->data['user_id'] . ' UNION SELECT topic_id, user_id FROM phpbb_topic_mod WHERE topic_id=' . $topic_data['topic_id'] . ' AND user_id=' . $user->data['user_id'];
 	$result = $db->sql_query($sql);
 	if ($result->num_rows < 1 && !($auth->acl_get('m_report', $forum_id))){
 		trigger_error('You are not authorized to read this topic.');

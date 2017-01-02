@@ -270,7 +270,7 @@ $sql = 'SELECT * FROM ' . TOPICS_TABLE . ' WHERE topic_id=' . $topic_id;
 $result= $db->sql_query($sql);
 $topic_data  = $db->sql_fetchrow($result);
 if($topic_data['is_private']){
-	$sql = 'SELECT * FROM phpbb_private_topic_users WHERE topic_id=' . $topic_data['topic_id'] . ' AND user_id=' . $user->data['user_id'] . ';';
+	$sql = 'SELECT topic_id, user_id FROM phpbb_private_topic_users WHERE topic_id=' . $topic_data['topic_id'] . ' AND user_id=' . $user->data['user_id'] . ' UNION SELECT topic_id, user_id FROM phpbb_topic_mod WHERE topic_id=' . $topic_data['topic_id'] . ' AND user_id=' . $user->data['user_id'];
 	$result = $db->sql_query($sql);
 	if ($result->num_rows < 1 && !($auth->acl_get('m_report', $forum_id))){
 		trigger_error('You are not authorized to post in this topic.');
@@ -725,16 +725,28 @@ if ($load && ($mode == 'reply' || $mode == 'quote' || $mode == 'multi' || $mode 
 }
 
 //PRIVATE TOPICS
-	$private_users_old = array();
-	if($topic_id > 0){
-		$sql = 'SELECT user_id FROM phpbb_private_topic_users WHERE permission_type=1 AND topic_id=' . $topic_id;
-		$result = $db->sql_query($sql);
-		while ($row = $db->sql_fetchrow($result)){
-			$private_users_old[] = $row['user_id'];
-		}
-		$db->sql_freeresult($result);
-	}
-	$post_data['private_users'] = $private_users_old;
+$private_users_old = array();
+if($topic_id > 0){
+    $sql = 'SELECT user_id FROM phpbb_private_topic_users WHERE permission_type=1 AND topic_id=' . $topic_id;
+    $result = $db->sql_query($sql);
+    while ($row = $db->sql_fetchrow($result)){
+        $private_users_old[] = $row['user_id'];
+    }
+    $db->sql_freeresult($result);
+}
+$post_data['private_users'] = $private_users_old;
+
+$private_mods_old = array();
+if($topic_id > 0){
+    $sql = 'SELECT user_id FROM phpbb_topic_mod WHERE topic_id=' . $topic_id;
+    $result = $db->sql_query($sql);
+    while ($row = $db->sql_fetchrow($result)){
+        $private_mods_old[] = $row['user_id'];
+    }
+    $db->sql_freeresult($result);
+}
+$post_data['private_mods'] = $private_mods_old;
+
 	$first_post_id = ((isset($post_data['topic_first_post_id'])) ? ((int) $post_data['topic_first_post_id']) : 0);
 	if ($forum_id == PRIVATE_FORUM && $mode == 'post' && $first_post_id == 0){
 		$post_data['is_private'] = 1;
@@ -1459,6 +1471,42 @@ if ($submit || $preview || $refresh)
 						}
 						
 					}
+
+                    $post_data['private_mods'] = array();
+                    $private_mods	= isset($_REQUEST['private_mods']) ? $_REQUEST['private_mods'] : array();
+					if (!is_array($private_mods)){
+						$private_mods = array();
+					}
+					$temp_mods = $private_mods;
+					$private_mods = array();
+					foreach ($temp_mods as $mods){
+						if ($mods != ''){
+							$private_mods[] = $mods;
+						}
+					}
+					if (sizeof($private_mods)){
+						$mod_id_ary = array();
+						user_get_id_name($mod_id_ary, $private_mods, array(USER_NORMAL, USER_FOUNDER));
+						$post_data['private_mods'] = $mod_id_ary;
+						if(!sizeof($mod_id_ary)){
+							$error[] = $user->lang['PM_NO_USERS'];
+						}
+					}
+					$private_mods_add = array_diff($post_data['private_mods'], $private_mods_old);
+					$private_mods_remove = array_diff ($private_mods_old, $post_data['private_mods']);
+					if (sizeof($private_mods_remove)){
+						$sql = 'DELETE FROM phpbb_topic_mod WHERE topic_id=' . $topic_id . ' AND user_id IN(' . implode(',',$private_mods_remove) . ');';
+						$db->sql_query($sql);
+					}
+					if (sizeof($private_mods_add)){
+						foreach ($private_mods_add as $mods){
+							if (($mode=='post' && $mods != $user->data['user_id']) || ($mode=='edit' && $mods != $post_data['topic_poster'])){
+								$sql = 'INSERT INTO phpbb_topic_mod (user_id, topic_id) VALUES('.$mods .','.$topic_id .');';
+								$db->sql_query($sql);
+							}
+						}
+						
+					}
 				}
 			}
 			// END PRIVATE TOPICS
@@ -1856,7 +1904,7 @@ add_form_key('posting');
 
 //PRIVATE USERS
 if (sizeof($post_data['private_users']) && $forum_id==PRIVATE_FORUM){
-$count = 0;
+    $count = 0;
 	$user_name_ary = array();
 	$user_ids = $post_data['private_users'];
 	user_get_id_name($user_ids, $user_name_ary, array(USER_NORMAL, USER_FOUNDER));
@@ -1867,6 +1915,23 @@ $count = 0;
 				'VALUE'		=> $user_name_ary[$users],
 				'NUM'		=> $count,
 				'LINK'		=> get_username_string('full', $users, $user_name_ary[$users])
+			));
+			$count++;
+	}
+}
+
+if (sizeof($post_data['private_mods']) && $forum_id==PRIVATE_FORUM){
+    $count = 0;
+    $mod_name_ary = array();
+	$mod_ids = $post_data['private_mods'];
+    user_get_id_name($mod_ids, $mod_name_ary, array(USER_NORMAL, USER_FOUNDER));
+    foreach ($post_data['private_mods'] as $mods){
+			$template->assign_block_vars('private_mods', array(
+				'NAME'		=> 'private_mods[' . $count . ']',
+				'ID'		=> 'private_mods[' . $count . ']',
+				'VALUE'		=> $mod_name_ary[$mods],
+				'NUM'		=> $count,
+				'LINK'		=> get_username_string('full', $mods, $mod_name_ary[$mods])
 			));
 			$count++;
 	}
@@ -1906,6 +1971,7 @@ $template->assign_vars(array(
 	'USER_TIMEZONE_OFFSET'	=> ($post_autolock_arr !== null && $post_autolock_arr["timezone_offset"] !== null) ? $post_autolock_arr["timezone_offset"] : number_format(($user->timezone + $user->dst) / 60 / 60, 2),
 	
 	'HAS_PRIVATE_USERS'			=> sizeof($post_data['private_users']),
+    'HAS_PRIVATE_MODS'			=> sizeof($post_data['private_mods']),
 	'S_ALLOW_PRIVATE'			=> $forum_allow_private,
 	'S_PUBLIC'					=> ($post_data['is_private']),
 	'IS_PRIVATE'					=> ($post_data['is_private']),

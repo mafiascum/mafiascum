@@ -7,6 +7,7 @@ require($phpbb_root_path . 'includes/functions_user.' . $phpEx);
 $user->session_begin();
 $auth->acl($user->data);
 $username = $db->sql_escape($_POST['name']);
+$field_name = $db->sql_escape($_POST['field_name']);
 $private_id = (int)$_POST['id'];
 $out = '';
 if (!empty($username)){
@@ -18,7 +19,7 @@ if (!empty($username)){
 		$out = 'false';
 	}
 	else {
-		$out = get_username_string('full', $user_id_ary[0], $username) . '<input name="' . 'private_users[' . $private_id . ']' . '" id="' . 'private_users[' . $private_id . ']' . '" value="' . $username  . '" type = "hidden"/>  <button type="button" class="repeatable-remove">x</button>';
+		$out = get_username_string('full', $user_id_ary[0], $username) . '<input name="' . $field_name . '[' . $private_id . ']' . '" id="' . $field_name . '[' . $private_id . ']' . '" value="' . $username  . '" type = "hidden"/>  <button type="button" class="repeatable-remove">x</button>';
 	}
 	echo $out;
 }

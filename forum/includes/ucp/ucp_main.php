@@ -653,13 +653,17 @@ class ucp_main
 				array(
 					'FROM' => array(PRIVATE_TOPIC_USERS => 'ptu'),
 					'ON' => 'ptu.topic_id = t.topic_id AND ptu.user_id = ' . $user->data['user_id']
+				),
+				array(
+					'FROM' => array(TOPIC_AUTHOR_MODERATION_TABLE => 'tm'),
+					'ON' => 'tm.topic_id = t.topic_id AND tm.user_id = ' . $user->data['user_id']
 				)
 			),
 
 			'WHERE'		=>	'i.topic_id = t.topic_id
 				AND i.user_id = ' . $user->data['user_id'] . '
 				AND ' . $db->sql_in_set('t.forum_id', $forbidden_forum_ary, true, true) . '
-				AND (t.is_private=0 OR ptu.topic_id IS NOT NULL)',
+				AND (t.is_private=0 OR ptu.topic_id IS NOT NULL OR tm.topic_id IS NOT NULL)',
 		);
 		$sql = $db->sql_build_query('SELECT', $sql_array);
 		$result = $db->sql_query($sql);
@@ -729,8 +733,9 @@ class ucp_main
 			$sql_array['SELECT'] .= ', tp.topic_posted';
 		}
 
-		$sql_array['LEFT_JOIN'][] = array('FROM' => array(PRIVATE_TOPIC_USERS => 'ptu'), 'ON' => 'ptu.topic_id = t.topic_id AND ptu.user_id = ' . $user->data['user_id']);
-		$sql_array['WHERE'] .= ' AND (t.is_private=0 OR ptu.topic_id IS NOT NULL)';
+        $sql_array['LEFT_JOIN'][] = array('FROM' => array(PRIVATE_TOPIC_USERS => 'ptu'), 'ON' => 'ptu.topic_id = t.topic_id AND ptu.user_id = ' . $user->data['user_id']);
+        $sql_array['LEFT_JOIN'][] = array('FROM' => array(TOPIC_AUTHOR_MODERATION_TABLE => 'tm'), 'ON' => 'tm.topic_id = t.topic_id AND tm.user_id = ' . $user->data['user_id']);
+		$sql_array['WHERE'] .= ' AND (t.is_private=0 OR ptu.topic_id IS NOT NULL OR tm.topic_id IS NOT NULL)';
 
 		$sql = $db->sql_build_query('SELECT', $sql_array);
 		$result = $db->sql_query_limit($sql, $config['topics_per_page'], $start);

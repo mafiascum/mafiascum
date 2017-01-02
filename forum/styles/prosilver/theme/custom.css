@@ -356,14 +356,25 @@ background-color:#0000FF;
 .indi-legend{
 margin-bottom:6px;
 }
-/*private topics*/
-#private_user_list li {
+.private-user-select-group {
+    margin: 5px 0 5px 0;
+}
+#private_users_list li {
 	list-style-type: none;
 }
-#private_user_list li a{
+#private_users_list li a{
 	display: inline-block;
 }
-#private_user_input {
+#private_mods_list li {
+	list-style-type: none;
+}
+#private_mods_list li a{
+	display: inline-block;
+}
+#private_users_input {
+	cursor: text;
+}
+#private_mods_input {
 	cursor: text;
 }
 .private {

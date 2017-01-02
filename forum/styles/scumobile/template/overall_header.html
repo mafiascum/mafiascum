@@ -27,7 +27,10 @@
 
 <script type="text/javascript">
 	<!-- IF SCRIPT_NAME eq 'posting' -->
-		var private_id_count = {HAS_PRIVATE_USERS};
+        var private_id_count = {
+        private_users: {HAS_PRIVATE_USERS},
+        private_mods: {HAS_PRIVATE_MODS}
+        };
 	<!-- ENDIF -->
 // <![CDATA[
 	var jump_page = '{LA_JUMP_PAGE}:';
