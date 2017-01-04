@@ -51,12 +51,14 @@ class bbcode_firstpass extends bbcode
 		{
 			if (isset($bbcode_data['disabled']) && $bbcode_data['disabled'])
 			{
-				foreach ($bbcode_data['regexp'] as $regexp => $replacement)
-				{
-					if (preg_match($regexp, $this->message))
+				if (is_array($bbcode_data['regexp']) || is_object($bbcode_data['regexp'])){
+					foreach ($bbcode_data['regexp'] as $regexp => $replacement)
 					{
-						$this->warn_msg[] = sprintf($user->lang['UNAUTHORISED_BBCODE'] , '[' . $bbcode_name . ']');
-						continue;
+						if (preg_match($regexp, $this->message))
+						{
+							$this->warn_msg[] = sprintf($user->lang['UNAUTHORISED_BBCODE'] , '[' . $bbcode_name . ']');
+							continue;
+						}
 					}
 				}
 			}
