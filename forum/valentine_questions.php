@@ -1,47 +1,72 @@
 <?php
+
+//Setup
 define('IN_PHPBB', true);
 $phpbb_root_path = (defined('PHPBB_ROOT_PATH')) ? PHPBB_ROOT_PATH : './';
 $phpEx = substr(strrchr(__FILE__, '.'), 1);
 require($phpbb_root_path . 'common.' . $phpEx);
 require($phpbb_root_path . 'includes/functions_user.' . $phpEx);
 $user->session_begin();
-if ($user->data['username'] == 'Anonymous'){
+$user_id = $user->data['user_id'];
+
+//Not signed in.
+if ($user_id == ANONYMOUS){
 	echo 'You must be logged in.';
 	exit;
 }
-$user_id = $user->data['user_id'];
-if ($user_id != 1637){
-	$query = "SELECT * FROM phpbb_alts WHERE alt_user_id=$user_id";
-	$result = $db->sql_query($query);
-	$alt_data = mysqli_fetch_array($result);
-	if (sizeOf($alt_data) > 0){
-		echo '<p>You are an alt!</p>';
-		exit;
-	}
+
+//Alt check.
+$query = "SELECT * FROM phpbb_alts WHERE alt_user_id=$user_id";
+$result = $db->sql_query($query);
+$alt_data = mysqli_fetch_array($result);
+if (sizeOf($alt_data) > 0)
+{
+	echo '<p>You are an alt!</p>';
+	exit;
 }
-if (!empty($_POST)){
+
+//Question count.
+$query = "SELECT COUNT(*) number_of_questions FROM valentines_questions";
+$result = $db->sql_query($query);
+$number_of_questions = (int)$db->sql_fetchrow($result)["number_of_questions"];
+$db->sql_freeresult($result);
+
+//Submission.
+if (!empty($_POST))
+{
 	$question_id = (int)$_POST['question_id'];
-	if ($question_id<0 || $question_id>53){
+	if ($question_id<0 || $question_id>$number_of_questions)
+	{
 		echo '<html><body><p>Invalid Question ID, stop hacking, yo!</p></body></html>';
 		exit;
 	}
-	if ($_POST['submit']){
+	if ($_POST['submit'])
+	{
 		$youranswer = (int)$_POST['youranswer'];
-		if ($youranswer>5){
+		if ($youranswer>5)
+		{
 			$youranswer=5;
-		} else if ($youranswer<1){
+		}
+		else if ($youranswer<1)
+		{
 			$youranswer=1;
 		}
 		$prefanswer = (int)$_POST['prefanswer'];
-		if ($prefanswer>5){
+		if ($prefanswer>5)
+		{
 			$prefanswer=5;
-		} else if ($prefanswer<1){
+		}
+		else if ($prefanswer<1)
+		{
 			$prefanswer=1;
 		}
 		$weight = (int)$_POST['weight'];
-		if ($weight>4){
+		if ($weight>4)
+		{
 			$weight=4;
-		} else if ($weight<0){
+		}
+		else if ($weight<0)
+		{
 			$weight=0;
 		}
 		$query = "INSERT INTO valentines_answers VALUES ($question_id,$user_id,$youranswer,$prefanswer,$weight) ON DUPLICATE KEY UPDATE answer=values(answer), prefanswer=(prefanswer), weight=(weight)";
@@ -49,20 +74,28 @@ if (!empty($_POST)){
 		$query = "INSERT INTO valentines_users (user_id, question_id) values($user_id, $question_id) ON DUPLICATE KEY UPDATE question_id=values(question_id)";
 		$result = $db->sql_query($query);
 		$question_id++;
-	} else if ($_POST['pass']){
+	}
+	else if ($_POST['pass'])
+	{
 		$query = "INSERT INTO valentines_users (user_id, question_id) values($user_id, $question_id) ON DUPLICATE KEY UPDATE question_id=values(question_id)";
 		$result = $db->sql_query($query);
 		$question_id++;
 	}
-}else {
+}
+else
+{
 	$query = "SELECT * FROM valentines_users WHERE user_id=$user_id";
 	$result = $db->sql_query($query);
-	if ($result){
+	if ($result)
+	{
 		$question_data = mysqli_fetch_array($result);
 	}
-	if ($question_data){
+	if ($question_data)
+	{
 		$question_id = $question_data['question_id']+1;
-	}else{
+	}
+	else
+	{
 		$question_id = 1;
 	}
 }
@@ -70,7 +103,8 @@ if (!empty($_POST)){
 $query = "SELECT * FROM valentines_questions WHERE question_id=$question_id";
 $result = $db->sql_query($query);
 $question_data = mysqli_fetch_array($result);
-if (!$question_data && $question_id < 54){
+if (!$question_data && $question_id <= $number_of_questions)
+{
 	$question_id++;
 	$query = "SELECT * FROM valentines_questions WHERE question_id=$question_id";
 	$result = $db->sql_query($query);
@@ -183,7 +217,7 @@ input[type=radio]:checked + label::before {
 	<input type='hidden' value="<?php echo $question_data['question_id']; ?>" name='question_id'/>
 	<div id='question'>
 	<?php
-		echo '#' . $question_data['question_id'] . '/53: ' .$question_data['question'];
+		echo '#' . $question_data['question_id'] . '/' . $number_of_questions . ': ' .$question_data['question'];
 	?>
 	</div>
 	<div id='youranswer'>
@@ -191,12 +225,15 @@ input[type=radio]:checked + label::before {
 		<div class='inner'>
 		<?php
 			$answers = array();
-			for ($i = 1;$i <6; $i++){
-				if (!empty($question_data["Answer$i"])){
+			for ($i = 1;$i <6; $i++)
+			{
+				if (!empty($question_data["Answer$i"]))
+				{
 					$answers[] = $question_data["Answer$i"];
 				}
 			}
-			for ($i = 1; $i < sizeOf($answers)+1; $i++){
+			for ($i = 1; $i < sizeOf($answers)+1; $i++)
+			{
 				echo '<input type="radio" id="youranswer' . $i . '" name="youranswer" value="' . $i . '">';
 				echo '<label for="youranswer' . $i . '" class="radiolabel' .  ($i == 1 ? ' firstlabel' : (($i == sizeOf($answers) )? ' lastlabel' : '')) .'">';
 				echo $answers[$i-1];
@@ -209,7 +246,8 @@ input[type=radio]:checked + label::before {
 	<h2>How you'd want a match to answer:</h2>
 		<div class='inner'>
 			<?php
-				for ($i = 1; $i < sizeOf($answers)+1; $i++){
+				for ($i = 1; $i < sizeOf($answers)+1; $i++)
+				{
 					echo '<input type="radio" id="prefanswer' . $i . '" name="prefanswer" value="' . $i . '">';
 					echo '<label for="prefanswer' . $i . '" class="radiolabel' .  ($i == 1 ? ' firstlabel' : (($i == sizeOf($answers) )? ' lastlabel' : '')) .'">';
 					echo $answers[$i-1];
