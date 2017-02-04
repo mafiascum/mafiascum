@@ -13,12 +13,14 @@ public class SiteChatWebSocket implements WebSocketListener {
   protected WebSocketSession connection;
   protected String id;
   protected SiteChatServer server;
+  protected String forwardedFor;
   
   private static final Logger logger = Logger.getLogger(SiteChatWebSocket.class.getName());
   
-  public SiteChatWebSocket(SiteChatServer server, String id) {
+  public SiteChatWebSocket(SiteChatServer server, String id, String forwardedFor) {
     this.server = server;
     this.id = id;
+    this.forwardedFor = forwardedFor;
   }
   
   public WebSocketSession getConnection() {
@@ -32,16 +34,16 @@ public class SiteChatWebSocket implements WebSocketListener {
   public void onWebSocketClose(int arg0, String data) {
     logger.trace(this.getClass().getSimpleName() + "#onWebSocketClose   arg0: " + arg0 + ", Data: " + data);
     
-    server.queueEvent(new SiteChatServerCloseEvent(new Descriptor(id, connection.getRemoteAddress().getHostString())));
+    server.queueEvent(new SiteChatServerCloseEvent(new Descriptor(id, getIpAddress())));
     server.removeWebSocket(id);
   }
 
   public void onWebSocketConnect(Session session) {
-    logger.trace(this.getClass().getSimpleName() + "#onWebSocketConnect   " + session.getRemoteAddress().getHostString());
+    logger.trace(this.getClass().getSimpleName() + "#onWebSocketConnect   " + getIpAddress());
     
     this.connection = (WebSocketSession)session;
     
-    server.queueEvent(new SiteChatServerOpenEvent(new Descriptor(id, connection.getRemoteAddress().getHostString())));
+    server.queueEvent(new SiteChatServerOpenEvent(new Descriptor(id, getIpAddress())));
   }
   
   public void onWebSocketError(Throwable throwable) {
@@ -51,6 +53,12 @@ public class SiteChatWebSocket implements WebSocketListener {
   public void onWebSocketText(String data) {
     logger.trace(this.getClass().getSimpleName() + "#onWebSocketText   " + data);
     
-    server.queueEvent(new SiteChatServerMessageEvent(new Descriptor(id, connection.getRemoteAddress().getHostString()), data));
+    server.queueEvent(new SiteChatServerMessageEvent(new Descriptor(id, getIpAddress()), data));
+  }
+  
+  protected String getIpAddress() {
+    if(forwardedFor != null)
+      return forwardedFor;
+    return connection.getRemoteAddress().getHostString();
   }
 }

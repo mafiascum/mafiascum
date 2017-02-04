@@ -104,7 +104,7 @@ public class SiteChatServer extends Server {
           public Object createWebSocket(UpgradeRequest upgradeRequest, UpgradeResponse upgradeResponse) {
             
             String webSocketId = UUID.randomUUID().toString();
-            SiteChatWebSocket siteChatWebSocket = new SiteChatWebSocket(SiteChatServer.this, webSocketId);
+            SiteChatWebSocket siteChatWebSocket = new SiteChatWebSocket(SiteChatServer.this, webSocketId, upgradeRequest.getHeader("X-Forwarded-For"));
             
             webSocketMap.put(webSocketId, siteChatWebSocket);
 
