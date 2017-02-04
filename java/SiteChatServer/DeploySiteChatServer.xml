@@ -34,9 +34,10 @@
 
 	<target name="svn-checkout">
 		<echo>SVN Checkout. Root: ${checkout-root} SRC: ${checkout-src}</echo>
-		<exec dir="." executable="svn">
-			<arg line="export svn://localhost/mafiascum/${branch}/java/SiteChatServer${revision} ./SiteChatServer/ --force --username=mmason" />
+		<exec dir="." executable="git">
+			<arg line="-C git-repo pull" />
 		</exec>
+		<copydir src="./git-repo/java/SiteChatServer" dest="${checkout-root}"/>
 	</target>
 	
 	<target name="shutdown-server">
