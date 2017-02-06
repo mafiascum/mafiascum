@@ -76,7 +76,7 @@ for ($i=0;$i<sizeOf($user_array);$i++){
 	}
 	for ($k=0;$k<sizeOf($my_question_id_set);$k++){
 		$question_id = $my_question_id_set[$k];
-		if ($question_id != 10){
+		if ($question_id != 1){
 			if ($their_pref_answer[$question_id]){
 				$question_match++;
 				$temp_weight = $their_weight[$question_id];
