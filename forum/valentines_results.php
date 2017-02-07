@@ -47,6 +47,8 @@ $my_gender_score = array();
 $their_score = array();
 $their_total_weight = array();
 
+$weighted_question_id = 1;
+
 $final_results = array();
 while ($row = $db->sql_fetchrow($result)){
 	$question_id = $row['question_id'];
@@ -76,7 +78,7 @@ for ($i=0;$i<sizeOf($user_array);$i++){
 	}
 	for ($k=0;$k<sizeOf($my_question_id_set);$k++){
 		$question_id = $my_question_id_set[$k];
-		if ($question_id != 1){
+		if ($question_id != $weighted_question_id){
 			if ($their_pref_answer[$question_id]){
 				$question_match++;
 				$temp_weight = $their_weight[$question_id];
@@ -92,13 +94,13 @@ for ($i=0;$i<sizeOf($user_array);$i++){
 				}
 			}
 		} else {
-			if ($their_pref_answer[10]){
+			if ($their_pref_answer[$weighted_question_id]){
 				$their_gender_score[$their_id] = 0;
 				$my_gender_score[$their_id] = 0;
-				if ($their_pref_answer[10] == $my_answer[10] || $their_weight[$question_id] == 0){
+				if ($their_pref_answer[$weighted_question_id] == $my_answer[$weighted_question_id] || $their_weight[$question_id] == 0){
 					$their_gender_score[$their_id] = 1;
 				}
-				if ($their_answer[10] == $my_pref_answer[10] || $my_weight[$question_id] == 0){
+				if ($their_answer[$weighted_question_id] == $my_pref_answer[$weighted_question_id] || $my_weight[$question_id] == 0){
 					$my_gender_score[$their_id] = 1;
 				}
 			}
