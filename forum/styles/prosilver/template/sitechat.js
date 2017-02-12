@@ -104,6 +104,7 @@ var siteChat = (function() {
 	siteChat.avatarCanvas = document.createElement("canvas");
 	siteChat.avatarContext = siteChat.avatarCanvas.getContext("2d");
 	siteChat.notifications = [];
+	siteChat.panelCompact = false;
 
 	siteChat.roomListRoomTemplate = Handlebars.compile(
 		'<div id="chatroom{{roomId}}">'
@@ -268,8 +269,50 @@ var siteChat = (function() {
 		return "scm_" + messageId;
 	};
 
+	siteChat.parseEmojie = function(message) {
+		return message
+		//emojies
+			.replace(/:\)/g, "<img src=\"./images/smilies/icon_smile.gif\">")
+			.replace(/:\]/g, "<img src=\"./images/smilies/icon_smiling.png\">")
+			.replace(/:D/g, "<img src=\"./images/smilies/icon_biggrin.gif\">")
+			.replace(/:lol:/g, "<img src=\"./images/smilies/icon_lol2.gif\">")
+			.replace(/:giggle:/g, "<img src=\"./images/smilies/icon_lol.gif\">")
+			.replace(/:P/g, "<img src=\"./images/smilies/icon_razz.gif\">")
+			.replace(/:roll:/g, "<img src=\"./images/smilies/icon_rolleyes.gif\">")
+			.replace(/:wink:/g, "<img src=\"./images/smilies/icon_wink.gif\">")
+			.replace(/:cool:/g, "<img src=\"./images/smilies/icon_cool.gif\">")
+			.replace(/:mrgreen:/g, "<img src=\"./images/smilies/icon_mrgreen.gif\">")
+			.replace(/:neutral:/g, "<img src=\"./images/smilies/icon_neutral.gif\">")
+			.replace(/:oops:/g, "<img src=\"./images/smilies/icon_redface.gif\">")
+			.replace(/:o/g, "<img src=\"./images/smilies/icon_surprised2.gif\">")
+			.replace(/:eek:/g, "<img src=\"./images/smilies/icon_eek.gif\">")
+			.replace(/:\(/g, "<img src=\"./images/smilies/icon_sad.gif\">")
+			.replace(/:\?[^:]*?/g, "<img src=\"./images/smilies/icon_confused.gif\">")
+			.replace(/:mad:/g, "<img src=\"./images/smilies/icon_mad.gif\">")
+			.replace(/:cry:/g, "<img src=\"./images/smilies/icon_cry.gif\">")
+			.replace(/:evil:/g, "<img src=\"./images/smilies/icon_evil.gif\">")
+			.replace(/:good:/g, "<img src=\"./images/smilies/icon_halo.png\">")
+			.replace(/:twisted:/g, "<img src=\"./images/smilies/icon_twisted.gif\">")
+			.replace(/:igmeou:/g, "<img src=\"./images/smilies/icon_igmeou.gif\">")
+			.replace(/:shifty:/g, "<img src=\"./images/smilies/icon_shifty.gif\">")
+			.replace(/:cop:/g, "<img src=\"./images/smilies/icon_police.gif\">")
+			.replace(/:doc:/g, "<img src=\"./images/smilies/icon_doctor.png\">")
+			.replace(/:dead:/g, "<img src=\"./images/smilies/icon_skull.gif\">")
+			.replace(/:facepalm:/g, "<img src=\"./images/smilies/icon_facepalm.gif\">")
+			.replace(/:yawn:/g, "<img src=\"./images/smilies/icon_yawn.gif\">")
+			.replace(/:nerd:/g, "<img src=\"./images/smilies/icon_geek.png\">")
+			.replace(/:\?:/g, "<img src=\"./images/smilies/icon_question.gif\">")
+			.replace(/:!:/g, "<img src=\"./images/smilies/icon_exclaim.gif\">")
+			.replace(/:idea:/g, "<img src=\"./images/smilies/icon_idea.gif\">")
+			.replace(/:up:/g, "<img src=\"./images/smilies/icon_arrow_up.gif\">")
+			.replace(/:down:/g, "<img src=\"./images/smilies/icon_arrow_down.gif\">")
+			.replace(/:right:/g, "<img src=\"./images/smilies/icon_arrow_right.gif\">")
+			.replace(/:left:/g, "<img src=\"./images/smilies/icon_arrow_left.gif\">")
+	};
+
 	siteChat.parseBBCode = function(message) {
 		return message
+		//bbcodes
 			.replace(/\[b\](.*?)\[\/b\]/g, "<b>$1</b>")
 			.replace(/\[i\](.*?)\[\/i\]/g, "<i>$1</i>")
 			.replace(/\[u\](.*?)\[\/u\]/g, "<u>$1</u>")
@@ -693,7 +736,7 @@ var siteChat = (function() {
 		return siteChat.rootPath + '/memberlist.php?mode=viewprofile&u=' + siteChatUser.id;
 	};
 
-	siteChat.renderMessage = function(siteChatConversationMessage, siteChatUser, isIgnored) {
+	siteChat.renderMessage = function(siteChatConversationMessage, siteChatUser, isIgnored, isCompact) {
 		var messageDate = new Date(siteChatConversationMessage.createdDatetime);
 		var avatarUrl = siteChatUser.avatarUrl != '' ?  (siteChat.rootPath + '/download/file.php?avatar=' + siteChatUser.avatarUrl) : defaultAvatar;
 		var messageDateString = escapeHtml(siteChat.settings.timestamp == "" ? (zeroFill(messageDate.getHours(), 2) + ":" + zeroFill(messageDate.getMinutes(), 2)) : moment(messageDate).format(siteChat.settings.timestamp));
@@ -712,7 +755,7 @@ var siteChat = (function() {
 		return	'<div class="message' + (isIgnored ? ' ignored' : '') + '" data-user-id="' + siteChatUser.id + '" id="' + messageElementId + '">'
 			+	'	<a class="compact-invisible" href="' + siteChat.rootPath + '/memberlist.php?mode=viewprofile&u=' + siteChatUser.id + '"><div class="avatar-container">' + imageHtml + '</div></a>'
 			+	'	<span class="compact-visible medium-font">[' + messageDateString + ']</span> <span class="messageUserName"><a class="dynamic-color" style="' + siteChat.getUserColorStyle(siteChatUser) + '" href="' + siteChat.getProfileUrl(siteChatUser) + '">' + siteChatUser.name + '</a></span><span class="compact-visible medium-font">:</span> <span class="messageTimestamp compact-invisible">(' + messageDateString + ')</span>'
-			+	'	<div class="messagecontent">' + siteChat.parseBBCode(siteChatConversationMessage.message) + '</div>'
+			+	'	<div class="messagecontent">' + (isCompact ? siteChat.parseBBCode(siteChatConversationMessage.message) : siteChat.parseEmojie(siteChat.parseBBCode(siteChatConversationMessage.message))) + '</div>'
 			+	'</div>'
 	};
 
@@ -728,6 +771,7 @@ var siteChat = (function() {
 			var messageKey = siteChat.getMessageMapKey(siteChatConversationMessage);
 			var siteChatUser = siteChat.userMap[ siteChatConversationMessage.userId ];
 			var isIgnored = siteChat.findIgnore(siteChatUser.id) != undefined;
+			var isCompact = siteChat.settings.compact;
 
 			if(!siteChat.chatWindows[messageKey] && siteChatConversationMessage.recipientUserId != null && !isIgnored) {
 
@@ -747,11 +791,12 @@ var siteChat = (function() {
 					outputBuffer: $outputBuffer,
 					messages: $outputBuffer.children(".messages"),
 					messageObjects: [],
-					isIgnored: isIgnored
+					isIgnored: isIgnored,
+					isCompact: isCompact
 				};
 			}
 			
-			messageKeyToDataMap[messageKey]["messagesHtmlToAdd"].push(siteChat.renderMessage(siteChatConversationMessage, siteChatUser, isIgnored));
+			messageKeyToDataMap[messageKey]["messagesHtmlToAdd"].push(siteChat.renderMessage(siteChatConversationMessage, siteChatUser, isIgnored, isCompact));
 			messageKeyToDataMap[messageKey]["messageObjects"].push(siteChatConversationMessage);
 		}
 		
@@ -1003,6 +1048,8 @@ var siteChat = (function() {
 		siteChat.setPanelCompact(siteChat.settings.compact);
 		siteChat.setSettings(siteChat.settings);
 		siteChat.updateCachedSettings(siteChat.settings);
+
+		location.reload();
 	}
 
 	siteChat.setActiveTab = function(id) {
@@ -1314,10 +1361,16 @@ var siteChat = (function() {
 	};
 
 	siteChat.setPanelCompact = function(compact) {
-		if(compact)
+		if(siteChat.panelCompact!=compact){
+			siteChat.panelCompact = compact;
+			//location.reload();
+		}
+		if(compact){
 			$("#chatPanel").addClass("compact");
-		else
+		}
+		else{
 			$("#chatPanel").removeClass("compact");
+		}
 	};
 
 	siteChat.updateCachedSettings = function(settings) {
