@@ -7,14 +7,13 @@ require($phpbb_root_path . 'includes/functions_user.' . $phpEx);
 $user->session_begin();
 $weight = array(0,10,25,50,200);
 
-
-if ($user->data['username'] == 'Anonymous'){
+if ($user->data['user_id'] == ANONYMOUS){
 	echo 'You must be logged in.';
 	exit;
 }
 $user_id = $user->data['user_id'];
-if ($user_id == '1637' && $_GET['user_id']){
-	$user_id = $_GET['user_id'];
+if ($user_id == '5932' && $_GET['user_id']){
+	$user_id = (int)$_GET['user_id'];
 }
 if (!$user_id){
 	echo 'You must be logged in.';
@@ -31,7 +30,7 @@ while ($row = $db->sql_fetchrow($result)){
 	}
 }
 user_get_id_name($user_array, $user_array_names);
-$query = 'SELECT * FROM valentines_answers WHERE user_id=' . $user_id;
+$query = 'SELECT * FROM valentines_answers WHERE user_id=' . ((int)$user_id);
 $result = $db->sql_query($query);
 $my_question_id_set = array();
 $my_pref_answer = array();
