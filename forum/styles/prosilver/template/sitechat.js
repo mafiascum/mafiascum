@@ -2,6 +2,7 @@ var siteChat = (function() {
 
 	var siteChat = siteChat || {};
 	var defaultAvatar = './styles/prosilver/imageset/defaultAvatar.png';
+	var lastEmoji = false;
 
 	function supportsHtml5Storage() {
 		try{return 'localStorage' in window && window['localStorage'] !== null;}
@@ -173,6 +174,7 @@ var siteChat = (function() {
 		+	'					<li><label for="settingsCompact">Compact Messages:</label> <input type="checkbox" id="settingsCompact" name="compact" {{#if compact}}checked{{/if}}/></li>'
 		+	'					<li><label for="settingsAnimateAvatars">Animate Avatars:</label> <input type="checkbox" id="settingsAnimateAvatars" name="animateAvatars" {{#if animateAvatars}}checked{{/if}}/></li>'
 		+	'					<li><label for="settingsInvisible">Hide Online Status:</label> <input type="checkbox" id="settingsInvisible" name="invisible" {{#if invisible}}checked{{/if}}/></li>'
+        +	'					<li><label for="settingsEmoji">Disable Smilies:</label> <input type="checkbox" id="settingsEmoji" name="emoji" {{#if emoji}}checked{{/if}}/></li>'
 		+	'					<li><label for="settingsTimestamp">Timestamp:</label> <input type="text" id="settingsTimestamp" name="timestamp" value="{{timestamp}}"/></li>'
 		+	'					<li><button type="button" id="saveSettings">Save Settings</button> <button type="button" id="disableChat">Disable Chat</button></li>'
 		+	'				</ul>'
@@ -738,7 +740,7 @@ var siteChat = (function() {
 		return siteChat.rootPath + '/memberlist.php?mode=viewprofile&u=' + siteChatUser.id;
 	};
 
-	siteChat.renderMessage = function(siteChatConversationMessage, siteChatUser, isIgnored, isCompact) {
+	siteChat.renderMessage = function(siteChatConversationMessage, siteChatUser, isIgnored, isCompact, isEmoji) {
 		var messageDate = new Date(siteChatConversationMessage.createdDatetime);
 		var avatarUrl = siteChatUser.avatarUrl != '' ?  (siteChat.rootPath + '/download/file.php?avatar=' + siteChatUser.avatarUrl) : defaultAvatar;
 		var messageDateString = escapeHtml(siteChat.settings.timestamp == "" ? (zeroFill(messageDate.getHours(), 2) + ":" + zeroFill(messageDate.getMinutes(), 2)) : moment(messageDate).format(siteChat.settings.timestamp));
@@ -757,7 +759,7 @@ var siteChat = (function() {
 		return	'<div class="message' + (isIgnored ? ' ignored' : '') + '" data-user-id="' + siteChatUser.id + '" id="' + messageElementId + '">'
 			+	'	<a class="compact-invisible" href="' + siteChat.rootPath + '/memberlist.php?mode=viewprofile&u=' + siteChatUser.id + '"><div class="avatar-container">' + imageHtml + '</div></a>'
 			+	'	<span class="compact-visible medium-font">[' + messageDateString + ']</span> <span class="messageUserName"><a class="dynamic-color" style="' + siteChat.getUserColorStyle(siteChatUser) + '" href="' + siteChat.getProfileUrl(siteChatUser) + '">' + siteChatUser.name + '</a></span><span class="compact-visible medium-font">:</span> <span class="messageTimestamp compact-invisible">(' + messageDateString + ')</span>'
-			+	'	<div class="messagecontent">' + (isCompact ? siteChat.parseBBCode(siteChatConversationMessage.message) : siteChat.parseEmojie(siteChat.parseBBCode(siteChatConversationMessage.message))) + '</div>'
+			+	'	<div class="messagecontent">' + (isEmoji ? siteChat.parseBBCode(siteChatConversationMessage.message) : siteChat.parseEmojie(siteChat.parseBBCode(siteChatConversationMessage.message))) + '</div>'
 			+	'</div>'
 	};
 
@@ -774,6 +776,9 @@ var siteChat = (function() {
 			var siteChatUser = siteChat.userMap[ siteChatConversationMessage.userId ];
 			var isIgnored = siteChat.findIgnore(siteChatUser.id) != undefined;
 			var isCompact = siteChat.settings.compact;
+			var isEmoji = siteChat.settings.emoji;
+
+			lastEmoji = isEmoji;
 
 			if(!siteChat.chatWindows[messageKey] && siteChatConversationMessage.recipientUserId != null && !isIgnored) {
 
@@ -794,11 +799,12 @@ var siteChat = (function() {
 					messages: $outputBuffer.children(".messages"),
 					messageObjects: [],
 					isIgnored: isIgnored,
-					isCompact: isCompact
+					isCompact: isCompact,
+					isEmoji : isEmoji
 				};
 			}
 			
-			messageKeyToDataMap[messageKey]["messagesHtmlToAdd"].push(siteChat.renderMessage(siteChatConversationMessage, siteChatUser, isIgnored, isCompact));
+			messageKeyToDataMap[messageKey]["messagesHtmlToAdd"].push(siteChat.renderMessage(siteChatConversationMessage, siteChatUser, isIgnored, isCompact,isEmoji));
 			messageKeyToDataMap[messageKey]["messageObjects"].push(siteChatConversationMessage);
 		}
 		
@@ -1012,6 +1018,7 @@ var siteChat = (function() {
 			compact: siteChat.settings.compact,
 			animateAvatars: siteChat.settings.animateAvatars,
 			invisible: siteChat.settings.invisible,
+			emoji: siteChat.settings.emoji,
 			timestamp: siteChat.settings.timestamp
 		}));
 
@@ -1047,11 +1054,23 @@ var siteChat = (function() {
 		siteChat.settings.timestamp = $form.find("[name=timestamp]").val();
 		siteChat.settings.invisible = $form.find("[name=invisible]").is(":checked");
 
+		var tempemoji = $form.find("[name=emoji]").is(":checked");
+
+		var shouldReset = false;
+		if(tempemoji != lastEmoji){
+			shouldReset = true;
+			lastEmoji = tempemoji;
+		}
+
+		siteChat.settings.emoji = tempemoji;
+
 		siteChat.setPanelCompact(siteChat.settings.compact);
 		siteChat.setSettings(siteChat.settings);
 		siteChat.updateCachedSettings(siteChat.settings);
 
-		location.reload();
+		if(shouldReset){
+			location.reload();
+		}
 	}
 
 	siteChat.setActiveTab = function(id) {
