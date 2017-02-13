@@ -1,5 +1,0 @@
-#!/usr/local/bin/bash
-WORKSPACE_ROOT=~mafiascum/prod
-WWW="/var/www-ms"
-TRASH_DIRECTORY=`echo ~/trash`
-USER=mafiascum
