@@ -1,4 +1,0 @@
-#!/usr/local/bin/bash
-WORKSPACE_ROOT=~mafiascum/prod
-WWW="/var/www-ms"
-USER=mafiascum
