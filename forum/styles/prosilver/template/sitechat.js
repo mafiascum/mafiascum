@@ -135,7 +135,7 @@ var siteChat = (function() {
 		'<div class="chatWindow conversation expanded" data-key="{{key}}" {{#if conversationId}}data-conversation-id="{{conversationId}}" {{/if}} {{#if recipientUserId}}data-recipient-user-id="{{recipientUserId}}" {{/if}} id="chat{{idPrefix}}{{uniqueIdentifier}}">'
 		+		'<div class="chatWindowOuter">'
 		+			'<div class="chatWindowInner">'
-		+				'<div class="title"><div class="name">{{title}}</div><div class="options"></div><div class="close">X</div></div>'
+		+				'<div class="title"><div class="name">{{#if isUser}}<span class="onlineindicator {{activeClass}}"></span> {{/if}}{{title}}</div><div class="options"></div><div class="close">X</div></div>'
 		+				'<div class="menu"><ul></ul></div>'
 		+				'<div class="outputBuffer">'
 		+					'<a href="#" class="loadMore">Load More Messages</a>'
@@ -271,31 +271,23 @@ var siteChat = (function() {
 		return "scm_" + messageId;
 	};
 
-	siteChat.parseEmojie = function(message) {
+	siteChat.parseEmoji = function(message) {
 		return message
-		//emojies
-			.replace(/:\)/g, "<img src=\"./images/smilies/icon_smile.gif\" title=\"Smile\" alt=\":)\">")
-			.replace(/:\]/g, "<img src=\"./images/smilies/icon_smiling.png\" title=\"Cheerful Smile\" alt=\":]\">")
-			.replace(/:D/g, "<img src=\"./images/smilies/icon_biggrin.gif\"  title=\"Very Happy\" alt=\":D\">")
+		//emojis
+		//First the more complicated ones:
 			.replace(/:lol:/g, "<img src=\"./images/smilies/icon_lol2.gif\" title=\"Laughing\" alt=\":lol:\">")
 			.replace(/:giggle:/g, "<img src=\"./images/smilies/icon_lol.gif\" title=\"Giggling\" alt=\":giggle:\">")
-			.replace(/:P/g, "<img src=\"./images/smilies/icon_razz.gif\" title=\"Razz\" alt=\":P\">")
 			.replace(/:roll:/g, "<img src=\"./images/smilies/icon_rolleyes.gif\" title=\"Rolling Eyes\" alt=\":roll:\">")
 			.replace(/:wink:/g, "<img src=\"./images/smilies/icon_wink.gif\" title=\"Wink\" alt=\":wink:\">")
 			.replace(/:cool:/g, "<img src=\"./images/smilies/icon_cool.gif\" title=\"Cool\" alt=\":cool:\">")
 			.replace(/:mrgreen:/g, "<img src=\"./images/smilies/icon_mrgreen.gif\" title=\"Mr. Green\" alt=\":mrgreen:\">")
 			.replace(/:neutral:/g, "<img src=\"./images/smilies/icon_neutral.gif\" title=\"Neutral\" alt=\":neutral:\">")
-			.replace(/:\|/g, "<img src=\"./images/smilies/icon_neutral.gif\" title=\"Neutral\" alt=\":|\">")
-			.replace(/:oops:/g, "<img src=\"./images/smilies/icon_redface.gif\" title=\"Embarassed\" alt=\":oops:\">")
-			.replace(/:o/g, "<img src=\"./images/smilies/icon_surprised2.gif\" title=\"Surprised\" alt=\":o\">")
+			.replace(/:oops:/g, "<img src=\"./images/smilies/icon_redface.gif\" title=\"Embarassed\" alt=\":_oops_:\">")
 			.replace(/:eek:/g, "<img src=\"./images/smilies/icon_eek.gif\" title=\"Eek\" alt=\":eek:\">")
-			.replace(/:\(/g, "<img src=\"./images/smilies/icon_sad.gif\" title=\"Sad\" alt=\":(\">")
-			.replace(/:\?:/g, "<img src=\"./images/smilies/icon_question.gif\" title=\"Question\" alt=\":_?_:\">")
-			.replace(/:\?[?!:]*?/g, "<img src=\"./images/smilies/icon_confused.gif\"  title=\"Confused\" alt=\":?\">")
-			.replace(/:_\?_:/g, ":?:")
 			.replace(/:mad:/g, "<img src=\"./images/smilies/icon_mad.gif\" title=\"Mad\" alt=\":mad:\">")
 			.replace(/:cry:/g, "<img src=\"./images/smilies/icon_cry.gif\" title=\"Crying or Very Sad\" alt=\":cry:\">")
 			.replace(/:evil:/g, "<img src=\"./images/smilies/icon_evil.gif\" title=\"Evil or Very Mad\" alt=\":evil:\">")
+			.replace(/:devil:/g, "<img src=\"./images/smilies/icon_evil.gif\" title=\"Evil or Very Mad\" alt=\":devil:\">")
 			.replace(/:good:/g, "<img src=\"./images/smilies/icon_halo.png\" title=\"Good\" alt=\":good:\">")
 			.replace(/:twisted:/g, "<img src=\"./images/smilies/icon_twisted.gif\" title=\"Twisted Evil\" alt=\":twisted:\">")
 			.replace(/:igmeou:/g, "<img src=\"./images/smilies/icon_igmeou.gif\" title=\"IGMEOU\" alt=\":igmeou:\">")
@@ -306,12 +298,26 @@ var siteChat = (function() {
 			.replace(/:facepalm:/g, "<img src=\"./images/smilies/icon_facepalm.gif\" title=\"Face, Meet Palm\" alt=\":facepalm:\">")
 			.replace(/:yawn:/g, "<img src=\"./images/smilies/icon_yawn.gif\" title=\"Yawn\" alt=\":yawn:\">")
 			.replace(/:nerd:/g, "<img src=\"./images/smilies/icon_geek.png\" title=\"Nerd\" alt=\":nerd:\">")
+			.replace(/:\?:/g, "<img src=\"./images/smilies/icon_question.gif\" title=\"Question\" alt=\":_?_:\">")
 			.replace(/:!:/g, "<img src=\"./images/smilies/icon_exclaim.gif\" title=\"Exclamation\" alt=\":!:\">")
 			.replace(/:idea:/g, "<img src=\"./images/smilies/icon_idea.gif\" title=\"Idea\" alt=\":idea:\">")
 			.replace(/:up:/g, "<img src=\"./images/smilies/icon_arrow_up.gif\" title=\"Up Arrow\" alt=\":up:\">")
 			.replace(/:down:/g, "<img src=\"./images/smilies/icon_arrow_down.gif\" title=\"Down Arrow\" alt=\":down:\">")
 			.replace(/:right:/g, "<img src=\"./images/smilies/icon_arrow_right.gif\" title=\"Right Arrow\" alt=\":right:\">")
 			.replace(/:left:/g, "<img src=\"./images/smilies/icon_arrow_left.gif\" title=\"Left Arrow\" alt=\":left:\">")
+		//Then the most popular ones
+			.replace(/:\)/g, "<img src=\"./images/smilies/icon_smile.gif\" title=\"Smile\" alt=\":)\">")
+			.replace(/:\]/g, "<img src=\"./images/smilies/icon_smiling.png\" title=\"Cheerful Smile\" alt=\":]\">")
+			.replace(/:D/g, "<img src=\"./images/smilies/icon_biggrin.gif\"  title=\"Very Happy\" alt=\":D\">")
+			.replace(/:P/g, "<img src=\"./images/smilies/icon_razz.gif\" title=\"Razz\" alt=\":P\">")
+			.replace(/:o/g, "<img src=\"./images/smilies/icon_surprised2.gif\" title=\"Surprised\" alt=\":o\">")
+			.replace(/:\|/g, "<img src=\"./images/smilies/icon_neutral.gif\" title=\"Neutral\" alt=\":|\">")
+			.replace(/:\?/g, "<img src=\"./images/smilies/icon_confused.gif\"  title=\"Confused\" alt=\":?\">")
+			.replace(/;\)/g, "<img src=\"./images/smilies/icon_wink.gif\" title=\"Wink\" alt=\":wink:\">")
+			.replace(/:\(/g, "<img src=\"./images/smilies/icon_sad.gif\" title=\"Sad\" alt=\":(\">")
+		//Conflict fixes
+			.replace(/:_oops_:/g, ":oops:") ////conflict of alt in :oops: with :o
+			.replace(/:_\?_:/g, ":?:")  //conflict of alt in :?: with :?
 	};
 
 	siteChat.parseBBCode = function(message) {
@@ -618,15 +624,23 @@ var siteChat = (function() {
 	siteChat.createChatWindow = function(conversationId, recipientUserId, createdByUserId, title, userIdSet, expanded, messages, save, blinking, width, height, authCode, focus) {
 
 		var chatWindowIdPrefix = (conversationId != null ? "C" : "P");
+		var isUser = (conversationId != null ? false : true);
 		var chatWindowUniqueIdentifier = (conversationId != null ? conversationId : recipientUserId);
+		var active = false;
+		if(isUser){
+			var siteChatUser= siteChat.userMap[recipientUserId];
+			active = siteChatUser.lastActivityDatetime ? ((new Date().getTime() - siteChatUser.lastActivityDatetime) / 1000 / 60) < (5) : false;
+		}
 
 		$("#chatPanel").append(this.chatWindowTemplate({
 			idPrefix: chatWindowIdPrefix,
+			isUser: isUser,
 			uniqueIdentifier: chatWindowUniqueIdentifier,
 			title: title,
 			conversationId: conversationId,
 			recipientUserId: recipientUserId,
-			key: chatWindowIdPrefix + chatWindowUniqueIdentifier
+			key: chatWindowIdPrefix + chatWindowUniqueIdentifier,
+			activeClass : active ? "active" : "idle"
 		}));
 
 		var $chatWindow = $("#chat" + chatWindowIdPrefix + chatWindowUniqueIdentifier);
@@ -759,7 +773,7 @@ var siteChat = (function() {
 		return	'<div class="message' + (isIgnored ? ' ignored' : '') + '" data-user-id="' + siteChatUser.id + '" id="' + messageElementId + '">'
 			+	'	<a class="compact-invisible" href="' + siteChat.rootPath + '/memberlist.php?mode=viewprofile&u=' + siteChatUser.id + '"><div class="avatar-container">' + imageHtml + '</div></a>'
 			+	'	<span class="compact-visible medium-font">[' + messageDateString + ']</span> <span class="messageUserName"><a class="dynamic-color" style="' + siteChat.getUserColorStyle(siteChatUser) + '" href="' + siteChat.getProfileUrl(siteChatUser) + '">' + siteChatUser.name + '</a></span><span class="compact-visible medium-font">:</span> <span class="messageTimestamp compact-invisible">(' + messageDateString + ')</span>'
-			+	'	<div class="messagecontent">' + (isEmoji ? siteChat.parseBBCode(siteChatConversationMessage.message) : siteChat.parseEmojie(siteChat.parseBBCode(siteChatConversationMessage.message))) + '</div>'
+			+	'	<div class="messagecontent">' + (isEmoji ? siteChat.parseBBCode(siteChatConversationMessage.message) : siteChat.parseEmoji(siteChat.parseBBCode(siteChatConversationMessage.message))) + '</div>'
 			+	'</div>'
 	};
 
