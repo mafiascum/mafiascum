@@ -135,7 +135,7 @@ var siteChat = (function() {
 		'<div class="chatWindow conversation expanded" data-key="{{key}}" {{#if conversationId}}data-conversation-id="{{conversationId}}" {{/if}} {{#if recipientUserId}}data-recipient-user-id="{{recipientUserId}}" {{/if}} id="chat{{idPrefix}}{{uniqueIdentifier}}">'
 		+		'<div class="chatWindowOuter">'
 		+			'<div class="chatWindowInner">'
-		+				'<div class="title"><div class="name">{{title}}</div><div class="options"></div><div class="close">X</div></div>'
+		+				'<div class="title"><div class="name">{{#if isUser}}<span class="onlineindicator {{activeClass}}"></span> {{/if}}{{title}}</div><div class="options"></div><div class="close">X</div></div>'
 		+				'<div class="menu"><ul></ul></div>'
 		+				'<div class="outputBuffer">'
 		+					'<a href="#" class="loadMore">Load More Messages</a>'
@@ -624,15 +624,23 @@ var siteChat = (function() {
 	siteChat.createChatWindow = function(conversationId, recipientUserId, createdByUserId, title, userIdSet, expanded, messages, save, blinking, width, height, authCode, focus) {
 
 		var chatWindowIdPrefix = (conversationId != null ? "C" : "P");
+		var isUser = (conversationId != null ? false : true);
 		var chatWindowUniqueIdentifier = (conversationId != null ? conversationId : recipientUserId);
+		var active = false;
+		if(isUser){
+			var siteChatUser= siteChat.userMap[recipientUserId];
+			active = siteChatUser.lastActivityDatetime ? ((new Date().getTime() - siteChatUser.lastActivityDatetime) / 1000 / 60) < (5) : false;
+		}
 
 		$("#chatPanel").append(this.chatWindowTemplate({
 			idPrefix: chatWindowIdPrefix,
+			isUser: isUser,
 			uniqueIdentifier: chatWindowUniqueIdentifier,
 			title: title,
 			conversationId: conversationId,
 			recipientUserId: recipientUserId,
-			key: chatWindowIdPrefix + chatWindowUniqueIdentifier
+			key: chatWindowIdPrefix + chatWindowUniqueIdentifier,
+			activeClass : active ? "active" : "idle"
 		}));
 
 		var $chatWindow = $("#chat" + chatWindowIdPrefix + chatWindowUniqueIdentifier);
