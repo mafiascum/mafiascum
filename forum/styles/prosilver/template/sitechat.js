@@ -629,7 +629,7 @@ var siteChat = (function() {
 		var active = false;
 		if(isUser){
 			var siteChatUser= siteChat.userMap[recipientUserId];
-			active = siteChatUser.lastActivityDatetime ? ((new Date().getTime() - siteChatUser.lastActivityDatetime) / 1000 / 60) < (1) : false;
+			active = siteChatUser.lastActivityDatetime ? ((new Date().getTime() - siteChatUser.lastActivityDatetime) / 1000 / 60) < (5) : false;
 		}
 
 		$("#chatPanel").append(this.chatWindowTemplate({
@@ -873,7 +873,7 @@ var siteChat = (function() {
 			return;
 		}
 
-		var active = siteChatUser.lastActivityDatetime ? ((new Date().getTime() - siteChatUser.lastActivityDatetime) / 1000) < (60) * (1) : false;
+		var active = siteChatUser.lastActivityDatetime ? ((new Date().getTime() - siteChatUser.lastActivityDatetime) / 1000) < (60) * (5) : false;
 		var invisible = siteChat.invisibleUsers.hasOwnProperty(siteChatUser.id);
 
 		var userSpanClasses = ["dynamic-color"];
@@ -968,7 +968,7 @@ var siteChat = (function() {
 				roomName: room.name,
 				numberOfUsers: room.userIdSet.length,
 				users: roomUsers.map(function(siteChatUser) {
-					var active = siteChatUser.lastActivityDatetime ? ((new Date().getTime() - siteChatUser.lastActivityDatetime) / 1000 / 60) < (1) : false;
+					var active = siteChatUser.lastActivityDatetime ? ((new Date().getTime() - siteChatUser.lastActivityDatetime) / 1000 / 60) < (5) : false;
 
 					return {
 						roomNameCleaned: room.name.replace(/[^A-Za-z0-9]/g, ''),
@@ -1289,7 +1289,7 @@ var siteChat = (function() {
 				$(".titlemarker").each(function(i) {
 					var father = this.closest("#chatP"+siteChatUser.id);
 					if(father!=null){
-						var active = siteChatUser.lastActivityDatetime ? ((new Date().getTime() - siteChatUser.lastActivityDatetime) / 1000) < (60) * (1) : false;
+						var active = siteChatUser.lastActivityDatetime ? ((new Date().getTime() - siteChatUser.lastActivityDatetime) / 1000) < (60) * (5) : false;
 						if(active){
 							$("#spanP"+siteChatUser.id).removeClass('idle');
 							$("#spanP"+siteChatUser.id).addClass('active');
