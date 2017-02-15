@@ -135,7 +135,7 @@ var siteChat = (function() {
 		'<div class="chatWindow conversation expanded" data-key="{{key}}" {{#if conversationId}}data-conversation-id="{{conversationId}}" {{/if}} {{#if recipientUserId}}data-recipient-user-id="{{recipientUserId}}" {{/if}} id="chat{{idPrefix}}{{uniqueIdentifier}}">'
 		+		'<div class="chatWindowOuter">'
 		+			'<div class="chatWindowInner">'
-		+				'<div class="title"><div class="name">{{#if isUser}}<span class="onlineindicator {{activeClass}}"></span> {{/if}}{{title}}</div><div class="options"></div><div class="close">X</div></div>'
+		+				'<div class="title"><div class="name">{{#if isUser}}<span id="span{{idPrefix}}{{uniqueIdentifier}}" class="onlineindicator titlemarker {{activeClass}}"></span> {{/if}}{{title}}</div><div class="options"></div><div class="close">X</div></div>'
 		+				'<div class="menu"><ul></ul></div>'
 		+				'<div class="outputBuffer">'
 		+					'<a href="#" class="loadMore">Load More Messages</a>'
@@ -629,7 +629,7 @@ var siteChat = (function() {
 		var active = false;
 		if(isUser){
 			var siteChatUser= siteChat.userMap[recipientUserId];
-			active = siteChatUser.lastActivityDatetime ? ((new Date().getTime() - siteChatUser.lastActivityDatetime) / 1000 / 60) < (5) : false;
+			active = siteChatUser.lastActivityDatetime ? ((new Date().getTime() - siteChatUser.lastActivityDatetime) / 1000 / 60) < (1) : false;
 		}
 
 		$("#chatPanel").append(this.chatWindowTemplate({
@@ -873,7 +873,7 @@ var siteChat = (function() {
 			return;
 		}
 
-		var active = siteChatUser.lastActivityDatetime ? ((new Date().getTime() - siteChatUser.lastActivityDatetime) / 1000) < (60) * (5) : false;
+		var active = siteChatUser.lastActivityDatetime ? ((new Date().getTime() - siteChatUser.lastActivityDatetime) / 1000) < (60) * (1) : false;
 		var invisible = siteChat.invisibleUsers.hasOwnProperty(siteChatUser.id);
 
 		var userSpanClasses = ["dynamic-color"];
@@ -968,7 +968,7 @@ var siteChat = (function() {
 				roomName: room.name,
 				numberOfUsers: room.userIdSet.length,
 				users: roomUsers.map(function(siteChatUser) {
-					var active = siteChatUser.lastActivityDatetime ? ((new Date().getTime() - siteChatUser.lastActivityDatetime) / 1000 / 60) < (5) : false;
+					var active = siteChatUser.lastActivityDatetime ? ((new Date().getTime() - siteChatUser.lastActivityDatetime) / 1000 / 60) < (1) : false;
 
 					return {
 						roomNameCleaned: room.name.replace(/[^A-Za-z0-9]/g, ''),
@@ -1285,6 +1285,20 @@ var siteChat = (function() {
 				siteChat.addUser(siteChatUser, true, true, true);
 				siteChat.addUserToOnlineList(siteChatUser, false);
 				siteChat.saveUser(siteChatUser, false);
+
+				$(".titlemarker").each(function(i) {
+					var father = this.closest("#chatP"+siteChatUser.id);
+					if(father!=null){
+						var active = siteChatUser.lastActivityDatetime ? ((new Date().getTime() - siteChatUser.lastActivityDatetime) / 1000) < (60) * (1) : false;
+						if(active){
+							$("#spanP"+siteChatUser.id).removeClass('idle');
+							$("#spanP"+siteChatUser.id).addClass('active');
+						} else{
+							$("#spanP"+siteChatUser.id).removeClass('active');
+							$("#spanP"+siteChatUser.id).addClass('idle');
+						}
+					}
+				});
 			});
 
 			//Import rooms.
