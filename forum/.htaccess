@@ -1,4 +1,0 @@
-RewriteEngine on
-
-RewriteCond %{HTTP_HOST} ^((mafiascum.net)|(www.mafiascum.net))$
-RewriteRule (.*) http://forum.mafiascum.net/$1 [NC,R=301]
