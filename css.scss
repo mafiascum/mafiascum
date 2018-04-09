@@ -1,6 +1,6 @@
 $medium-max: 768px;
 $large-min: 769px;
-
+$redfont: #ED1C24;
 * {
 	border:0;
 	margin:0;
@@ -27,7 +27,7 @@ a {
 }
 div#nav_container{
 	margin-top:15px;
-	color:#ED1C24;
+	color:$redfont;
 	line-height: 150%;
 	font-weight:bold;
 	text-align: center;
@@ -75,7 +75,6 @@ p {
 	font:normal 14px arial, helvetica, sans-serif;
 	line-height:140%;
 	margin:20px auto;
-	padding-right:13px;
 	text-align:justify;
 	text-shadow:1px 1px 2px #000, 1px 1px 2px #000;
 	max-width:585px;
@@ -91,4 +90,14 @@ p {
 	font-weight:bold;
 	letter-spacing:1px;
 	margin-right:3px;
+}
+
+.social-icons {
+	font-size: 40px;
+	color: $redfont;
+	margin-top: 15px;
+
+	& a {
+		color: $redfont;
+	}
 }

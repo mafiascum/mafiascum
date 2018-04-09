@@ -1,1 +1,4 @@
 RewriteEngine on
+
+RewriteRule ^Forum(.*) https://forum.mafiascum.net$1 [L,R=301]
+RewriteRule ^Cards(.*) https://wiki.mafiascum.net/index.php?title=Cards [L,R=301]

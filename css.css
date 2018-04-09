@@ -62,7 +62,6 @@ div#howto {
   font: normal 14px arial, helvetica, sans-serif;
   line-height: 140%;
   margin: 20px auto;
-  padding-right: 13px;
   text-align: justify;
   text-shadow: 1px 1px 2px #000, 1px 1px 2px #000;
   max-width: 585px; }
@@ -77,3 +76,10 @@ div#howto {
   font-weight: bold;
   letter-spacing: 1px;
   margin-right: 3px; }
+
+.social-icons {
+  font-size: 40px;
+  color: #ED1C24;
+  margin-top: 15px; }
+  .social-icons a {
+    color: #ED1C24; }
